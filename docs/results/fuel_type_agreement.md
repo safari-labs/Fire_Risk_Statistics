@@ -29,6 +29,9 @@ Confirmed end to end on real patches:
 
 ## The result splits hard by scene type
 
+![Percent-conifer disagreement by scene type](figures/scene_split.png)
+
+
 Two patches each, pooled over fuel pixels only:
 
 | scene | PC MAE | bias | label agreement |
@@ -106,6 +109,17 @@ layer is wrong. On stable ground they are comparable; on disturbed ground they
 are answering different questions. The useful conclusion is narrower: **the
 agreement statistic is only interpretable on unburned patches**, and that is
 where the thresholds must be calibrated.
+
+## Figures
+
+Regenerate with `python scripts/make_result_figures.py`.
+
+| Figure | What it shows |
+|---|---|
+| [scene_split.png](figures/scene_split.png) | the finding above |
+| [band_pool.png](figures/band_pool.png) | the 11-band pool against the atmospheric regions |
+| [index_feasibility.png](figures/index_feasibility.png) | which index each band set can form |
+| [cut_points.png](figures/cut_points.png) | judgement vs fitted percent-conifer thresholds |
 
 ## Next
 
