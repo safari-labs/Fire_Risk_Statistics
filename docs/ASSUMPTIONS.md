@@ -303,3 +303,34 @@ This is the second time a hand-set region edge rejected a demonstrably working
 band — the first set the two-threshold scheme after it rejected S2's 1610 nm.
 Both point the same way: **replace these edges with a computed transmittance
 threshold in Phase 2** rather than continuing to adjust them one band at a time.
+
+---
+
+## A-16 — SCANFI is pinned to the 2020 time step
+
+**Status:** OPEN — affects every use of SCANFI, not just the fuel comparison
+**File:** `Fire_Risk_Model/src/data/scanfi.py` (`_select_time_step`)
+
+`_select_time_step` returns **2020 for every patch year**: 2018, 2021, 2023
+and 2024 all resolve to the same product. SCANFI v2 publishes 5-year steps
+from 1985 to 2025, so later steps exist and are simply not wired in.
+
+Two consequences, and the second is the serious one.
+
+A patch imaged in 2023 is described by 2020 ecology, so stand attributes are
+up to several years stale — tolerable for slow-changing structure, not for
+anything disturbance-sensitive.
+
+More importantly it makes the vintage mismatch against the published CFFDRS
+fuel layer **fixed and uncorrectable**. The layer is 2024, SCANFI is 2020, and
+any ground that burned between them has the two sources describing different
+stands. Measured on fire and confuser patches that is a percent-conifer MAE of
+0.79–0.88, against 0.22–0.30 on unburned ground. See
+`docs/results/fuel_type_agreement.md`.
+
+It also blocks the decisive test of that explanation: re-running SCANFI at the
+layer's own vintage is impossible while the selector is pinned, so the
+explanation stays inferred rather than isolated.
+
+**Replace with:** the nearest available SCANFI step per patch year, if the
+later products are published in the same layout the remote reader expects.

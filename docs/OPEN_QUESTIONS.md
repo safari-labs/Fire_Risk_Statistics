@@ -250,3 +250,51 @@ Keep both and let the nested ranking choose, or drop B8 in favour of the
 narrow B8A up front?
 
 **Answer:**
+
+---
+
+### Q16 — Can a later SCANFI time step be wired in?
+
+**Status:** OPEN
+**Blocks:** isolating the vintage explanation in the fuel-type comparison, and
+the staleness of every SCANFI-derived attribute.
+
+`_select_time_step` returns 2020 for every patch year, though SCANFI v2
+publishes 5-year steps to 2025. That pins the comparison against the 2024 fuel
+layer to a fixed four-year gap and makes the vintage explanation untestable —
+the clean experiment is to re-run SCANFI at the layer's own vintage and watch
+the disagreement collapse, and that cannot currently be run.
+
+Is 2020 a deliberate choice (the only step validated, or the only one the
+ecology model was trained against), or just the step that was wired first? If
+the latter, the remote reader already builds filenames by time step, so adding
+2025 may be close to free.
+
+Note it is not purely free scientifically: changing the step changes what the
+ecology model was distilled from, so Stage 1 labels and any existing checkpoint
+would need re-examining.
+
+**Answer:**
+
+---
+
+### Q17 — Should fuel-type agreement be scored on unburned patches only?
+
+**Status:** OPEN — provisional answer already acted on
+**Blocks:** the threshold calibration, which is running on unburned only.
+
+On fire and confuser patches the derived and published fuel types describe
+different ground, because the patch burned between SCANFI's 2020 and the
+layer's 2024. Calibrating thresholds there would tune them against
+disturbance rather than against the derivation's error, so the calibration run
+is restricted to unburned patches.
+
+That is almost certainly right, but it has a cost worth naming: unburned
+patches are, by selection, stable forest. Thresholds fitted there may not
+transfer to the recently disturbed and regenerating stands that carry the most
+fire interest — and those are exactly the stands the mission exists to watch.
+
+Accept the restriction, or find a disturbance mask that lets burned patches be
+included with their post-fire state properly accounted for?
+
+**Answer:**
