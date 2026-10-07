@@ -28,6 +28,8 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 FIG_DIR = _ROOT / "docs" / "results" / "figures"
+#: Written by Fire_Risk_Model/scripts/python/fuel_type_agreement.py.
+AGREE_DIR = _ROOT.parent / "Fire_Risk_Model" / "output" / "fuel_agreement"
 
 # Surfaces and ink from the Fire_Risk_FW house style.
 FIG_BG, AX_BG = "#0f1117", "#1a1d27"
@@ -329,12 +331,126 @@ def fig_cut_points():
     return _save(fig, "cut_points.png")
 
 
+def fig_pc_regression():
+    """Where the derivation puts its mass at each published level.
+
+    NOT a scatter or a 2D histogram. The published percent conifer is
+    DISCRETE -- the layer encodes it in its class codes, so it only ever takes
+    six values (0, 0.15, 0.25, 0.50, 0.75, 1.0). Plotting a continuous
+    derived value against it produces six vertical stripes and hides the one
+    thing worth seeing: at each published level, where does the derivation
+    actually sit?
+    """
+    import numpy as np
+    src = AGREE_DIR / "pairs.npz"
+    if not src.exists():
+        print(f"  skip pc_regression: {src} not found")
+        return None
+    z = np.load(src)
+    derived, published = z["derived_pc"], z["published_pc"]
+
+    levels = sorted(set(np.round(published, 2).tolist()))
+    groups = [derived[np.isclose(published, lv, atol=1e-3)] for lv in levels]
+    keep = [(lv, g) for lv, g in zip(levels, groups) if g.size >= 50]
+
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(7.0, 4.0), facecolor=FIG_BG)
+    _axes(ax, "Derived percent conifer at each published level",
+          xlabel="published percent conifer (the layer's own six values)",
+          ylabel="derived (from SCANFI)")
+
+    pos = range(len(keep))
+    bp = ax.boxplot([g for _, g in keep], positions=list(pos), widths=0.55,
+                    patch_artist=True, showfliers=False, zorder=3)
+    for box in bp["boxes"]:
+        box.set(facecolor=S1, alpha=0.75, edgecolor=INK_BRIGHT, linewidth=1.1)
+    for part in ("whiskers", "caps"):
+        for ln in bp[part]:
+            ln.set(color=INK, linewidth=1.1)
+    for med in bp["medians"]:
+        med.set(color=INK_BRIGHT, linewidth=1.8)
+
+    # Where each box SHOULD sit if the two agreed.
+    ax.plot(list(pos), [lv for lv, _ in keep], marker="D", ms=7, ls="--",
+            lw=1.4, color=S2, zorder=4, label="published value (perfect agreement)")
+
+    ax.set_xticks(list(pos))
+    ax.set_xticklabels([f"{lv:.2f}" for lv, _ in keep], color=INK, fontsize=9,
+                       family="monospace")
+    for i, (lv, g) in enumerate(keep):
+        ax.text(i, 1.04, f"{g.size/1000:.0f}k", ha="center", color=MUTED,
+                fontsize=7.6, family="monospace")
+    ax.set_ylim(-0.03, 1.10)
+    ax.legend(loc="lower right", facecolor=AX_BG, edgecolor=SPINE,
+              labelcolor=INK, fontsize=8.5, framealpha=0.95)
+
+    fig.text(0.0, -0.20, chr(10).join([
+        "29 unburned sites, 200k sampled fuel pixels; counts above each box. Boxes are "
+        "quartiles, whiskers 1.5 IQR, outliers hidden.",
+        "Every box sits ABOVE its diamond except at the top of the range: the derivation "
+        "reads more conifer than the layer at",
+        "every level, which is the +0.098 bias. The gap is widest where the layer says "
+        "pure deciduous, matching the 0.4%",
+        "categorical agreement on D-1/D-2.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
+    return _save(fig, "pc_regression.png")
+
+
+def fig_class_agreement():
+    """Where the categorical agreement actually fails."""
+    import json
+    src = AGREE_DIR / "agreement.json"
+    if not src.exists():
+        print(f"  skip class_agreement: {src} not found")
+        return None
+    per = json.load(open(src))["pooled"]["per_class"]
+    rows = sorted(((k, v[0], v[1]) for k, v in per.items()),
+                  key=lambda r: -r[2])
+
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(7.0, 3.8), facecolor=FIG_BG)
+    _axes(ax, "Agreement by published class",
+          xlabel="share of that class the derivation also calls that class")
+
+    UNREACHABLE = {"C-5", "C-7"}       # SCANFI folds white/red pine into OtherCon
+    labels, ys = [], []
+    for i, (name, hit, tot) in enumerate(rows):
+        y = len(rows) - 1 - i
+        frac = hit / tot if tot else 0.0
+        col = MUTED if name in UNREACHABLE else (S3 if frac >= 0.5 else
+              (WARN if frac >= 0.15 else S2))
+        ax.barh(y, frac, height=0.62, color=col, zorder=2)
+        ax.text(frac + 0.012, y, f"{frac*100:4.1f}%   {tot/1e6:.1f}M px",
+                va="center", color=INK, fontsize=8.3, family="monospace")
+        labels.append(name + ("  *" if name in UNREACHABLE else ""))
+        ys.append(y)
+
+    ax.set_yticks(ys); ax.set_yticklabels(labels, color=INK_BRIGHT, fontsize=9,
+                                          family="monospace")
+    ax.set_xlim(0, 1.0); ax.set_ylim(-0.7, len(rows) - 0.3)
+    ax.grid(axis="y", visible=False)
+
+    fig.text(0.0, -0.27, chr(10).join([
+        "Pooled over 29 unburned sites; 27.6% overall. The derivation agrees on closed "
+        "boreal spruce (C-2, 78%) and fails almost",
+        "completely on deciduous (D-1/D-2, 0.4% of 6.6M pixels) - the same story as the "
+        "+0.098 conifer bias, seen categorically.",
+        "",
+        "*  C-5 and C-7 are UNREACHABLE by construction: SCANFI folds white and red pine "
+        "into OtherCon, so the derivation",
+        "   can never emit them. 0% is the expected result, not a failure.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
+    return _save(fig, "class_agreement.png")
+
+
 def main() -> int:
     print("rendering Stage 1 result figures")
     fig_scene_split()
     fig_band_pool()
     fig_feasibility()
     fig_cut_points()
+    fig_pc_regression()
+    fig_class_agreement()
     print(f"\nall figures -> {FIG_DIR.relative_to(_ROOT)}")
     return 0
 

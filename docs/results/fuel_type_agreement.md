@@ -63,6 +63,43 @@ D-1/D-2 aspen, and post-fire boreal regeneration *is* deciduous — aspen and
 birch resprout first. A +0.76 bias is what comparing pre-fire conifer against
 post-fire aspen regeneration should look like.
 
+## The pooled run, corrected
+
+The first pooled figure reported **100% label agreement on every class**. That
+was a self-comparison: the published labelling was passed as the derived
+argument, so the layer was scored against itself. The tell was that per-patch
+agreement ran 14-42% while the pooled figure was 100%, and pooling cannot lift
+agreement above its parts. Fixed, and re-run over 29 distinct unburned
+locations (107 files deduplicate to 29 sites; SCANFI is pinned to 2020 and the
+layer is static, so repeated years of one site return identical rows).
+
+| | |
+|---|---|
+| sites | 29 distinct unburned locations |
+| pixels | 51.3M, of which 42.7M (83%) carry fuel |
+| percent-conifer MAE | **0.212** |
+| bias | **+0.098** (derivation reads more conifer) |
+| R² | **−0.071** |
+| label agreement | **27.6%** |
+| per-site MAE | 0.018 min, 0.220 median, 0.571 max |
+
+![Derived percent conifer at each published level](figures/pc_regression.png)
+
+The published percent conifer is discrete — the layer encodes it in its class
+codes, so it only takes six values. Plotted that way the result is stark: where
+the layer says **pure deciduous**, the derivation's median is **0.87**. The
+boxes barely track the diamonds anywhere except the conifer end, which is what
+a negative R² means in practice.
+
+![Agreement by published class](figures/class_agreement.png)
+
+Categorically the same story. The derivation agrees on closed boreal spruce
+(C-2, 78% of 10.3M pixels) and fails almost completely on deciduous (D-1/D-2,
+0.4% of 6.6M). C-5 and C-7 at 0% are expected rather than failures: SCANFI
+folds white and red pine into OtherCon, so the derivation can never emit them.
+
+![Judgement vs fitted cut points](figures/cut_points.png)
+
 ## Three consequences
 
 **1. Only unburned patches can calibrate the derivation.** On fire and
@@ -78,10 +115,12 @@ layer cannot describe a stand that burned in 2025" was a reasonable claim
 before; it is now a number. Note the caveat in the next section before leaning
 on it.
 
-**3. The derivation has real error even on stable ground.** MAE 0.22–0.30 and
-label agreement of 14–42% on unburned patches is not good. Some of that is
-threshold choice, which calibration can fix; some is SCANFI and the layer
-genuinely disagreeing about species. The calibration run will separate them.
+**3. The derivation is weak on stable ground, and calibration does not rescue
+it.** Pooled MAE 0.212 with R² −0.071 means it is slightly worse than
+predicting the mean percent conifer. Fitting the cut points moves them a long
+way (0.20/0.80 → 0.10/0.45) and still only reaches 67.3% three-class accuracy.
+This is a negative result about the derived fuel arm, not a tuning problem:
+the derivation systematically reads conifer where the layer reads deciduous.
 
 ## Caveats, which are substantial
 
