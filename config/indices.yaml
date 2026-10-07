@@ -1,0 +1,152 @@
+# Reference vegetation index catalogue (brief section 3).
+#
+# SCOPE WARNING. These indices are baselines and interpretability aids only.
+# Band selection in this study targets the physical variables (Cw, Cm, NPV
+# fraction, percent conifer), NOT index values. Methodological rule 3 forbids
+# using spectral-index thresholds as retrieval labels, and rule 4 requires band
+# sets to be judged by training the provisional retrieval model on them. An
+# index-based retrieval appears in Phase 4.3 solely as the heritage baseline to
+# beat.
+#
+# CAUTION (brief section 3). In grass and shrub fuels, visible greenness indices
+# can track LFMC deceptively well because greenness and moisture co-vary
+# seasonally. That shortcut fails in evergreen conifers, which is exactly the
+# case SAFARI must handle. Treat any strong greenness-LFMC correlation in a
+# grass scenario as suspect until it is reproduced in conifer.
+#
+# Each index is defined over band ROLES, not wavelengths, so the same definition
+# resolves against any candidate band set. `requires_roles` drives the
+# feasibility matrix: which candidate sets can form which index at all.
+#
+# Phase 0 does not evaluate these formulas. `formula` is documentation and a
+# forward-compatible field for the evaluator added in a later phase.
+
+name: reference_index_catalogue
+
+indices:
+  # ---- T1: canopy water / LFMC ----------------------------------------
+  - name: NDMI
+    aliases: [NDII]
+    long_name: Normalised Difference Moisture (Infrared) Index
+    target: T1
+    family: canopy_water
+    requires_roles: [NIR, SWIR1]
+    formula: "(NIR - SWIR1) / (NIR + SWIR1)"
+    notes: >-
+      The workhorse canopy-water index. Illustrates why band value is
+      conditional: the SWIR1 moisture signal is only usable in contrast
+      against NIR, so SWIR1 and NIR cannot be ranked independently.
+
+  - name: MSI
+    long_name: Moisture Stress Index
+    target: T1
+    family: canopy_water
+    requires_roles: [NIR, SWIR1]
+    formula: "SWIR1 / NIR"
+    notes: Simple ratio form of the same NIR/SWIR1 contrast as NDMI.
+
+  - name: NDWI_Gao
+    long_name: Gao's Normalised Difference Water Index
+    target: T1
+    family: canopy_water
+    requires_roles: [NIR, SWIR_1240]
+    formula: "(NIR - SWIR_1240) / (NIR + SWIR_1240)"
+    notes: >-
+      The index configuration B exists to support. Uses the weak 1240 nm water
+      feature, reachable on standard InGaAs. Whether it substitutes for the
+      SWIR1/SWIR2 pair on the dry-matter side of T1 is hypothesis H1/H3.
+
+  - name: NMDI
+    long_name: Normalised Multi-band Drought Index
+    target: T1
+    family: canopy_water
+    requires_roles: [NIR, SWIR1, SWIR2]
+    formula: "(NIR - (SWIR1 - SWIR2)) / (NIR + (SWIR1 - SWIR2))"
+    notes: >-
+      Uses the SWIR1/SWIR2 difference, so it needs extended InGaAs
+      (configuration C). One of the two water-sensitive bands with differing
+      water-to-dry-matter absorption ratios that hypothesis H1 calls for.
+
+  # ---- T2: curing, NPV, dry matter -------------------------------------
+  - name: NDTI
+    aliases: [NBR2]
+    long_name: Normalised Difference Tillage Index
+    target: T2
+    family: curing_npv
+    requires_roles: [SWIR1, SWIR2]
+    formula: "(SWIR1 - SWIR2) / (SWIR1 + SWIR2)"
+    notes: >-
+      Central to T2. Hypothesis H2 states SWIR2 is necessary for curing and
+      that 1240 nm is not a substitute; this index cannot be formed at all
+      without SWIR2, which is the config-level expression of that claim.
+
+  - name: CAI
+    long_name: Cellulose Absorption Index
+    target: T2
+    family: curing_npv
+    requires_roles: [SWIR_2000, SWIR_2100, SWIR_2200]
+    formula: "0.5 * (SWIR_2000 + SWIR_2200) - SWIR_2100"
+    hyperspectral_only: true
+    notes: >-
+      Requires three narrow bands across 2.0-2.2 um. Listed for completeness as
+      an upper bound on what the cellulose/lignin feature can give; not
+      achievable by any realistic SAFARI multispectral configuration. Expect it
+      to be infeasible for every candidate band set.
+
+  # ---- T3/T4 and general greenness, phenology, stress ------------------
+  - name: NDVI
+    long_name: Normalised Difference Vegetation Index
+    target: T4
+    family: greenness
+    requires_roles: [RED, NIR]
+    formula: "(NIR - RED) / (NIR + RED)"
+    notes: >-
+      The current FWI2025 remote-sensing option for grassland curing is
+      NDVI-based greenness. That makes NDVI the incumbent to improve on for T2,
+      despite being listed here under greenness.
+
+  - name: EVI
+    long_name: Enhanced Vegetation Index
+    target: T4
+    family: greenness
+    requires_roles: [BLUE, RED, NIR]
+    formula: "2.5 * (NIR - RED) / (NIR + 6.0 * RED - 7.5 * BLUE + 1.0)"
+
+  - name: VARI
+    long_name: Visible Atmospherically Resistant Index
+    target: T4
+    family: greenness
+    requires_roles: [BLUE, GREEN, RED]
+    formula: "(GREEN - RED) / (GREEN + RED - BLUE)"
+
+  - name: NDRE
+    long_name: Normalised Difference Red Edge
+    target: T3
+    family: greenness
+    requires_roles: [RED_EDGE1, NIR]
+    formula: "(NIR - RED_EDGE1) / (NIR + RED_EDGE1)"
+    notes: Red-edge stress signal, relevant to T3 mortality and defoliation.
+
+  # ---- Disturbance and burn history ------------------------------------
+  - name: NBR
+    long_name: Normalised Burn Ratio
+    target: T3
+    family: disturbance
+    requires_roles: [NIR, SWIR2]
+    formula: "(NIR - SWIR2) / (NIR + SWIR2)"
+    notes: >-
+      Used with CanLaBS v2 severity in the Phase 6 fire-outcome tests, which
+      are restricted to bands the archive sensors actually measure.
+
+  # ---- Ancillary: snow, cloud, winter conifer mapping -------------------
+  - name: NDSI
+    long_name: Normalised Difference Snow Index
+    target: ancillary
+    family: snow_cloud
+    requires_roles: [GREEN, SWIR1]
+    formula: "(GREEN - SWIR1) / (GREEN + SWIR1)"
+    notes: >-
+      Supports two ancillary requirements at once: cloud/snow discrimination,
+      and snow-off timing, which keys the FWI season start-up as a surrogate
+      for ground thaw. Also underpins the snow-on conifer/deciduous separation
+      behind T4.

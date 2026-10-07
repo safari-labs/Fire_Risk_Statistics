@@ -1,0 +1,27 @@
+# Orbit and sampling geometry.
+#
+# PLACEHOLDER. Open question Q2 (orbit altitude, local overpass time, target
+# GSD and swath) is unanswered. A sun-synchronous mid-morning orbit is assumed
+# as the conventional default for land imaging; the overpass time matters for
+# the high solar zenith angles of spring overpasses at 45-60 N, which are an
+# explicit Phase 1 confounder. See docs/ASSUMPTIONS.md (A-4).
+
+name: default_orbit
+placeholder: true
+source: "PLACEHOLDER - pending open question Q2"
+
+altitude_km: 550.0
+orbit_type: sun_synchronous
+local_solar_overpass_time: "10:30"
+
+gsd_m: 30.0
+swath_km: 60.0
+
+# Integration time follows from ground velocity and GSD once the orbit is fixed;
+# stated explicitly here because Phase 2 radiometry needs it directly.
+integration_time_ms: 4.0
+tdi_stages: 1
+
+# Latitude band of interest: boreal Canada. Drives the solar zenith angles that
+# Phase 1 must sample.
+target_latitude_range_deg: [45.0, 60.0]

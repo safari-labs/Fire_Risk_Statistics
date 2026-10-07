@@ -1,0 +1,33 @@
+# Extended-wavelength InGaAs detector, required for a ~2100-2300 nm SWIR2 band
+# (brief section 5, configuration C). Much higher dark current and deeper TEC
+# cooling than standard InGaAs -- this is the main cost/SWaP driver of the study.
+#
+# PLACEHOLDER. Representative values for a COTS extended InGaAs array,
+# NOT a datasheet figure for a selected part. Replace once James answers
+# open question Q4. See docs/ASSUMPTIONS.md (A-2).
+
+name: ingaas_ext
+placeholder: true
+technology: ingaas_extended
+source: "PLACEHOLDER - representative COTS extended InGaAs values, no part selected"
+
+spectral_range_nm: [900.0, 2500.0]
+
+qe_curve:
+  wavelength_nm: [900, 1100, 1300, 1500, 1700, 1900, 2100, 2200, 2300, 2400, 2500]
+  qe: [0.40, 0.62, 0.68, 0.70, 0.70, 0.68, 0.64, 0.60, 0.52, 0.35, 0.12]
+
+# Roughly two orders of magnitude above standard InGaAs at the same temperature;
+# this is why deeper cooling is needed. The placeholder operating temperature
+# assumes a multi-stage TEC.
+dark_current:
+  reference_temperature_k: 293.15
+  reference_e_per_s: 3000000.0
+  doubling_temperature_k: 7.0
+
+read_noise_e: 60.0
+full_well_e: 1500000.0
+pixel_pitch_um: 15.0
+operating_temperature_k: 233.15
+tec_cooled: true
+tec_stages: 3

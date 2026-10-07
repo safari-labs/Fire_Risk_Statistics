@@ -1,0 +1,94 @@
+# Atmospheric transmission constraints on candidate band placement.
+#
+# This file is the machine-readable form of methodological rule 7 in CLAUDE.md:
+# leaf water features at 1450 and 1940 nm are unusable from orbit, and candidate
+# SWIR bands sit near 1230-1250, 1550-1750 and 2100-2300 nm.
+#
+# Enforced by safari_bands.config.validators.check_atmospheric_windows.
+#
+# STATUS: provisional. Edge wavelengths are drawn from the brief plus standard
+# atmospheric-window knowledge, not yet from a 6S/libRadtran transmittance run.
+# Phase 2 should replace these with computed transmittance thresholds.
+# See docs/ASSUMPTIONS.md (A-1).
+
+name: nominal_atmospheric_windows
+placeholder: true
+source: >-
+  PLACEHOLDER - region edges from the brief plus standard atmospheric-window
+  knowledge, not from a computed 6S/libRadtran transmittance spectrum.
+  Replace in Phase 2.
+
+# Overlap between a band and a forbidden region is tested at two widths.
+#
+# error_fwhm_multiplier (1.0) is the band's nominal FWHM extent: the part of
+# the response that carries the measurement. Overlap here is an error.
+#
+# warn_fwhm_multiplier (2.0) reaches into the SRF skirts. Overlap only out
+# there is a warning, and is separately accounted for by each band's
+# out_of_band_leakage.
+#
+# A single aggressive threshold does not work: Sentinel-2's 1610 nm band has
+# 90 nm FWHM, so testing at 3x FWHM would reject a band that works in orbit.
+error_fwhm_multiplier: 1.0
+warn_fwhm_multiplier: 2.0
+
+forbidden_regions:
+  - name: o2_a_band
+    range_nm: [755.0, 775.0]
+    reason: >-
+      Oxygen A-band absorption. Deep and narrow; unusable for surface retrieval
+      and a hazard for any band whose skirt reaches into it.
+
+  - name: o2_1270
+    range_nm: [1262.0, 1288.0]
+    reason: >-
+      Oxygen band at 1270 nm. The brief places the SWIR moisture band at
+      1230-1250 nm specifically to stay clear of this feature.
+
+  - name: water_vapour_1400
+    range_nm: [1330.0, 1490.0]
+    reason: >-
+      Strong water vapour absorption centred near 1400-1450 nm. The 1450 nm leaf
+      water feature sits inside it and is unusable from orbit (rule 7).
+
+  - name: water_vapour_1900
+    range_nm: [1780.0, 1980.0]
+    reason: >-
+      Strong water vapour absorption centred near 1940 nm. The 1940 nm leaf water
+      feature sits inside it and is unusable from orbit (rule 7).
+
+  - name: co2_h2o_2500_edge
+    range_nm: [2400.0, 2600.0]
+    reason: >-
+      Combined CO2 and water vapour absorption closing the SWIR2 window above
+      ~2350 nm; also the upper edge of the PROSPECT/4SAIL 400-2500 nm domain.
+
+# Windows in which candidate SWIR bands may be placed (rule 7). Advisory: used to
+# report whether a band sits in a sanctioned window, not to reject it outright,
+# so that Phase 4's candidate grid can explore beyond these if justified.
+permitted_swir_windows:
+  - name: swir_1240
+    range_nm: [1230.0, 1250.0]
+    note: Gao's NDWI water band; clear of the 1270 nm O2 feature.
+  - name: swir1
+    range_nm: [1550.0, 1750.0]
+    note: SWIR1 moisture window; contains the Sentinel-2 1610 nm centre.
+  - name: swir2
+    range_nm: [2100.0, 2300.0]
+    note: >-
+      SWIR2 cellulose/lignin window; contains the Sentinel-2 2190 nm centre.
+      Requires extended-wavelength InGaAs or HgCdTe.
+
+# Bands declared with purpose "atmospheric" are exempt from the forbidden-region
+# check, because they exist precisely to sense the atmosphere. Listed here so the
+# exemption is explicit rather than implicit in code.
+atmospheric_purpose_exemptions:
+  - name: cirrus_1375
+    range_nm: [1360.0, 1390.0]
+    note: >-
+      Cirrus detection band. Works because the 1400 nm water vapour region is
+      opaque to surface return, so only high thin cloud is seen. Shares the
+      standard InGaAs focal plane (brief section 5).
+  - name: water_vapour_945
+    range_nm: [930.0, 960.0]
+    note: Column water vapour retrieval for atmospheric correction.

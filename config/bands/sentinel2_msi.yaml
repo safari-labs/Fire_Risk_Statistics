@@ -1,0 +1,66 @@
+# Sentinel-2 MSI equivalent band set.
+#
+# ROLE: positive benchmark (brief section 6, Phase 4.3). A band set known to
+# support operational fuel-condition retrieval. Any SAFARI configuration that
+# cannot approach this is under-specified.
+#
+# Centres are the nominal values the brief asks SAFARI to match where it costs
+# little (section 5), which also enables cross-calibration, training on the S2
+# archive and filling revisit gaps. FWHM values are nominal S2A figures.
+#
+# No detector is assigned: this describes a reference sensor, not a SAFARI
+# build, so the detector spectral-range check does not apply.
+
+name: sentinel2_msi
+description: Sentinel-2 MSI equivalent band set, used as the positive benchmark.
+role_in_study: positive_benchmark
+
+bands:
+  - name: B2
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 65.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B3
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B4
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B5
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B6
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B8A
+    role: NIR
+    centre_nm: 865.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B11
+    role: SWIR1
+    centre_nm: 1610.0
+    fwhm_nm: 90.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B12
+    role: SWIR2
+    centre_nm: 2190.0
+    fwhm_nm: 180.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01

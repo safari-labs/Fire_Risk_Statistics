@@ -1,0 +1,91 @@
+# SAFARI configuration B: VNIR + ~1240 nm + ~1610 nm on one standard InGaAs
+# focal plane, plus a 1375 nm cirrus band sharing the same detector.
+#
+# Brief section 5: because B shares optics and focal plane with SWIR1, it adds
+# no new cross-chain registration problem. The key output of the study is the
+# fraction of configuration C's retrieval performance that B recovers, per target.
+#
+# Hypothesis H3 predicts B recovers a good share for T1 canopy water, but little
+# for T2 curing or the dry-matter side of T1. Hypothesis H2 predicts 1240 nm is
+# not a substitute for SWIR2 on T2. Phase 4 tests both.
+#
+# The 1240 nm centre sits in the 1230-1250 nm window, deliberately clear of the
+# 1270 nm O2 band (rule 7).
+#
+# The VNIR set here is provisional; it is optimised in Phase 4.
+
+name: config_b
+description: VNIR plus ~1240 and ~1610 nm on one standard InGaAs focal plane.
+role_in_study: candidate
+swir_content: "~1240 + ~1610 nm"
+detector_class: standard_ingaas
+
+bands:
+  - name: blue
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: green
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red_edge1
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red_edge2
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: nir
+    role: NIR
+    centre_nm: 865.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: swir_1240
+    role: SWIR_1240
+    centre_nm: 1240.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  - name: swir1
+    role: SWIR1
+    centre_nm: 1610.0
+    fwhm_nm: 90.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  # Atmospheric band: shares the standard InGaAs focal plane at no extra
+  # detector cost (brief section 5). Exempt from the forbidden-region check
+  # because it exists to sense high thin cloud inside the 1400 nm water
+  # vapour absorption, where the surface return is opaque.
+  - name: cirrus
+    role: CIRRUS
+    centre_nm: 1375.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+    purpose: atmospheric

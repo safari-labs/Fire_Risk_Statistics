@@ -1,0 +1,27 @@
+# Telescope / foreoptics.
+#
+# PLACEHOLDER. Nothing here has been set by James -- open question Q3
+# (aperture, f-number, transmission, integration time, TDI availability).
+# These values are a self-consistent starting point for a small cubesat
+# telescope only, so that the Phase 2 radiometry has something to run on.
+# See docs/ASSUMPTIONS.md (A-3).
+
+name: default_optics
+placeholder: true
+source: "PLACEHOLDER - pending open question Q3"
+
+aperture_diameter_mm: 70.0
+focal_length_mm: 280.0
+f_number: 4.0
+
+# Total optical transmission including all elements, excluding the band filter.
+# Scalar for now; replace with a wavelength-dependent curve when the design exists.
+transmission: 0.75
+
+# Filter architecture drives band-to-band registration, which is a flagged
+# engineering risk for the VNIR/SWIR split. Pending open question Q5.
+filter_architecture: "PLACEHOLDER - pending Q5 (strip filters / filter wheel / separate cameras)"
+
+# Separate VNIR (silicon) and SWIR (InGaAs) chains are expected, per brief
+# section 1. Cross-chain co-registration error is a Phase 5 sensitivity axis.
+separate_vnir_swir_chains: true

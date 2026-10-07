@@ -1,0 +1,20 @@
+# Environments
+.venv/
+venv/
+*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Large generated data and run outputs (keep the scripts that regenerate them)
+data/
+runs/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

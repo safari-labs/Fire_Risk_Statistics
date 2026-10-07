@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv *)",
+      "Bash(python -m venv .venv)",
+      "Bash(./.venv/Scripts/python.exe --version)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --quiet --upgrade pip)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --quiet -e \".[dev]\")",
+      "Bash(./.venv/Scripts/python.exe -m pytest)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/test_config_loading.py::test_every_detector_loads)",
+      "Bash(./.venv/Scripts/safari-bands.exe validate *)",
+      "Bash(./.venv/Scripts/safari-bands.exe indices *)",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(./.venv/Scripts/python.exe -m ruff check .)",
+      "Bash(./.venv/Scripts/python.exe -m ruff check . --fix)",
+      "Bash(./.venv/Scripts/python.exe -m ruff check . --select E501)",
+      "Bash(python -)",
+      "Bash(echo \"exit=$?\")"
+    ]
+  }
+}

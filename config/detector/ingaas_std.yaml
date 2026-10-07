@@ -1,0 +1,32 @@
+# Standard InGaAs detector, SWIR chain. Cuts off near 1.7 um, so 1240 nm,
+# ~1610 nm and a 1375 nm cirrus band can share this one focal plane
+# (brief section 5, configurations A and B).
+#
+# PLACEHOLDER. Representative values for a COTS standard InGaAs array,
+# NOT a datasheet figure for a selected part. Replace once James answers
+# open question Q4. See docs/ASSUMPTIONS.md (A-2).
+
+name: ingaas_std
+placeholder: true
+technology: ingaas_standard
+source: "PLACEHOLDER - representative COTS standard InGaAs values, no part selected"
+
+# The 1.7 um cutoff is the defining constraint: it is what makes a ~2190 nm
+# SWIR2 band impossible on this detector (configuration C needs extended InGaAs).
+spectral_range_nm: [900.0, 1700.0]
+
+qe_curve:
+  wavelength_nm: [900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1650, 1700]
+  qe: [0.55, 0.72, 0.78, 0.80, 0.81, 0.81, 0.80, 0.78, 0.70, 0.40]
+
+dark_current:
+  reference_temperature_k: 293.15
+  reference_e_per_s: 20000.0
+  doubling_temperature_k: 8.0
+
+read_noise_e: 40.0
+full_well_e: 500000.0
+pixel_pitch_um: 15.0
+operating_temperature_k: 273.15
+tec_cooled: true
+tec_stages: 1

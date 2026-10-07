@@ -1,0 +1,80 @@
+# SAFARI configuration C: VNIR + ~1610 nm + ~2190 nm on extended InGaAs.
+#
+# Brief section 5: the ~2100-2300 nm SWIR2 band needs extended-wavelength
+# InGaAs (much higher dark current, deeper TEC cooling) or HgCdTe. This is the
+# main cost/SWaP driver, and the reason the study ranks bands by marginal
+# retrieval value per marginal cost rather than by value alone.
+#
+# This configuration is the reference against which B is measured: the key
+# output is the fraction of C's performance that B recovers, per target.
+# Cellulose/lignin absorption near 2100 nm is what drives NPV/soil separation
+# (target T2), so C is expected to dominate on curing.
+#
+# The 2190 nm centre also serves dark-target aerosol retrieval, which pairs
+# ~2.1 um with blue/red (brief section 3, ancillary requirements).
+#
+# The VNIR set here is provisional; it is optimised in Phase 4.
+
+name: config_c
+description: VNIR plus ~1610 and ~2190 nm on extended-wavelength InGaAs.
+role_in_study: candidate
+swir_content: "~1610 + ~2190 nm"
+detector_class: extended_ingaas
+
+bands:
+  - name: blue
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: green
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red_edge1
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red_edge2
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: nir
+    role: NIR
+    centre_nm: 865.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: swir1
+    role: SWIR1
+    centre_nm: 1610.0
+    fwhm_nm: 90.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_ext
+  - name: swir2
+    role: SWIR2
+    centre_nm: 2190.0
+    fwhm_nm: 180.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_ext

@@ -1,0 +1,155 @@
+# Assumptions
+
+Every value the study uses that James has not confirmed. Each entry says what
+was assumed, why, what it affects, and which open question replaces it.
+
+Placeholder configs carry `placeholder: true` and a `source:` string, so
+`safari-bands validate` lists them on every run. Nothing here should survive
+into a final requirements table without being replaced or explicitly accepted.
+
+Status key: **OPEN** = still a stand-in. **RESOLVED** = replaced by a confirmed
+value (keep the row, note what it became).
+
+---
+
+## A-1 — Atmospheric window edges are nominal, not computed
+
+**Status:** OPEN
+**File:** `config/atmospheric_windows.yaml`
+
+The forbidden regions (O2-A 755–775, O2 1262–1288, water vapour 1330–1490 and
+1780–1980, CO2/H2O above 2400 nm) come from the brief's rule 7 plus standard
+atmospheric-window knowledge. They are not derived from a computed
+transmittance spectrum.
+
+The two-threshold scheme is also a judgement call: overlap within 1.0× FWHM is
+an error, overlap out to 2.0× FWHM is a warning. This was calibrated so that
+Sentinel-2's own 1610 nm band (90 nm FWHM) passes — a single aggressive
+threshold rejected a band that demonstrably works in orbit.
+
+**Affects:** which candidate band centres Phase 4 is allowed to consider.
+**Replace with:** 6S or libRadtran transmittance in Phase 2; set the edges at a
+stated transmittance threshold rather than by hand.
+
+---
+
+## A-2 — Detector parameters are representative, not datasheet
+
+**Status:** OPEN — blocks meaningful Phase 2 output
+**Files:** `config/detector/silicon_cmos.yaml`, `ingaas_std.yaml`, `ingaas_ext.yaml`
+
+QE curves, dark current, read noise, full well, pixel pitch and operating
+temperature are plausible values for COTS parts of each technology. No part has
+been selected and no datasheet has been consulted.
+
+The one structural claim that is *not* a placeholder is the standard-InGaAs
+1.7 µm cutoff. That is a property of the material, it is what makes a ~2190 nm
+band impossible on standard InGaAs, and it is enforced by
+`check_detector_coverage`. The study's main cost/SWaP trade rests on it.
+
+The extended-InGaAs dark current is set about two orders of magnitude above
+standard InGaAs at the same temperature, which is the right order but not a
+measured figure.
+
+**Affects:** every SNR number, and therefore every noisy retrieval result
+(rule 6 requires noise in every evaluation).
+**Replace with:** answers to **Q4**.
+
+---
+
+## A-3 — Optics are a self-consistent guess
+
+**Status:** OPEN
+**File:** `config/optics/default.yaml`
+
+70 mm aperture, 280 mm focal length, f/4, 0.75 transmission. Chosen only so
+Phase 2 radiometry has something to run on. Filter architecture is unset, which
+matters because it drives band-to-band registration — a flagged engineering
+risk for the VNIR/SWIR split.
+
+**Affects:** signal levels, hence SNR, hence Phase 5's SNR requirement line.
+**Replace with:** answers to **Q3** and **Q5**.
+
+---
+
+## A-4 — Orbit is a conventional sun-synchronous default
+
+**Status:** OPEN
+**File:** `config/orbit/default.yaml`
+
+550 km, sun-synchronous, 10:30 local overpass, 30 m GSD, 60 km swath, 4 ms
+integration. A mid-morning descending orbit is the conventional choice for land
+imaging; 30 m GSD matches SCANFI and the CFFDRS fuel type layer, which makes
+comparison convenient.
+
+Overpass time is not a free parameter scientifically: it sets the solar zenith
+angle, and the spring overpasses at 45–60° N that Phase 1 must sample are
+exactly the high-SZA, high-risk case.
+
+**Affects:** illumination geometry in Phase 1 scenarios, signal level in Phase 2.
+**Replace with:** answers to **Q2**.
+
+---
+
+## A-5 — VNIR band set is provisional
+
+**Status:** OPEN by design — Phase 4 resolves this
+**Files:** `config/bands/config_a.yaml`, `config_b.yaml`, `config_c.yaml`
+
+All three configurations carry the same six VNIR bands at Sentinel-2 centres
+(490, 560, 665, 705, 740, 865 nm). This is a starting point, not a result: the
+brief has Phase 4 optimise the VNIR set, and the whole point of the study is to
+replace the working priority list with a nested ranking.
+
+FWHM values are round numbers, not derived from a filter design. One consequence
+is already visible: the 740 nm band at 20 nm FWHM has skirts reaching the O2-A
+band, which `safari-bands validate` reports as a warning. Sentinel-2's B6 avoids
+this with 15 nm FWHM. Worth revisiting in Phase 4/5.
+
+**Replace with:** the Phase 4 nested ranking.
+
+---
+
+## A-6 — Index catalogue is for baselines only
+
+**Status:** by design, not a placeholder
+**File:** `config/indices.yaml`
+
+The catalogue exists to support the heritage index baseline (Phase 4.3) and to
+make results interpretable. Methodological rule 3 forbids using index thresholds
+as retrieval labels and rule 4 requires band sets to be judged by training the
+provisional retrieval model on them.
+
+Recorded here so the distinction is not lost later: a band set that can form
+more indices has **not** been shown to be better at anything.
+
+---
+
+## A-7 — Environment: numpy is capped below 2.6
+
+**Status:** OPEN, technical
+**File:** `pyproject.toml`
+
+`prosail` 2.0.5 (Phase 1) depends on numba, and numba 0.67 requires
+`numpy>=1.22,<2.6`. The `sim` extra pins accordingly.
+
+Two things this confirms, checked before committing to the stack: `prosail`
+ships a pure-Python universal wheel, so Phase 1 needs no Fortran toolchain on
+Windows; and it implements PROSPECT-5 and PROSPECT-D with 4SAIL, but **not**
+PROSPECT-PRO. The brief asks that PROSPECT-PRO availability be checked — the
+answer is that it is not in the Python package, so PROSPECT-PRO would mean
+porting from Féret's R `prospect` package or calling R.
+
+The system Python (Windows Store 3.12.10) has an incompatible numpy/scipy pair
+installed globally; the project uses `.venv` and does not touch it.
+
+---
+
+## A-8 — Phase 2 atmospheric tooling is unverified on Windows
+
+**Status:** OPEN, technical — check before planning Phase 2
+**File:** none yet
+
+Py6S needs the 6S Fortran executable built separately, and libRadtran is
+effectively Linux-only. Neither has been tested here. This may force WSL, a
+container, or precomputed look-up tables for Phase 2.

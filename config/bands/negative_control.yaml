@@ -1,0 +1,45 @@
+# Deliberately poor band set.
+#
+# ROLE: negative control (brief section 6, Phase 4.3). A band set that should
+# perform badly on every target. If a selection method or a retrieval model
+# scores this set well, the evaluation is broken.
+#
+# It is built to fail in the specific way the Kanyini study failed (brief
+# section 8): four near-duplicate red bands carrying almost the same
+# information, no water-sensitive band anywhere, no red edge, no SWIR. Any
+# apparent skill from this set comes from redundancy or leakage, not physics.
+#
+# The centres are 8 nm apart with 15 nm FWHM, so the responses overlap well
+# above half maximum -- the same kind of redundancy as VIIRS I2 and M7 sharing
+# 846-885 nm. This set must trip check_band_separation and must be able to
+# form no index at all.
+
+name: negative_control
+description: Four overlapping red bands; no water sensitivity, no SWIR, no red edge.
+role_in_study: negative_control
+
+bands:
+  - name: red_a
+    role: RED
+    centre_nm: 660.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: red_b
+    role: RED_DUP1
+    centre_nm: 668.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: red_c
+    role: RED_DUP2
+    centre_nm: 676.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: red_d
+    role: RED_DUP3
+    centre_nm: 684.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01

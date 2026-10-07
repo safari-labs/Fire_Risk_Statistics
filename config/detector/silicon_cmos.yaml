@@ -1,0 +1,30 @@
+# Silicon CMOS detector, VNIR chain (~400-1000 nm).
+#
+# PLACEHOLDER. Every number below is a representative value for a COTS
+# scientific CMOS sensor, NOT a datasheet figure for a selected part.
+# Replace once James answers open question Q4 (candidate detectors with
+# datasheets). See docs/ASSUMPTIONS.md (A-2).
+
+name: silicon_cmos
+placeholder: true
+technology: silicon_cmos
+source: "PLACEHOLDER - representative COTS sCMOS values, no part selected"
+
+spectral_range_nm: [400.0, 1000.0]
+
+# Quantum efficiency, sampled. Linearly interpolated between points.
+qe_curve:
+  wavelength_nm: [400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000]
+  qe: [0.35, 0.55, 0.68, 0.72, 0.72, 0.68, 0.62, 0.55, 0.45, 0.33, 0.20, 0.10, 0.03]
+
+# Dark current doubles every doubling_temperature_k above reference.
+dark_current:
+  reference_temperature_k: 293.15
+  reference_e_per_s: 5.0
+  doubling_temperature_k: 7.0
+
+read_noise_e: 3.0
+full_well_e: 30000.0
+pixel_pitch_um: 5.5
+operating_temperature_k: 293.15
+tec_cooled: false
