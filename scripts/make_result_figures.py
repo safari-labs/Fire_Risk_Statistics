@@ -184,9 +184,19 @@ def fig_band_pool():
 
 SETS = ["config_a", "config_b", "config_c",
         "sentinel2_11band_candidates", "sentinel2_msi", "negative_control"]
-SHORT = {"config_a": "A", "config_b": "B", "config_c": "C",
-         "sentinel2_11band_candidates": "S2 11-band",
-         "sentinel2_msi": "S2 MSI", "negative_control": "control"}
+
+# "A", "B", "C" mean nothing without the bands behind them, and the whole
+# point of the figure is which SWIR content a configuration carries. Each
+# column header therefore names the set AND its SWIR bands, since that is the
+# only axis the three SAFARI configurations differ on.
+COLHEAD = {
+    "config_a":                    ("Config A", "VNIR|+1610"),
+    "config_b":                    ("Config B", "VNIR|+1240|+1610"),
+    "config_c":                    ("Config C", "VNIR|+1610|+2190"),
+    "sentinel2_11band_candidates": ("S2 pool", "11 bands|400-1750"),
+    "sentinel2_msi":               ("S2 MSI", "full|+2190"),
+    "negative_control":            ("control", "4 red|bands only"),
+}
 
 
 def fig_feasibility():
@@ -205,8 +215,8 @@ def fig_feasibility():
             res = resolve_index(idx, band_sets[key])
             grid[r, c] = 1.0 if res.feasible else (0.5 if res.hyperspectral_only else 0.0)
 
-    fig, ax = plt.subplots(figsize=(6.4, 4.6), facecolor=FIG_BG)
-    _axes(ax, "Which index each band set can form")
+    fig, ax = plt.subplots(figsize=(7.0, 5.0), facecolor=FIG_BG)
+    _axes(ax, "Which index each band set can form, from band placement alone")
     ax.grid(False)
 
     from matplotlib.colors import ListedColormap
@@ -222,7 +232,15 @@ def fig_feasibility():
                     family="monospace")
 
     ax.set_xticks(range(len(SETS)))
-    ax.set_xticklabels([SHORT[s] for s in SETS], color=INK_BRIGHT, fontsize=9)
+    ax.set_xticklabels([COLHEAD[s][0] for s in SETS], color=INK_BRIGHT, fontsize=9.5)
+    # Band content BELOW the tick labels. Drawn in data-x / axes-y with a
+    # pixel offset: in data coordinates it landed on top of the tick label.
+    for c, key in enumerate(SETS):
+        ax.annotate(chr(10).join(COLHEAD[key][1].split("|")),
+                    xy=(c, 0), xycoords=("data", "axes fraction"),
+                    xytext=(0, -30), textcoords="offset points",
+                    ha="center", va="top", color=MUTED, fontsize=7.6,
+                    family="monospace", linespacing=1.5, annotation_clip=False)
     ax.set_yticks(range(len(names)))
     ax.set_yticklabels([f"{n}  ({i.target})" for n, i in zip(names, cat.indices)],
                        color=INK, fontsize=8.5, family="monospace")
@@ -231,10 +249,14 @@ def fig_feasibility():
     ax.grid(which="minor", color=FIG_BG, lw=2)
     ax.tick_params(which="minor", length=0)
 
-    fig.text(0.0, -0.04,
-             "Configurations A and B can form no curing index (T2) at any SNR: NDTI needs a "
-             "SWIR1/SWIR2 contrast they do not carry.",
-             color=MUTED, fontsize=8.2, ha="left")
+    fig.text(0.0, -0.175, chr(10).join([
+        "Rows are reference indices, with the retrieval target they serve. "
+        "Configurations A and B can form no curing index (T2) at any SNR:",
+        "NDTI needs a SWIR1/SWIR2 contrast they do not carry. The control is a "
+        "deliberately bad set - four overlapping red bands, no water",
+        "sensitivity - and forming nothing is the correct result for it. "
+        "CAI needs three narrow 2.0-2.2 um bands, so no multispectral set reaches it.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
     return _save(fig, "index_feasibility.png")
 
 
@@ -243,36 +265,67 @@ def fig_feasibility():
 # ──────────────────────────────────────────────────────────────────────────
 
 def fig_cut_points():
-    plt = _plt()
-    fig, ax = plt.subplots(figsize=(7.0, 2.3), facecolor=FIG_BG)
-    _axes(ax, "Percent-conifer cut points, judgement vs fitted",
-          xlabel="percent conifer")
+    """Why two thresholds exist at all, and where they land.
 
-    rows = [("judgement", 0.20, 0.80, MUTED, None),
-            ("fitted", 0.10, 0.45, S1, "67.3% three-class accuracy")]
-    for i, (lab, lo, hi, col, acc) in enumerate(rows):
+    The derivation produces a CONTINUOUS percent conifer; the published layer
+    reports DISCRETE classes. Comparing them means cutting the continuum into
+    three classes, which needs two boundaries -- and those boundaries were a
+    guess until they were fitted.
+    """
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(7.6, 3.2), facecolor=FIG_BG)
+    _axes(ax, "Turning continuous percent conifer into the layer's three classes",
+          xlabel="percent conifer  (0 = all broadleaf,  1 = all conifer)")
+
+    ZONE = [("deciduous", S2), ("mixedwood", WARN), ("conifer", S3)]
+    rows = [
+        ("judgement", 0.20, 0.80, "guessed when the derivation was written"),
+        ("fitted",    0.10, 0.45, "best match to the layer — 67.3% correct"),
+    ]
+
+    for i, (lab, lo, hi, note) in enumerate(rows):
         y = len(rows) - 1 - i
-        ax.plot([0, 1], [y, y], color=SPINE, lw=7, solid_capstyle="round", zorder=1)
-        ax.plot([lo, hi], [y, y], color=col, lw=7, solid_capstyle="round",
-                alpha=0.42, zorder=2)
-        ax.scatter([lo, hi], [y, y], s=74, color=col, zorder=3,
-                   edgecolors=AX_BG, linewidths=1.6)
+        for (zname, zcol), (a, b) in zip(ZONE, [(0, lo), (lo, hi), (hi, 1)]):
+            ax.barh(y, b - a, left=a, height=0.42, color=zcol, alpha=0.78,
+                    edgecolor=AX_BG, linewidth=2, zorder=2)
+            if b - a > 0.13:                       # only label a zone with room
+                ax.text((a + b) / 2, y, zname, ha="center", va="center",
+                        color="#0f1117", fontsize=8.8, fontweight="bold", zorder=3)
         for v in (lo, hi):
-            ax.text(v, y + 0.22, f"{v:.2f}", color=INK, fontsize=8.5,
-                    ha="center", family="monospace")
-        if acc:
-            ax.text(1.03, y, acc, color=INK, fontsize=8.5, va="center")
+            ax.plot([v, v], [y - 0.30, y + 0.30], color=INK_BRIGHT, lw=1.6, zorder=4)
+            ax.text(v, y + 0.345, f"{v:.2f}", ha="center", va="bottom",
+                    color=INK_BRIGHT, fontsize=9, family="monospace", zorder=4)
+        ax.text(1.015, y, note, va="center", color=INK, fontsize=8.4)
+
+    # Both boundaries moved LEFT, which is the finding: the derivation reads
+    # systematically more conifer than the layer, so the cuts must drop to
+    # compensate.
+    for a, b in [(0.20, 0.10), (0.80, 0.45)]:
+        ax.annotate("", xy=(b, 0.42), xytext=(a, 0.58),
+                    arrowprops=dict(arrowstyle="->", color=MUTED, lw=1.3,
+                                    shrinkA=0, shrinkB=0))
+    ax.text(0.625, 0.655, "both cuts move left", color=MUTED, fontsize=8.2,
+            ha="center", va="bottom", style="italic")
 
     ax.set_yticks(range(len(rows)))
-    ax.set_yticklabels([r[0] for r in reversed(rows)], color=INK_BRIGHT, fontsize=10)
-    ax.set_xlim(-0.02, 1.02)
-    ax.set_ylim(-0.55, len(rows) - 0.3)
+    ax.set_yticklabels([r[0] for r in reversed(rows)], color=INK_BRIGHT, fontsize=10.5)
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(-0.52, len(rows) - 0.30)
     ax.grid(axis="y", visible=False)
 
-    fig.text(0.0, -0.12,
-             "Fitted on 29 distinct unburned sites. The model input is continuous percent conifer, "
-             "so no cut point enters the retrieval.",
-             color=MUTED, fontsize=8.2, ha="left")
+    fig.text(0.0, -0.42, chr(10).join([
+        "The derivation outputs a continuous percent conifer; the published CFFDRS layer "
+        "reports discrete classes. Comparing the two means cutting",
+        "the continuum into deciduous / mixedwood / conifer, which takes two boundaries. "
+        "Those were a judgement call until they were fitted on 29",
+        "distinct unburned sites. Both moved sharply left, because the derivation reads "
+        "more conifer than the layer (bias +0.098) and the cuts",
+        "have to drop to compensate. Even at the best pair, only 67.3% of pixels land in "
+        "the layer's class.",
+        "",
+        "This affects REPORTING only. The model consumes continuous percent conifer, so "
+        "neither threshold enters the retrieval.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.55)
     return _save(fig, "cut_points.png")
 
 
