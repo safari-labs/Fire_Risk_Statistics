@@ -298,3 +298,59 @@ Accept the restriction, or find a disturbance mask that lets burned patches be
 included with their post-fire state properly accounted for?
 
 **Answer:**
+
+---
+
+### Q18 — Port the FBP behaviour equations, or compare against FWI only?
+
+**Status:** OPEN — decides how far the CFFDRS comparison reaches
+**Blocks:** one rung of the comparison ladder, not the ladder itself.
+
+The study now compares our rating against CFFDRS rung by rung: the raw weather
+inputs, each FWI code individually, the FWI subsystem output, each FBP input
+individually, the FBP subsystem output, and then our model with and without
+those covariates.
+
+Every rung but one is free. `src/data/fwi.py` already emits FFMC, DMC, DC, ISI,
+BUI and FWI; `src/data/fbp.py` emits the FBP *inputs* (foliar moisture, wind
+direction, percent slope, aspect). The **FBP subsystem outputs** — rate of
+spread, head fire intensity, crown fraction burned, fire type — are **not
+implemented**, and there is no Python package for them; only the CRAN `cffdrs`
+R package covers both systems.
+
+Porting means the fuel-type-specific rate-of-spread coefficients plus the
+crown-fire and intensity equations. Sizeable but bounded, and the reference
+implementation is open (MPL-2.0).
+
+The question is whether head fire intensity is worth that, or whether FWI as
+the operational danger rating is a sufficient baseline. FWI is what a duty
+officer actually reads; HFI is what FBP predicts. Note also the NRCan warning
+recorded in [ASSUMPTIONS.md](ASSUMPTIONS.md): **FWI2025 must not be used with
+FBP1992**, so a port has to pair with the classic Van Wagner codes `fwi.py`
+already implements, not with `cffdrs-ng`.
+
+**Answer:**
+
+---
+
+### Q19 — Which framing is the headline for the CFFDRS comparison?
+
+**Status:** OPEN — affects what the study claims, not what it runs.
+**Blocks:** nothing; both framings are computed either way.
+
+Scored unconditionally ("did this pixel burn"), CFFDRS is at a structural
+disadvantage: FWI and FBP predict fire *behaviour given ignition*, not where
+fire starts. That is FOP, which is out of scope by decision. A low CFFDRS score
+there is evidence the comparison is mis-specified, not that the operational
+system is poor — and it would be easy to write up as the latter.
+
+Scored **within fire** (given this burned, how severely), ignition is
+conditioned out and CFFDRS is asked the question it was built for. That is the
+fair comparison and the defensible headline.
+
+The catch is that within-fire severity means CanLaBS, which is itself
+NBR-derived and so reintroduces SWIR circularity — the reason it was kept out
+of scope in the first place. Is there a severity measure that is not a
+spectral index?
+
+**Answer:**

@@ -149,6 +149,32 @@ are answering different questions. The useful conclusion is narrower: **the
 agreement statistic is only interpretable on unburned patches**, and that is
 where the thresholds must be calibrated.
 
+## Planned experiments
+
+Diagrams of what Stage 1 intends to run, regenerated with
+`python scripts/make_experiment_diagrams.py`.
+
+| Diagram | What it shows |
+|---|---|
+| [exp_axes.png](figures/exp_axes.png) | the five axes, and which two are the question |
+| [exp_protocol.png](figures/exp_protocol.png) | two-tier greedy selection, re-run inside every fold |
+| [exp_cffdrs.png](figures/exp_cffdrs.png) | CFFDRS inputs as the baseline, and what replaces each slot |
+| [exp_vs_cffdrs.png](figures/exp_vs_cffdrs.png) | **our rating against CFFDRS, rung by rung** |
+| [exp_critical_path.png](figures/exp_critical_path.png) | what is built, and what blocks the rest |
+
+![Our rating against CFFDRS, rung by rung](figures/exp_vs_cffdrs.png)
+
+The ladder scores each level as a predictor in its own right — raw weather
+inputs, each FWI code, the FWI output, each FBP input, the FBP output, then our
+model with and without them. If a single slow code like DC does nearly as well
+as the full FBP system, that is worth knowing before any hardware is specified.
+
+Two rules keep it honest. A per-patch scalar and a per-pixel map cannot share
+an AUC, so scalars are scored at patch level and spatial predictors at pixel
+level. And scored unconditionally, CFFDRS is at a structural disadvantage: FWI
+and FBP predict fire *behaviour given ignition*, not where fire starts. The
+within-fire framing is the fair one (Q19).
+
 ## Figures
 
 Regenerate with `python scripts/make_result_figures.py`.
