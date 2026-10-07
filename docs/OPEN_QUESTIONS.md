@@ -164,3 +164,89 @@ Linux-only. Options: WSL, a container, or precomputed look-up tables. Worth
 settling before Phase 2 is planned. See A-8.
 
 **Answer:**
+
+### Q12 — Is the 400–1750 nm ceiling final, given it cannot test H2?
+
+**Status:** OPEN — scope decision already taken, consequence worth confirming
+**Blocks:** nothing; shapes what the empirical arm can conclude.
+
+The empirical band pool stops at 1750 nm, i.e. the standard-InGaAs cutoff
+(configurations A and B). That deliberately excludes **B12 at 2190 nm**.
+
+The consequence: **hypothesis H2 — "SWIR2 is necessary for curing and 1240 nm
+is not a substitute" — cannot be tested empirically** with this data. Neither
+can the SWIR1/SWIR2 contrast behind NMDI and NDTI. H2 remains a simulation
+question, and the empirical arm can speak only to what configurations A and B
+can do.
+
+B12 is free to add to the Sentinel-2 download (it is a band S2 actually
+measures, so rule 2 permits it) even though no SAFARI configuration under
+consideration carries it. That would let the data say what the extended-InGaAs
+detector would buy, which is the main cost/SWaP decision of the whole study.
+
+**Answer:**
+
+---
+
+### Q13 — Does the Sentinel-2 download record its composite window per patch?
+
+**Status:** OPEN — affects the sharpest leakage guard in the covariate set
+**Blocks:** correctness of the FWI codes, not just their precision.
+
+The FWI recursion needs the acquisition date to know where to stop, and
+`compute_fwi_series` refuses a series extending past it. The assembly script
+currently assumes **30 June**, matching the April–June pre-fire composite.
+
+If the real composite end varies per patch and is later than assumed, the
+spin-up window would reach into the fire period and the fire's own weather
+would propagate forward into its own predictor. The guard only protects against
+what it is told.
+
+Is the composite window recorded anywhere per patch, or can the download be
+changed to record it? See A-14.
+
+**Answer:**
+
+---
+
+### Q14 — Which patches get the spectral FMC estimate, and from what?
+
+**Status:** OPEN — blocks the MEASURED and AUGMENT arms
+**Blocks:** two of the three foliar-moisture arms.
+
+The BASELINE arm works today: FBP's equation from elevation, latitude/longitude
+and date. The MEASURED and AUGMENT arms need an actual spectral estimate of
+foliar moisture per patch, and nothing currently produces one.
+
+Options, roughly in increasing effort: a published LFMC index from the
+available bands; a regression trained on Globe-LFMC 2.0 (which the brief notes
+has **no Canadian sites**, with US jack and red pine the nearest analogues); or
+the simulation-trained retrieval this repo's Phases 1–4 are meant to build.
+
+The last is the scientifically right answer and the slowest. Which one feeds
+the empirical arm?
+
+**Answer:**
+
+---
+
+### Q15 — Do B8 and B8A both stay in the candidate pool?
+
+**Status:** OPEN — flagged automatically by the validator
+**Blocks:** nothing; affects how the ranking should be read.
+
+`safari-bands validate` flags two near-duplicate pairs in the Sentinel-2
+candidate set: **B7/B8** (59 nm apart, mean FWHM 68) and **B8/B8A** (23 nm
+apart). That is not a defect in the configuration — S2's B8 is a broad 115 nm
+NIR band that genuinely overlaps both the narrow B8A and B7.
+
+It matters because near-duplicate bands are exactly the Kanyini failure mode
+the rules exist to avoid: its importance rankings picked VIIRS I2 and M7, which
+share 846–885 nm. A greedy selection over this pool will face the same
+situation honestly rather than by construction, but the result needs reading
+with it in mind — "B8 or B8A" may be close to arbitrary.
+
+Keep both and let the nested ranking choose, or drop B8 in favour of the
+narrow B8A up front?
+
+**Answer:**

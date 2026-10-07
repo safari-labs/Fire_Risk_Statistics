@@ -34,10 +34,17 @@ warn_fwhm_multiplier: 2.0
 
 forbidden_regions:
   - name: o2_a_band
-    range_nm: [755.0, 775.0]
+    range_nm: [755.0, 772.0]
     reason: >-
       Oxygen A-band absorption. Deep and narrow; unusable for surface retrieval
-      and a hazard for any band whose skirt reaches into it.
+      and a hazard for any band whose skirt reaches into it. The upper edge was
+      755-775 until Sentinel-2's B7 was added as a candidate: B7 is centred at
+      783 nm with 20 nm FWHM, so its extent is 773-793 and it was rejected by
+      2 nm. B7 is an operational band returning usable surface reflectance, so
+      the edge was wrong rather than the band. The O2-A rotational lines end
+      near 771 nm and transmittance recovers quickly above that, which is the
+      physical justification; B7 working in orbit is the empirical one. Same
+      correction as the SWIR1 case that set the two-threshold scheme.
 
   - name: o2_1270
     range_nm: [1262.0, 1288.0]

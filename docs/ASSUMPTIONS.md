@@ -153,3 +153,153 @@ installed globally; the project uses `.venv` and does not touch it.
 Py6S needs the 6S Fortran executable built separately, and libRadtran is
 effectively Linux-only. Neither has been tested here. This may force WSL, a
 container, or precomputed look-up tables for Phase 2.
+
+---
+
+## A-9 — Empirical arm runs on a 20 m grid, with mixed native resolutions
+
+**Status:** OPEN — resolvable by a sensitivity check
+**Files:** `Fire_Risk_Model/src/data/bands.py`, `config/bands/sentinel2_11band_candidates.yaml`
+
+Sentinel-2's bands are native at 10 m (B2/B3/B4/B8), 20 m (B5/B6/B7/B8A/B11)
+and 60 m (B1/B9). They must share one grid, and the choice is a confound for
+band ranking.
+
+20 m was chosen so the bands the study most cares about — the red edge and
+**B11 SWIR1** — are never interpolated. Ranking a band on upsampled data would
+judge it on an artificially smooth version of itself. The 10 m bands are
+**averaged** down (what a coarser detector would integrate); the two 60 m
+atmospheric bands are **bilinear** up.
+
+Earth Engine's default differs by direction and only one direction needed an
+explicit call: downsampling reads the image pyramid, which averages, while
+upsampling defaults to nearest. The per-band plan is recorded in the HDF5
+attrs so the confound stays checkable.
+
+**Residual risk:** B1 and B9 remain mostly interpolation at 20 m. They are
+excluded from the default surface input for that reason.
+**Replace with:** a 10 m variant and a rank-stability check across the two.
+
+---
+
+## A-10 — NBAC perimeters carry unburned inclusions
+
+**Status:** OPEN — bounded, not eliminated
+**File:** `Fire_Risk_Model/src/data/labels.py`
+
+The primary per-pixel label rasterises NBAC fire perimeters, which are
+**filled**. Real perimeters contain unburned islands — wet depressions, rock,
+open water — conventionally 5–20% of the interior. NBAC is therefore a noisy
+per-pixel label and an accurate patch-level one.
+
+This is accepted deliberately. A noisy label that is independent of the inputs
+supports a band ranking; a clean label that is a *function* of the inputs (the
+old dNBR threshold on B8/B11) does not. `inclusion_rate()` is recorded per
+patch so the noise can later be bounded empirically.
+
+**Replace with:** nothing available. CanLaBS severity would quantify it but is
+itself NBR-derived, which reintroduces the SWIR circularity.
+
+---
+
+## A-11 — Fuel-type cut points are judgement, pending calibration
+
+**Status:** OPEN — calibration script written, not yet run
+**File:** `Fire_Risk_Model/src/data/fuel_type.py`
+
+Deriving an FBP fuel type from SCANFI needs thresholds the FBP System does not
+specify as hard classes: percent conifer at 0.20/0.80, crown closure 0.40 for
+C-1 against C-2, canopy height 10 m for C-3 against C-4.
+
+Two things reduce the exposure. First, the **model input is continuous**
+(`fuel_vector`, percent conifer first), so no cut point enters the retrieval —
+they are needed only to compare against the published layer's discrete classes,
+which is a reporting step. Second, the published CFFDRS 2024 layer encodes
+percent conifer in its own codes (625 = 25%, 650 = 50%, 675 = 75%, 415 = 15%),
+so the comparison is a regression and `calibrate_cut_points()` can replace the
+guesses with whatever best reproduces the layer.
+
+**Replace with:** the output of `scripts/python/fuel_type_agreement.py` over
+the real patch set. Needs Earth Engine credentials and SCANFI sidecars.
+
+---
+
+## A-12 — Leaf-on window is a fixed date rule
+
+**Status:** OPEN
+**File:** `Fire_Risk_Model/src/data/fuel_type.py`
+
+D-1/D-2, M-1/M-2 and O-1a/O-1b differ *only* by broadleaf phenology, so the
+derivation needs a leaf-on flag. It defaults to day of year 140–275, bracketing
+the boreal green season.
+
+Deliberately a crude explicit rule rather than something inferred from the
+imagery: inferring the season from reflectance would make the fuel-type label
+depend on the same data the label is meant to be compared against.
+
+Note the published layer declines to choose at all — its codes are "D-1/D-2"
+and "M-1/M-2" — because a static annual map cannot know an acquisition date.
+Its one grass class is labelled "O-1a Matted Grass", asserting a season it
+cannot vary; that is handled as a named interpretation in
+`fuel_agreement.LAYER_SEASON_AMBIGUOUS` rather than edited into the
+transcribed code table.
+
+**Replace with:** a per-patch green-up date, if one can be sourced
+independently of the imagery.
+
+---
+
+## A-13 — Foliar moisture is a per-patch scalar, never a raster
+
+**Status:** by design, not a placeholder
+**Files:** `Fire_Risk_Model/src/data/cffdrs_features.py`, `terrain.py`
+
+FBP computes FMC from elevation, latitude/longitude and date. Elevation is the
+only one of those that varies within a patch, so a per-**pixel** FMC raster
+would vary *solely* with elevation — it would be an elevation channel under
+another name, reintroducing precisely the geography shortcut `terrain.py`
+excludes it to avoid ("1200 m means Cordillera").
+
+FMC is therefore a scalar computed from patch-mean elevation. That is also what
+FBP itself assumes (a stand-level value) and matches how the weather features
+enter.
+
+---
+
+## A-14 — FWI spin-up ends at the composite end date
+
+**Status:** OPEN, and load-bearing
+**Files:** `Fire_Risk_Model/src/data/fwi.py`, `scripts/python/build_cffdrs_dataset.py`
+
+The FWI codes are recursive and DC carries ~53 days of memory, so a value for
+an acquisition needs a long preceding window. The assembly script uses **30
+June** as the composite end, matching the April–June pre-fire S2 window.
+
+This is the sharpest leakage surface in the whole covariate set. If the window
+overruns the acquisition by even a few days into the fire period, the fire's
+own weather propagates forward through the recursion into its own predictor,
+and the model would score spectacularly while meaning nothing.
+`compute_fwi_series` therefore **refuses** rather than warns.
+
+**Replace with:** the true per-patch composite end, if the download records it.
+The composite window is not currently stored per patch.
+
+---
+
+## A-15 — O2-A forbidden region narrowed to clear Sentinel-2 B7
+
+**Status:** OPEN, same provenance as A-1
+**File:** `config/atmospheric_windows.yaml`
+
+The O2-A region was 755–775 nm. Adding Sentinel-2's B7 (783 nm, 20 nm FWHM)
+as a candidate rejected it by 2 nm: its FWHM extent is 773–793.
+
+B7 is an operational band returning usable surface reflectance, so the edge was
+wrong rather than the band. Narrowed to 755–**772**. The physical justification
+is that the O2-A rotational lines end near 771 nm and transmittance recovers
+quickly above that; the empirical one is that B7 works in orbit.
+
+This is the second time a hand-set region edge rejected a demonstrably working
+band — the first set the two-threshold scheme after it rejected S2's 1610 nm.
+Both point the same way: **replace these edges with a computed transmittance
+threshold in Phase 2** rather than continuing to adjust them one band at a time.

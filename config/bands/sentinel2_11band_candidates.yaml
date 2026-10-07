@@ -1,0 +1,121 @@
+# Sentinel-2 candidate band set for the Phase 6 empirical arm, 400-1750 nm.
+#
+# ROLE: the candidate pool that the empirical band selection ranks over. These
+# are the bands Sentinel-2 ACTUALLY MEASURES, which is what rule 2 permits:
+# "Multispectral archives may be used only for bands they actually measure."
+# Nothing here is interpolated or synthesised from a coarser sensor.
+#
+# This mirrors src/data/bands.py in the Fire_Risk_Model repo, which is the
+# source of truth for the download. Centres and FWHM are nominal S2A figures.
+#
+# WHY 400-1750 AND NOT FURTHER
+# ----------------------------
+# The ceiling is the standard-InGaAs cutoff (~1.7 um), i.e. configurations A
+# and B of this study. B12 (2190 nm) is deliberately absent: it needs
+# extended-wavelength InGaAs, which is the main cost/SWaP driver, and the
+# mission decision was to stay inside the cheaper detector for the empirical
+# arm. That means this set CANNOT test hypothesis H2 (SWIR2 necessary for
+# curing) empirically -- H2 remains a simulation question.
+#
+# B10 (1375 nm cirrus) is absent for a different reason: it does not exist in
+# L2A surface reflectance at all. It is consumed by the atmospheric correction
+# and dropped, so it is only available in L1C.
+#
+# ORDER IS APPEND-ONLY
+# --------------------
+# The first three bands are B4/B8/B5 and the first five add B3/B2, matching the
+# historical 3- and 5-band products exactly. Every existing checkpoint indexes
+# channels 0/1/2 as Red/NIR/RedEdge, so reordering would invalidate them and
+# would break the 3-band reproduction gate that checks the new data path did
+# not change anything it should not have.
+#
+# ATMOSPHERIC BANDS
+# -----------------
+# B1 (443 nm) and B9 (945 nm) are 60 m bands that sense the atmosphere rather
+# than the surface; resampled to 20 m they are largely interpolation. They are
+# carried as candidates with purpose "atmospheric" so they are exempt from the
+# rule 7 window check and excluded from the default surface input, but they
+# remain available to an atmospheric-screening experiment.
+#
+# No detector is assigned: this describes what Sentinel-2 measures, not a
+# SAFARI build, so the detector spectral-range check does not apply.
+
+name: sentinel2_11band_candidates
+description: >-
+  Sentinel-2 L2A bands within 400-1750 nm, the candidate pool for the Phase 6
+  empirical band ranking. Excludes B12 (needs extended InGaAs) and B10 (absent
+  from L2A).
+role_in_study: candidate
+
+bands:
+  # ── Historical channels 0-4, order preserved exactly ──────────────────
+  - name: B4
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B8
+    role: NIR
+    centre_nm: 842.0
+    fwhm_nm: 115.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B5
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B3
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B2
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 65.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  # ── Appended for the 400-1750 nm study ────────────────────────────────
+  - name: B6
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B7
+    role: RED_EDGE3
+    centre_nm: 783.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B8A
+    role: NIR_NARROW
+    centre_nm: 865.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B11
+    role: SWIR1
+    centre_nm: 1610.0
+    fwhm_nm: 90.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  # ── Atmospheric: carried, not default input ───────────────────────────
+  - name: B1
+    role: COASTAL
+    centre_nm: 443.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    purpose: atmospheric
+  - name: B9
+    role: WATER_VAPOUR
+    centre_nm: 945.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    purpose: atmospheric
