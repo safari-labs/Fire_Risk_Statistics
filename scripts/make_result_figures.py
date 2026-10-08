@@ -168,14 +168,15 @@ def fig_band_pool():
     from matplotlib.patches import Patch
     ax.legend(handles=[
         Patch(facecolor=S1, label="surface band"),
-        Patch(facecolor=MUTED, label="atmospheric (not default input)"),
+        Patch(facecolor=MUTED, label="60 m native, bilinear to 20 m"),
         Patch(facecolor=CRIT, alpha=0.3, label="forbidden region"),
     ], loc="lower left", bbox_to_anchor=(0.30, 0.02), facecolor=AX_BG,
         edgecolor=SPINE, labelcolor=INK, fontsize=8.5, framealpha=0.95)
 
     fig.text(0.0, -0.06,
-             "Bar width is FWHM. B7 (783 nm) sits 1 nm clear of the O2-A region after its upper "
-             "edge was corrected from 775 to 772 nm.",
+             "Bar width is FWHM. All eleven are packed and rankable: holding B1/B9 back "
+             "would decide their value by assumption. B7 sits 1 nm clear of O2-A after its "
+             "upper edge was corrected from 775 to 772 nm.",
              color=MUTED, fontsize=8.2, ha="left")
     return _save(fig, "band_pool.png")
 
