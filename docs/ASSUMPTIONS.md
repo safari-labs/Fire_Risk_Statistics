@@ -334,3 +334,49 @@ explanation stays inferred rather than isolated.
 
 **Replace with:** the nearest available SCANFI step per patch year, if the
 later products are published in the same layout the remote reader expects.
+
+---
+
+## A-17 — Patch rasters are EPSG:3978 at a true square 20 m
+
+**Status:** RESOLVED — was a defect, now a fixed convention
+**File:** `Fire_Risk_Model/src/data/download.py` (`PATCH_CRS`)
+
+Earth Engine's `getDownloadURL` with no `crs` returns EPSG:4326 and applies
+`scale: 20` as 20/111320 **degrees on both axes**. That is 20 m north-south
+but 20·cos(lat) m east-west — 11.4 m at 55° N, 7.8 m at 67° N. The first
+11-band download therefore wrote 877×501 patches rather than 501×501.
+
+Three consequences, each one defeating a decision the 20 m grid was chosen to
+implement:
+
+1. **B11, B5, B6, B7 and B8A were upsampled 1.75×–2.6× in longitude.** Those
+   are exactly the bands the 20 m packing grid exists to deliver without
+   interpolation. On one axis they were interpolated anyway.
+2. **The stretch varies with latitude.** A 3×3 kernel spanned 34 × 60 m at a
+   55° N site and 23 × 60 m at 67° N, so spatial scale became a function of
+   where the patch is — the same class of geographic confound the terrain
+   work had to control for with a within-region test.
+3. **About a third of sites were silently lost.** The inflated requests
+   exceeded the 50 MB `getDownloadURL` cap, so 82 of 120 fire sites landed
+   and the shortfall was indistinguishable from missing cloud-free imagery.
+   The client-side size estimate computed the pixel count for a square-metre
+   grid while GEE delivered a square-degree one, so it was low by exactly the
+   factor that made the request fail.
+
+Patches are now requested in **EPSG:3978** (Canada Atlas Lambert), giving
+true 20.00 × 20.00 m pixels. Verified on the 67.117° N site that previously
+failed: 676 × 675 × 11 bands, square pixels, no nodata. EPSG:3978 is also the
+CRS NBAC, the published CFFDRS fuel layer, SCANFI and CanLaBS already use, so
+sidecar reprojection onto the patch grid is close to identity instead of
+another resample.
+
+**Side effect, accepted:** the lat/lon bounding box reprojects to a slightly
+larger rectangle in Lambert, growing with latitude — 10.0 km at mid-latitude,
+13.5 km at 67° N. Ground sampling is uniform 20 m everywhere, which was the
+objective; the extra area is real imagery, and it means northern sites yield
+somewhat more 256-px tiles. Not corrected, because cropping back to exactly
+10 km would discard valid data to buy a uniformity nothing downstream needs.
+
+The superseded patches are kept at
+`data/stage2_fire/patches_11band.anisotropic_4326/` as evidence only.
