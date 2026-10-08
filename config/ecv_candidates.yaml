@@ -1,0 +1,139 @@
+# Essential Climate Variables reachable from the SAFARI band set.
+#
+# PURPOSE. The mission offers preprocessed imagery on the calibration downlink;
+# this asks which ECVs could ride along as a secondary product. It is a
+# scoping table, not a commitment: `status` says what is actually supported by
+# the 400-1750 nm pool, and `blocker` says what stops the rest.
+#
+# WHY THIS IS TRACTABLE. The Stage 1 brief already names SL2P (the SNAP
+# Sentinel-2 biophysical processor, which CCRS runs in Earth Engine via the
+# LEAF Toolbox) as the precedent for the Stage 2 retrieval. SL2P's own outputs
+# -- LAI, fAPAR and fCOVER -- ARE terrestrial ECVs, retrieved from exactly the
+# Sentinel-2 bands this study is selecting over, and already validated over
+# North American forests (Fernandes et al., cited in the brief). So the
+# strongest ECV claim is not a new capability: it is that the same retrieval
+# family the mission already plans to run produces ECVs as a by-product.
+#
+# WHAT THE BAND SET CANNOT DO. Thermal and microwave ECVs are out of reach and
+# listed here anyway, because a scoping table that only lists successes is not
+# a scoping table. Land Surface Temperature needs thermal infrared; soil
+# moisture needs microwave. Neither is in 400-1750 nm at any SNR.
+#
+# STATUS: candidate list. None of these has been produced or validated here.
+# See docs/OPEN_QUESTIONS.md Q22.
+
+name: ecv_candidates
+placeholder: true
+source: >-
+  PLACEHOLDER - scoping only. Band requirements are from the standard retrieval
+  literature and the SL2P ATBD; nothing in this table has been produced or
+  validated in this project.
+
+#: GCOS terrestrial ECVs, against the 400-1750 nm pool.
+variables:
+  - name: Leaf Area Index
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [RED, NIR]
+    also_uses: [RED_EDGE1, RED_EDGE2, SWIR1]
+    reference: SL2P / LEAF Toolbox, validated over North American forests
+    note: >-
+      The strongest candidate. SL2P retrieves it from Sentinel-2 bands the
+      pool already contains, and the brief names SL2P as the Stage 2
+      precedent, so this is the retrieval family the mission plans to run
+      anyway.
+
+  - name: FAPAR
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [RED, NIR]
+    also_uses: [RED_EDGE1, BLUE]
+    reference: SL2P / LEAF Toolbox
+    note: Same retrieval family and the same validation as LAI.
+
+  - name: Fraction of Vegetation Cover
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [RED, NIR]
+    also_uses: [RED_EDGE1]
+    reference: SL2P / LEAF Toolbox (fCOVER)
+    note: Same family again; the three are produced together.
+
+  - name: Land Cover
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [BLUE, GREEN, RED, NIR, SWIR1]
+    reference: SCANFI v2 is the Canadian reference product
+    note: >-
+      The ecology head already predicts the SCANFI landcover class, so this is
+      largely work already done rather than a new retrieval.
+
+  - name: Above-Ground Biomass
+    gcos_domain: terrestrial
+    status: partial
+    requires_roles: [RED, NIR, SWIR1]
+    reference: SCANFI v2 biomass layer
+    blocker: >-
+      Optical reflectance saturates over closed canopy, so biomass from
+      optical alone is weak; the operational products use lidar or radar. The
+      ecology head predicts it by DISTILLING SCANFI, which means SCANFI's own
+      accuracy is the ceiling and the claim has to be stated that way.
+
+  - name: Fire Disturbance
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [NIR, SWIR1]
+    reference: burned area; NBAC is the Canadian reference
+    note: >-
+      This is the mission's own primary product, so it is listed for
+      completeness rather than as an additional offer.
+
+  - name: Snow Cover
+    gcos_domain: terrestrial
+    status: supported
+    requires_roles: [GREEN, SWIR1]
+    reference: NDSI, the standard retrieval
+    note: >-
+      Free: the pool carries both bands, and snow-off timing is already an
+      ancillary requirement because FWI season start-up keys to it.
+
+  - name: Lakes (water extent)
+    gcos_domain: terrestrial
+    status: partial
+    requires_roles: [GREEN, NIR, SWIR1]
+    reference: NDWI / MNDWI
+    blocker: >-
+      Extent is reachable; the ECV also covers level and temperature, which
+      are not.
+
+  - name: Surface Albedo
+    gcos_domain: terrestrial
+    status: partial
+    requires_roles: [BLUE, GREEN, RED, NIR, SWIR1]
+    blocker: >-
+      Narrowband-to-broadband conversion plus a BRDF correction, and the BRDF
+      part needs multi-angle sampling a single-look pushbroom does not give.
+
+  - name: Land Surface Temperature
+    gcos_domain: terrestrial
+    status: out_of_reach
+    blocker: >-
+      Needs thermal infrared (~10-12 um). The payload stops at 1750 nm.
+
+  - name: Soil Moisture
+    gcos_domain: terrestrial
+    status: out_of_reach
+    blocker: >-
+      Needs microwave. Optical gives surface-dryness proxies at best, and not
+      the ECV as defined.
+
+# Rules of thumb for reading the table.
+#
+# 1. "supported" means the pool carries the bands a standard retrieval needs.
+#    It does NOT mean the retrieval has been implemented, tuned or validated
+#    here. Nothing in this table has.
+# 2. The four SL2P-family entries (LAI, FAPAR, fCOVER, Land Cover) are the
+#    defensible claim, because they share one retrieval, one precedent and one
+#    published validation over the right biome.
+# 3. Anything marked partial carries its blocker in the same row, so a claim
+#    cannot be lifted from this file without the caveat attached to it.
