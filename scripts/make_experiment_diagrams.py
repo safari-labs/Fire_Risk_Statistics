@@ -414,6 +414,85 @@ def diagram_vs_cffdrs():
     _save(fig, "exp_vs_cffdrs.png")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# 6. Report claims against the experiments that substantiate them
+# ──────────────────────────────────────────────────────────────────────────
+
+def diagram_claims():
+    """Which experiment backs which claim in the mission report."""
+    fig, ax = _canvas(11.2, 8.6)
+    heading(ax, "Report claims, and the experiment that substantiates each",
+            "Green is measured or designed. Amber is partial. Red is claimed in the "
+            "report with nothing measuring it.")
+
+    OK, PART, GAP = S3, WARN, CRIT
+    CLAIMS = [
+        ("compare fuel-condition estimates used by CFFDRS",
+         "the rung-by-rung comparison ladder", OK),
+        ("directly observe properties CFFDRS INFERS",
+         "FMC arms: equation vs spectral vs both", OK),
+        ("characterize fuel types",
+         "derived vs published layer -- MEASURED, R2 -0.071", OK),
+        ("canopy water content",
+         "target T1; blocked on a spectral FMC estimate (Q14)", PART),
+        ("combine with uplinked weather + topography",
+         "fusion arms, scored at 0/24/72 h staleness", OK),
+        ("vegetation stress",
+         "nearest is T3 mortality; no stress target defined", PART),
+        ("wildfire-risk POLYGONS as the primary product",
+         "nothing produces or scores polygons -- all metrics are per-pixel", GAP),
+        ("a few kilobytes, several orders of magnitude",
+         "arithmetic checks out (~94,000x) but nothing measures it", GAP),
+        ("operational frequency for fire danger rating",
+         "29-33 ms/frame measured; not tied to orbit cadence", PART),
+        ("onboard AI models, end-to-end in orbit",
+         "hls4ml path works; main core is 405% over BRAM", PART),
+        ("preprocessed imagery for Essential Climate Variables",
+         "no ECV is defined, produced or validated", GAP),
+    ]
+
+    top, rh_ = 86, 6.2
+    from matplotlib.patches import FancyBboxPatch
+    for i, (claim, backing, col) in enumerate(CLAIMS):
+        y = top - i * rh_
+        ax.add_patch(FancyBboxPatch((0, y - 4.9), 100, 4.9,
+                                    boxstyle="round,pad=0,rounding_size=0.9",
+                                    linewidth=1.2, edgecolor=col, facecolor=AX_BG,
+                                    zorder=2))
+        mark = {OK: "v", PART: "~", GAP: "x"}[col]
+        ax.text(1.8, y - 2.45, mark, va="center", color=col, fontsize=9.5,
+                fontweight="bold", family="monospace", zorder=3)
+        ax.text(5, y - 2.45, claim, va="center", color=INK_BRIGHT, fontsize=8.5,
+                zorder=3)
+        ax.text(48, y - 2.45, backing, va="center", color=col, fontsize=8.0,
+                zorder=3)
+
+    ax.text(0, 15, "The three gaps, in order of consequence", color=INK_BRIGHT,
+            fontsize=9.8, fontweight="bold", va="top")
+    gaps = [
+        "POLYGONS are the stated primary product and every metric in the study is "
+        "per-pixel. A model can score well on auc_px and",
+        "   fragment into hundreds of unusable slivers; nothing would currently catch "
+        "that.",
+        "DOWNLINK BUDGET is a quantified claim in the report. It should be measured "
+        "from real model output, not asserted.",
+        "ECVs appear in the report with no variable named. SCANFI already gives biomass, "
+        "canopy height and cover, which are ECV-adjacent.",
+    ]
+    for i, g in enumerate(gaps):
+        ax.text(0.5, 9.5 - i * 3.6, g, color=INK if i != 1 else MUTED,
+                fontsize=8.2, va="top")
+
+    caption(fig, [
+        "Every claim about comparing against CFFDRS is well covered -- that is what the "
+        "ladder was built for. The gaps are all on the PRODUCT side:",
+        "what the satellite actually downlinks, how big it is, and how often. Those are "
+        "the claims a reviewer can check most easily, so they are",
+        "the ones worth measuring rather than asserting.",
+    ])
+    _save(fig, "exp_claims.png")
+
+
 def main() -> int:
     print("rendering experiment diagrams")
     diagram_axes()
@@ -421,6 +500,7 @@ def main() -> int:
     diagram_cffdrs()
     diagram_critical_path()
     diagram_vs_cffdrs()
+    diagram_claims()
     print(f"\nall diagrams -> {FIG_DIR.relative_to(_ROOT)}")
     return 0
 

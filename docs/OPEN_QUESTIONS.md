@@ -354,3 +354,79 @@ of scope in the first place. Is there a severity measure that is not a
 spectral index?
 
 **Answer:**
+
+---
+
+### Q20 — How is the polygon product defined and scored?
+
+**Status:** OPEN — the largest gap between the report and the experiments
+**Blocks:** substantiating the mission's stated PRIMARY product.
+
+The report names wildfire-risk polygons as the primary scientific and
+operational product. Every metric in this study is per-pixel: `auc_px`, AP,
+IoU, ECE. Nothing in any of the three repos produces a polygon or scores one —
+the only polygon code reads NBAC perimeters *in*.
+
+That matters because the two can diverge. A model can score well on `auc_px`
+and still fragment into hundreds of unusable slivers, and no current metric
+would catch it. The reverse also holds: a model that is mediocre per-pixel but
+produces clean, correctly-placed polygons may be the better operational
+product.
+
+What has to be decided before it can be measured:
+
+- **Extraction.** Threshold then contour, or something smarter? The threshold
+  choice is already flagged as operational rather than statistical
+  (`stage-a.md`: fix an acceptable false-alarm rate and take the best recall).
+- **Metrics.** Polygon-level precision and recall against NBAC perimeters,
+  plus a fragmentation measure (count and size distribution for a given burned
+  area) and boundary agreement.
+- **Minimum useful size.** A 20 m-grid polygon of a few pixels is noise, not a
+  product. What is the floor?
+
+**Answer:**
+
+---
+
+### Q21 — Measure the downlink budget rather than asserting it?
+
+**Status:** OPEN — easy to do and easy for a reviewer to check
+**Blocks:** nothing; strengthens a quantified report claim.
+
+The report claims polygons of "a few kilobytes" replacing scenes of "hundreds
+of megabytes", a reduction of "several orders of magnitude". The arithmetic
+supports it: at the placeholder 30 m GSD with 9 surface bands, a 100 km scene
+is ~150 MB at 12 bits, and 20 polygons of 30 vertices is ~5 KB, which is about
+10^4-10^5.
+
+But that is a calculation, not a measurement, and it is the claim a reviewer
+can most easily check. Once polygons exist (Q20), the real product size should
+be measured from real model output across the scene types, and reported as a
+distribution rather than a single figure — a fire-heavy scene produces more
+polygons than an unburned one, and the worst case is what sizes a downlink.
+
+Note the GSD and swath are still placeholders pending **Q2**, so the scene-size
+half of the ratio moves with that answer.
+
+**Answer:**
+
+---
+
+### Q22 — Which Essential Climate Variables, specifically?
+
+**Status:** OPEN
+**Blocks:** a secondary claim in the report, with nothing behind it yet.
+
+The report offers preprocessed imagery for "mapping multiple Essential Climate
+Variables". No ECV is currently named, produced or validated anywhere in the
+project.
+
+The nearest existing material is the SCANFI-distilled ecology head, which
+already predicts above-ground biomass, canopy height and crown closure — all
+ECV-adjacent (GCOS lists Above-Ground Biomass and Land Cover among the
+terrestrial ECVs). Framing one or two of those as the ECV claim would make it
+concrete and is largely work already done.
+
+Which variables, and against what reference would they be validated?
+
+**Answer:**

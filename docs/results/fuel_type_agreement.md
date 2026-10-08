@@ -149,6 +149,22 @@ are answering different questions. The useful conclusion is narrower: **the
 agreement statistic is only interpretable on unburned patches**, and that is
 where the thresholds must be calibrated.
 
+## Do the experiments substantiate the report?
+
+![Report claims against the experiments](figures/exp_claims.png)
+
+Every claim about comparing against CFFDRS is well covered — that is what the
+ladder was built for, and the fuel-type arm already has a measured result.
+The gaps are all on the **product** side: what the satellite downlinks, how
+big it is, and how often.
+
+The most consequential is **polygons**. They are the stated primary product
+and every metric here is per-pixel, so a model could score well on `auc_px`
+and fragment into unusable slivers with nothing catching it (Q20). The
+downlink budget is a quantified claim that should be measured from real output
+rather than calculated (Q21), and no Essential Climate Variable is yet named
+(Q22).
+
 ## Planned experiments
 
 Diagrams of what Stage 1 intends to run, regenerated with
