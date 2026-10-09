@@ -63,7 +63,7 @@ bands:
   # choice, and 1230-1250 still clears the O2 band at 1270 by ~20 nm. The
   # 1209-vs-1240 trade is itself a question for the study.
   - name: swir_1240
-    role: SWIR_SHORT
+    role: SWIR_1240
     centre_nm: 1240.0
     fwhm_nm: 20.0
     srf_shape: gaussian
@@ -84,7 +84,7 @@ bands:
   # keeping one band at 1610 buys cross-calibration and lets the archive be
   # used for this band specifically under rule 2.
   - name: swir_1610
-    role: SWIR1_MID
+    role: SWIR1
     centre_nm: 1610.0
     fwhm_nm: 40.0
     srf_shape: gaussian

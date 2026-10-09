@@ -57,7 +57,7 @@ detector_class: standard_ingaas
 
 bands:
   - name: swir_1209
-    role: SWIR_SHORT
+    role: SWIR_1240
     centre_nm: 1209.0
     fwhm_nm: 30.0
     srf_shape: gaussian
@@ -71,7 +71,7 @@ bands:
     out_of_band_leakage: 0.01
     detector: ingaas_std
   - name: swir_1661
-    role: SWIR1_MID
+    role: SWIR1
     centre_nm: 1661.0
     fwhm_nm: 40.0
     srf_shape: gaussian

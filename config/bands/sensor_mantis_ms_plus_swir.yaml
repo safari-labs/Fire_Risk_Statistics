@@ -84,14 +84,14 @@ bands:
   out_of_band_leakage: 0.01
   detector: silicon_cmos
 - name: nir_narrow
-  role: NIR_NARROW
+  role: NIR
   centre_nm: 865.0
   fwhm_nm: 20.0
   srf_shape: gaussian
   out_of_band_leakage: 0.01
   detector: silicon_cmos
 - name: swir_1240
-  role: SWIR_SHORT
+  role: SWIR_1240
   centre_nm: 1240.0
   fwhm_nm: 20.0
   srf_shape: gaussian
@@ -105,7 +105,7 @@ bands:
   out_of_band_leakage: 0.01
   detector: ingaas_std
 - name: swir_1610
-  role: SWIR1_MID
+  role: SWIR1
   centre_nm: 1610.0
   fwhm_nm: 40.0
   srf_shape: gaussian

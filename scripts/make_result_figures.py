@@ -185,22 +185,26 @@ def fig_band_pool():
 # 3. Index feasibility -- read from the live config, never hard-coded
 # ──────────────────────────────────────────────────────────────────────────
 
-SETS = ["config_a", "config_b", "config_c",
-        "sentinel2_11band_candidates", "sentinel2_msi", "negative_control"]
+SETS = ["sensor_mantis_vnir6", "sensor_mantis_hs96", "sensor_mantis_swir4",
+        "sensor_mantis_ms_plus_swir", "swir4_worldview3",
+        "sentinel2_msi", "negative_control"]
 
-# "A", "B", "C" mean nothing without the bands behind them, and the whole
-# point of the figure is which SWIR content a configuration carries. Each
-# column header therefore names the set AND its SWIR bands, since that is the
-# only axis the three SAFARI configurations differ on.
+# The Mantis modes first, because they are the decision. The configurations
+# A/B/C this figure used to show are retired (A-18): C needs extended InGaAs
+# at 2190 nm, which no Mantis mode reaches.
+#
+# Each header names the set AND its spectral content, because "MS" and "HS"
+# mean nothing without knowing that HS is NARROWER -- 470-900 against
+# 400-1000 -- which is the whole reason the two columns differ.
 COLHEAD = {
-    "config_a":                    ("Config A", "VNIR|+1610"),
-    "config_b":                    ("Config B", "VNIR|+1240|+1610"),
-    "config_c":                    ("Config C", "VNIR|+1610|+2190"),
-    "sentinel2_11band_candidates": ("S2 pool", "11 bands|400-1750"),
-    "sentinel2_msi":               ("S2 MSI", "full|+2190"),
-    "negative_control":            ("control", "4 red|bands only"),
+    "sensor_mantis_vnir6":        ("Mantis MS", "6 bands|400-1000"),
+    "sensor_mantis_hs96":         ("Mantis HS", "96 bands|470-900"),
+    "sensor_mantis_swir4":        ("Mantis SWIR", "4 bands|1000-1750"),
+    "sensor_mantis_ms_plus_swir": ("MS + SWIR", "10 bands|both chains"),
+    "swir4_worldview3":           ("WV-3 SWIR", "4 bands|1209-1730"),
+    "sentinel2_msi":              ("S2 MSI", "reference|+2190"),
+    "negative_control":           ("control", "4 red|bands only"),
 }
-
 
 def fig_feasibility():
     sys.path.insert(0, str(_ROOT / "src"))
@@ -218,7 +222,7 @@ def fig_feasibility():
             res = resolve_index(idx, band_sets[key])
             grid[r, c] = 1.0 if res.feasible else (0.5 if res.hyperspectral_only else 0.0)
 
-    fig, ax = plt.subplots(figsize=(7.0, 5.0), facecolor=FIG_BG)
+    fig, ax = plt.subplots(figsize=(9.2, 5.6), facecolor=FIG_BG)
     _axes(ax, "Which index each band set can form, from band placement alone")
     ax.grid(False)
 
@@ -252,13 +256,18 @@ def fig_feasibility():
     ax.grid(which="minor", color=FIG_BG, lw=2)
     ax.tick_params(which="minor", length=0)
 
-    fig.text(0.0, -0.175, chr(10).join([
-        "Rows are reference indices, with the retrieval target they serve. "
-        "Configurations A and B can form no curing index (T2) at any SNR:",
-        "NDTI needs a SWIR1/SWIR2 contrast they do not carry. The control is a "
-        "deliberately bad set - four overlapping red bands, no water",
-        "sensitivity - and forming nothing is the correct result for it. "
-        "CAI needs three narrow 2.0-2.2 um bands, so no multispectral set reaches it.",
+    fig.text(0.0, -0.52, chr(10).join([
+        "Rows are reference indices, with the retrieval target they serve. Three results read straight off this matrix.",
+        "",
+        "SWIR ALONE FORMS NOTHING. Every moisture and curing index contrasts a SWIR band against NIR, and NIR is on the VNIR chain. The SWIR mode is not a weaker",
+        "configuration than MS -- on its own it cannot form the products it exists for. Same for the WorldView-3 SWIR set, for the same reason.",
+        "",
+        "HS ADDS NO INDEX OVER MS. Both form NDVI, EVI, VARI and NDRE and nothing else. Index feasibility depends on WHICH wavelengths a set carries, not how many,",
+        "and 96 bands between 470 and 900 nm reach no further than 6 do. Whatever HS is worth, it is not extra indices -- it has to come from full-spectrum retrieval.",
+        "",
+        "MS + SWIR UNLOCKS FOUR: NDMI, MSI, Gao's NDWI and NDSI. That is the index-level answer to whether the second chain earns its place.",
+        "NMDI, NDTI and NBR stay out of reach at any SNR -- all need SWIR2 at ~2190 nm, past every Mantis mode. CAI needs three narrow 2.0-2.2 um bands,",
+        "so no multispectral set reaches it. The control forms nothing, which is the correct result for four overlapping red bands.",
     ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
     return _save(fig, "index_feasibility.png")
 

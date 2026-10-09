@@ -114,9 +114,9 @@ def diagram_axes():
 
     # Question axes: two wide boxes.
     box(ax, 0, 85, 48, "BANDS", [
-        "9 candidates, 400-1750 nm",
-        "greedy nested: the best",
-        "k-band set for every k",
+        "11 candidates, 400-1750 nm",
+        "VNIR: best 6 of 10",
+        "SWIR: best 4 of 1 (needs WV-3)",
     ], edge=S1, fs=8.6)
     box(ax, 52, 85, 48, "ARCHITECTURE", [
         "9 presets, 15k to 87M params",
@@ -217,7 +217,7 @@ def diagram_protocol():
             ha="center", color=MUTED, fontsize=8.3)
 
     caption(fig, [
-        "Greedy over 9 candidates is 45 fits for the full nesting, so the wide sweep "
+        "Greedy over the 10 VNIR candidates is 55 fits for the full nesting, so the wide sweep "
         "uses the cheapest preset and the expensive ones see only the",
         "shortlist. Per-fold variation is not noise to average away: a band chosen in "
         "every fold is a finding, one chosen in three of six is a coin flip.",
@@ -253,7 +253,7 @@ def diagram_cffdrs():
                              "augment   both", "", "BLOCKED: no spectral", "estimate yet (Q14)"]),
         ("FUEL TYPE", ["baseline  2024 layer", "derived   SCANFI", "",
                        "MEASURED: R2 -0.071", "worse than predicting", "the mean"]),
-        ("BANDS", ["the main question", "", "9 candidates, ranked", "on a non-circular label",
+        ("BANDS", ["the main question", "", "11 candidates, ranked", "on a non-circular label",
                    "", "BLOCKED: data is 3-band"]),
     ]
     for i, (name, lines) in enumerate(status):
@@ -279,16 +279,16 @@ def diagram_cffdrs():
 def diagram_critical_path():
     fig, ax = _canvas(10.0, 5.4)
     heading(ax, "What is built, and what blocks the rest",
-            "Everything downstream of the 11-band download is written and tested, "
-            "and none of it can run yet.")
+            "The data path is done. The VNIR selection is the next step "
+            "and nothing is stopping it.")
 
     steps = [
-        ("11-band\ndownload", CRIT, "written,\nnot launched"),
-        ("tile, split,\npack HDF5", CRIT, "needs\nstep 1"),
-        ("covariate\nsidecars", WARN, "terrain 78%\nFWI 52%"),
-        ("band sweep\n(Narval)", CRIT, "needs 9 bands,\nhas 3"),
-        ("pool folds", CRIT, "pool_bands.py\nNOT WRITTEN"),
-        ("results\nnote", CRIT, "needs\nall of it"),
+        ("11-band\ndownload", S3, "292 patches\nEPSG:3978"),
+        ("tile, split,\npack HDF5", S3, "1834/473/206\n11 bands"),
+        ("covariate\nsidecars", WARN, "terrain 100%\nweather redo"),
+        ("VNIR sweep\n(Narval)", WARN, "best 6 of 10\njob not written"),
+        ("pool folds", S3, "pool_bands.py\nwritten, tested"),
+        ("results\nnote", CRIT, "needs the\nsweep"),
     ]
     from matplotlib.patches import FancyBboxPatch
     w, gap, top, h = 13.6, 3.7, 80, 20
@@ -323,11 +323,9 @@ def diagram_critical_path():
         ax.text(5, y, b, color=INK, fontsize=8.5, va="center")
 
     caption(fig, [
-        "The one hard blocker is the data. The download is an Earth Engine job and "
-        "cannot run on Narval, whose compute nodes have no outbound",
-        "network. pool_bands.py is the other gap: without it the six folds cannot be "
-        "combined, and selection frequency is what separates a finding",
-        "from a coin flip.",
+        "The data blocker is gone: 292 patches are packed at 11 bands, splits are grouped by location, and pool_bands.py is written and "
+        "tested. What remains is the Narval job for the VNIR selection itself. The weather redo is an Earth Engine pass and runs locally, "
+        "since Narval compute nodes have no outbound network.",
     ])
     _save(fig, "exp_critical_path.png")
 

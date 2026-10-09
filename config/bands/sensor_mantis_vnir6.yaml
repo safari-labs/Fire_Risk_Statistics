@@ -91,7 +91,7 @@ bands:
   # pair, six slots cannot. B8A is the better single choice: narrow, and less
   # contaminated by the water vapour feature near 940 nm.
   - name: nir_narrow
-    role: NIR_NARROW
+    role: NIR
     centre_nm: 865.0
     fwhm_nm: 20.0
     srf_shape: gaussian

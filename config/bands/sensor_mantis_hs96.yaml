@@ -53,6 +53,18 @@
 # So the effective surface count is 91, not 96, and any comparison against
 # the 6-band MS mode should say 91.
 #
+#
+# CANONICAL ROLES ARE ASSIGNED TO THE NEAREST BANDS
+# -------------------------------------------------
+# Six of the 96 carry the standard role names (BLUE, GREEN, RED, RED_EDGE1,
+# RED_EDGE2, NIR) rather than HS_nn. That is not a claim that those six are
+# special -- it is how the index feasibility matrix is told that a contiguous
+# sensor can form NDVI, EVI, VARI and NDRE. With HS_nn names throughout, the
+# matrix reported that a 96-band imager could form no index at all, which is
+# an artifact of the role vocabulary and not a property of the optics.
+#
+# A hyperspectral instrument picks whichever channel it needs; these six are
+# simply the channels nearest the heritage centres.
 # VALIDATOR NOISE IS EXPECTED HERE. Contiguous 4.5 nm bands at 4.5 nm
 # FWHM are near-duplicates by the rule's definition, and several fall in the
 # O2-A region. For a dispersive hyperspectral sensor that is the design, not
@@ -95,8 +107,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_04
-    role: HS_04
+  - name: hs_04   # BLUE, nearest to 490 nm
+    role: BLUE
     centre_nm: 490.16
     fwhm_nm: 4.48
     srf_shape: gaussian
@@ -207,8 +219,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_20
-    role: HS_20
+  - name: hs_20   # GREEN, nearest to 560 nm
+    role: GREEN
     centre_nm: 561.82
     fwhm_nm: 4.48
     srf_shape: gaussian
@@ -368,8 +380,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_43
-    role: HS_43
+  - name: hs_43   # RED, nearest to 665 nm
+    role: RED
     centre_nm: 664.84
     fwhm_nm: 4.48
     srf_shape: gaussian
@@ -431,8 +443,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_52
-    role: HS_52
+  - name: hs_52   # RED_EDGE1, nearest to 705 nm
+    role: RED_EDGE1
     centre_nm: 705.16
     fwhm_nm: 4.48
     srf_shape: gaussian
@@ -487,8 +499,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_60
-    role: HS_60
+  - name: hs_60   # RED_EDGE2, nearest to 740 nm
+    role: RED_EDGE2
     centre_nm: 740.99
     fwhm_nm: 4.48
     srf_shape: gaussian
@@ -653,8 +665,8 @@ bands:
     srf_shape: gaussian
     out_of_band_leakage: 0.01
     detector: silicon_cmos
-  - name: hs_83
-    role: HS_83
+  - name: hs_83   # NIR, nearest to 842 nm
+    role: NIR
     centre_nm: 844.01
     fwhm_nm: 4.48
     srf_shape: gaussian
