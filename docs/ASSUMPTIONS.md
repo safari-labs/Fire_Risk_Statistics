@@ -383,76 +383,90 @@ The superseded patches are kept at
 
 ---
 
-## A-18 — The payload is two candidate pushbroom sensors, not a free band budget
+## A-18 — The payload is one Mantis head with four modes
 
-**Status:** CONFIRMED by James — this is design context, not an assumption
-**Supersedes:** the framing in configurations A/B/C (brief §5)
+**Status:** CONFIRMED by James (datasheet extract)
+**Supersedes:** the framing in configurations A/B/C (brief §5), and an
+earlier version of this entry that read the options as two separate sensors
 
-The decision is between two sensors, taken singly or together:
+One imager, **<1U, TRL-9**, four modes:
 
-| Sensor | Detector | Range | Bands |
+| Mode | Type | Bands | Range |
 |---|---|---|---|
-| VNIR pushbroom | silicon | 400–1000 nm | **6** multispectral |
-| SWIR pushbroom | standard InGaAs | 1000–1750 nm | **4** SWIR |
+| Snapshot | RGB or monochrome | — | — |
+| Push broom | **Multispectral** | **6** MS | **400–1000 nm** |
+| Push broom | **Hyperspectral** | **96** HS | **470–900 nm** |
+| Push broom | **SWIR** | **4** SWIR | **1000–1750 nm** |
 
-Three options: VNIR only, SWIR only, or both — the last only if the gain is
-shown to justify it.
+The three pushbroom modes are the decision. An earlier reading of this had
+them as two separate sensors and costed the SWIR half against Dragonfly's
+Chameleon SWIR (2.5U, 1.6 kg, 11.2 km swath) — a different product. Those
+figures are withdrawn, not adjusted: Mantis SWIR is a mode of the same <1U
+head.
 
 ### What this changes
 
-**The band count is fixed, not free.** The nested ranking still reports every
-k, but only two rungs are decisions: the best **6** of the 400–1000 nm pool
-and the best **4** of 1000–1750. Marginal gain at k=7 in the VNIR is not a
-trade, it is unreachable.
+**The band counts are fixed.** The nested ranking still reports every k, but
+only two rungs are decisions: the best **6** of 400–1000 nm and the best **4**
+of 1000–1750. Marginal gain at k=7 is unreachable, not a trade.
+
+**HS is not a strict upgrade on MS.** It is narrower: 470–900 against
+400–1000. It buys ~4.5 nm sampling by surrendering both ends, and in
+Sentinel-2 terms that costs exactly **B1 (443, coastal/aerosol)** and **B9
+(945, water vapour)** — ten candidate bands for MS, eight for HS.
+
+**Five of the 96 HS bands are not surface bands.** At 4.5 nm spacing, bands
+near 754, 759, 763, 768 and 772 nm fall inside the O₂-A absorption; a
+contiguous dispersive sensor cannot avoid placing detector columns there.
+They are marked `purpose: atmospheric`. The effective surface count is **91**.
 
 **Configuration C is retired.** It pairs 1610 with 2190 nm on extended
-InGaAs. 2190 is outside the SWIR sensor's 1000–1750 window, so extended
-InGaAs is not among the options under consideration. Any recommendation to
-bring B12 (2190 nm) into the study is moot — including the one made earlier
-in this project's development. What that retires with it:
-
-- **H1** as written ("SWIR1 + SWIR2 resolves Cm changes") is not testable
-  against a real option, because SWIR2 is not on offer. Its *fallback clause*
-  — "SWIR1 + 1240 nm may partially substitute" — becomes the live question,
-  and the 4-band SWIR sensor is exactly the budget needed to answer it.
-- **H2** ("SWIR2 is necessary for T2") can now only be answered as a reason to
-  *reject* the SWIR sensor for curing, never as a reason to specify SWIR2.
-
-**Configuration B becomes the natural shape of the SWIR sensor.** Its
-1240 + 1375 + 1610 all fall inside 1000–1750, using three of the four slots.
-
-**The two usable sub-windows constrain where the 4 SWIR bands can sit.**
-Atmospheric transmission allows roughly 1000–1300 nm (clear of the O₂ band at
-1270) and 1500–1750 nm. 1350–1450 is opaque water vapour — which is why 1375
-works as a cirrus band and cannot serve as a surface band.
+InGaAs, and 2190 is outside every mode's range. Any recommendation to bring
+B12 into the study is moot — including one made earlier in this project.
+**H1** as written ("SWIR1 + SWIR2 resolves Cm changes") has no real option
+behind it; its fallback clause, SWIR1 + 1240 nm, becomes the live question,
+and four SWIR bands is exactly the budget for it. **H2** survives only as a
+possible reason to reject the SWIR mode for curing, never to specify SWIR2.
 
 ### What our data can and cannot decide
 
-Sentinel-2 splits very unevenly across the two sensors:
-
-| Sensor range | S2 candidates | Decidable from data in hand? |
+| Mode | S2 bands in range | Decidable from data in hand? |
 |---|---|---|
-| 400–1000 nm | **10** (B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9) | **Yes** — choosing 6 of 10 is exactly the nested ranking |
-| 1000–1750 nm | **1** (B11 at 1610) | **No** — cannot choose 4 from a pool of 1 |
+| MS, 400–1000 | **10** | **Yes** — best 6 of 10 is exactly the nested ranking |
+| HS, 470–900 | 8 | **Partly** — the MS-vs-HS *reach* question is answerable; 96-band resolution is not |
+| SWIR, 1000–1750 | **1** (B11) | **No** — four cannot be chosen from a pool of one |
 
-So the Sentinel-2 arms answer the **VNIR sensor completely** and can only put
-a *lower bound* on the SWIR sensor, by measuring what a single SWIR band adds
-to the best VNIR set. Specifying 4 SWIR bands requires contiguous spectra —
-AVIRIS-NG over the ABoVE domain (5 nm, ~5 m, boreal Canada and Alaska),
-EnMAP or PRISMA.
+The MS-vs-HS comparison has a sharp, cheap test that needs no new data: run
+the VNIR selection over all ten S2 bands and see whether B1 or B9 earns a
+place in the best six. If either does, HS forfeits something measurable. If
+neither does, HS surrenders nothing and its extra bands are pure gain.
 
-### The "both" option carries a cost the others do not
+What HS cannot be judged on from Sentinel-2 is what 96 bands at 4.5 nm buy
+over 6 — ten samples cannot be interpolated into ninety-six, and rule 2
+forbids trying. That needs AVIRIS-NG, EnMAP or PRISMA, which also answer the
+SWIR mode. One hyperspectral dataset settles both.
 
-Two pushbrooms are two focal planes, so "both" adds VNIR/SWIR band-to-band
-misregistration, which the brief already flags as an engineering risk at
-snow/forest boundaries. This is not a second-order concern: the indices that
-motivate the SWIR sensor at all — NDMI/NDII, NMDI — contrast a NIR band
-against a SWIR one, so they are precisely the products that cross the chain
-boundary and degrade under misregistration. The "both" arm must therefore be
-evaluated **with a misregistration term**, not as a clean union of two band
-sets, or it will be scored optimistically against the single-sensor options.
+### Costs that are not band count
 
----
+- **Downlink.** 96 bands is ~16× the per-pixel volume of 6, against a budget
+  already under validation.
+- **Onboard inference.** The first convolution's width scales with input
+  channels, and stream BRAM is ⌈width_bits/18⌉ × ⌈depth/1024⌉ per stream, so
+  96 channels widens every inter-layer FIFO. This is the input-channel axis
+  the hardware sweep already measures.
+- **Registration.** MS and SWIR are different focal planes whether or not
+  they share a housing. NDMI, NDII and NMDI all contrast NIR against SWIR, so
+  cross-chain misregistration lands on exactly the products the SWIR mode is
+  carried for. Any combined arm must be scored **with** a misregistration
+  term.
+
+### Open
+
+Whether MS and SWIR can run **simultaneously**, or are alternative
+configurations selected per acquisition. If alternatives, "both" means two
+Mantis units and the cost doubles; if simultaneous, "both" is nearly free.
+This decides the shape of the whole trade and nothing else in it can be
+settled first.
 
 ## A-19 — The 1750 nm top of the SWIR sensor sits past the standard InGaAs cutoff
 

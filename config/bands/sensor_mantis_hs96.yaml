@@ -1,0 +1,746 @@
+# Mantis Hyperspectral — 96 contiguous bands, 470-900 nm.
+#
+# The third Mantis pushbroom mode (ASSUMPTIONS A-18), and the one that changes
+# the question. Generated, not hand-authored: 96 bands at 4.479 nm spacing
+# across the published envelope.
+#
+# THE RANGE IS THE TRADE, NOT THE BAND COUNT
+# ------------------------------------------
+# HS does not simply beat MS. It buys spectral resolution by giving up
+# spectral REACH:
+#
+#     MS   400-1000 nm   600 nm span    6 bands
+#     HS   470- 900 nm   430 nm span   96 bands
+#
+# HS cannot see below 470 nm or above 900 nm at all. In Sentinel-2 terms that
+# removes exactly two bands from the candidate pool -- B1 (443, coastal /
+# aerosol) and B9 (945, water vapour) -- leaving eight: B2, B3, B4, B5, B6,
+# B7, B8, B8A.
+#
+# That makes the MS-vs-HS comparison sharp and, unusually, answerable with
+# data already on disk. Run the VNIR selection over all ten S2 bands; if B1 or
+# B9 earns a place in the best six, HS forfeits something measurable. If
+# neither does, HS gives up nothing and its 96 bands are pure gain.
+#
+# What HS gains is the red edge. 680-780 nm sits comfortably inside 470-900,
+# and at 4.5 nm sampling the whole inflection is resolved rather than
+# sampled at three points. The brief leans on the red edge for T3 (mortality,
+# defoliation), and the three S2 red-edge bands are the part of the VNIR
+# argument with the least obvious answer.
+#
+# WHAT IT COSTS DOWNSTREAM
+# ------------------------
+# 96 input channels is not 6. Two consequences the study already has
+# machinery for:
+#   * downlink -- 16x the per-pixel volume of MS, against a budget already
+#     being validated;
+#   * onboard inference -- the first convolution's width scales with input
+#     channels, and stream BRAM is ceil(width_bits/18) x ceil(depth/1024) per
+#     stream, so 96 channels widens every inter-layer FIFO. This is precisely
+#     the input-channel cost axis in the hardware sweep.
+# So HS has to earn its place against 6 bands by more than a little.
+#
+# FIVE OF THE 96 ARE NOT SURFACE BANDS
+# -------------------------------------
+# At 4.5 nm spacing, bands near 754, 759, 763, 768 and 772 nm fall inside the
+# O2-A absorption. A dispersive sensor covering 470-900 contiguously cannot
+# avoid putting detector columns there -- it is a property of the spectrum,
+# not a design slip. Those five return no usable surface reflectance and are
+# marked purpose: atmospheric, which is also honest about their value: O2-A
+# is informative for cloud-top pressure and aerosol height, just not for
+# fuel.
+#
+# So the effective surface count is 91, not 96, and any comparison against
+# the 6-band MS mode should say 91.
+#
+# VALIDATOR NOISE IS EXPECTED HERE. Contiguous 4.5 nm bands at 4.5 nm
+# FWHM are near-duplicates by the rule's definition, and several fall in the
+# O2-A region. For a dispersive hyperspectral sensor that is the design, not
+# a defect -- the rule exists to catch wasted slots in a SELECTED set.
+
+name: sensor_mantis_hs96
+description: >
+  Mantis Hyperspectral, 96 contiguous bands over 470-900 nm. Generated at
+  even spacing from the published envelope. The trade against the 6-band
+  MS mode is REACH for RESOLUTION: HS cannot see B1 (443) or B9 (945).
+role_in_study: candidate
+swir_content: "none - VNIR only, and narrower than the MS mode"
+detector_class: silicon_cmos
+bands:
+  - name: hs_00
+    role: HS_00
+    centre_nm: 472.24
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_01
+    role: HS_01
+    centre_nm: 476.72
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_02
+    role: HS_02
+    centre_nm: 481.20
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_03
+    role: HS_03
+    centre_nm: 485.68
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_04
+    role: HS_04
+    centre_nm: 490.16
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_05
+    role: HS_05
+    centre_nm: 494.64
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_06
+    role: HS_06
+    centre_nm: 499.11
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_07
+    role: HS_07
+    centre_nm: 503.59
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_08
+    role: HS_08
+    centre_nm: 508.07
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_09
+    role: HS_09
+    centre_nm: 512.55
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_10
+    role: HS_10
+    centre_nm: 517.03
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_11
+    role: HS_11
+    centre_nm: 521.51
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_12
+    role: HS_12
+    centre_nm: 525.99
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_13
+    role: HS_13
+    centre_nm: 530.47
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_14
+    role: HS_14
+    centre_nm: 534.95
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_15
+    role: HS_15
+    centre_nm: 539.43
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_16
+    role: HS_16
+    centre_nm: 543.91
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_17
+    role: HS_17
+    centre_nm: 548.39
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_18
+    role: HS_18
+    centre_nm: 552.86
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_19
+    role: HS_19
+    centre_nm: 557.34
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_20
+    role: HS_20
+    centre_nm: 561.82
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_21
+    role: HS_21
+    centre_nm: 566.30
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_22
+    role: HS_22
+    centre_nm: 570.78
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_23
+    role: HS_23
+    centre_nm: 575.26
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_24
+    role: HS_24
+    centre_nm: 579.74
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_25
+    role: HS_25
+    centre_nm: 584.22
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_26
+    role: HS_26
+    centre_nm: 588.70
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_27
+    role: HS_27
+    centre_nm: 593.18
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_28
+    role: HS_28
+    centre_nm: 597.66
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_29
+    role: HS_29
+    centre_nm: 602.14
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_30
+    role: HS_30
+    centre_nm: 606.61
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_31
+    role: HS_31
+    centre_nm: 611.09
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_32
+    role: HS_32
+    centre_nm: 615.57
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_33
+    role: HS_33
+    centre_nm: 620.05
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_34
+    role: HS_34
+    centre_nm: 624.53
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_35
+    role: HS_35
+    centre_nm: 629.01
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_36
+    role: HS_36
+    centre_nm: 633.49
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_37
+    role: HS_37
+    centre_nm: 637.97
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_38
+    role: HS_38
+    centre_nm: 642.45
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_39
+    role: HS_39
+    centre_nm: 646.93
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_40
+    role: HS_40
+    centre_nm: 651.41
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_41
+    role: HS_41
+    centre_nm: 655.89
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_42
+    role: HS_42
+    centre_nm: 660.36
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_43
+    role: HS_43
+    centre_nm: 664.84
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_44
+    role: HS_44
+    centre_nm: 669.32
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_45
+    role: HS_45
+    centre_nm: 673.80
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_46
+    role: HS_46
+    centre_nm: 678.28
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_47
+    role: HS_47
+    centre_nm: 682.76
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_48
+    role: HS_48
+    centre_nm: 687.24
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_49
+    role: HS_49
+    centre_nm: 691.72
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_50
+    role: HS_50
+    centre_nm: 696.20
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_51
+    role: HS_51
+    centre_nm: 700.68
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_52
+    role: HS_52
+    centre_nm: 705.16
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_53
+    role: HS_53
+    centre_nm: 709.64
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_54
+    role: HS_54
+    centre_nm: 714.11
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_55
+    role: HS_55
+    centre_nm: 718.59
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_56
+    role: HS_56
+    centre_nm: 723.07
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_57
+    role: HS_57
+    centre_nm: 727.55
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_58
+    role: HS_58
+    centre_nm: 732.03
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_59
+    role: HS_59
+    centre_nm: 736.51
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_60
+    role: HS_60
+    centre_nm: 740.99
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_61
+    role: HS_61
+    centre_nm: 745.47
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_62
+    role: HS_62
+    centre_nm: 749.95
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_63
+    role: HS_63
+    centre_nm: 754.43
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+    purpose: atmospheric
+  - name: hs_64
+    role: HS_64
+    centre_nm: 758.91
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+    purpose: atmospheric
+  - name: hs_65
+    role: HS_65
+    centre_nm: 763.39
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+    purpose: atmospheric
+  - name: hs_66
+    role: HS_66
+    centre_nm: 767.86
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+    purpose: atmospheric
+  - name: hs_67
+    role: HS_67
+    centre_nm: 772.34
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+    purpose: atmospheric
+  - name: hs_68
+    role: HS_68
+    centre_nm: 776.82
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_69
+    role: HS_69
+    centre_nm: 781.30
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_70
+    role: HS_70
+    centre_nm: 785.78
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_71
+    role: HS_71
+    centre_nm: 790.26
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_72
+    role: HS_72
+    centre_nm: 794.74
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_73
+    role: HS_73
+    centre_nm: 799.22
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_74
+    role: HS_74
+    centre_nm: 803.70
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_75
+    role: HS_75
+    centre_nm: 808.18
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_76
+    role: HS_76
+    centre_nm: 812.66
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_77
+    role: HS_77
+    centre_nm: 817.14
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_78
+    role: HS_78
+    centre_nm: 821.61
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_79
+    role: HS_79
+    centre_nm: 826.09
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_80
+    role: HS_80
+    centre_nm: 830.57
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_81
+    role: HS_81
+    centre_nm: 835.05
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_82
+    role: HS_82
+    centre_nm: 839.53
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_83
+    role: HS_83
+    centre_nm: 844.01
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_84
+    role: HS_84
+    centre_nm: 848.49
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_85
+    role: HS_85
+    centre_nm: 852.97
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_86
+    role: HS_86
+    centre_nm: 857.45
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_87
+    role: HS_87
+    centre_nm: 861.93
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_88
+    role: HS_88
+    centre_nm: 866.41
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_89
+    role: HS_89
+    centre_nm: 870.89
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_90
+    role: HS_90
+    centre_nm: 875.36
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_91
+    role: HS_91
+    centre_nm: 879.84
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_92
+    role: HS_92
+    centre_nm: 884.32
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_93
+    role: HS_93
+    centre_nm: 888.80
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_94
+    role: HS_94
+    centre_nm: 893.28
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: hs_95
+    role: HS_95
+    centre_nm: 897.76
+    fwhm_nm: 4.48
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos

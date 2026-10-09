@@ -1,51 +1,51 @@
-# Dragonfly Aerospace Chameleon SWIR — the candidate 4-band SWIR pushbroom.
+# Mantis SWIR — the candidate 4-band SWIR pushbroom.
 #
-# This is the SWIR half of the two-sensor decision in ASSUMPTIONS A-18. James
-# quoted it as "Push broom SWIR, 4x SWIR bands (1000 - 1750 nm)"; the public
-# catalogue entry for Dragonfly's Chameleon SWIR matches that exactly. There
-# is no publicly documented "Mantis SWIR" variant — the Mantis line is the
-# VNIR/hyperspectral imager (see sensor_mantis_vnir6.yaml), and Chameleon is
-# the SWIR one. Correct this if the vendor quote says otherwise.
+# The SWIR half of the two-sensor decision in ASSUMPTIONS A-18. James's
+# datasheet extract lists it as one of four modes of a single Mantis imager,
+# all in the same <1U envelope at TRL-9:
+#
+#     Snapshot    RGB or Monochrome
+#     Push broom  Multispectral   6x MS bands    400-1000 nm
+#     Push broom  Hyperspectral   96x HS bands   470-900 nm
+#     Push broom  SWIR            4x SWIR bands  1000-1750 nm
+#
+# NAMING CORRECTION. This file was first written as "Chameleon SWIR", which
+# is Dragonfly's separate 2.5U / 1.6 kg SWIR product and the only public
+# listing matching "4 bands, 1000-1750 nm". It is NOT this. Mantis SWIR is a
+# mode of the <1U Mantis head, so the platform cost is far lower than the
+# Chameleon figures that were in this header -- and the swath and GSD quoted
+# from that listing (11.2 km, 8.7 m) do not apply and have been removed
+# rather than carried over as plausible-looking wrong numbers.
 #
 # THE BAND CENTRES BELOW ARE SLOTS, NOT SPECIFICATIONS
 # ----------------------------------------------------
-# The vendor publishes the ENVELOPE — four bands somewhere in 1000-1750 nm —
-# and not the centres. That is the most useful thing about this config: the
-# placements appear to be a design input rather than a fixed property, which
-# is precisely what this study exists to determine. Nothing here should be
-# quoted as a Chameleon specification.
+# The datasheet gives the envelope and the count, not the placements. That is
+# the useful part: the centres look like a design input, which is what this
+# study determines. Nothing here is a Mantis specification.
 #
 # The provisional values respect three constraints:
 #   * rule 7's sanctioned windows, 1230-1250 and 1550-1750;
-#   * the standard-InGaAs response edge (A-19) — QE is 0.70 at 1650 and 0.40
-#     at 1700, so a band much past 1700 buys little signal and sits where the
+#   * the standard-InGaAs response edge (A-19) -- QE 0.70 at 1650, 0.40 at
+#     1700, so a band much past 1700 buys little and sits where the
 #     temperature-dependent cutoff makes it least stable;
-#   * one band in the short window and three sampling the 1500-1750 shoulder,
-#     which is the shape WorldView-3 chose and the arrangement that gives two
-#     water-sensitive regions with different water-to-dry-matter ratios —
-#     hypothesis H1's surviving clause.
+#   * one band in the short window and three across the 1500-1750 shoulder,
+#     giving two water-sensitive regions with different water-to-dry-matter
+#     ratios -- hypothesis H1's surviving clause.
 #
 # PLATFORM COST, for the marginal-value denominator the brief asks for
 # --------------------------------------------------------------------
-#   2.5U, 1.6 kg, 7.0 W average, TRL 8, in production
-#   GSD  8.7 m at 500 km (RAW)        swath 11.2 km at 500 km
-#   8- or 10-bit
+#   <1U, TRL-9, same head as the VNIR modes.
+#   GSD and swath for the SWIR mode are NOT in the extract -- needed before
+#   any coverage or revisit claim. See OPEN_QUESTIONS.
 #
-# The swath is the number to notice. Mantis gives 32 km; this gives 11.2 km.
-# Flying BOTH does not cost mass and power alone — any product that needs a
-# VNIR and a SWIR band together is confined to the narrower swath, so the
-# combined-sensor coverage is roughly a third of VNIR-only. Since NDMI, NDII
-# and NMDI all contrast NIR against SWIR, that penalty falls on exactly the
-# products the second sensor is bought for.
-#
-# The GSD runs the other way and is worth confirming with the vendor: 8.7 m
-# SWIR against 32 m for the Mantis MS bands is the reverse of the usual
-# arrangement, and a VNIR/SWIR pair at different ground scales needs an
-# explicit resampling convention before any cross-sensor index is formed.
+# Because all modes share one <1U head, the "both" question is not two
+# separate payloads. Whether MS and SWIR can run SIMULTANEOUSLY, or are
+# alternative configurations of one instrument, changes the trade completely
+# and is the first thing to confirm.
 
-name: sensor_chameleon_swir4
+name: sensor_mantis_swir4
 description: >
-  Dragonfly Chameleon SWIR, the candidate 4-band SWIR pushbroom (1000-1750
+  Mantis SWIR, the candidate 4-band SWIR pushbroom mode (1000-1750
   nm). BAND CENTRES ARE PROVISIONAL SLOTS chosen to respect rule 7 and the
   InGaAs response edge — the vendor publishes only the envelope, and the
   placements are what this study is meant to determine.
