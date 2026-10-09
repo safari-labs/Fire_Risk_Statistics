@@ -451,3 +451,57 @@ against a SWIR one, so they are precisely the products that cross the chain
 boundary and degrade under misregistration. The "both" arm must therefore be
 evaluated **with a misregistration term**, not as a clean union of two band
 sets, or it will be scored optimistically against the single-sensor options.
+
+---
+
+## A-19 — The 1750 nm top of the SWIR sensor sits past the standard InGaAs cutoff
+
+**Status:** OPEN — a hardware question for James, surfaced by config validation
+**Files:** `config/detector/ingaas_std.yaml`, `config/bands/swir4_worldview3.yaml`
+
+The SWIR pushbroom is specified **1000–1750 nm on standard InGaAs** (A-18).
+Standard InGaAs cuts off near 1.7 µm. The top ~50 nm of the stated range is
+therefore past the detector's edge, and our modelled QE curve shows the
+approach is not gentle:
+
+| nm | 1500 | 1600 | 1650 | 1700 |
+|---|---|---|---|---|
+| QE | 0.80 | 0.78 | **0.70** | **0.40** |
+
+Response is already halved at 1700 and falls off a cliff beyond it. A band
+centred at 1730 would sit where QE is a small fraction of the plateau — and
+the InGaAs cutoff wavelength shifts with temperature, so whatever response
+remains is also the least thermally stable part of the range.
+
+This surfaced when the WorldView-3 SWIR set was added as a benchmark.
+WV-3's four bands below 1750 nm — 1209, 1572, 1661, 1730 — are exactly four
+bands in exactly this window, which is why they are a natural benchmark. But
+WV-3 carries eight SWIR bands reaching 2365 nm, so its detector is **HgCdTe,
+not InGaAs**. Its placements were chosen against a far longer cutoff, and
+they do not transplant: the validator rejected `swir_1730` on `ingaas_std`
+outright, and warns that `swir_1661`'s SRF skirt (1621–1701 nm at 2× FWHM)
+will be clipped by falling QE.
+
+`swir4_worldview3.yaml` therefore declares `swir_1730` on `ingaas_ext`. That
+is not a recommendation to fly extended InGaAs — it is the config refusing to
+state something physically false, and it makes the benchmark's cost visible:
+**this particular four-band set is not achievable on standard InGaAs alone.**
+
+### What to resolve
+
+1. Is the 1750 nm figure a nominal envelope, or is a band genuinely intended
+   above 1700? If the usable top is really ~1700, the two sub-windows for
+   four bands are roughly 1000–1300 and 1500–1700, which is tighter than
+   A-18 assumed and changes where the four bands can sit.
+2. If a band above 1700 is wanted, the detector is not standard InGaAs. A
+   1.9 µm extended variant is cheaper than the 2.2 µm part configuration C
+   would have needed, but it is still extended — deeper cooling, higher dark
+   current, and the SWaP consequences the brief flags as the main cost driver.
+3. The QE curve itself is a **placeholder** (Q4, A-2), so the exact cutoff
+   shape is representative rather than a datasheet figure. The conclusion is
+   robust to that — 1.7 µm is the defining property of the technology, not of
+   a particular part — but the margin at 1650–1700 is not.
+
+**Until resolved:** treat 1700 nm as the usable top for band-placement work,
+and carry the WV-3 set as a benchmark that is partly out of reach rather than
+as a candidate specification.

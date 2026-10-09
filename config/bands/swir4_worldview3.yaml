@@ -1,0 +1,86 @@
+# WorldView-3's four SWIR bands below 1750 nm, as a benchmark for the
+# 4-band SWIR pushbroom (ASSUMPTIONS A-18).
+#
+# WHY THIS SET EXISTS AS A CONFIG
+# -------------------------------
+# WV-3 carries eight SWIR bands; SWIR-5 through SWIR-8 (2145-2365 nm) sit
+# above the standard-InGaAs cutoff and are therefore outside the candidate
+# sensor's window. What remains is SWIR-1 to SWIR-4 -- EXACTLY four bands in
+# EXACTLY 1000-1750 nm. A flown instrument has already solved the problem this
+# study is posing, and its answer is a benchmark rather than a guess.
+#
+# This is the SWIR counterpart to the Sentinel-2 positive control the brief
+# asks for in Phase 4: the question becomes whether an optimised set beats a
+# real instrument's choices, which is a far more honest bar than beating a set
+# we invented ourselves.
+#
+# WHAT THE PLACEMENTS APPEAR TO BE DOING
+# --------------------------------------
+# 1209 nm sits in the short-wave window, and NOT at 1240 where Gao's NDWI puts
+# it. 1195-1225 leaves ~45 nm of margin to the O2 band at 1270, where a
+# 1230-1250 band leaves ~20. Liquid water absorption rises through this
+# region, so 1240 is the more water-sensitive choice and 1209 the more
+# atmospherically conservative one. That trade is itself worth measuring --
+# see OPEN_QUESTIONS.
+#
+# 1572, 1661 and 1730 sample the SHAPE of the 1500-1750 shoulder rather than
+# its level. Sentinel-2's B11 sits between the first two and is roughly twice
+# as wide, so it integrates over exactly the structure these three resolve.
+# The liquid water feature centred near 1450 has a long shoulder rising
+# through this range, and its slope separates water content from overall
+# brightness -- which is the Cw-versus-Cm disentangling hypothesis H1 needs
+# and cannot get from a single broad band.
+#
+# So this set plausibly satisfies H1's surviving clause ("SWIR1 + 1240 nm may
+# partially substitute" for SWIR1 + SWIR2) by a different route: two
+# water-sensitive REGIONS with different water-to-dry-matter absorption
+# ratios, one of them resolved into three samples.
+#
+# USING IT UNDER RULE 2
+# ---------------------
+# WV-3 imagery may be used for the bands it actually measures, so evaluating
+# THIS set on WV-3 data is legitimate. Synthesising other placements from it
+# is not -- that needs hyperspectral or radiative transfer. WV-3 is also
+# commercial, so it is a benchmark and a validation source, not a search
+# space.
+#
+# Centres are the effective values; the datasheets publish ranges, and the
+# FWHM here is the published range width.
+
+name: swir4_worldview3
+description: >
+  The four WorldView-3 SWIR bands inside 1000-1750 nm, as a flown benchmark
+  for the 4-band SWIR pushbroom.
+role_in_study: positive_control
+swir_content: "1209, 1572, 1661, 1730 nm"
+detector_class: standard_ingaas
+
+bands:
+  - name: swir_1209
+    role: SWIR_SHORT
+    centre_nm: 1209.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  - name: swir_1572
+    role: SWIR1_LOW
+    centre_nm: 1572.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  - name: swir_1661
+    role: SWIR1_MID
+    centre_nm: 1661.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  - name: swir_1730
+    role: SWIR1_HIGH
+    centre_nm: 1730.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_ext
