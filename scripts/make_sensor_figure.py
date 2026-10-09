@@ -35,6 +35,15 @@ S2 = [("B1", 443), ("B2", 490), ("B3", 560), ("B4", 665), ("B5", 705),
       ("B6", 740), ("B7", 783), ("B8", 842), ("B8A", 865), ("B9", 945),
       ("B11", 1610)]
 
+#: WorldView-3, the archive standing in for the bands Sentinel-2 lacks.
+#: Eight VNIR plus four SWIR inside the Mantis SWIR window -- one platform,
+#: co-registered, which is how the dichroic design sees the scene too.
+WV3_VNIR = [427, 478, 546, 608, 659, 724, 831, 908]
+WV3_SWIR = [1209, 1572, 1661, 1730]
+
+#: Where the dichroic splits: SWIR reflected, VNIR transmitted.
+DICHROIC_NM = 1000
+
 MS_LO, MS_HI, N_MS = 400, 1000, 6
 HS_LO, HS_HI, N_HS = 470, 900, 96
 SW_LO, SW_HI, N_SW = 1000, 1750, 4
@@ -60,7 +69,7 @@ def main() -> int:
     fig, ax = plt.subplots(figsize=(11.2, 5.0), facecolor=FIG_BG)
     ax.set_facecolor(AX_BG)
     ax.set_xlim(370, 1810)
-    ax.set_ylim(0, 10)
+    ax.set_ylim(-0.35, 10)
     fig.suptitle("Mantis modes, and what our data can decide",
                  color=INK_BRIGHT, fontsize=12.5, x=0.0, ha="left", y=1.01)
     for side in ("top", "right", "left"):
@@ -109,24 +118,50 @@ def main() -> int:
         if in_ms and not in_hs:
             ax.plot(nm, 2.95, marker="v", color=CRIT, ms=5, zorder=4)
 
+    # The dichroic crossover, and the band that sits in it.
+    ax.axvline(DICHROIC_NM, ymin=0.33, ymax=0.97, color=INK_BRIGHT, lw=1.4,
+               ls="--", alpha=0.75, zorder=5)
+    ax.text(DICHROIC_NM + 10, 9.45, "dichroic", color=INK_BRIGHT,
+            fontsize=8.6, ha="left", va="center", style="italic")
+    ax.text(DICHROIC_NM + 10, 9.05, "SWIR reflected 90 deg", color=SW_C,
+            fontsize=7.8, ha="left", va="center")
+    ax.text(DICHROIC_NM - 10, 9.05, "MS transmitted", color=MS_C,
+            fontsize=7.8, ha="right", va="center")
+
     ax.text(700, 2.25, "Sentinel-2 candidates in range", color=INK_BRIGHT,
             fontsize=9, ha="center")
     ax.text(700, 1.45, "MS: 10      HS: 8  (red = HS cannot see)",
             color=INK, fontsize=9, ha="center", family="monospace")
-    ax.text(700, 0.72, "choose 6  ->  DECIDABLE NOW", color=MS_C,
+    ax.text(700, 0.95, "choose 6  ->  DECIDABLE NOW", color=MS_C,
             fontsize=9.4, ha="center", weight="bold")
 
     ax.text(1375, 2.25, "Sentinel-2 candidates in range", color=INK_BRIGHT,
             fontsize=9, ha="center")
     ax.text(1375, 1.45, "SWIR: 1  (B11 only)", color=INK, fontsize=9,
             ha="center", family="monospace")
-    ax.text(1375, 0.72, "choose 4  ->  NEEDS HYPERSPECTRAL", color=SW_C,
+    ax.text(1375, 0.95, "choose 4  ->  WORLDVIEW-3 SUPPLIES IT", color=SW_C,
             fontsize=9.4, ha="center", weight="bold")
+
+    # WorldView-3 row: the archive that fills the SWIR gap.
+    for nm in WV3_VNIR:
+        ax.plot([nm, nm], [0.12, 0.52], color=MS_C, lw=2.0, alpha=0.75,
+                solid_capstyle="round", zorder=3)
+    for nm in WV3_SWIR:
+        ax.plot([nm, nm], [0.12, 0.52], color=SW_C, lw=2.0,
+                solid_capstyle="round", zorder=3)
+    ax.text(378, 0.32, "WV-3", color=INK, fontsize=8, ha="right",
+            va="center", family="monospace")
+    # Below the ticks, not beside them: at the right edge it sat on the
+    # 1572/1661/1730 marks it was describing.
+    ax.text(1090, -0.28, "WorldView-3: 8 VNIR + 4 SWIR, one platform, "
+            "co-registered", color=MUTED, fontsize=7.8, ha="center",
+            va="bottom", style="italic")
 
     ax.legend(handles=[
         Patch(facecolor=CRIT, alpha=0.3, hatch="///", edgecolor=CRIT,
               label="range HS gives up"),
-    ], loc="lower right", frameon=False, labelcolor=INK, fontsize=8.4)
+    ], loc="upper right", bbox_to_anchor=(1.0, 0.60), frameon=False,
+        labelcolor=INK, fontsize=8.4)
 
     cap = [
         "One <1U head at TRL-9, four modes. The band counts are FIXED, so "
@@ -143,8 +178,13 @@ def main() -> int:
         f"{N_HS - N_HS_ATMOS}.",
         "",
         "The SWIR mode cannot be chosen from Sentinel-2 at all -- one band in "
-        "range is not a pool of four. That half needs AVIRIS-NG, EnMAP or "
-        "PRISMA.",
+        "range is not a pool of four. WorldView-3 supplies it: four real "
+        "measurements at 1209, 1572, 1661 and 1730 nm.",
+        "WV-3 also carries eight VNIR bands, so it can supply BOTH halves "
+        "co-registered -- the same way the dichroic sees the scene. Pairing "
+        "WV-3 SWIR with S2 VNIR instead would add a cross-platform",
+        "mismatch the real instrument does not have. Tuning the four centres "
+        "freely still needs hyperspectral.",
     ]
     fig.text(0.0, -0.33, chr(10).join(cap), color=MUTED, fontsize=8.4,
              ha="left")

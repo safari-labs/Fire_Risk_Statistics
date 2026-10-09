@@ -487,3 +487,62 @@ or hyperspectral data with one. It should not block the VNIR decision, which
 is independent.
 
 **Answer:**
+
+---
+
+### Q24 — Use WorldView-3 for BOTH halves, not just the SWIR?
+
+James's plan is to use WorldView-3 data to supply the SWIR bands Sentinel-2
+lacks, so the Mantis SWIR mode can be analysed. That works — WV-3's four
+in-range SWIR bands (1209, 1572, 1661, 1730 nm) are real measurements, which
+is what rule 2 requires of a multispectral archive.
+
+**But WV-3 also carries eight VNIR bands**, and that changes the better plan:
+
+| | WorldView-3 | Mantis |
+|---|---|---|
+| VNIR | 8 bands, 400–1040 nm, 1.24 m | 6 bands, 400–1000 nm |
+| SWIR in range | 4 bands, 1209–1730 nm, 3.7 m | 4 bands, 1000–1750 nm |
+
+So WV-3 alone is a **12-band co-registered analogue of Mantis MS+SWIR** — and
+co-registered in exactly the way the dichroic design is (A-20): one platform,
+one instant, one geometry.
+
+Pairing WV-3 SWIR with Sentinel-2 VNIR would instead introduce a cross-
+platform registration and timing mismatch that the real instrument does not
+have. It would measure a harder problem than the one being designed, and a
+poor combined-mode result could be an artifact of the pairing rather than a
+property of the bands.
+
+**Recommendation:** use WV-3 for both halves when evaluating the combined
+mode, and keep Sentinel-2 for the VNIR-only question, where its ten in-range
+bands and wall-to-wall free coverage are the better instrument.
+
+### What to check before committing
+
+1. **Coverage and cost.** WV-3 is commercial. Archive holdings over boreal
+   Canada — and specifically over our 292 fire and 279 ecology patches — are
+   unlikely to be dense, and tasking is expensive. This is the binding
+   constraint, not the science.
+2. **Resolution ratio.** WV-3 is 1.24 m VNIR against 3.7 m SWIR, a 3× ratio;
+   Mantis has them equal. Aggregating VNIR to 3.7 m is honest downsampling
+   and matches the instrument being designed.
+3. **Band placement differences.** WV-3's VNIR set is not Mantis's — it has a
+   yellow band, two NIRs and one red edge, where the S2-derived candidate
+   pool has three red edges. It is an analogue, not a replica, so it answers
+   "does SWIR add over VNIR" better than it answers "which six VNIR bands".
+4. **Labels are not the blocker.** SCANFI and NBAC are national rasters, so
+   any Canadian WV-3 footprint can be labelled with the same machinery
+   already running on the Sentinel-2 patches.
+
+**The division this suggests**
+
+| Question | Instrument |
+|---|---|
+| Which 6 VNIR bands | Sentinel-2 — 10 in-range bands, free, wall to wall |
+| MS vs HS *reach* (B1, B9) | Sentinel-2 |
+| Which 4 SWIR bands | WorldView-3 (4 real in-range), or hyperspectral to tune centres |
+| Does SWIR add over VNIR | WorldView-3, both halves co-registered |
+| What 96 HS bands buy over 6 | hyperspectral only — AVIRIS-NG, EnMAP, PRISMA |
+
+**Answer:**

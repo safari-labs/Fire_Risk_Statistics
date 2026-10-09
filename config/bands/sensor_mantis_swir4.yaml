@@ -35,13 +35,17 @@
 # PLATFORM COST, for the marginal-value denominator the brief asks for
 # --------------------------------------------------------------------
 #   <1U, TRL-9, same head as the VNIR modes.
-#   GSD and swath for the SWIR mode are NOT in the extract -- needed before
-#   any coverage or revisit claim. See OPEN_QUESTIONS.
+#   GSD and swath: SAME as the MS mode (confirmed by James) -- 32 m and 32 km
+#   at 500 km. So the SWIR mode carries no coverage penalty.
 #
-# Because all modes share one <1U head, the "both" question is not two
-# separate payloads. Whether MS and SWIR can run SIMULTANEOUSLY, or are
-# alternative configurations of one instrument, changes the trade completely
-# and is the first thing to confirm.
+# Confirmed: MS and SWIR run SIMULTANEOUSLY, split by a dichroic on a shared
+# fore-optic -- SWIR reflected at 90 degrees, VNIR transmitted. So the SWIR
+# mode is not an alternative to the MS mode and "both" is the default
+# configuration rather than a doubling of the payload. See ASSUMPTIONS A-20.
+#
+# One consequence for the short end: the dichroic crossover near 1000 nm
+# bounds how blue a SWIR band can sit. The 1240 nm slot is comfortably clear;
+# a band nearer 1000 would land in the transition.
 
 name: sensor_mantis_swir4
 description: >

@@ -519,3 +519,70 @@ state something physically false, and it makes the benchmark's cost visible:
 **Until resolved:** treat 1700 nm as the usable top for band-placement work,
 and carry the WV-3 set as a benchmark that is partly out of reach rather than
 as a candidate specification.
+
+---
+
+## A-20 — MS and SWIR run simultaneously, split by a dichroic on one aperture
+
+**Status:** CONFIRMED by James
+**Supersedes:** the misregistration argument in A-18 and in
+`sensor_mantis_ms_plus_swir.yaml`, which assumed two independent instruments
+
+The optical design is a shared fore-optic with a dichroic beamsplitter: SWIR
+is **reflected** at 90° onto the InGaAs focal plane, VNIR is **transmitted**
+to the silicon one. Both run at once. GSD and swath are the same for both.
+
+### This defuses the registration risk, and I had it overweighted
+
+A-18 argued that "both" must be scored with a misregistration term because
+NDMI, NDII and NMDI all contrast NIR against SWIR, so cross-chain error would
+land on exactly the products the SWIR mode is carried for. That reasoning was
+right for two separate telescopes. It is largely wrong here.
+
+A shared aperture with a dichroic means both chains see **the same scene,
+through the same optics, at the same instant, from the same geometry**.
+Registration is then an alignment-and-thermal-stability problem between two
+focal planes on one bench — bounded, characterisable, and correctable by
+calibration — rather than a parallax-and-timing problem between instruments.
+Cross-chain indices are well-posed by construction.
+
+The residual term is real but much smaller: focal-plane mounting tolerance,
+dichroic wedge, and differential thermal drift across the bench. It should
+still be measured in Phase 5, but as a tolerance to specify rather than a
+penalty that could disqualify the combined option.
+
+With equal GSD and swath confirmed, the combined arm also carries **no
+coverage penalty**. The earlier 11.2 km versus 32 km argument came from the
+Chameleon mis-identification and is withdrawn entirely.
+
+### What the dichroic introduces instead
+
+**The crossover is a design parameter, and a band sits in it.** A dichroic
+edge is not a step; it has a transition region, typically some tens of nm.
+With the split near 1000 nm:
+
+- **B9 (945 nm, ~20 nm wide, so 935–955)** sits within ~50 nm of the
+  crossover. Its transmission depends on where the edge is placed and how
+  steep it is. If the VNIR selection finds B9 valuable, the dichroic
+  specification becomes coupled to that result — and B9 is already one of the
+  two bands that distinguishes MS from HS (A-18).
+- The SWIR chain's short end at 1000 nm sits on the other side of the same
+  transition, so the shortest usable SWIR band is bounded by it. Our
+  provisional 1240 nm slot is comfortably clear; a band nearer 1000 would
+  not be.
+
+**A hypothesis worth confirming:** the HS mode stops at 900 nm rather than
+1000. That could be silicon QE falling away, or it could be staying clear of
+the dichroic crossover. If the latter, the MS mode's own 1000 nm top is
+optimistic in the same way, and both edges move together if the dichroic is
+re-specified.
+
+**Throughput.** A dichroic costs a few percent in reflection and rather more
+in transmission. Both chains therefore see slightly less light than a
+dedicated single-chain instrument would. Small, but it belongs in the SNR
+budget rather than being assumed away.
+
+### Open
+
+Where the dichroic edge sits, and how steep it is. It bounds the MS mode's
+red end, the SWIR mode's blue end, and B9's usability at once.
