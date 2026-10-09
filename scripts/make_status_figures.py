@@ -148,6 +148,8 @@ def survey(repo: Path) -> dict:
         "splits": splits,
         "bands": bands,
         "n_ecology": len(list(eco.glob("*_bands.tif"))) if eco.exists() else 0,
+        "n_ecology_scanfi": (len(list(eco.glob("*_scanfi.npy")))
+                             if eco.exists() else 0),
         "fwi_total": len(fwis),
         "fwi_with_history": with_hist,
         "h5_error": h5_error,
@@ -205,8 +207,10 @@ def fig_inventory(st: dict):
         f"{st['n_patches']} patches, {len(st['bands'])} bands at 20 m in "
         f"EPSG:3978. Packed tiles: {packed or 'not packed'}.",
         f"Weather history on {st['fwi_with_history']}/{st['fwi_total']} "
-        f"patches -- the covariate run predates it and needs a --overwrite "
-        f"pass. Ecology set: {st['n_ecology']} patches downloading.",
+        f"patches; the covariate run predates it, so an --overwrite pass is "
+        f"in progress.",
+        f"Ecology set: {st['n_ecology']} patches complete, SCANFI labels on "
+        f"{st['n_ecology_scanfi']}.",
     ]), color=MUTED, fontsize=8.3, ha="left")
     return _save(fig, "status_inventory.png")
 
@@ -291,57 +295,76 @@ def fig_staleness(st: dict):
 
 
 def fig_arms():
+    """What each data source can decide, now that the instrument is known."""
     plt = _plt()
-    fig, ax = plt.subplots(figsize=(9.6, 4.3), facecolor=FIG_BG)
+    fig, ax = plt.subplots(figsize=(11.0, 5.2), facecolor=FIG_BG)
     ax.set_facecolor(FIG_BG)
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5.6)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 7.2)
     ax.axis("off")
-    fig.suptitle("Two band-ranking arms, and the gap between them",
-                 color=INK_BRIGHT, fontsize=12, x=0.0, ha="left", y=0.99)
+    fig.suptitle("Which data source answers which part of the Mantis decision",
+                 color=INK_BRIGHT, fontsize=12.5, x=0.0, ha="left", y=1.0)
 
-    def box(x, y, w, h, title, lines, col):
-        from matplotlib.patches import FancyBboxPatch
+    from matplotlib.patches import FancyBboxPatch
+
+    def box(x, y, w, h, title, sub, lines, col):
         ax.add_patch(FancyBboxPatch(
             (x, y), w, h, boxstyle="round,pad=0.12", linewidth=1.5,
             edgecolor=col, facecolor=AX_BG, zorder=2))
-        ax.text(x + 0.18, y + h - 0.3, title, color=col, fontsize=10,
+        ax.text(x + 0.2, y + h - 0.32, title, color=col, fontsize=10,
                 weight="bold", zorder=3)
+        ax.text(x + 0.2, y + h - 0.66, sub, color=MUTED, fontsize=8.2,
+                zorder=3, style="italic")
         for i, ln in enumerate(lines):
-            ax.text(x + 0.18, y + h - 0.68 - i * 0.32, ln, color=INK,
-                    fontsize=8.6, zorder=3)
+            ax.text(x + 0.2, y + h - 1.04 - i * 0.33, ln, color=INK,
+                    fontsize=8.5, zorder=3)
 
-    box(0.1, 2.9, 4.6, 2.4, "ECOLOGY ARM  (primary)", [
-        "SCANFI distillation, ~300 patches",
-        "dense: every pixel labelled",
-        "crown closure, height, biomass,",
-        "species, land cover  ->  T4",
-        "pinned to 2020: one season only",
+    box(0.1, 3.75, 3.5, 3.1, "SENTINEL-2", "292 fire + 279 ecology, packed", [
+        "10 bands in 400-1000 nm",
+        "1 band in 1000-1750 (B11)",
+        "",
+        "ANSWERS",
+        "  which 6 VNIR bands",
+        "  MS vs HS reach (B1, B9)",
     ], S1)
 
-    box(5.3, 2.9, 4.6, 2.4, "FIRE ARM  (relevance check)", [
-        "NBAC outcome, 292 patches",
-        "sparse: one label per patch",
-        "flammability -> moisture-adjacent",
-        "confounded by ignition arrival",
-        "spans 2019-2023: seasonal range",
-    ], CRIT)
-
-    box(0.1, 0.25, 9.8, 2.25, "NEITHER ARM MEASURES", [
-        "T1 live foliar moisture (LFMC)  and  T2 curing / NPV fraction  have no labels anywhere in this data.",
-        "They need radiative transfer simulation (Phases 1-2, not built) or field measurement (Phase 6).",
+    box(4.2, 3.75, 3.5, 3.1, "WORLDVIEW-3", "commercial, coverage TBC", [
+        "8 VNIR  400-1040 nm",
+        "4 SWIR  1209-1730 nm",
+        "one platform, co-registered",
         "",
-        "This matters most for B11. 1610 nm is in the design for canopy water, so a structure-only ranking",
-        "scores it on its secondary role -- and B11 is the band the whole SWIR chain exists to carry.",
+        "ANSWERS",
+        "  does SWIR add over VNIR",
     ], S2)
 
-    from matplotlib.patches import FancyArrowPatch
-    ax.add_patch(FancyArrowPatch((4.78, 4.1), (5.22, 4.1), mutation_scale=13,
-                                 color=MUTED, lw=1.3, arrowstyle="->"))
-    # ABOVE the boxes. Centred in the 0.6-wide gap between them it
-    # overflowed onto the fire panel and sat on its first two lines.
-    ax.text(5.0, 5.45, "rank here, then check there", color=MUTED,
-            fontsize=8.2, ha="center", style="italic")
+    box(8.3, 3.75, 3.6, 3.1, "HYPERSPECTRAL",
+        "AVIRIS-NG / EnMAP / PRISMA", [
+        "contiguous 400-2500 nm",
+        "5-12 nm sampling",
+        "",
+        "ANSWERS",
+        "  where the 4 SWIR centres go",
+        "  what 96 HS bands buy",
+    ], S3)
+
+    box(0.1, 1.75, 11.8, 1.8, "TWO LABEL SOURCES, AND WHAT NEITHER COVERS", "", [
+        "ECOLOGY (SCANFI, dense per pixel): T4 fuel type and percent conifer, "
+        "plus crown closure, height, biomass, species.",
+        "FIRE (NBAC, sparse, one label per patch): flammability, which is "
+        "moisture-adjacent but confounded by ignition arrival.",
+        "NEITHER labels T1 live foliar moisture or T2 curing / NPV. Those need "
+        "radiative transfer (Phases 1-2, not built) or field measurement.",
+    ], S2)
+
+    box(0.1, 0.1, 11.8, 1.55, "AND ONE THING NO DATA SOURCE FIXES", "", [
+        "T2 needs lignin. With SWIR2 out of range, the only in-range route is "
+        "NDLI (1680 + 1754 nm) -- and 1754 sits past both the 1700 InGaAs "
+        "cutoff and the 1750 envelope.",
+        "The ecology set is eight treed and wetland classes with no grassland "
+        "at all, so there is no curing label to test it against either. See "
+        "Q23.",
+    ], CRIT)
+
     return _save(fig, "status_ranking_arms.png")
 
 
