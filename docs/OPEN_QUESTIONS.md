@@ -430,3 +430,60 @@ concrete and is largely work already done.
 Which variables, and against what reference would they be validated?
 
 **Answer:**
+
+---
+
+### Q23 — Is a SWIR band above 1700 nm worth an extended detector, for NDLI?
+
+James set the terms: the 1750 nm top of the Chameleon SWIR envelope is
+nominal, and a band above 1700 is **only consequential if there are relevant
+indices that need it**. So: there is exactly one, and it is not a minor one.
+
+**NDLI, the Normalized Difference Lignin Index, uses 1680 and 1754 nm.**
+
+That matters because lignin is the curing signal. The brief routes T2 (curing
+/ NPV fraction) through cellulose and lignin absorption near 2100 nm, and
+hypothesis H2 says SWIR2 is *necessary* for it. SWIR2 is not on offer — the
+sensor stops at 1750 and extended InGaAs is outside the two-sensor decision
+(A-18). NDLI is therefore the **only in-range route to the curing target**.
+Without it, T2 is unreachable by this payload at all, and the study's answer
+on T2 reduces to "we cannot measure it".
+
+What else lives up there, for completeness:
+
+| Index | Bands | In range? |
+|---|---|---|
+| NDNI (nitrogen) | 1510, 1680 | **yes**, both comfortably inside |
+| NDLI (lignin) | 1680, **1754** | 1754 is past both 1700 and the nominal 1750 |
+| CAI (cellulose) | 2000 / 2100 / 2200 | no — needs SWIR2 |
+
+So the question is narrow and answerable: **is T2 worth a detector that
+responds at 1754 nm?**
+
+The cost side. Standard InGaAs is ~0.40 QE at 1700 in our modelled curve
+(A-19) and falls steeply beyond, so 1754 means either a part with a longer
+cutoff — a 1.9 µm extended variant, cheaper than the 2.2 µm part configuration
+C would have needed, but still extended, with deeper cooling and higher dark
+current — or accepting a band with very low and thermally unstable response.
+
+Three ways this could go, and the study can inform all three:
+
+1. **Drop it.** Four bands inside 1000–1700, T2 declared out of scope for the
+   payload, and the results note says so plainly rather than implying curing
+   is covered.
+2. **Take it on standard InGaAs anyway** and measure what the low QE costs.
+   The sensor model exists to answer exactly this: convolve a 1754 band
+   against the falling QE curve, propagate the SNR, and see whether NDLI
+   still separates cured from green grass. If it does at realistic SNR, the
+   band is nearly free.
+3. **Extended detector.** Only justified if (2) fails AND NDLI turns out to
+   carry T2 well in hyperspectral data where the band is noise-free.
+
+**Note the ordering.** (2) and (3) both need an NDLI-versus-curing result
+first, and no curing label exists anywhere in the current data — the ecology
+set is eight treed and wetland classes with no grassland at all. So this
+question cannot be settled empirically until there is either a curing label
+or hyperspectral data with one. It should not block the VNIR decision, which
+is independent.
+
+**Answer:**

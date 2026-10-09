@@ -1,0 +1,99 @@
+# Dragonfly Aerospace Mantis — the candidate 6-band VNIR pushbroom.
+#
+# The VNIR half of the two-sensor decision in ASSUMPTIONS A-18: "Push broom
+# Multispectral, 6x MS bands (400 - 1000 nm)". Mantis also ships in RGB and
+# 96-band hyperspectral variants; this config is the 6-band multispectral one.
+#
+# THE BAND CENTRES BELOW ARE SLOTS, NOT SPECIFICATIONS
+# ----------------------------------------------------
+# As with the SWIR sensor, the vendor publishes the envelope and the band
+# count, not the placements. Choosing those six is the part of the study that
+# our Sentinel-2 data can answer outright: ten S2 bands fall inside
+# 400-1000 nm (B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9), so "best 6 of 10" is
+# exactly the nested ranking, on data already packed.
+#
+# The provisional set below is a STARTING POINT, not a recommendation: blue,
+# green, red, one red edge, NIR and narrow NIR, matched to Sentinel-2 centres
+# where that costs nothing so the archive can cross-calibrate. The study's job
+# is to beat it — and in particular to decide between the three red edges
+# (705 / 740 / 783), which is where most of the VNIR argument sits, and
+# whether B1 (443, aerosol) or B9 (945, water vapour) earn a slot ahead of a
+# second red edge.
+#
+# PLATFORM COST, for the marginal-value denominator
+# -------------------------------------------------
+#   1U (65 x 90 x 107 mm), 0.5 kg, 6.0 W average, TRL 9, flight heritage 2021
+#   GSD  32 m MS (16 m PAN) at 500 km     swath 32 km at 500 km
+#
+# Against the SWIR sensor's 2.5U / 1.6 kg / 7.0 W, this is the cheap half of
+# the payload by a wide margin — roughly a third of the mass and volume. That
+# asymmetry is the reason the brief insists on ranking by marginal value per
+# marginal cost rather than by value alone: a VNIR band is nearly free next to
+# the decision to carry a SWIR chain at all.
+#
+# Note the swath and GSD against Chameleon SWIR (11.2 km, 8.7 m). The two
+# sensors do not match on either axis, so the "both" option needs a stated
+# resampling convention and is confined to the narrower swath. See
+# sensor_chameleon_swir4.yaml.
+
+name: sensor_mantis_vnir6
+description: >
+  Dragonfly Mantis, the candidate 6-band VNIR pushbroom (400-1000 nm). BAND
+  CENTRES ARE PROVISIONAL SLOTS — the vendor publishes only the envelope and
+  the count. Choosing the six from the ten Sentinel-2 bands in this range is
+  the part of the study answerable with data already in hand.
+role_in_study: candidate
+swir_content: "none - VNIR only"
+detector_class: silicon_cmos
+
+bands:
+  - name: blue
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 65.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: green
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  # One red edge of three candidates. Which one is a live question: 705 is
+  # closest to the chlorophyll red edge inflection, 740 is the steepest part
+  # of the slope, 783 is nearly NIR. The brief's T3 (mortality, defoliation)
+  # leans on this choice.
+  - name: red_edge
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  - name: red_edge2
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos
+  # ONE NIR, not two. Sentinel-2 carries both B8 (842, wide) and B8A (865,
+  # narrow) and the validator calls them near-duplicates -- S2 can afford the
+  # pair, six slots cannot. B8A is the better single choice: narrow, and less
+  # contaminated by the water vapour feature near 940 nm.
+  - name: nir_narrow
+    role: NIR_NARROW
+    centre_nm: 865.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: silicon_cmos

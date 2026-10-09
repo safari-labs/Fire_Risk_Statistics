@@ -1,0 +1,106 @@
+# Dragonfly Aerospace Chameleon SWIR — the candidate 4-band SWIR pushbroom.
+#
+# This is the SWIR half of the two-sensor decision in ASSUMPTIONS A-18. James
+# quoted it as "Push broom SWIR, 4x SWIR bands (1000 - 1750 nm)"; the public
+# catalogue entry for Dragonfly's Chameleon SWIR matches that exactly. There
+# is no publicly documented "Mantis SWIR" variant — the Mantis line is the
+# VNIR/hyperspectral imager (see sensor_mantis_vnir6.yaml), and Chameleon is
+# the SWIR one. Correct this if the vendor quote says otherwise.
+#
+# THE BAND CENTRES BELOW ARE SLOTS, NOT SPECIFICATIONS
+# ----------------------------------------------------
+# The vendor publishes the ENVELOPE — four bands somewhere in 1000-1750 nm —
+# and not the centres. That is the most useful thing about this config: the
+# placements appear to be a design input rather than a fixed property, which
+# is precisely what this study exists to determine. Nothing here should be
+# quoted as a Chameleon specification.
+#
+# The provisional values respect three constraints:
+#   * rule 7's sanctioned windows, 1230-1250 and 1550-1750;
+#   * the standard-InGaAs response edge (A-19) — QE is 0.70 at 1650 and 0.40
+#     at 1700, so a band much past 1700 buys little signal and sits where the
+#     temperature-dependent cutoff makes it least stable;
+#   * one band in the short window and three sampling the 1500-1750 shoulder,
+#     which is the shape WorldView-3 chose and the arrangement that gives two
+#     water-sensitive regions with different water-to-dry-matter ratios —
+#     hypothesis H1's surviving clause.
+#
+# PLATFORM COST, for the marginal-value denominator the brief asks for
+# --------------------------------------------------------------------
+#   2.5U, 1.6 kg, 7.0 W average, TRL 8, in production
+#   GSD  8.7 m at 500 km (RAW)        swath 11.2 km at 500 km
+#   8- or 10-bit
+#
+# The swath is the number to notice. Mantis gives 32 km; this gives 11.2 km.
+# Flying BOTH does not cost mass and power alone — any product that needs a
+# VNIR and a SWIR band together is confined to the narrower swath, so the
+# combined-sensor coverage is roughly a third of VNIR-only. Since NDMI, NDII
+# and NMDI all contrast NIR against SWIR, that penalty falls on exactly the
+# products the second sensor is bought for.
+#
+# The GSD runs the other way and is worth confirming with the vendor: 8.7 m
+# SWIR against 32 m for the Mantis MS bands is the reverse of the usual
+# arrangement, and a VNIR/SWIR pair at different ground scales needs an
+# explicit resampling convention before any cross-sensor index is formed.
+
+name: sensor_chameleon_swir4
+description: >
+  Dragonfly Chameleon SWIR, the candidate 4-band SWIR pushbroom (1000-1750
+  nm). BAND CENTRES ARE PROVISIONAL SLOTS chosen to respect rule 7 and the
+  InGaAs response edge — the vendor publishes only the envelope, and the
+  placements are what this study is meant to determine.
+role_in_study: candidate
+swir_content: "4 bands in 1000-1750 nm, centres TBD by this study"
+detector_class: ingaas_std
+
+bands:
+  # Short window. 1240 rather than WorldView-3's 1209: liquid water
+  # absorption rises through this region so 1240 is the more sensitive
+  # choice, and 1230-1250 still clears the O2 band at 1270 by ~20 nm. The
+  # 1209-vs-1240 trade is itself a question for the study.
+  - name: swir_1240
+    role: SWIR_SHORT
+    centre_nm: 1240.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  # Shoulder, low. Respaced from 1575 to 1550: at 40 nm FWHM, 1575 and
+  # 1610 overlap enough that the validator calls them near-duplicates,
+  # and spending two of only four slots on the same measurement is the
+  # most expensive mistake available here.
+  - name: swir_1550
+    role: SWIR1_LOW
+    centre_nm: 1550.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  # Heritage placement: Sentinel-2 B11 and Landsat OLI B6 both sit here, so
+  # keeping one band at 1610 buys cross-calibration and lets the archive be
+  # used for this band specifically under rule 2.
+  - name: swir_1610
+    role: SWIR1_MID
+    centre_nm: 1610.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
+  # Shoulder, high. Pulled to 1680 rather than WV-3's 1730 to stay inside
+  # the standard-InGaAs response, where the modelled QE at 1730 is a small
+  # fraction of the plateau.
+  #
+  # 1680 is also half of NDLI, the lignin index, whose other band is 1754
+  # nm -- past both the 1700 cutoff and the 1750 envelope. That pairing is
+  # the ONLY in-range route to T2 (curing / NPV), because the brief's 2100
+  # nm cellulose route needs a SWIR2 this sensor does not reach. So this
+  # slot is half of a measurement whose other half is currently out of
+  # reach, which is the sharpest form of the extended-detector question.
+  # See OPEN_QUESTIONS Q23.
+  - name: swir_1680
+    role: SWIR1_HIGH
+    centre_nm: 1680.0
+    fwhm_nm: 40.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    detector: ingaas_std
