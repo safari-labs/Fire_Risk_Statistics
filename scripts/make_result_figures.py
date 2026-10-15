@@ -458,6 +458,7 @@ def main() -> int:
     fig_scene_split()
     fig_band_pool()
     fig_feasibility()
+    fig_ecv_feasibility()
     fig_cut_points()
     fig_pc_regression()
     fig_class_agreement()
@@ -465,5 +466,111 @@ def main() -> int:
     return 0
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Essential Climate Variables, against the same band sets
+#
+# The mission offers preprocessed imagery on the calibration downlink, and
+# ECVs are the candidate secondary product. The question is the same shape as
+# index feasibility -- which roles does a set carry -- so it is answered the
+# same way, from config/ecv_candidates.yaml.
+# ──────────────────────────────────────────────────────────────────────────
+
+def fig_ecv_feasibility():
+    sys.path.insert(0, str(_ROOT / "src"))
+    import yaml
+    from safari_bands.config.loader import load_all_band_sets
+
+    band_sets = load_all_band_sets()
+    ecv = yaml.safe_load(open(_ROOT / "config/ecv_candidates.yaml",
+                              encoding="utf-8"))["variables"]
+    plt = _plt()
+    import numpy as np
+
+    # 1.0 carried outright, 0.6 core roles present but the set lacks a band
+    # the retrieval also leans on, 0.3 out of reach for ANY optical set,
+    # 0.0 missing a required role.
+    #
+    # 0.3 and not 0.5 for the out-of-reach rows: four colours over [0, 1] bin
+    # at 0.25/0.5/0.75, so 0.5 fell in the same bin as 0.6 and "needs thermal
+    # infrared" rendered in the identical green as "core roles present".
+    grid = np.zeros((len(ecv), len(SETS)))
+    for r, v in enumerate(ecv):
+        req = v.get("requires_roles")
+        for c, key in enumerate(SETS):
+            if not req:
+                grid[r, c] = 0.3          # needs thermal or microwave
+                continue
+            roles = band_sets[key].roles
+            if not set(req) <= roles:
+                grid[r, c] = 0.0
+            else:
+                extra = set(v.get("also_uses") or [])
+                grid[r, c] = 1.0 if extra <= roles else 0.6
+
+    fig, ax = plt.subplots(figsize=(9.2, 5.2), facecolor=FIG_BG)
+    _axes(ax, "Which Essential Climate Variables each sensor combination reaches")
+    ax.grid(False)
+
+    from matplotlib.colors import ListedColormap
+    ax.imshow(grid, cmap=ListedColormap([AX_BG, "#2a2f3d", "#2f6d52", S1]),
+              vmin=0, vmax=1, aspect="auto")
+
+    for r in range(len(ecv)):
+        for c in range(len(SETS)):
+            v = grid[r, c]
+            txt, col = (("yes", "#ffffff") if v == 1.0 else
+                        ("core", "#bfe3d0") if v == 0.6 else
+                        ("n/a", MUTED) if v == 0.3 else ("—", MUTED))
+            ax.text(c, r, txt, ha="center", va="center", color=col,
+                    fontsize=8.2, family="monospace")
+
+    ax.set_xticks(range(len(SETS)))
+    ax.set_xticklabels([COLHEAD[s][0] for s in SETS], color=INK_BRIGHT,
+                       fontsize=9.5)
+    for c, key in enumerate(SETS):
+        ax.annotate(chr(10).join(COLHEAD[key][1].split("|")),
+                    xy=(c, 0), xycoords=("data", "axes fraction"),
+                    xytext=(0, -30), textcoords="offset points",
+                    ha="center", va="top", color=MUTED, fontsize=7.6,
+                    family="monospace", linespacing=1.5, annotation_clip=False)
+    ax.set_yticks(range(len(ecv)))
+    ax.set_yticklabels([v["name"] for v in ecv], color=INK, fontsize=8.5)
+    ax.set_xticks([x - 0.5 for x in range(1, len(SETS))], minor=True)
+    ax.set_yticks([y - 0.5 for y in range(1, len(ecv))], minor=True)
+    ax.grid(which="minor", color=FIG_BG, linewidth=2.0)
+    ax.tick_params(which="minor", length=0)
+
+    # Count what each column actually delivers, for the caption.
+    got = {k: int((grid[:, c] >= 0.6).sum()) for c, k in enumerate(SETS)}
+    ms, hs = got["sensor_mantis_vnir6"], got["sensor_mantis_hs96"]
+    sw, both = got["sensor_mantis_swir4"], got["sensor_mantis_ms_plus_swir"]
+
+    fig.text(0.0, -0.46, chr(10).join([
+        "yes = every role the retrieval uses.   core = the required roles, "
+        "without a band the retrieval also leans on.   n/a = out of reach for "
+        "any optical set.",
+        "",
+        f"MS alone reaches {ms} of {len(ecv)}. SWIR alone reaches {sw} -- every "
+        f"ECV here needs a VNIR band, so the SWIR chain contributes nothing "
+        f"on its own, exactly as it does for the indices.",
+        f"TOGETHER they reach {both}: adding SWIR1 unlocks Land Cover, "
+        f"Above-Ground Biomass, Fire Disturbance, Snow Cover, Lakes and "
+        f"Surface Albedo.",
+        "",
+        f"HS reaches {hs}, the same as MS. Its 96 bands add spectral detail "
+        f"within 470-900 nm, and every ECV beyond the three vegetation ones "
+        f"needs a wavelength outside that window.",
+        "",
+        "Land Surface Temperature needs thermal infrared and Soil Moisture "
+        "needs microwave; neither is reachable in 400-1750 nm at any SNR, and "
+        "they are listed so the table is a scoping",
+        "exercise rather than a list of successes. Nothing here has been "
+        "produced or validated -- see OPEN_QUESTIONS Q22.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
+    return _save(fig, "ecv_feasibility.png")
+
+
 if __name__ == "__main__":
     sys.exit(main())
+
+
