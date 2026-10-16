@@ -153,6 +153,67 @@ summary, not a mean) is worth having if FOP is ever revisited.
 
 ---
 
+## G7 — CFFDRS assumes same-day noon observations; a cubesat has yesterday's
+
+**The gap.** Every FWI code is defined on a **noon local standard time
+observation of the same day**. A satellite product is not that. Uplink to a
+cubesat is daily at best, so an operational danger rating computed onboard, or
+computed on the ground from the last uplink, runs on weather that is 24 to 72
+hours old. The quantity being produced is therefore not the quantity CFFDRS
+defines, and the size of that difference has never been measured against a
+fire outcome.
+
+**What we already know, and what we do not.** `era5.py` and `fwi.py` record
+the INPUT drift: DC moves 8.2% over a three-day lag while ISI moves 89.9%, and
+`fwi.py` argues from that split to a recommendation — BUI is the best single
+feature for an uplink-constrained platform, FWI the worst, because FWI
+inherits ISI's volatility.
+
+That is an argument about feature values. It is not a measurement of what
+staleness costs a **prediction**, and the two can differ: a feature can drift
+a long way and still rank fires correctly, or drift slightly in exactly the
+direction that matters. Nothing in the study currently tests it.
+
+**Claim.** Fire-danger skill decays with weather age, and it decays at a rate
+that depends on which weather representation is used — slowest for the slow
+codes and our compressed history, fastest for the fast codes.
+
+**Verdict: TESTABLE, and cheaply, with one wrinkle.**
+
+The design is an EVALUATION-time perturbation, so it needs no retraining per
+lag: train once, then score the same model with weather as of
+`composite_end − L` for L in {0, 24, 48, 72 h, 7 d}. One trained model, five
+scores.
+
+The wrinkle is that the sidecars currently store the codes at
+`composite_end` only, so the lagged values have to be computed — an ERA5 pass
+over data already held, no new imagery. Once computed they pack as extra
+columns, which makes each lag a **column mask** exactly like the weather arms
+(see E-4), rather than five packs.
+
+**A pleasant consequence of the leakage guard:** `compute_fwi_series` refuses
+a series that runs past its target date, so asking for the codes at an
+*earlier* date is strictly safer than asking for them at
+`composite_end`. Staleness cannot introduce a leakage path; it can only
+remove one.
+
+**Two readings, and they answer different questions:**
+
+| Design | Question |
+|---|---|
+| train fresh, test stale | what does operational staleness COST a model built on good data? The deployment question, and the primary one |
+| train stale, test stale | if staleness is accepted up front, can the model adapt to it? The design question |
+
+**Why it matters beyond our own product:** if the decay is steep for the fast
+codes and flat for the slow ones, that is a concrete recommendation to the
+operational system about which codes a satellite-fed danger rating should be
+built on — and it is the kind of claim this study is well placed to make,
+because it needs exactly the fire outcomes and weather history we hold.
+
+**Added to the plan as E-4.**
+
+---
+
 ## Gaps we identify and cannot close
 
 **Grassland curing.** FWI2025 accepts curing as an optional input and names
@@ -182,6 +243,7 @@ not fuel moisture codes.
 | **E-1** | distance-to-nearest-weather-station per patch, and a stratified readout | G3 was unfalsifiable without it — we hold no station locations |
 | **E-2** | per-pixel snow-off from NDSI, as the FWI start date, against the flat 90-day spinup | G4, and it fixes a latitude-dependent bias in our own codes first |
 | **E-3** | weather-arm contrast reported by latitude band | G5's claim is about high latitude specifically; a pooled number cannot test it |
+| **E-4** | weather STALENESS at 0/24/48/72 h and 7 d, per weather arm | G7. The input drift is measured (DC 8.2% vs ISI 89.9% over 3 days); the effect on a PREDICTION is not, and `fwi.py` makes a recommendation that rests on the untested half |
 
 And one claim withdrawn rather than tested: **G1 as originally stated**. The
 FMC arms cannot compare a spectral estimate against the equation, because no
