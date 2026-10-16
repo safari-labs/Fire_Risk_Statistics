@@ -18,3 +18,10 @@ runs/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Earthdata bearer token. A credential must never be committable, and
+# this one sat in a repo root untracked-but-not-ignored, which is one
+# "git add -A" away from being published.
+.earthdata_token
+*.earthdata_token
+.netrc
