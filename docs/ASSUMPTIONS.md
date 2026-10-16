@@ -677,3 +677,66 @@ float32 BIL, `data ignore value = -9999`, 5.1 m pixels on UTM/WGS-84.
 **Revisit if:** a line from the 2022 campaign carries a different bad-band
 list. The grid above is read from a 2018 line, and the per-year calibration
 files named in the header differ between campaigns.
+
+## A-23 — T1 external validation rests on 2,884 Globe-LFMC records, none Canadian
+
+**What we assume:** the only real LFMC labels available to this study are
+2,884 Globe-LFMC 2.0 records in Canadian-relevant tree species that fall
+inside the Sentinel-2 two-satellite era, across 83 sites, all in the United
+States.
+
+**Measured from the file on 2026-10-16**, not quoted. Globe-LFMC 2.0 is one
+72.5 MB xlsx, **CC0**, no login, from the figshare collection
+`10.6084/m9.figshare.c.6980418` (file DOI `10.6084/m9.figshare.25413790`,
+sha256 `cec5e596…`). 293,796 records, 15 countries. The brief's statement that
+there are **no Canadian sites is correct** — verified directly.
+
+Of those, 104,229 (35.5%) are from 2017 or later, which is when Sentinel-2 had
+both satellites flying. Intersecting that with species that map to FBP fuel
+types:
+
+| Species | FBP type | All | ≥2017 | Sites | LFMC range |
+|---|---|---|---|---|---|
+| *Pinus banksiana* | C-3/C-4 jack pine | 3,993 | **1,296** | 29 | 21–220% |
+| *Pinus resinosa* | red pine | 3,467 | **1,202** | 27 | 77–184% |
+| *Populus tremuloides* | D-1/D-2 aspen | 273 | 177 | 6 | 74–273% |
+| *Abies balsamea* | M-3/M-4 balsam fir | 126 | 82 | 5 | 74–175% |
+| *Picea glauca* | white spruce | 208 | 76 | 8 | 66–163% |
+| *Picea mariana* | **C-2 black spruce** | 182 | **51** | 8 | 73–120% |
+| *Larix laricina* | tamarack | 0 | 0 | — | — |
+| *Betula papyrifera* | white birch | 0 | 0 | — | — |
+| | **total** | 8,249 | **2,884** | 83 | |
+
+**The good news is sharper than "no Canadian sites" suggests.** Jack and red
+pine supply 2,498 of the 2,884, and the dominant coordinates (46.10 N,
+−86.40) are in Michigan's Upper Peninsula — the same species and region as
+Jolly, Hadlow & Huguet (2014), which is the paper the spring-dip argument and
+hypothesis H1 both rest on. So the one mechanism this study most needs to
+test has real measurements behind it, from the study that proposed it.
+
+**The bad news is C-2.** Black spruce is the single most important Canadian
+fuel type and has **51 records at 8 sites**. Any claim about C-2 LFMC
+retrieval rests on that, and 51 records across 8 sites will not support a
+per-fuel-type accuracy figure.
+
+**GLOBE-LFMC CONTAINS NO SPECTRA.** It carries LFMC, coordinates, date,
+species, elevation, slope, IGBP land cover and a weather block (precipitation
+at 24 h / 3 d / 1 wk / 4 wk / 12 wk, relative humidity at four times of day,
+temperature, vapour pressure, wind). Using it as a label set therefore means
+pairing each record with a Sentinel-2 acquisition ourselves, which is new
+download work and introduces its own matching tolerance (how many days
+between the sample and the overpass).
+
+**This cannot validate the SWIR design.** Sentinel-2 has one band between
+1000 and 1750 nm, so a Globe-LFMC pairing tests the VNIR set plus B11 and
+says nothing about where four SWIR bands go. That stays with AVIRIS-NG
+(A-21, A-22).
+
+**One quality flag to resolve before use:** the jack pine minimum is 21%,
+which is not a live-foliage value. The file carries both an
+`Extra information/Quality Flag` and an `Isolated data point` column; these
+have not been applied to the counts above, so the usable total may be lower.
+
+**Revisit if:** Canadian field sampling becomes available, which would
+replace the analogue argument with the real thing, or if Globe-LFMC 3.0 adds
+Canadian sites.
