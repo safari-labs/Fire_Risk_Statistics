@@ -23,7 +23,7 @@ never measures sits directly under one of its headline predictions.
 
 **Claim we would like to make.** A spectral FMC estimate beats the equation.
 
-**Verdict: NOT TESTABLE AS STATED.** `fmc_measured` is read in four places
+**Verdict: the claim as stated is not testable; the restated version is now runnable (below).** `fmc_measured` is read in four places
 and written in none; no sidecar on disk contains it. `FMCArm.MEASURED` falls
 through `resolve_fmc` to the equation, and `AUGMENT` therefore reports
 `fmc_cffdrs` and `fmc_measured` as the same number. Running the three arms
@@ -34,11 +34,40 @@ The reason is circular and worth stating: producing a validated spectral FMC
 needs an LFMC label, and no LFMC label exists in this data (see the T1 row of
 the experiment plan).
 
-**Restated claim that IS testable.** *Imagery carries foliar-moisture
-information the FBP equation does not.* That is a comparison between a model
-given the bands and one given only the FBP FMC scalar — the fusion/rasters
-contrast, not the FMC arm. It cannot say our estimate is better than theirs;
-it can say the bands contain something the formula misses.
+**Restated claim that IS testable, and now runnable.** *Imagery carries
+foliar-moisture information the FBP equation does not.* That is a comparison
+between a model given only the FBP FMC scalar and one given that scalar plus
+the bands. It cannot say our estimate is better than theirs; it can say the
+bands contain something the formula misses.
+
+Both halves now exist:
+
+| Arm | What it sees |
+|---|---|
+| `g1_fmc_only` | the FBP FMC scalar alone, imagery removed |
+| `g1_fmc_plus_bands` | the same scalar, plus all nine surface bands |
+
+    SETS=g1 SUBMIT=1 bash scripts/shell/sweep_covariates.sh
+
+Two pieces were needed and neither existed. An `fmc`-only column mask,
+because every weather arm bundled `fmc` with FFMC, ISI, BUI, wind and date,
+and an arm that bundles cannot attribute anything to foliar moisture. And a
+`ScalarOnlyBaseline`, because `build_fusion` requires a backbone and the
+obvious shortcut is a trap: `nn.Conv2d(0, 16, 3)` does not raise in torch, it
+returns an empty `(B, 0, H, W)` tensor, so a "no imagery" arm built that way
+would train on nothing and report a number.
+
+The baseline reuses the fusion head's own `ScalarEncoder` and linear danger
+head at the same widths, so the contrast isolates the imagery rather than
+also changing the scalar architecture. Its prediction is constant across each
+patch, which is correct rather than a limitation: a per-patch scalar has no
+within-patch structure to offer, and the arms carrying imagery have to win on
+exactly the part a scalar structurally cannot reach.
+
+**Read it as a contrast, not a level.** Both arms carry the 198 of 1834 tiles
+that have no weather at all, zero-filled with a validity flag, so the two
+train on identical rows.
+
 
 **To make the original claim testable:** Globe-LFMC 2.0 (Yebra et al. 2024)
 paired with Sentinel-2 acquisitions, or PROSAIL simulation, or James's own
