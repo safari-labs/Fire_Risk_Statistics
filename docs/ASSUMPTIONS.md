@@ -634,3 +634,46 @@ after the four-minute NBAC pass, with nothing on disk to show for it.
 
 **Revisit if:** a V4 release publishes the 2017 and 2019 Canadian
 reflectance, which would take the pool from 42 to something near 228.
+
+## A-22 — The SWIR candidate grid is 1003-1359 and 1414-1749 nm, measured
+
+**What we assume:** band placement for the Mantis SWIR mode searches two
+sub-windows, 1003-1359 nm (72 channels) and 1414-1749 nm (68 channels), for
+140 candidates in total.
+
+**Why, read from the data rather than assumed:** the first AVIRIS-NG line
+downloaded (`ang20180721t192935_rfl_v2r2`) carries the instrument team's own
+bad-band list, which is a statement of which channels return no surface
+signal. It flags three runs:
+
+| Bands | Wavelengths | Cause |
+|---|---|---|
+| 197-206 | 1363.6-1408.6 nm | water vapour |
+| 285-318 | 1804.3-1969.6 nm | water vapour |
+| 424 | 2500.5 nm | detector edge |
+
+Everything else from 376.9 to 2495 nm is marked usable. Inside the SWIR
+mode's 1000-1750 nm range that leaves the two windows above.
+
+**What this corrects:** the experiment card previously searched 1000-1300 and
+1500-1750, a grid chosen from the general knowledge that water vapour sits
+"around 1400" and "around 1900". The measured gap is 1364-1408 — narrower on
+both sides — so 1300-1359 and 1414-1500 are usable and were being excluded
+for no reason. That is roughly 25 extra candidate channels, and one of them
+is 1572 nm, which is a WorldView-3 centre and part of the positive control.
+
+**The 1270 nm O2 band is still excluded, separately.** The bad-band list does
+not flag it, and that is consistent rather than contradictory: AVIRIS-NG flies
+at ~20 km through a fraction of the atmospheric column an orbital instrument
+looks through, so an absorption feature that is tolerable from an aircraft can
+be disqualifying from orbit. Rule 7's margin around 1270 therefore stands on
+its own reasoning and is imposed on top of the bad-band list, not derived from
+it.
+
+**Other instrument facts from the same header,** which the SRF convolution
+needs: 425 bands, 376.9-2500.5 nm, 5.01 nm mean spacing, FWHM 5.57-6.03 nm,
+float32 BIL, `data ignore value = -9999`, 5.1 m pixels on UTM/WGS-84.
+
+**Revisit if:** a line from the 2022 campaign carries a different bad-band
+list. The grid above is read from a 2018 line, and the per-year calibration
+files named in the header differ between campaigns.

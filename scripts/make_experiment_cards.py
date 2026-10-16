@@ -226,8 +226,13 @@ CARDS = [
          "labellable with machinery already running.",
   MODEL="tier2-small, as the band arms.",
   TRAINING="Greedy over a centre x FWHM grid inside the two usable "
-           "sub-windows, 1000-1300 (clear of the O2 band at 1270) and "
-           "1500-1750.",
+           "sub-windows, MEASURED from AVIRIS-NG's own bad-band "
+           "list: 1003-1359 and 1414-1749 nm, 140 candidate "
+           "channels. The water-vapour gap is 1364-1408 nm, narrower "
+           "than assumed. A margin around the 1270 nm O2 band is "
+           "imposed separately -- the bad-band list does not flag "
+           "it, because an aircraft looks through far less air than "
+           "an orbit does.",
   EVALUATION="auc_px and the ecology heads, same protocol.",
   OUTPUT="Four band centres and widths, with tolerances. The actual SWIR "
          "specification.",
