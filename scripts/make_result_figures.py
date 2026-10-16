@@ -459,6 +459,7 @@ def main() -> int:
     fig_band_pool()
     fig_feasibility()
     fig_ecv_feasibility()
+    fig_products()
     fig_cut_points()
     fig_pc_regression()
     fig_class_agreement()
@@ -475,7 +476,7 @@ def main() -> int:
 # same way, from config/ecv_candidates.yaml.
 # ──────────────────────────────────────────────────────────────────────────
 
-def fig_ecv_feasibility():
+def _ecv_grid():
     sys.path.insert(0, str(_ROOT / "src"))
     import yaml
     from safari_bands.config.loader import load_all_band_sets
@@ -507,6 +508,13 @@ def fig_ecv_feasibility():
                 extra = set(v.get("also_uses") or [])
                 grid[r, c] = 1.0 if extra <= roles else 0.6
 
+    return ecv, grid
+
+
+def fig_ecv_feasibility():
+    """ECVs alone, kept for anyone who wants just that panel."""
+    plt = _plt()
+    ecv, grid = _ecv_grid()
     fig, ax = plt.subplots(figsize=(9.2, 5.2), facecolor=FIG_BG)
     _axes(ax, "Which Essential Climate Variables each sensor combination reaches")
     ax.grid(False)
@@ -568,6 +576,106 @@ def fig_ecv_feasibility():
         "produced or validated -- see OPEN_QUESTIONS Q22.",
     ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
     return _save(fig, "ecv_feasibility.png")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Indices and ECVs in one frame
+#
+# They answer the same question of a band set -- which roles does it carry --
+# so splitting them across two files made the reader do the join by hand.
+# Sharing a column axis makes the comparison the figure is actually for:
+# what does each sensor combination deliver, in products.
+# ──────────────────────────────────────────────────────────────────────────
+
+def fig_products():
+    sys.path.insert(0, str(_ROOT / "src"))
+    from safari_bands.config.loader import load_all_band_sets, load_index_catalogue
+    from safari_bands.indices import resolve_index
+    plt = _plt()
+    import numpy as np
+    from matplotlib.colors import ListedColormap
+
+    cat, band_sets = load_index_catalogue(), load_all_band_sets()
+    idx_names = [i.name for i in cat.indices]
+    igrid = np.zeros((len(idx_names), len(SETS)))
+    for r, idx in enumerate(cat.indices):
+        for c, key in enumerate(SETS):
+            res = resolve_index(idx, band_sets[key])
+            igrid[r, c] = 1.0 if res.feasible else (0.3 if res.hyperspectral_only else 0.0)
+    ecv, egrid = _ecv_grid()
+
+    n_i, n_e = len(idx_names), len(ecv)
+    fig, (ax_i, ax_e) = plt.subplots(
+        2, 1, figsize=(9.6, 1.4 + 0.42 * (n_i + n_e)), facecolor=FIG_BG,
+        gridspec_kw={"height_ratios": [n_i, n_e], "hspace": 0.08})
+    fig.suptitle("What each sensor combination can deliver",
+                 color=INK_BRIGHT, fontsize=12.5, x=0.0, ha="left", y=0.995)
+
+    cmap = ListedColormap([AX_BG, "#2a2f3d", "#2f6d52", S1])
+    for ax, grid, labels, title in (
+            (ax_i, igrid, [f"{n}  ({i.target})" for n, i in zip(idx_names, cat.indices)],
+             "Reference indices"),
+            (ax_e, egrid, [v["name"] for v in ecv],
+             "Essential Climate Variables")):
+        ax.set_facecolor(AX_BG)
+        ax.imshow(grid, cmap=cmap, vmin=0, vmax=1, aspect="auto")
+        ax.set_title(title, color=INK_BRIGHT, fontsize=10, loc="left", pad=6)
+        for r in range(grid.shape[0]):
+            for c in range(len(SETS)):
+                v = grid[r, c]
+                txt, col = (("yes", "#ffffff") if v == 1.0 else
+                            ("core", "#bfe3d0") if v == 0.6 else
+                            ("n/a", MUTED) if v == 0.3 else ("—", MUTED))
+                ax.text(c, r, txt, ha="center", va="center", color=col,
+                        fontsize=8.2, family="monospace")
+        ax.set_yticks(range(len(labels)))
+        ax.set_yticklabels(labels, color=INK, fontsize=8.3, family="monospace")
+        ax.set_xticks([x - 0.5 for x in range(1, len(SETS))], minor=True)
+        ax.set_yticks([y - 0.5 for y in range(1, grid.shape[0])], minor=True)
+        ax.grid(which="minor", color=FIG_BG, linewidth=2.0)
+        ax.grid(which="major", visible=False)
+        ax.tick_params(which="minor", length=0)
+        for side in ("top", "right", "left", "bottom"):
+            ax.spines[side].set_visible(False)
+
+    ax_i.set_xticks([])
+    ax_e.set_xticks(range(len(SETS)))
+    ax_e.set_xticklabels([COLHEAD[s][0] for s in SETS], color=INK_BRIGHT,
+                         fontsize=9.5)
+    for c, key in enumerate(SETS):
+        ax_e.annotate(chr(10).join(COLHEAD[key][1].split("|")),
+                      xy=(c, 0), xycoords=("data", "axes fraction"),
+                      xytext=(0, -30), textcoords="offset points",
+                      ha="center", va="top", color=MUTED, fontsize=7.6,
+                      family="monospace", linespacing=1.5,
+                      annotation_clip=False)
+
+    n_idx = {k: int((igrid[:, c] >= 0.6).sum()) for c, k in enumerate(SETS)}
+    n_ecv = {k: int((egrid[:, c] >= 0.6).sum()) for c, k in enumerate(SETS)}
+    row = lambda d: "   ".join(
+        f"{COLHEAD[k][0]} {d[k]}" for k in
+        ("sensor_mantis_vnir6", "sensor_mantis_hs96",
+         "sensor_mantis_swir4", "sensor_mantis_ms_plus_swir"))
+
+    fig.text(0.0, -0.135, chr(10).join([
+        f"indices   {row(n_idx)}",
+        f"ECVs      {row(n_ecv)}",
+        "",
+        "SWIR ALONE DELIVERS NOTHING, in either panel. Every moisture index "
+        "and every ECV here needs a VNIR band, and NIR is on the other chain.",
+        "HS DELIVERS NO MORE THAN MS. Its 96 bands add detail inside 470-900 "
+        "nm; everything the extra products need lies outside that window.",
+        "MS + SWIR is where the gain is: four more indices and six more ECVs "
+        "-- Land Cover, Above-Ground Biomass, Fire Disturbance, Snow Cover, "
+        "Lakes, Surface Albedo.",
+        "",
+        "yes = every role used.   core = required roles, missing one the "
+        "retrieval also leans on.   n/a = out of reach for any optical set "
+        "(CAI needs 2.0-2.2 um; LST thermal; soil moisture microwave).",
+        "Feasibility from band placement only. Nothing here has been produced "
+        "or validated -- see OPEN_QUESTIONS Q22.",
+    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
+    return _save(fig, "index_and_ecv_feasibility.png")
 
 
 if __name__ == "__main__":
