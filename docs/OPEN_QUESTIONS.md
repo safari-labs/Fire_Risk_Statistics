@@ -518,6 +518,34 @@ property of the bands.
 mode, and keep Sentinel-2 for the VNIR-only question, where its ten in-range
 bands and wall-to-wall free coverage are the better instrument.
 
+### Q25 — Is a 2023-burn-only lead time enough for the SWIR evidence?
+
+**The situation.** The AVIRIS-NG pool that is both pre-fire and published is
+42 lines (A-21), and 35 of them precede a burn in 2023 alone. So the
+dominant design is "imaged in 2022, burned in 2023": a one-season lead time,
+measured once.
+
+**Why it matters.** The SWIR bands exist to sense fuel moisture and dry
+matter, both of which vary within a season. A one-year lead says whether the
+spectrum before a fire differs from the spectrum before no fire; it does not
+say how far ahead that difference is readable, which is the question a
+monitoring mission actually faces. The 2018 lines (12 of the 42, with burns
+in 2019-2023) are the only multi-year lead available, and twelve lines is
+thin for a curve.
+
+**What we would do about it, in order of cost:**
+1. Accept the one-season design and say so plainly in the Phase 6 note. The
+   band-placement answer does not need a lead-time curve.
+2. Add post-fire lines (`--all-lines`) for severity and recovery, which is a
+   different question but uses data already paid for.
+3. Extend NBAC past 2023 as perimeters are published; every new fire year
+   turns some of the 143 published 2022 Canadian lines into pre-fire ones.
+   This is the cheapest real improvement and needs no new imagery.
+
+**For James:** is a single-season lead acceptable evidence for the SWIR
+specification, or does the spec need the multi-year read that only option 3
+can eventually give?
+
 ### What to check before committing
 
 1. **Coverage and cost.** WV-3 is commercial. Archive holdings over boreal

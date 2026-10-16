@@ -183,7 +183,7 @@ def main(argv=None) -> int:
 
         ("SCOPED, NOT YET HELD", None, None, None, None),
         ("AVIRIS-NG ABoVE",
-         "574 Canadian lines, 5 nm · 228 pre-fire",
+         "163 published of 574 lines, 5 nm · 42 pre-fire",
          "free", PART,
          "THE SWIR answer: any 4-band placement, synthesised"),
         ("WorldView-3",

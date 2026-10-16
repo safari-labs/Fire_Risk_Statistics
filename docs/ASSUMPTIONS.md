@@ -586,3 +586,51 @@ budget rather than being assumed away.
 
 Where the dichroic edge sits, and how steep it is. It bounds the MS mode's
 red end, the SWIR mode's blue end, and B9's usability at once.
+
+## A-21 — The usable AVIRIS-NG pre-fire pool is 42 lines, not 228
+
+**What we assume:** Phase 6's hyperspectral evidence rests on 42 AVIRIS-NG
+flight lines, 12 flown in 2018 and 30 in 2022, and not on the 228 figure
+quoted in earlier versions of the data inventory and experiment plan.
+
+**Why, measured against the archive on 2026-10-16:** the per-year boundary
+shapefiles describe where the aircraft flew, not what ORNL DAAC published.
+Of the 574 Canadian footprints, 163 have a reflectance (`rfl`) product in
+ABoVE_Airborne_AVIRIS_NG_V3, and the shortfall is structural, not scattered:
+
+| Year | Canadian footprints | With a reflectance product |
+|---|---|---|
+| 2017 | 244 | **0** |
+| 2018 | 21 | 19 |
+| 2019 | 165 | **1** |
+| 2022 | 144 | 143 |
+
+(The 2019 release holds 272 products, almost all of them Alaska. The 2021
+release is Iceland.)
+
+The pre-fire condition and the published years then pull against each other.
+228 of the 574 footprints precede a burn in NBAC 2019-2023, but only 42 of
+those are published, because a 2022 line can only precede a 2023 burn. The
+burn years behind the 42 are {2019: 3, 2020: 2, 2021: 2, 2022: 8, 2023: 35}.
+
+**Why this is still enough for its job:** the question is where four SWIR
+band centres go, and the unit that matters is labelled spectra, not flight
+lines. 42 scenes at ~5 m is tens of millions of pixels, each a contiguous
+380-2510 nm spectrum, every one labellable by SCANFI and NBAC. Band
+placement is limited by spectral and ecological diversity, which 42 lines
+spanning 57-68 N across two seasons supplies, not by line count.
+
+**What it does cost, and this is the real constraint:** lead time. 35 of the
+42 precede a 2023 burn only, so most of the pool supports "this stand burned
+the following year" and not a multi-year curve. And the geography is
+unchanged and still narrow — nothing east of -93.2 degrees, so no Quebec
+black spruce and no budworm fir (see Q25).
+
+**How it was found:** `--check-auth` returned HTTP 404 where a 401 was
+expected. A wrong URL announces itself as a 404 while you are braced for a
+wrong password, which is why the cheap check exists: the first selection
+drew all three of its lines from 2017 and would have failed on every one,
+after the four-minute NBAC pass, with nothing on disk to show for it.
+
+**Revisit if:** a V4 release publishes the 2017 and 2019 Canadian
+reflectance, which would take the pool from 42 to something near 228.

@@ -217,8 +217,8 @@ CARDS = [
   slug="08_swir_placement", tier=LATER, tier_name="NEEDS NEW DATA",
   title="Where do the four SWIR bands go?",
   question="The Mantis SWIR mode carries 4 bands in 1000-1750 nm. Which four?",
-  INPUT="AVIRIS-NG ABoVE: 574 Canadian flight lines, 380-2510 nm at 5 nm, "
-        "~5 m, 2017-2022. Free, Earthdata login only. Any candidate band set "
+  INPUT="AVIRIS-NG ABoVE: 163 published Canadian flight lines, 380-2510 nm "
+        "at 5 nm, ~5 m, 2018 and 2022. Free, Earthdata login only. Any candidate band set "
         "is synthesised by convolving a response onto the contiguous "
         "spectrum -- which is what rule 2 requires, and what a multispectral "
         "archive cannot provide.",
@@ -235,9 +235,12 @@ CARDS = [
            "benchmark: does an optimised set beat a real instrument's "
            "choices? Also settles 1209 vs 1240 -- water sensitivity traded "
            "against O2 margin.",
-  STATUS="Not fetched. 228 lines were flown BEFORE a burn they overlap, "
-         "which is the pre-fire case. Western Canada only: nothing east of "
-         "-93.2 degrees, so no Quebec black spruce and no budworm fir.",
+  STATUS="Fetching. 42 lines are BOTH pre-fire and published -- 12 from "
+         "2018, 30 from 2022 -- not the 228 pre-fire footprints: the 2017 "
+         "and 2019 campaigns have almost no Canadian reflectance in V3, and "
+         "a 2022 line can only precede a 2023 burn. Western Canada only: "
+         "nothing east of -93.2 degrees, so no Quebec black spruce and no "
+         "budworm fir.",
  ),
  dict(
   slug="09_hardware_cost", tier=LATER, tier_name="HARDWARE",

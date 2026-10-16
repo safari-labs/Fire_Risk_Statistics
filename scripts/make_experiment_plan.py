@@ -91,7 +91,8 @@ PLAN = [
      ]),
 
     ("NEEDS NEW DATA — free, but not yet fetched", LATER,
-     "AVIRIS-NG ABoVE: 574 Canadian lines at 5 nm, 228 of them flown before a burn.",
+     "AVIRIS-NG ABoVE: 163 of 574 Canadian lines are published at 5 nm;"
+     " 42 of those precede a burn.",
      [
       ("SWIR placement",
        "any 4 bands in 1000-1750 nm",
