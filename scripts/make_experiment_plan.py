@@ -64,9 +64,21 @@ PLAN = [
       ("Fusion arms",
        "rasters-only / two-head / bottleneck",
        "what the CFFDRS-shaped separation of fuel and weather costs or buys"),
-      ("FMC arms",
+      ("FMC arms  [VACUOUS]",
        "baseline / measured / augment",
-       "whether a spectral foliar-moisture estimate beats the FBP equation"),
+       "CANNOT RUN: fmc_measured is written nowhere, so all three arms are the FBP equation"),
+      ("Imagery vs FMC scalar",
+       "bands + terrain against the FBP FMC alone",
+       "G1 restated: does imagery carry moisture information the formula misses?"),
+      ("Station-density split  [NEW]",
+       "increment stratified by distance to the nearest station",
+       "G3: CFS names thin station coverage as a limit. Fuel state is the integral of weather"),
+      ("Snow-off startup  [NEW]",
+       "per-pixel NDSI date vs the flat 90-day spinup",
+       "G4: our own codes start ~1 April, frozen at 55-67 N. Fixes a latitude bias first"),
+      ("Latitude-banded weather  [NEW]",
+       "the weather-arm contrast, split by latitude",
+       "G5: day-length factors are tabulated for ~46 N. A pooled number cannot test that"),
       ("Ecology arm",
        "the same searches against SCANFI structure",
        "PRIMARY band ranking. Dense per-pixel labels, not one sparse outcome per patch"),
@@ -180,6 +192,15 @@ def main() -> int:
         "reading the label, not the fuel), the lightning cohort (human "
         "ignitions carry a roads-and-access signal), and per-fold selection "
         "frequency (one fold is a sample, not a result).",
+        "",
+        "Three experiments marked [NEW] were added by auditing our claims "
+        "against CFFDRS's stated gaps (docs/CFFDRS_GAPS.md): without them, G3, "
+        "G4 and G5 were",
+        "claims we could assert but not test. The FMC arms are marked VACUOUS "
+        "for the same reason -- fmc_measured is read in four places and "
+        "written in none, so all three arms",
+        "reduce to the FBP equation and would have produced three identical "
+        "numbers looking like 'no difference'.",
         "",
         "The last block is not a backlog. T1 and T2 have no label anywhere in "
         "this data and cannot be obtained by working harder on what we hold -- "
