@@ -115,7 +115,7 @@ network itself.
 
 **Fix, and it is small:** fetch the CWFIS fire-weather station locations and
 record a distance-to-nearest-station scalar per patch. Then the existing arms
-can be read stratified by it. **Added to the plan as E-1.**
+can be read stratified by it. **Added to the register as E-17.**
 
 ---
 
@@ -137,7 +137,7 @@ drought — and 2023, which contributes 2,244 of our perimeters, followed dry
 years in the west.
 
 So this is a defect to fix before it is a contribution to offer. **Added to
-the plan as E-2.**
+the register as E-18.**
 
 NDSI (green + SWIR1) is computable as a server-side reduction over the
 Sentinel-2 collection — first date below threshold, per pixel — without
@@ -161,7 +161,7 @@ compressions, but a pooled result cannot distinguish "history is better" from
 comparison has to be read stratified by latitude band.
 
 **Fix:** report the weather-arm contrast by latitude band in `pool_bands`.
-**Added to the plan as E-3.**
+**Added to the register as E-19.**
 
 ---
 
@@ -218,7 +218,7 @@ The wrinkle is that the sidecars currently store the codes at
 `composite_end` only, so the lagged values have to be computed — an ERA5 pass
 over data already held, no new imagery. Once computed they pack as extra
 columns, which makes each lag a **column mask** exactly like the weather arms
-(see E-4), rather than five packs.
+(see E-20), rather than five packs.
 
 **A pleasant consequence of the leakage guard:** `compute_fwi_series` refuses
 a series that runs past its target date, so asking for the codes at an
@@ -239,7 +239,7 @@ operational system about which codes a satellite-fed danger rating should be
 built on — and it is the kind of claim this study is well placed to make,
 because it needs exactly the fire outcomes and weather history we hold.
 
-**Added to the plan as E-4.**
+**Added to the register as E-20.**
 
 ---
 
@@ -267,12 +267,14 @@ not fuel moisture codes.
 
 ## Experiments added or changed by this audit
 
+These were numbered E-1 to E-4 when the audit was written. They are now **E-17 to E-20** in the single register at `docs/EXPERIMENTS.md`, which covers all 31 experiments; two numbering schemes for one set of experiments is worse than renumbering once.
+
 | | What | Why |
 |---|---|---|
-| **E-1** | distance-to-nearest-weather-station per patch, and a stratified readout | G3 was unfalsifiable without it — we hold no station locations |
-| **E-2** | per-pixel snow-off from NDSI, as the FWI start date, against the flat 90-day spinup | G4, and it fixes a latitude-dependent bias in our own codes first |
-| **E-3** | weather-arm contrast reported by latitude band | G5's claim is about high latitude specifically; a pooled number cannot test it |
-| **E-4** | weather STALENESS at 0/24/48/72 h and 7 d, per weather arm | G7. The input drift is measured (DC 8.2% vs ISI 89.9% over 3 days); the effect on a PREDICTION is not, and `fwi.py` makes a recommendation that rests on the untested half |
+| **E-17** | distance-to-nearest-weather-station per patch, and a stratified readout | G3 was unfalsifiable without it — we hold no station locations |
+| **E-18** | per-pixel snow-off from NDSI, as the FWI start date, against the flat 90-day spinup | G4, and it fixes a latitude-dependent bias in our own codes first |
+| **E-19** | weather-arm contrast reported by latitude band | G5's claim is about high latitude specifically; a pooled number cannot test it |
+| **E-20** | weather STALENESS at 0/24/48/72 h and 7 d, per weather arm | G7. The input drift is measured (DC 8.2% vs ISI 89.9% over 3 days); the effect on a PREDICTION is not, and `fwi.py` makes a recommendation that rests on the untested half |
 
 And one claim withdrawn rather than tested: **G1 as originally stated**. The
 FMC arms cannot compare a spectral estimate against the equation, because no

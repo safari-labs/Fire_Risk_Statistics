@@ -1,176 +1,53 @@
 """scripts/make_experiment_plan.py
 
-Every experiment in the study, what each one varies, and what it settles.
+Every experiment, as a table: what it varies, what it measures, what it
+could conclude, whether it can run, and what runs it.
 
-Grouped by what stands between it and a result, because that is the only
-ordering that tells you what to do next. An experiment that is blocked on a
-purchase is not in the same category as one blocked on a two-gigabyte copy.
+RENDERED FROM src/safari_bands/experiments.py, which docs/EXPERIMENTS.md
+also renders from. Previously the plan lived inline in this file and the
+same facts were restated in three documents; the AVIRIS line count was
+wrong in all three at once because each had been edited separately.
+
+Grouped by THEME rather than by readiness, with the feasibility state as a
+column, because the thing a reader wants is "what does this experiment
+settle" and the state is a property of today rather than of the experiment.
 
     python scripts/make_experiment_plan.py
 """
 from __future__ import annotations
 
 import sys
+import textwrap
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
+from safari_bands.experiments import (  # noqa: E402
+    EXPERIMENTS,
+    STATES,
+    by_group,
+    runnable,
+)
 
 OUT = Path("docs/results/figures")
 
 FIG_BG, AX_BG = "#14161a", "#1b1e24"
 INK, INK_BRIGHT, MUTED, SPINE = "#c7ccd4", "#eef1f5", "#79818e", "#2c313a"
-#: One colour per readiness tier. HARDWARE gets its own rather than
-#: sharing with NEW DATA -- the chips are the only cue once the reader
-#: has scrolled past the heading.
-READY, SOON, LATER = "#52a675", "#e8973f", "#9b7fd4"
-HW, BLOCKED = "#4ea1d3", "#d1495b"
+HEAD = "#4ea1d3"
 
-#: (section, colour, subtitle)
-#: (name, varies, answers, script)
-#:
-#: SCRIPT is the actual runner, verified to exist. "--" means nothing runs it
-#: yet, which is the single most useful column in this figure: it is the
-#: to-write list. Env vars shown are ones the script reads.
-PLAN = [
-    ("READY — data packed, nothing in the way", READY,
-     "Sentinel-2, 2,513 tiles, 11 bands at 20 m. Six folds grouped by location.",
-     [
-      ("VNIR selection",
-       "best 6 of 10 bands, 400-1000 nm",
-       "WHICH SIX for the Mantis MS mode. The one complete answer available today",
-       "sweep_arms.sh ARMS=vnir   << LAUNCHED"),
-      ("All-11 greedy",
-       "unconstrained over 11 candidates",
-       "does B11 get picked, and at what k -- evidence the SWIR chain earns a slot",
-       "sweep_arms.sh ARMS=all11   << LAUNCHED"),
-      ("Forced-SWIR",
-       "B11 held in, same k as the VNIR arm",
-       "the SWIR delta at matched band count. Lower bound: we have 1 SWIR band, Mantis has 4",
-       "sweep_arms.sh ARMS=vnir_swir   << LAUNCHED"),
-      ("Leave-one-out",
-       "remove each band from the chosen set",
-       "per-band value CONDITIONAL on the rest -- the only importance that means anything here",
-       "sweep_bands.py --leave-one-out   << in all 3"),
-      ("Selection frequency",
-       "the same search inside each of 6 folds",
-       "6/6 is a finding, 3/6 is a coin flip. Separates both from a single-fold fluke",
-       "pool_bands.py   (run after the arrays)"),
-      ("Label control",
-       "NBAC swapped for VIIRS thermal",
-       "LEAKAGE. A band whose value collapses on an independent label was exploiting it",
-       "sweep_bands.sh LABEL=vnp14"),
-      ("Lightning cohort",
-       "fires filtered to NFDB CAUSE = lightning",
-       "removes the roads-and-access confound from human ignitions",
-       "labels.is_lightning() exists; no runner"),
-      ("Negative control",
-       "a deliberately redundant band pool",
-       "sanity. If this scores well the pipeline is broken, not the bands",
-       "sweep_bands.sh BANDS=...  / negative_control.yaml"),
-     ]),
-
-    ("MOSTLY NO RE-PACK — a column mask over the pack we have", SOON,
-     "The pack carries weather_arm=both, the UNION of all arms,"
-     " so most of these are flags not repacks.",
-     [
-      ("Weather arms",
-       "FWI codes / history / both / dimensionless",
-       "does OUR compression of 91 days beat the FWI System's? Baseline is CFFDRS as it stands",
-       "sweep_covariates.sh SETS=weather"),
-      ("Weather staleness  [NEW]",
-       "weather aged 0 / 24 / 48 / 72 h / 7 d",
-       "G7: uplink is daily at best, so CFFDRS's same-day noon"
-       " observation is not what we will have",
-       "-- needs lagged FWI sidecars (E-4)"),
-      ("Fusion arms",
-       "rasters_only / two_head / bottleneck",
-       "what the CFFDRS-shaped separation of fuel and weather costs or buys",
-       "sweep_covariates.sh SETS=fusion"),
-      ("FMC arms  [VACUOUS]",
-       "baseline / measured / augment",
-       "CANNOT RUN: fmc_measured is written nowhere, so all three arms are the FBP equation",
-       "sweep_bands.sh FMC_ARM=  (do not bother)"),
-      ("Imagery vs FMC scalar",
-       "FBP FMC alone vs FMC + all 9 bands",
-       "G1 restated: does imagery carry moisture information the formula "
-       "misses?",
-       "sweep_covariates.sh SETS=g1   (runnable)"),
-      ("Station-density split  [NEW]",
-       "increment stratified by distance to the nearest station",
-       "G3: CFS names thin station coverage as a limit. Fuel state is the integral of weather",
-       "-- needs a CWFIS station fetch (E-1)"),
-      ("Snow-off startup  [NEW]",
-       "per-pixel NDSI date vs the flat 90-day spinup",
-       "G4: our own codes start ~1 April, frozen at 55-67 N. Fixes a latitude bias first",
-       "-- needs an Earth Engine NDSI pass (E-2)"),
-      ("Latitude-banded weather  [NEW]",
-       "the weather-arm contrast, split by latitude",
-       "G5: day-length factors are tabulated for ~46 N. A pooled number cannot test that",
-       "pool_bands.py -- needs a band-split flag (E-3)"),
-      ("Ecology arm",
-       "the same searches against SCANFI structure",
-       "PRIMARY band ranking. Dense per-pixel labels, not one sparse outcome per patch",
-       "train_ecology.sh / train_ecology.py"),
-      ("SCANFI refresh",
-       "static 2020 layer vs our current estimate",
-       "does a REFRESHED fuel map predict fire better, and does the gain grow with staleness?",
-       "attach_scanfi_to_fire.py (done) + train_ecology.py"),
-      ("Resolution sweep",
-       "20 / 40 / 80 m, coarsen only",
-       "how much GSD the retrieval actually needs -- a mission requirement, not a curiosity",
-       "data.py coarsen() exists; no CLI flag"),
-     ]),
-
-    ("NEEDS NEW DATA — free, and now partly fetched", LATER,
-     "AVIRIS-NG ABoVE: 163 of 574 Canadian lines are published at 5 nm;"
-     " 42 of those precede a burn. 3 are on disk.",
-     [
-      ("SWIR placement",
-       "any 4 bands in 1003-1359 and 1414-1749 nm",
-       "THE SWIR DECISION. Sentinel-2 has one band in that window; four cannot be chosen from one",
-       "fetch_aviris.py (3 done) + ingest_aviris.py"),
-      ("1209 vs 1240",
-       "WorldView-3's choice against Gao's NDWI band",
-       "water sensitivity traded against O2 margin -- the validator flagged it, nobody measured it",
-       "ingest_aviris.py --mode both"),
-      ("HS vs MS, properly",
-       "140 SWIR channels at 5 nm vs the best 6 VNIR",
-       "what spectral RESOLUTION buys. Ten S2 bands cannot be interpolated into ninety-six",
-       "ingest_aviris.py, then sweep_bands.py"),
-      ("Conditional large fire",
-       "burned >100 ha, given it burned at all",
-       "36% base rate, and 97% of area burned is in the tail. Fuel-dominated, unlike ignition",
-       "-- needs an NBAC area filter at pack time"),
-     ]),
-
-    ("HARDWARE — runs beside the band work", HW,
-     "Converts each model for real and applies a BRAM law matched to two synthesis runs.",
-     [
-      ("Cost vs input channels",
-       "3 / 6 / 10 / 11 / 96 channels",
-       "the MARGINAL COST denominator. The brief asks for value per cost, not value",
-       "sweep_architecture.py --widths"),
-      ("Misregistration",
-       "sub-pixel VNIR/SWIR shifts at hard edges",
-       "a tolerance to specify. The dichroic makes this small, not absent",
-       "-- no runner yet"),
-     ]),
-
-    ("OUT OF REACH — stated, not planned", BLOCKED,
-     "Listed because a plan that only lists what it can do is not a plan.",
-     [
-      ("T1 live foliar moisture",
-       "LFMC, the brief's lead target",
-       "NO LABEL EXISTS in this data. Needs radiative transfer, or Globe-LFMC, or field sampling",
-       "-- no label, so no script"),
-      ("T2 curing / NPV",
-       "grass curing fraction",
-       "no label, no grassland in the ecology set, and NDLI needs 1754 nm -- past the detector",
-       "-- no label, so no script"),
-      ("Fire occurrence (FOP)",
-       "ignition probability per cell-day",
-       "out of scope by decision. Needs lightning strike data; the satellite sees no ignition",
-       "-- out of scope"),
-     ]),
+#: Column layout in axis units (0-100), and how many characters fit.
+COLS = [
+    ("ID", 0.0, 4),
+    ("EXPERIMENT", 4.0, 26),
+    ("VARIES (independent)", 23.0, 40),
+    ("MEASURES (dependent)", 46.0, 34),
+    ("STATE", 65.0, 16),
+    ("RUNNER", 77.5, 38),
 ]
+
+
+def _wrap(text: str, width: int) -> list[str]:
+    return textwrap.wrap(text, width=width) or [""]
 
 
 def main() -> int:
@@ -183,101 +60,134 @@ def main() -> int:
                          "figure.facecolor": FIG_BG,
                          "savefig.facecolor": FIG_BG})
 
-    n_rows = sum(len(items) for _, _, _, items in PLAN)
-    n_head = len(PLAN)
-    H, HEAD = 0.40, 0.62
-    total = n_rows * H + n_head * HEAD
+    groups = by_group()
 
-    fig, ax = plt.subplots(figsize=(19.0, 0.45 + total), facecolor=FIG_BG)
-    ax.set_xlim(0, 100)
-    ax.set_ylim(-0.08, total + 0.12)
+    # Row heights are driven by the tallest wrapped cell, so nothing is
+    # clipped and the table does not need a fixed row height that is wrong
+    # for both the short rows and the long ones.
+    plan: list = []
+    for group, items in groups.items():
+        plan.append(("__group__", group))
+        for e in items:
+            cells = [
+                [e.eid],
+                _wrap(e.name, COLS[1][2]),
+                _wrap(e.independent, COLS[2][2]),
+                _wrap(e.dependent, COLS[3][2]),
+                _wrap(STATES[e.state]["label"], COLS[4][2]),
+                _wrap(e.runner if e.runner != "--" else "(none yet)",
+                      COLS[5][2]),
+            ]
+            plan.append((e, cells, max(len(c) for c in cells)))
+
+    LINE = 0.175                    # height of one text line
+    PAD = 0.12                      # padding inside a row
+    GROUP_H = 0.52
+
+    total = 0.0
+    for item in plan:
+        total += GROUP_H if item[0] == "__group__" else item[2] * LINE + PAD
+
+    fig, ax = plt.subplots(figsize=(20.0, 0.55 + total), facecolor=FIG_BG)
+    ax.set_xlim(0, 116)
+    ax.set_ylim(-0.1, total + 0.95)
     ax.axis("off")
-    fig.suptitle("Every experiment, what it varies, what it settles, and "
-                 "what runs it",
-                 color=INK_BRIGHT, fontsize=13.5, x=0.0, ha="left", y=1.0)
-    ax.text(2.0, total + 0.02, "EXPERIMENT / WHAT VARIES", color=MUTED,
-            fontsize=7.2, va="center", weight="bold")
-    ax.text(24, total + 0.02, "WHAT IT SETTLES", color=MUTED, fontsize=7.2,
-            va="center", weight="bold")
-    ax.text(70.5, total + 0.02, "RUNNER", color=MUTED, fontsize=7.2,
-            va="center", weight="bold")
+    # The axes fill the canvas; without this the default margins leave a
+    # band of dead space above the header taller than several rows.
+    fig.subplots_adjust(top=1.0, bottom=0.0, left=0.0, right=1.0)
+
+    n_run = len(runnable())
+    # Drawn in axis units rather than as a suptitle, so it sits a fixed
+    # distance above the header row instead of at the top of a canvas whose
+    # height changes with the number of experiments.
+    ax.text(0, total + 0.78,
+            f"Experiment register — {len(EXPERIMENTS)} experiments, "
+            f"{n_run} runnable today",
+            color=INK_BRIGHT, fontsize=14, va="center")
+
+    # Column headers.
+    y = total + 0.30
+    for label, x, _w in COLS:
+        ax.text(x, y, label, color=HEAD, fontsize=7.6, weight="bold",
+                va="center")
+    ax.plot([0, 116], [y - 0.17, y - 0.17], color=HEAD, lw=1.0, alpha=0.5)
 
     y = total
-    for title, col, sub, items in PLAN:
-        y -= HEAD
-        ax.text(0, y + 0.24, title, color=col, fontsize=10.2, weight="bold",
-                va="center")
-        ax.text(0, y + 0.02, sub, color=MUTED, fontsize=7.8, va="center",
-                style="italic")
-        ax.plot([0, 100], [y - 0.12, y - 0.12], color=SPINE, lw=0.8)
-        for name, varies, answers, script in items:
-            y -= H
-            ax.add_patch(FancyBboxPatch(
-                (0, y - 0.03), 100, H - 0.07, boxstyle="round,pad=0.01",
-                facecolor=AX_BG, edgecolor="none", zorder=1))
-            # A colour chip, so readiness is readable without the heading.
-            ax.add_patch(FancyBboxPatch(
-                (0.3, y + 0.02), 0.7, H - 0.17, boxstyle="square,pad=0",
-                facecolor=col, edgecolor="none", alpha=0.9, zorder=2))
-            ax.text(2.0, y + 0.15, name, color=INK_BRIGHT, fontsize=9,
-                    va="center", zorder=2)
-            ax.text(2.0, y - 0.01, varies, color=MUTED, fontsize=7.6,
-                    va="center", zorder=2)
-            ax.text(24, y + 0.07, answers, color=INK, fontsize=8.3,
-                    va="center", zorder=2)
-            # A launched arm is called out, and a missing runner is dimmed:
-            # the eye should land on what is running and what is unwritten.
-            launched = "<<" in script
-            unwritten = script.startswith("--")
-            ax.text(70.5, y + 0.07, script,
-                    color=READY if launched else (
-                        BLOCKED if unwritten else MUTED),
-                    fontsize=7.8, va="center", zorder=2, family="monospace",
-                    weight="bold" if launched else "normal")
+    for item in plan:
+        if item[0] == "__group__":
+            y -= GROUP_H
+            ax.text(0, y + 0.17, item[1].upper(), color=INK_BRIGHT,
+                    fontsize=9.6, weight="bold", va="center")
+            ax.plot([0, 116], [y - 0.02, y - 0.02], color=SPINE, lw=0.8)
+            continue
 
-    n_live = sum(1 for _, _, _, items in PLAN
-                 for *_, s in items if "<<" in s)
-    n_todo = sum(1 for _, _, _, items in PLAN
-                 for *_, s in items if s.startswith("--"))
-    fig.text(0.0, -0.045, chr(10).join([
-        f"LAUNCHED: {n_live} rows, which is the three band-selection arms "
-        f"plus the leave-one-out riding inside each of them. One sbatch array "
-        f"of 6 folds per arm, 18 tasks, ~1,056 fits,",
-        "tier2-small at 35 epochs against the NBAC label. Those 35 epochs are "
-        "a RANKING budget: the output is an order, and no number from it is "
-        "quotable as an accuracy until the top sets",
-        "are re-run at full budget. Nothing is a result until pool_bands.py "
-        "has combined the six folds, because one fold is a sample.",
+        e, cells, nlines = item
+        h = nlines * LINE + PAD
+        y -= h
+        ax.add_patch(FancyBboxPatch(
+            (0, y + 0.02), 116, h - 0.05, boxstyle="round,pad=0.01",
+            facecolor=AX_BG, edgecolor="none", zorder=1))
+        # A state chip, so feasibility is readable down the page.
+        ax.add_patch(FancyBboxPatch(
+            (-0.9, y + 0.05), 0.6, h - 0.11, boxstyle="square,pad=0",
+            facecolor=STATES[e.state]["colour"], edgecolor="none",
+            alpha=0.95, zorder=2))
+
+        top = y + h - PAD / 2 - LINE / 2
+        for (label, x, _w), lines in zip(COLS, cells, strict=True):
+            for i, line in enumerate(lines):
+                bright = label in ("ID", "EXPERIMENT")
+                mono = label == "RUNNER"
+                col = INK_BRIGHT if bright else INK
+                if label == "STATE":
+                    col = STATES[e.state]["colour"]
+                if mono and e.runner == "--":
+                    col = MUTED
+                ax.text(x, top - i * LINE, line, color=col,
+                        fontsize=7.9 if not bright else 8.3,
+                        va="center", zorder=3,
+                        family="monospace" if mono else None,
+                        weight="bold" if (bright and i == 0) else "normal")
+        # Star the primary experiments.
+        if "primary" in e.tags:
+            ax.text(114.6, top, "★", color="#e8c547", fontsize=10,
+                    va="center", ha="right", zorder=3)
+
+    fig.text(0.0, -0.030, chr(10).join([
+        "RENDERED FROM src/safari_bands/experiments.py, which "
+        "docs/EXPERIMENTS.md also renders from, so the table and the "
+        "document cannot drift. The CONCLUSION each experiment could reach "
+        "is in",
+        "that document: it is the field that decides whether an experiment "
+        "deserves GPU time, since one whose null result teaches nothing is "
+        "not worth queueing.",
         "",
-        f"The RUNNER column is the honest part: {n_todo} experiments have no "
-        f"script at all, and saying which is more useful than a plan that "
-        f"implies everything is one command away.",
+        "STATE is a property of today, not of the experiment. "
+        + "   ".join(f"{STATES[k]['label']}: {sum(1 for e in EXPERIMENTS if e.state == k)}"
+                     for k in STATES
+                     if any(e.state == k for e in EXPERIMENTS)),
         "",
-        "Three rows are CONTROLS, not results, and a positive finding is not "
-        "reportable without them: the thermal label (a band whose value "
-        "survives only on NBAC was reading the label,",
-        "not the fuel), the lightning cohort (human ignitions carry a "
-        "roads-and-access signal), and per-fold selection frequency. None of "
-        "the three is in the launched set.",
+        "TWO CAVEATS ON EVERY NUMBER. The 35-epoch budget is a RANKING "
+        "budget, so results are an order and not an accuracy until the top "
+        "sets are re-run at full budget. And the fold spread is large --",
+        "the one arm that has completed spanned 0.5396 to 0.7660 across six "
+        "folds from a single model on a single input -- so arms must be "
+        "compared as PAIRED per-fold differences through",
+        "report_arms.py, never as two means read by eye.",
         "",
-        "Three experiments marked [NEW] came from auditing our claims against "
-        "CFFDRS's stated gaps (docs/CFFDRS_GAPS.md): without them G3, G4 and "
-        "G5 were claims we could assert",
-        "but not test. The FMC arms are VACUOUS for a related reason -- "
-        "fmc_measured is read in four places and written in none, so all three "
-        "arms reduce to the FBP equation and would",
-        "have produced three identical numbers looking like 'no difference'.",
-        "",
-        "The last block is not a backlog. T1 and T2 have no label anywhere in "
-        "this data and cannot be obtained by working harder on what we hold. "
-        "Saying so is part of the answer.",
+        "★ marks the three experiments the study turns on: E-1 names "
+        "the six VNIR bands, E-11 tests a moisture index against the "
+        "greenness proxy CFFDRS currently accepts, and E-22 is the primary",
+        "band ranking because SCANFI gives dense per-pixel labels instead "
+        "of one sparse outcome per patch.",
     ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
 
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / "experiment_plan.png"
-    fig.savefig(out, dpi=165, facecolor=FIG_BG, bbox_inches="tight")
+    fig.savefig(out, dpi=150, facecolor=FIG_BG, bbox_inches="tight")
     plt.close(fig)
-    print(f"  wrote {out}  ({n_rows} experiments in {n_head} groups)")
+    print(f"  wrote {out}  ({len(EXPERIMENTS)} experiments, "
+          f"{len(groups)} groups, {n_run} runnable)")
     return 0
 
 
