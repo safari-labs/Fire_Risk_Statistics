@@ -38,11 +38,12 @@ HEAD = "#4ea1d3"
 #: Column layout in axis units (0-100), and how many characters fit.
 COLS = [
     ("ID", 0.0, 4),
-    ("EXPERIMENT", 4.0, 26),
-    ("VARIES (independent)", 23.0, 40),
-    ("MEASURES (dependent)", 46.0, 34),
-    ("STATE", 65.0, 16),
-    ("RUNNER", 77.5, 38),
+    ("EXPERIMENT", 3.6, 22),
+    ("VARIES (independent)", 18.5, 34),
+    ("MEASURES (dependent)", 37.0, 28),
+    ("HYPOTHESIS (and what would refute it)", 53.0, 54),
+    ("STATE", 82.0, 15),
+    ("RUNNER", 93.0, 36),
 ]
 
 
@@ -74,9 +75,10 @@ def main() -> int:
                 _wrap(e.name, COLS[1][2]),
                 _wrap(e.independent, COLS[2][2]),
                 _wrap(e.dependent, COLS[3][2]),
-                _wrap(STATES[e.state]["label"], COLS[4][2]),
+                _wrap(e.hypothesis or "--", COLS[4][2]),
+                _wrap(STATES[e.state]["label"], COLS[5][2]),
                 _wrap(e.runner if e.runner != "--" else "(none yet)",
-                      COLS[5][2]),
+                      COLS[6][2]),
             ]
             plan.append((e, cells, max(len(c) for c in cells)))
 
@@ -88,9 +90,10 @@ def main() -> int:
     for item in plan:
         total += GROUP_H if item[0] == "__group__" else item[2] * LINE + PAD
 
-    fig, ax = plt.subplots(figsize=(20.0, 0.55 + total), facecolor=FIG_BG)
-    ax.set_xlim(0, 116)
-    ax.set_ylim(-0.1, total + 0.95)
+    fig, ax = plt.subplots(figsize=(27.0, 0.55 + total), facecolor=FIG_BG)
+    ax.set_xlim(0, 131)
+    FOOTER = 3.1          # data units reserved below the last row
+    ax.set_ylim(-FOOTER, total + 0.95)
     ax.axis("off")
     # The axes fill the canvas; without this the default margins leave a
     # band of dead space above the header taller than several rows.
@@ -110,7 +113,7 @@ def main() -> int:
     for label, x, _w in COLS:
         ax.text(x, y, label, color=HEAD, fontsize=7.6, weight="bold",
                 va="center")
-    ax.plot([0, 116], [y - 0.17, y - 0.17], color=HEAD, lw=1.0, alpha=0.5)
+    ax.plot([0, 131], [y - 0.17, y - 0.17], color=HEAD, lw=1.0, alpha=0.5)
 
     y = total
     for item in plan:
@@ -118,14 +121,14 @@ def main() -> int:
             y -= GROUP_H
             ax.text(0, y + 0.17, item[1].upper(), color=INK_BRIGHT,
                     fontsize=9.6, weight="bold", va="center")
-            ax.plot([0, 116], [y - 0.02, y - 0.02], color=SPINE, lw=0.8)
+            ax.plot([0, 131], [y - 0.02, y - 0.02], color=SPINE, lw=0.8)
             continue
 
         e, cells, nlines = item
         h = nlines * LINE + PAD
         y -= h
         ax.add_patch(FancyBboxPatch(
-            (0, y + 0.02), 116, h - 0.05, boxstyle="round,pad=0.01",
+            (0, y + 0.02), 131, h - 0.05, boxstyle="round,pad=0.01",
             facecolor=AX_BG, edgecolor="none", zorder=1))
         # A state chip, so feasibility is readable down the page.
         ax.add_patch(FancyBboxPatch(
@@ -141,6 +144,8 @@ def main() -> int:
                 col = INK_BRIGHT if bright else INK
                 if label == "STATE":
                     col = STATES[e.state]["colour"]
+                if label.startswith("HYPOTHESIS"):
+                    col = MUTED if e.state == "BLOCKED" else INK
                 if mono and e.runner == "--":
                     col = MUTED
                 ax.text(x, top - i * LINE, line, color=col,
@@ -150,10 +155,10 @@ def main() -> int:
                         weight="bold" if (bright and i == 0) else "normal")
         # Star the primary experiments.
         if "primary" in e.tags:
-            ax.text(114.6, top, "★", color="#e8c547", fontsize=10,
+            ax.text(129.6, top, "★", color="#e8c547", fontsize=10,
                     va="center", ha="right", zorder=3)
 
-    fig.text(0.0, -0.030, chr(10).join([
+    ax.text(0, -0.45, chr(10).join([
         "RENDERED FROM src/safari_bands/experiments.py, which "
         "docs/EXPERIMENTS.md also renders from, so the table and the "
         "document cannot drift. The CONCLUSION each experiment could reach "
@@ -180,7 +185,7 @@ def main() -> int:
         "greenness proxy CFFDRS currently accepts, and E-22 is the primary",
         "band ranking because SCANFI gives dense per-pixel labels instead "
         "of one sparse outcome per patch.",
-    ]), color=MUTED, fontsize=8.2, ha="left", linespacing=1.5)
+    ]), color=MUTED, fontsize=8.2, ha="left", va="top", linespacing=1.6)
 
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / "experiment_plan.png"

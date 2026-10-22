@@ -92,6 +92,13 @@ class Experiment:
     dependent: str
     conclusion: str
     state: str
+    #: A falsifiable PREDICTION, with the condition that would refute it.
+    #: CLAUDE.md is explicit that the study's job is to test the brief's
+    #: hypotheses rather than confirm them, so each one is written to be
+    #: capable of being wrong and says what wrong would look like. Where a
+    #: prediction comes from the brief (H1, H2, H3) it is attributed; the
+    #: rest are this study's own and carry no more authority than that.
+    hypothesis: str = ""
     runner: str = "--"
     gap: str = ""
     blocker: str = ""
@@ -113,6 +120,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ───────────────────────────── Band selection ────────────────────────
     Experiment(
         "E-1", "VNIR band selection", "Band selection",
+        hypothesis="Red-edge earns a slot: the best six include at least one of "
+                   "B5/B6/B7 and exclude both 60 m atmospheric bands (B1, B9). "
+                   "WRONG IF an atmospheric band survives into the best six, which "
+                   "would say the ranking is reading haze rather than vegetation.",
         independent="which 6 of the 10 Sentinel-2 bands in 400-1000 nm",
         dependent=_M + ", per set size k",
         conclusion="Names the six bands for the Mantis MS mode. The one "
@@ -124,6 +135,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-2", "All-11 greedy", "Band selection",
+        hypothesis="B11 enters by k=3, because the NIR/SWIR contrast is the "
+                   "strongest single moisture signal available. WRONG IF it has "
+                   "not entered by k=7, which would be weak evidence against the "
+                   "SWIR chain -- weak, because one band cannot stand in for four.",
         independent="unconstrained choice over all 11 packed bands",
         dependent=_M + "; the k at which B11 first enters",
         conclusion="If greedy reaches for B11 early, the SWIR chain earns a "
@@ -135,6 +150,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-3", "Forced-SWIR delta", "Band selection",
+        hypothesis="Positive but small: under +0.02 auc_px. One band in the window "
+                   "is a poor proxy for a four-band mode, so a large gain would be "
+                   "surprising and a null is not disqualifying.",
         independent="B11 held in the set vs the VNIR-only set, matched k",
         dependent="the paired difference in " + _M,
         conclusion="The marginal value of one SWIR band at equal band count. "
@@ -145,6 +163,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-4", "SWIR-only floor", "Band selection",
+        hypothesis="Clearly above chance and clearly below the VNIR set. The water "
+                   "features at 1200 and 1600 nm are physically present, so a "
+                   "learned model should find something; without the NIR anchor it "
+                   "cannot normalise for canopy structure or illumination. WRONG "
+                   "IF it matches the VNIR set, which would make the MS chain "
+                   "arguable.",
         independent="B11 alone, no VNIR band",
         dependent=_M,
         conclusion="The third sensor option -- SWIR instead of MS -- had no "
@@ -158,6 +182,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-5", "Leave-one-out band value", "Band selection",
+        hypothesis="Every individual drop is small, because the pool is redundant. "
+                   "B8 and B8A in particular each look worthless while the pair is "
+                   "not: leave-one-out cannot see mutual substitution, and reading "
+                   "a small drop as 'this band does not matter' is the "
+                   "trap. WRONG IF any single removal costs more than "
+                   "about 0.02, which would mean the pool is far less "
+                   "redundant than the near-duplicate pairs suggest and "
+                   "the chosen set is already minimal.",
         independent="each band removed in turn from the chosen set",
         dependent="the drop in " + _M + " on removing each band",
         conclusion="Per-band value CONDITIONAL on the rest, which is the "
@@ -170,6 +202,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-6", "Selection stability", "Band selection",
+        hypothesis="The top two or three bands are selected in 6/6 folds and the "
+                   "tail is unstable. WRONG IF even the top band swings, which "
+                   "would mean the ranking is fold noise and no k is reportable.",
         independent="the same search re-run inside each of 6 location folds",
         dependent="the fraction of folds that select each band at each k",
         conclusion="6/6 is a finding, 3/6 is a coin flip. Without it a "
@@ -179,6 +214,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-7", "Resolution requirement", "Band selection",
+        hypothesis="Graceful degradation from 20 to 40 m and a sharper fall by 80 "
+                   "m. This one matters: the Mantis MS mode is 32 m at 500 km, so "
+                   "if 20 -> 40 m already costs materially, our 20 m results "
+                   "overstate what the sensor would deliver.",
         independent="ground sample distance: 20 / 40 / 80 m, coarsening only",
         dependent=_M + " vs GSD",
         conclusion="How much resolution the retrieval needs — a mission "
@@ -194,6 +233,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ─────────────────────────────── Controls ────────────────────────────
     Experiment(
         "E-8", "Label independence control", "Controls",
+        hypothesis="The ranking is largely preserved. WRONG IF B11's value "
+                   "collapses specifically -- that would say it was reading "
+                   "NBR-like information shared with the perimeter delineation "
+                   "rather than fuel, which is exactly the circularity rule 3 "
+                   "exists to catch.",
         independent="the label source: NBAC perimeters vs VIIRS thermal",
         dependent="change in the band ranking and in " + _M,
         conclusion="A band whose value collapses when the label becomes "
@@ -206,6 +250,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-9", "Lightning cohort", "Controls",
+        hypothesis="Absolute skill drops (fewer and harder cases) but the band "
+                   "ranking holds. WRONG IF the ranking changes, which would say "
+                   "human-ignition access signals -- roads, settlement -- were "
+                   "driving it.",
         independent="fires filtered to NFDB CAUSE = lightning",
         dependent=_M + ", restricted cohort",
         conclusion="Human ignitions carry a roads-and-settlement signal that "
@@ -219,6 +267,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-10", "Negative control", "Controls",
+        hypothesis="At or near chance. Anything else means the pipeline is broken "
+                   "and no other result in this register is interpretable.",
         independent="a deliberately redundant band pool",
         dependent=_M,
         conclusion="Sanity. If a deliberately poor set scores well, the "
@@ -232,6 +282,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ────────────────────────── Index baselines ──────────────────────────
     Experiment(
         "E-11", "Greenness vs moisture indices", "Index baselines",
+        hypothesis="`both` beats `greenness` by a small but fold-consistent "
+                   "margin, because direct water absorption at 1610 nm carries "
+                   "information a greenness proxy cannot; and `moisture` (2 bands) "
+                   "draws with `greenness` (5 bands). WRONG IF `both` does not "
+                   "beat `greenness`, which would say the 1610 nm moisture signal "
+                   "adds nothing this label can see -- a publishable null, and one "
+                   "that would weaken the case for the SWIR chain considerably.",
         independent="the index family given to the model: greenness "
                     "(NDVI, EVI, VARI, NDRE) / moisture (NDMI, MSI) / both / "
                     "raw bands",
@@ -257,6 +314,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-12", "Index baseline vs learned bands", "Index baselines",
+        hypothesis="The learned model on raw bands beats every index family, "
+                   "because an index is a fixed projection that discards "
+                   "information a model could use. WRONG IF indices match it, "
+                   "which would be a strong argument for shipping indices -- cheap "
+                   "on an FPGA and interpretable to an operational user.",
         independent="hand-built indices vs the learned model on raw bands",
         dependent="the paired difference in " + _M,
         conclusion="If the learned model beats every index family by a wide "
@@ -271,6 +333,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ─────────────────────────────── Covariates ──────────────────────────
     Experiment(
         "E-13", "Weather representation", "Covariates",
+        hypothesis="BOTH is within noise of CODES. The FWI codes already integrate "
+                   "the same 91 days through a recursion tuned over decades, so "
+                   "our 12 features are unlikely to extract much the codes have "
+                   "not. WRONG IF BOTH wins clearly -- then check DIMENSIONLESS, "
+                   "because a gain that disappears there came from absolute level, "
+                   "which at 45-70 N is latitude wearing a weather costume.",
         independent="the scalar columns the fusion head sees: FWI codes / "
                     "our 12 compressed history features / both / "
                     "dimensionless history",
@@ -287,6 +355,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-14", "Fusion architecture", "Covariates",
+        hypothesis="Both fusion variants beat rasters_only, and two_head is within "
+                   "noise of bottleneck. The CFFDRS-shaped separation is expected "
+                   "to cost little; if it costs a lot, the architecture argument "
+                   "has to give way to the measurement. WRONG IF "
+                   "rasters_only matches both, which would say the "
+                   "weather scalars add nothing at this label and sample "
+                   "size -- and would make E-13 moot.",
         independent="how weather enters: not at all / two-head late / "
                     "bottleneck",
         dependent="the paired difference in " + _M,
@@ -299,6 +374,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-15", "Imagery vs the FBP formula", "Covariates",
+        hypothesis="Imagery plus the FMC scalar beats the scalar alone, "
+                   "substantially. The FBP equation is a function of latitude, "
+                   "longitude, elevation and date only -- it carries no "
+                   "information about the stand at all -- so a null here would be "
+                   "surprising and would cast doubt on the imagery rather than "
+                   "vindicate the formula.",
         independent="the FBP foliar-moisture scalar alone vs that scalar "
                     "plus all 9 surface bands",
         dependent="the paired difference in " + _M,
@@ -315,6 +396,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-16", "FMC arms", "Covariates",
+        hypothesis="None. The arms are identical by construction, so no prediction "
+                   "is possible and any apparent difference would be seed noise.",
         independent="baseline / measured / augment foliar moisture",
         dependent="(none obtainable)",
         conclusion="NOTHING. fmc_measured is read in four places and written "
@@ -329,6 +412,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ───────────────────────────── CFFDRS gaps ───────────────────────────
     Experiment(
         "E-17", "Station-density stratification", "CFFDRS gaps",
+        hypothesis="The imagery increment grows with distance to the nearest "
+                   "station. Fuel moisture is the integral of weather, so a "
+                   "satellite estimate should be worth most where the weather grid "
+                   "is interpolated from furthest away -- the north, which is also "
+                   "where most area burns.",
         independent="distance from each patch to the nearest fire-weather "
                     "station",
         dependent="the imagery increment in " + _M + ", stratified by that "
@@ -346,6 +434,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-18", "Snow-off startup", "CFFDRS gaps",
+        hypothesis="Correcting the start date changes DC and DMC materially above "
+                   "55 N and improves skill there, with little effect in the "
+                   "south. Our flat 90-day spinup starts around 1 April into "
+                   "frozen, snow-covered ground, so the spurious drying should "
+                   "scale with latitude.",
         independent="FWI start date: per-pixel NDSI snow-off vs our flat "
                     "90-day spinup",
         dependent="change in the FWI codes, and " + _M,
@@ -362,6 +455,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-19", "Latitude-banded weather", "CFFDRS gaps",
+        hypothesis="History beats codes at high latitude specifically, and not in "
+                   "the south. The day-length factors are tabulated for ~46 N, so "
+                   "the codes should be least trustworthy where that assumption is "
+                   "furthest from the truth. A uniform effect across bands would "
+                   "say the mechanism is something else.",
         independent="the E-13 weather contrast, split by latitude band",
         dependent="the paired difference per band",
         conclusion="DMC and DC day-length factors are tabulated for ~46 N "
@@ -375,6 +473,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-20", "Weather staleness", "CFFDRS gaps",
+        hypothesis="Skill decays with weather age, fastest for CODES and slowest "
+                   "for the dimensionless history. This is the testable half of a "
+                   "claim fwi.py already makes from input drift alone (DC 8.2% "
+                   "over three days against ISI's 89.9%). WRONG IF decay is flat, "
+                   "which would mean a daily uplink costs nothing and the "
+                   "slow-code argument is unnecessary.",
         independent="the age of the weather at inference: 0 / 24 / 48 / 72 h "
                     "/ 7 d",
         dependent=_M + " vs weather age, per weather arm",
@@ -395,6 +499,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
+        hypothesis="A positive slope: the advantage of a refreshed estimate grows "
+                   "with the staleness gap. At gap 0 our estimate should LOSE, "
+                   "because it is a noisy copy of its own training target -- which "
+                   "is why the slope and not the level is the estimator.",
         independent="the static 2020 SCANFI layer vs our current estimate, "
                     "against staleness gap",
         dependent="the SLOPE of " + _M + " against staleness, not the level",
@@ -411,6 +519,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-22", "Ecology arm", "CFFDRS gaps",
+        hypothesis="The ranking from dense SCANFI labels differs from the "
+                   "fire-outcome ranking, and SWIR ranks higher in it. Structure "
+                   "and biomass retrieval leans on SWIR more than a burn outcome "
+                   "does, because the outcome is diluted by ignition and weather. "
+                   "If the two rankings agree, that is a strong convergent result "
+                   "for whichever bands win.",
         independent="the same band searches, against SCANFI structure "
                     "instead of a burn outcome",
         dependent="per-pixel error on cover, closure, height, biomass, "
@@ -430,6 +544,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ───────────────────────────── Hyperspectral ─────────────────────────
     Experiment(
         "E-23", "SWIR band placement", "Hyperspectral",
+        hypothesis="The best four cluster near 1240, 1610 and 1680-1730 nm, with "
+                   "the fourth in the 1500s. From brief hypotheses H1 and H3: "
+                   "resolving a dry-matter change needs two water-sensitive bands "
+                   "with different water-to-dry-matter absorption ratios.",
         independent="any 4 centres and widths in 1003-1359 and 1414-1749 nm "
                     "(140 usable channels)",
         dependent="retrieval error per candidate set",
@@ -446,6 +564,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-24", "1209 vs 1240 nm", "Hyperspectral",
+        hypothesis="1240 nm is slightly better for water sensitivity and 1209 "
+                   "slightly better for O2 margin, with the difference small "
+                   "enough that the flown WorldView-3 centre is defensible. A "
+                   "large difference either way is the interesting outcome.",
         independent="WorldView-3's flown centre against Gao's NDWI band",
         dependent="retrieval error, and O2 absorption margin",
         conclusion="Water sensitivity traded against O2 margin. The "
@@ -456,6 +578,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-25", "Spectral resolution: HS vs MS", "Hyperspectral",
+        hypothesis="Diminishing returns beyond roughly 10-15 well-placed bands, so "
+                   "the HS mode's 96 channels buy little over a well-chosen MS "
+                   "set. WRONG IF the curve keeps climbing, which would make the "
+                   "HS mode the better instrument and change the payload decision.",
         independent="140 SWIR channels at 5 nm vs the best 4-6 broad bands",
         dependent="retrieval error vs channel count",
         conclusion="What spectral RESOLUTION buys, which decides the Mantis "
@@ -467,6 +593,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-26", "Conditional large fire", "Hyperspectral",
+        hypothesis="The fuel signal is stronger conditional on ignition than "
+                   "unconditionally, because conditioning removes the "
+                   "weather-and-chance component the sensor cannot see. This is "
+                   "the cleanest test of whether the imagery reads fuel at all.",
         independent="burned area > 100 ha, conditional on having burned",
         dependent=_M + " on the conditional task",
         conclusion="36% base rate, and 97% of area burned is in the tail. "
@@ -481,6 +611,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ─────────────────────────────── Hardware ────────────────────────────
     Experiment(
         "E-27", "Cost per input channel", "Hardware",
+        hypothesis="BRAM scales roughly linearly with input channel count, so 96 "
+                   "channels are infeasible on the target part and 11 are "
+                   "affordable. Stream BRAM is ceil(width/18) x ceil(depth/1024) "
+                   "and width never stops paying. WRONG IF scaling is "
+                   "sub-linear because the first convolution dominates, "
+                   "which would make a wide input cheaper than the "
+                   "marginal-cost argument assumes.",
         independent="input channel count: 3 / 6 / 10 / 11 / 96",
         dependent="BRAM, DSP, LUT and latency from a real conversion",
         conclusion="The MARGINAL COST denominator. The brief asks for value "
@@ -493,6 +630,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-28", "Co-registration tolerance", "Hardware",
+        hypothesis="Degradation is tolerable to about half a pixel and rises "
+                   "sharply beyond it, concentrated at snow/forest boundaries -- "
+                   "the flagged engineering risk. A tolerance looser than that "
+                   "would retire the risk; tighter would constrain the dichroic "
+                   "design.",
         independent="sub-pixel VNIR/SWIR shift injected at hard edges",
         dependent="retrieval error vs shift",
         conclusion="A number for the requirements table. The dichroic makes "
@@ -506,6 +648,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     # ────────────────────────────── Out of reach ─────────────────────────
     Experiment(
         "E-29", "T1 live foliar moisture", "Out of reach",
+        hypothesis="From Jolly et al. (2014), the brief's lead hypothesis H1: dry "
+                   "matter, not water content, drives seasonal conifer LFMC, so "
+                   "water-only bands will return EWT rather than LFMC and a "
+                   "two-band water contrast is required. Untestable here until an "
+                   "LFMC label exists.",
         independent="LFMC, the brief's lead retrieval target",
         dependent="RMSE against gravimetric LFMC",
         conclusion="Would make G1's STRONG claim testable -- that a spectral "
@@ -523,6 +670,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-30", "T2 curing / NPV fraction", "Out of reach",
+        hypothesis="Brief hypothesis H2: SWIR2 is necessary for curing and 1240 nm "
+                   "is not a substitute, because the cellulose/lignin feature near "
+                   "2100 nm is what separates NPV from soil. Untestable here: no "
+                   "curing label, no grassland, and the band is past the detector.",
         independent="grass curing fraction",
         dependent="error against field curing",
         conclusion="The other half of the FWI2025 curing input. Blocked "
@@ -535,6 +686,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-31", "Fire occurrence prediction", "Out of reach",
+        hypothesis="None offered. Out of scope by decision, and a hypothesis "
+                   "recorded for work that will not run invites being mistaken for "
+                   "a finding.",
         independent="ignition probability per cell-day",
         dependent="(out of scope)",
         conclusion="Parked by decision. Recorded because the argument is "

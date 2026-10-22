@@ -71,8 +71,8 @@ def main() -> int:
         L.append(f"### {group}")
         L.append("")
         L.append("| ID | Experiment | Independent variable | Dependent "
-                 "variable | State | Runner |")
-        L.append("|---|---|---|---|---|---|")
+                 "variable | Hypothesis | State | Runner |")
+        L.append("|---|---|---|---|---|---|---|")
         for e in items:
             star = " \u2605" if "primary" in e.tags else ""
             ctl = " (control)" if "control" in e.tags else ""
@@ -80,16 +80,26 @@ def main() -> int:
             L.append(
                 f"| **{e.eid}** | {_cell(e.name)}{star}{ctl} | "
                 f"{_cell(e.independent)} | {_cell(e.dependent)} | "
+                f"{_cell(e.hypothesis)} | "
                 f"{STATES[e.state]['label']} | {runner} |")
         L.append("")
 
     # ── Conclusions, which is the part worth reading ─────────────────────
-    L.append("## What each experiment could conclude")
+    L.append("## Hypotheses and conclusions")
     L.append("")
-    L.append("The field that decides whether an experiment deserves GPU "
-             "time. An experiment whose null result teaches nothing is not "
-             "worth queueing, and writing this down is how that gets "
-             "noticed before the run rather than after.")
+    L.append("Each experiment carries a falsifiable **prediction** and "
+             "the condition that would refute it, then what could be "
+             "**concluded** either way. The conclusion field is what "
+             "decides whether an experiment deserves GPU time: one whose "
+             "null result teaches nothing is not worth queueing, and "
+             "writing it down is how that gets noticed before the run.")
+    L.append("")
+    L.append("The hypotheses are written to be capable of being wrong. "
+             "`CLAUDE.md` is explicit that the study's job is to **test** "
+             "the brief's hypotheses rather than confirm them, so each "
+             "states what being wrong would look like. Where a prediction "
+             "comes from the brief (H1, H2, H3) it is attributed; the rest "
+             "are this study's own and carry no more authority than that.")
     L.append("")
     for group, items in by_group().items():
         L.append(f"### {group}")
@@ -97,6 +107,9 @@ def main() -> int:
         for e in items:
             L.append(f"**{e.eid} — {e.name}**")
             L.append("")
+            if e.hypothesis:
+                L.append(f"*Hypothesis:* {e.hypothesis}")
+                L.append("")
             L.append(e.conclusion)
             if e.note:
                 L.append("")

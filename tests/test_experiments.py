@@ -143,3 +143,32 @@ def test_blocked_experiments_do_not_claim_a_working_runner():
         if e.state == "BLOCKED":
             assert e.runner.startswith("--"), (
                 f"{e.eid} is blocked but its runner reads as a command")
+
+
+@pytest.mark.parametrize("e", EXPERIMENTS, ids=lambda e: e.eid)
+def test_every_experiment_states_a_hypothesis(e: Experiment):
+    assert e.hypothesis, (
+        f"{e.eid} has no hypothesis. An experiment without a prediction "
+        f"cannot be wrong, and one that cannot be wrong is not worth the "
+        f"queue time")
+
+
+@pytest.mark.parametrize("e", EXPERIMENTS, ids=lambda e: e.eid)
+def test_a_runnable_hypothesis_says_what_would_refute_it(e: Experiment):
+    """Falsifiability, checked crudely but usefully.
+
+    CLAUDE.md: the study's job is to TEST the brief's hypotheses, not to
+    confirm them. A prediction with no stated failure condition drifts into
+    a statement of belief, and the first ambiguous result gets read as
+    support for it.
+
+    Only required where the experiment can actually run -- for the
+    out-of-reach ones the honest hypothesis is often "none offered".
+    """
+    if not e.runnable:
+        return
+    lowered = e.hypothesis.lower()
+    assert any(k in lowered for k in ("wrong if", "unless", "refut",
+                                      "would be surprising", "anything else")), (
+        f"{e.eid} predicts an outcome but never says what would refute it: "
+        f"{e.hypothesis[:120]}")
