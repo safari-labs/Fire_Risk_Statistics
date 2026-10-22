@@ -25,3 +25,7 @@ Thumbs.db
 .earthdata_token
 *.earthdata_token
 .netrc
+
+# Narval job output copied back for diagnosis. Grows with every run (336
+# files from one batch), and the authoritative copy lives on the cluster.
+narval_results/
