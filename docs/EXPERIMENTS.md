@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-31 experiments. **17 can run today** on data already packed and staged.
+48 experiments. **17 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -18,14 +18,34 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 |---|---|---|---|
 | **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
 | **Partial result** | 6 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10 |
-| **Needs code** | 2 | no new data; a runner or a flag has to be written | E-18, E-29 |
-| **Needs a pack** | 4 | data held but not tiled, packed or transferred | E-8, E-20, E-21, E-22 |
-| **Needs new data** | 5 | free to obtain, not yet held | E-9, E-17, E-23, E-24, E-25 |
+| **Needs code** | 10 | no new data; a runner or a flag has to be written | E-17, E-18, E-21, E-29, E-32, E-33, E-39, E-40, E-41, E-43 |
+| **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
+| **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
 Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audit. They were renumbered into this single register rather than left as a second scheme; `docs/CFFDRS_GAPS.md` points at the new ids.
 
 ## Experiments
+
+### CFFDRS mirror
+
+| ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
+|---|---|---|---|---|---|---|
+| **E-32** | CFFDRS as is (R0) ★ | FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor. | none learned: FBP ROS / HFI / CFB per pixel and FWI codes per patch, computed from the operational inputs | within-patch and between-patch AUC, per process | Needs code | *none yet* |
+| **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Needs code | *none yet* |
+| **E-34** | Learned CFFDRS (R1/R2) | A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it. | R0 vs R1 vs R2 on identical inputs and folds | paired within/between-patch AUC per process | Needs a pack | *none yet* |
+| **E-35** | Fuel-type slot | Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut. | the fuel-type slot's source: pre-fire inventory vs imagery_replace (ecology model) vs imagery_correct | paired delta in within-patch AUC per process | Needs a pack | *none yet* |
+| **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Needs a pack | *none yet* |
+| **E-37** | Crown-base-height slot | Imagery-informed CBH changes crown fraction burned enough to move intensity skill. WRONG IF the CFB term never engages at our fire weather. | CBH source: ST-X-3 default vs height-derived | paired delta in the intensity branch | Needs a pack | *none yet* |
+| **E-38** | Curing slot | Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'. | curing source: CWFIS percent curing (2020-2025) or the time-of-year default vs S2 curing | ignition and spread on O-1 pixels | Needs new data | *none yet* |
+| **E-39** | Canopy closure to in-stand moisture | Imagery stand density sharpens ignition receptivity through the stand-specific FFMC adjustment. WRONG IF the adjusted in-stand FFMC ranks ignitions no better than open FFMC. | closure source for the in-stand FFMC adjustment | Stage C ignition AUC and calibration | Needs code | *none yet* |
+| **E-40** | Green-up slot | An S2 green-up date beats the CWFIS green-up product for the D-1/M-1/M-2 leafless-to-green switch. WRONG IF the two agree to within a few days, leaving nothing to gain. | green-up source: CWFIS product (2020-2025, held) vs S2 phenology | spread and ignition on deciduous and mixedwood pixels | Needs code | *none yet* |
+| **E-41** | Spread R0 (CFSDS) | FBP ROS correlates with observed daily spread (Spearman rho > 0). WRONG IF it does not, which would bound everything the spread branch can claim. | none learned: FBP ROS on each fire-day | Spearman rho and log-ratio error against CFSDS spread | Needs code | *none yet* |
+| **E-42** | Spread slot value | Fuel-side imagery slots improve per-fire-day spread prediction. WRONG IF only weather-side inputs move it. | slot sources, as in E-35 to E-40, on the spread target | paired change in Spearman rho per fire-day | Needs a pack | *none yet* |
+| **E-44** | Ignition R0 | P(sustained flaming) x P(lightning holdover) ranks lightning starts above matched controls. WRONG IF at chance. | none learned: the published ignition relationships | AUC and calibration, starts vs matched controls | Needs new data | *none yet* |
+| **E-45** | Ignition slot value | Closure, green-up and fuel-type slots improve ignition ranking. WRONG IF the shuffled twins gain as much. | slot sources on the ignition target | paired AUC change | Needs new data | *none yet* |
+| **E-46** | Band and index decision | The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence. | per-slot nested rankings weighted by slot value (A-29) | the chosen band and index sets, with their margins | Needs a pack | *none yet* |
+| **E-47** | Architecture decision | A tier2-class model is within one SE of the best preset at the chosen bands. WRONG IF only tier3 or larger reaches it. | model preset, R2 vs R4 form | paired skill at the chosen bands; the onboard/ground split | Needs a pack | *none yet* |
 
 ### Band selection
 
@@ -47,6 +67,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Needs new data | *none yet* |
 | **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Partial result | `sweep_axes.sh SETS=neg` |
 | **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `sweep_axes.sh SETS=cond` |
+| **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Needs code | *none yet* |
 
 ### Index baselines
 
@@ -68,11 +89,11 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-17** | Station-density stratification | The imagery increment grows with distance to the nearest station. Fuel moisture is the integral of weather, so a satellite estimate should be worth most where the weather grid is interpolated from furthest away -- the north, which is also where most area burns. | distance from each patch to the nearest fire-weather station | the imagery increment in auc_px, scenario-held-out folds, stratified by that distance | Needs new data | *none yet* |
+| **E-17** | Station-density stratification | The imagery increment grows with distance to the nearest station. Fuel moisture is the integral of weather, so a satellite estimate should be worth most where the weather grid is interpolated from furthest away -- the north, which is also where most area burns. | distance from each patch to the nearest fire-weather station | the imagery increment in auc_px, scenario-held-out folds, stratified by that distance | Needs code | *none yet* |
 | **E-18** | Snow-off startup | Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. | FWI start date: per-pixel NDSI snow-off vs our flat 90-day spinup | change in the FWI codes, and auc_px, scenario-held-out folds | Needs code | *none yet* |
 | **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `sweep_covariates.sh SETS=weather` |
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
-| **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. | the static 2020 SCANFI layer vs our current estimate, against staleness gap | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Needs a pack | *none yet* |
+| **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Needs code | *none yet* |
 | **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Needs a pack | `train_ecology.sh` |
 
 ### Hyperspectral
@@ -89,6 +110,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-27** | Cost per input channel | BRAM scales roughly linearly with input channel count, so 96 channels are infeasible on the target part and 11 are affordable. Stream BRAM is ceil(width/18) x ceil(depth/1024) and width never stops paying. WRONG IF scaling is sub-linear because the first convolution dominates, which would make a wide input cheaper than the marginal-cost argument assumes. | input channel count: 3 / 6 / 10 / 11 / 96 | BRAM, DSP, LUT and latency from a real conversion | Runnable now | `sweep_architecture.py --widths` |
 | **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `sweep_axes.sh SETS=shift` |
+| **E-48** | Hardware decision | The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does. | board (Q7, Q8, Q9) x model x input channels | BRAM / DSP / LUT, latency, power (A-29) | Needs a pack | *none yet* |
 
 ### Out of reach
 
@@ -103,6 +125,136 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 Each experiment carries a falsifiable **prediction** and the condition that would refute it, then what could be **concluded** either way. The conclusion field is what decides whether an experiment deserves GPU time: one whose null result teaches nothing is not worth queueing, and writing it down is how that gets noticed before the run.
 
 The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit that the study's job is to **test** the brief's hypotheses rather than confirm them, so each states what being wrong would look like. Where a prediction comes from the brief (H1, H2, H3) it is attributed; the rest are this study's own and carry no more authority than that.
+
+### CFFDRS mirror
+
+**E-32 — CFFDRS as is (R0)**
+
+*Hypothesis:* FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor.
+
+The non-learned reference every imagery slot is measured against -- CFFDRS itself, not a model trained on its inputs.
+
+*Blocked on:* needs the FBP port and ignition relationships (plan P1; ignition coefficients need Q26)
+
+**E-33 — Fuel inventory comparison**
+
+*Hypothesis:* Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome.
+
+Which operational fuel input is honest on burned ground, and how much a post-fire inventory would flatter a result.
+
+*Blocked on:* R0 (E-32); the SCANFI v1 adapter is not written
+
+*CFFDRS gap:* G2 fuel-type layer is a fixed vintage
+
+**E-34 — Learned CFFDRS (R1/R2)**
+
+*Hypothesis:* A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it.
+
+The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
+
+*Blocked on:* pack v2 (fire dates, pre-fire imagery, per-pixel slots) and the slot network (plan P4-P5)
+
+**E-35 — Fuel-type slot**
+
+*Hypothesis:* Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut.
+
+Whether the imager should refresh FBP fuel type.
+
+*Blocked on:* E-22 (ecology model) and pack v2
+
+*CFFDRS gap:* G2 fuel-type layer is a fixed vintage
+
+**E-36 — Percent-conifer slot**
+
+*Hypothesis:* Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels.
+
+Brief target T4 as a CFFDRS input rather than a map.
+
+*Blocked on:* E-22 and pack v2
+
+*CFFDRS gap:* G2 fuel-type layer is a fixed vintage
+
+**E-37 — Crown-base-height slot**
+
+*Hypothesis:* Imagery-informed CBH changes crown fraction burned enough to move intensity skill. WRONG IF the CFB term never engages at our fire weather.
+
+Whether stand height from orbit belongs in FBP's crown fire initiation.
+
+*Blocked on:* FBP port and pack v2; the CBH-from-height rule is not set
+
+**E-38 — Curing slot**
+
+*Hypothesis:* Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'.
+
+The FWI2025 curing input, tested where grass exists.
+
+*Blocked on:* CWFIS pcuring zips (about 2 GB a year) not fetched; little grass
+
+*CFFDRS gap:* curing
+
+**E-39 — Canopy closure to in-stand moisture**
+
+*Hypothesis:* Imagery stand density sharpens ignition receptivity through the stand-specific FFMC adjustment. WRONG IF the adjusted in-stand FFMC ranks ignitions no better than open FFMC.
+
+The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
+
+*Blocked on:* the ignition relationships need the coefficients in Q26
+
+**E-40 — Green-up slot**
+
+*Hypothesis:* An S2 green-up date beats the CWFIS green-up product for the D-1/M-1/M-2 leafless-to-green switch. WRONG IF the two agree to within a few days, leaving nothing to gain.
+
+Whether the imager should own the leaf-state switch FBP applies to aspen and mixedwood.
+
+*Blocked on:* greenup.py is not written; CWFIS green-up 2020-2023 is held, 2019 is not published
+
+**E-41 — Spread R0 (CFSDS)**
+
+*Hypothesis:* FBP ROS correlates with observed daily spread (Spearman rho > 0). WRONG IF it does not, which would bound everything the spread branch can claim.
+
+Stage B's floor. CFSDS v1.1 (90 m, fires > 500 ha, 2002-2024) covers all 99 fire patches: 82 fires, 7,835 fire-days.
+
+*Blocked on:* FBP port; cfsds.py and the spread dataset are not written
+
+**E-42 — Spread slot value**
+
+*Hypothesis:* Fuel-side imagery slots improve per-fire-day spread prediction. WRONG IF only weather-side inputs move it.
+
+Imagery's value on the outcome FBP actually predicts.
+
+*Blocked on:* the spread dataset and the slot network
+
+**E-44 — Ignition R0**
+
+*Hypothesis:* P(sustained flaming) x P(lightning holdover) ranks lightning starts above matched controls. WRONG IF at chance.
+
+Stage C's floor: ignition receptivity, not occurrence (A-28).
+
+*Blocked on:* NFDB points not fetched; coefficients need Q26
+
+**E-45 — Ignition slot value**
+
+*Hypothesis:* Closure, green-up and fuel-type slots improve ignition ranking. WRONG IF the shuffled twins gain as much.
+
+Imagery's value on the ignition process.
+
+*Blocked on:* E-44
+
+**E-46 — Band and index decision**
+
+*Hypothesis:* The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence.
+
+The CubeSat's bands and indices.
+
+*Blocked on:* plan P6/P7 results
+
+**E-47 — Architecture decision**
+
+*Hypothesis:* A tier2-class model is within one SE of the best preset at the chosen bands. WRONG IF only tier3 or larger reaches it.
+
+The onboard model.
+
+*Blocked on:* E-46
 
 ### Band selection
 
@@ -200,6 +352,14 @@ Conditioning on ignition removes the component a reflectance spectrum structural
 
 *Note:* REDESIGNED. As first written it asked 'burned > 100 ha, given it burned'. Patches are ~530 x 530 px, ~11,257 ha, and every one of the 99 fire patches exceeds 100 ha -- the smallest burned area is 3,017 ha -- so the cut separated nothing. Folds are now assigned BEFORE the scene filter: fold_indices deals the blocks present round-robin, so filtering first had reshuffled which ground landed in which fold.
 
+**E-43 — Date-only control**
+
+*Hypothesis:* Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read.
+
+Guards the fire-date design (A-24).
+
+*Blocked on:* pseudo-dates for negatives are not written (fire dates are)
+
 ### Index baselines
 
 **E-11 — Greenness vs moisture indices**
@@ -262,7 +422,9 @@ NOTHING. fmc_measured is read in four places and written in none, so all three a
 
 CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel moisture is the integral of weather, so satellite fuel state should be worth most where the weather grid is weakest -- the north, which is also where most of the area burns.
 
-*Blocked on:* CWFIS station locations not held; ERA5-Land says nothing about where the observing stations are
+*Note:* Measured 2026-10-23: fire patches sit a median 37 km from the nearest reporting CWFIS station (IQR 23-63, max 191); terciles at 30 and 54 km. Provincial agency stations are not in the CWFIS export, so true density is higher than this says.
+
+*Blocked on:* station data now held (CWFIS fwi_obs: 2020s daily FWI with coordinates, station list); stations.py and the stratified readout are not written, and 2019 fires need the 2010s file
 
 *CFFDRS gap:* G3 station density
 
@@ -304,7 +466,9 @@ Every FWI code is defined on a same-day noon observation and a daily uplink cann
 
 FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, insects, fire and regrowth. The slope is the estimator because at gap 0 our estimate is a noisy copy of its own training target and would lose on noise alone.
 
-*Blocked on:* needs E-22 first (the ecology model), then the refreshed estimate attached
+*Note:* SCANFI v2 now carries all nine steps; sidecars for 2005-2025 are fetched for every patch, so the staleness slope can be read off the inventory itself before any model exists. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25).
+
+*Blocked on:* the inventory half needs only R0 (E-32, which needs the FBP port); the refreshed-estimate half still needs E-22
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -359,6 +523,14 @@ The MARGINAL COST denominator. The brief asks for value per marginal cost, and w
 A number for the requirements table. The dichroic makes misregistration small, not absent. This is the deployment question -- a model built on co-registered imagery meeting a misregistered instrument.
 
 *Note:* REDESIGNED. Shifting during training too would understate the cost, because a convolution can learn to compensate a fixed offset. Rigid translation only -- not rotation, scale or pushbroom keystone -- so the tolerance is NECESSARY, not sufficient. The original hypothesis also placed the loss at snow/forest boundaries; this reports the scene-average cost and cannot localise it, so that clause was dropped rather than left untestable.
+
+**E-48 — Hardware decision**
+
+*Hypothesis:* The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does.
+
+The onboard hardware.
+
+*Blocked on:* E-47; latency and power budgets (Q28)
 
 ### Out of reach
 

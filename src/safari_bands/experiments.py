@@ -72,6 +72,7 @@ STATES: dict[str, dict[str, str]] = {
 }
 
 GROUPS = (
+    "CFFDRS mirror",
     "Band selection",
     "Controls",
     "Index baselines",
@@ -519,11 +520,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "of weather, so satellite fuel state should be worth most "
                    "where the weather grid is weakest -- the north, which is "
                    "also where most of the area burns.",
-        state="NEEDS_DATA",
+        state="NEEDS_CODE",
         runner="--",
-        blocker="CWFIS station locations not held; ERA5-Land says nothing "
-                "about where the observing stations are",
+        blocker="station data now held (CWFIS fwi_obs: 2020s daily FWI with "
+                "coordinates, station list); stations.py and the stratified "
+                "readout are not written, and 2019 fires need the 2010s file",
         gap="G3 station density",
+        note="Measured 2026-10-23: fire patches sit a median 37 km from the "
+             "nearest reporting CWFIS station (IQR 23-63, max 191); terciles "
+             "at 30 and 54 km. Provincial agency stations are not in the CWFIS "
+             "export, so true density is higher than this says.",
     ),
     Experiment(
         "E-18", "Snow-off startup", "CFFDRS gaps",
@@ -603,19 +609,24 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "with the staleness gap. At gap 0 our estimate should LOSE, "
                    "because it is a noisy copy of its own training target -- which "
                    "is why the slope and not the level is the estimator.",
-        independent="the static 2020 SCANFI layer vs our current estimate, "
-                    "against staleness gap",
+        independent="the fuel inventory's vintage (SCANFI v2 2005-2020, "
+                    "pre-fire steps only), and later our refreshed estimate, "
+                    "against the gap to the fire year",
         dependent="the SLOPE of " + _M + " against staleness, not the level",
         conclusion="FBP consumes a fixed-vintage fuel grid while fuel type "
                    "changes with harvest, insects, fire and regrowth. The "
                    "slope is the estimator because at gap 0 our estimate is "
                    "a noisy copy of its own training target and would lose "
                    "on noise alone.",
-        state="NEEDS_PACK",
+        state="NEEDS_CODE",
         runner="--",
-        blocker="needs E-22 first (the ecology model), then the refreshed "
-                "estimate attached",
+        blocker="the inventory half needs only R0 (E-32, which needs the FBP "
+                "port); the refreshed-estimate half still needs E-22",
         gap="G2 fuel-type layer is a fixed vintage",
+        note="SCANFI v2 now carries all nine steps; sidecars for 2005-2025 are "
+             "fetched for every patch, so the staleness slope can be read off "
+             "the inventory itself before any model exists. Pre-fire steps "
+             "only: the 2020 step already shows the 2019-2020 fires (A-25).",
     ),
     Experiment(
         "E-22", "Ecology arm", "CFFDRS gaps",
@@ -831,6 +842,221 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="-- (out of scope)",
         blocker="out of scope by decision; needs lightning strike data",
         gap="G6 FOP cannot see within its cells",
+    ),
+
+    # ───────────────────────────── CFFDRS mirror ─────────────────────────
+    # The study's core from 2026-10-23: mirror CFFDRS (FWI1987 + FBP1992,
+    # three processes -- ignition, spread, intensity) and measure imagery's
+    # value one input slot at a time. Measured inputs and pre-registered
+    # decision rules: ASSUMPTIONS A-24 to A-29.
+    Experiment(
+        "E-32", "CFFDRS as is (R0)", "CFFDRS mirror",
+        hypothesis="FBP head-fire intensity ranks burned pixels above chance "
+                   "within fire patches, and FWI/BUI ranks fire above confuser "
+                   "patches. WRONG IF the physics scores sit at chance on both: "
+                   "then the outcome measures something CFFDRS does not rate, "
+                   "and every imagery delta would be against a meaningless floor.",
+        independent="none learned: FBP ROS / HFI / CFB per pixel and FWI codes "
+                    "per patch, computed from the operational inputs",
+        dependent="within-patch and between-patch AUC, per process",
+        conclusion="The non-learned reference every imagery slot is measured "
+                   "against -- CFFDRS itself, not a model trained on its inputs.",
+        state="NEEDS_CODE",
+        blocker="needs the FBP port and ignition relationships (plan P1; "
+                "ignition coefficients need Q26)",
+        tags=("primary",),
+    ),
+    Experiment(
+        "E-33", "Fuel inventory comparison", "CFFDRS mirror",
+        hypothesis="Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 "
+                   "pre-fire step) give R0 skill within noise of each other, and "
+                   "the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. "
+                   "WRONG IF a post-fire inventory does NOT inflate skill: then "
+                   "the leakage measured in A-25 does not reach the outcome.",
+        independent="the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, "
+                    "SCANFI v2 2005-2025, SCANFI v1 2020",
+        dependent="R0 within-patch AUC per process, and the gap between "
+                  "pre- and post-fire inventories",
+        conclusion="Which operational fuel input is honest on burned ground, "
+                   "and how much a post-fire inventory would flatter a result.",
+        state="NEEDS_CODE",
+        blocker="R0 (E-32); the SCANFI v1 adapter is not written",
+        gap="G2 fuel-type layer is a fixed vintage",
+    ),
+    Experiment(
+        "E-34", "Learned CFFDRS (R1/R2)", "CFFDRS mirror",
+        hypothesis="A model given exactly the CFFDRS inputs (R1) beats R0, and "
+                   "physics plus a learned residual (R2) is within noise of R1. "
+                   "WRONG IF R1 does not beat R0, which would say the outcome is "
+                   "already as predictable from CFFDRS inputs as CFFDRS makes it.",
+        independent="R0 vs R1 vs R2 on identical inputs and folds",
+        dependent="paired within/between-patch AUC per process",
+        conclusion="The learned baseline the imagery slots are added to, and "
+                   "whether the physics layer costs or buys anything.",
+        state="NEEDS_PACK",
+        blocker="pack v2 (fire dates, pre-fire imagery, per-pixel slots) and "
+                "the slot network (plan P4-P5)",
+    ),
+    Experiment(
+        "E-35", "Fuel-type slot", "CFFDRS mirror",
+        hypothesis="Imagery-derived fuel type improves within-patch skill over "
+                   "the pre-fire operational layer. WRONG IF the shuffled-imagery "
+                   "twin gains as much, which would make the gain a shortcut.",
+        independent="the fuel-type slot's source: pre-fire inventory vs "
+                    "imagery_replace (ecology model) vs imagery_correct",
+        dependent="paired delta in within-patch AUC per process",
+        conclusion="Whether the imager should refresh FBP fuel type.",
+        state="NEEDS_PACK",
+        blocker="E-22 (ecology model) and pack v2",
+        gap="G2 fuel-type layer is a fixed vintage",
+    ),
+    Experiment(
+        "E-36", "Percent-conifer slot", "CFFDRS mirror",
+        hypothesis="Imagery percent conifer improves M-1/M-2 spread and "
+                   "intensity. WRONG IF no gain survives on mixedwood pixels.",
+        independent="percent-conifer source for M-1/M-2: inventory vs imagery",
+        dependent="paired delta on M-1/M-2 pixels",
+        conclusion="Brief target T4 as a CFFDRS input rather than a map.",
+        state="NEEDS_PACK",
+        blocker="E-22 and pack v2",
+        gap="G2 fuel-type layer is a fixed vintage",
+    ),
+    Experiment(
+        "E-37", "Crown-base-height slot", "CFFDRS mirror",
+        hypothesis="Imagery-informed CBH changes crown fraction burned enough "
+                   "to move intensity skill. WRONG IF the CFB term never "
+                   "engages at our fire weather.",
+        independent="CBH source: ST-X-3 default vs height-derived",
+        dependent="paired delta in the intensity branch",
+        conclusion="Whether stand height from orbit belongs in FBP's crown "
+                   "fire initiation.",
+        state="NEEDS_PACK",
+        blocker="FBP port and pack v2; the CBH-from-height rule is not set",
+    ),
+    Experiment(
+        "E-38", "Curing slot", "CFFDRS mirror",
+        hypothesis="Imagery curing beats the CWFIS curing product on O-1 "
+                   "pixels. WRONG IF it does not -- but O-1 is about 3 % of "
+                   "burned pixels, so a null is likely to be 'n insufficient'.",
+        independent="curing source: CWFIS percent curing (2020-2025) or the "
+                    "time-of-year default vs S2 curing",
+        dependent="ignition and spread on O-1 pixels",
+        conclusion="The FWI2025 curing input, tested where grass exists.",
+        state="NEEDS_DATA",
+        blocker="CWFIS pcuring zips (about 2 GB a year) not fetched; little grass",
+        gap="curing",
+    ),
+    Experiment(
+        "E-39", "Canopy closure to in-stand moisture", "CFFDRS mirror",
+        hypothesis="Imagery stand density sharpens ignition receptivity through "
+                   "the stand-specific FFMC adjustment. WRONG IF the adjusted "
+                   "in-stand FFMC ranks ignitions no better than open FFMC.",
+        independent="closure source for the in-stand FFMC adjustment",
+        dependent="Stage C ignition AUC and calibration",
+        conclusion="The ignition-side slot GLC-X-42 p.32 points at: fuel "
+                   "moisture by canopy closure.",
+        state="NEEDS_CODE",
+        blocker="the ignition relationships need the coefficients in Q26",
+    ),
+    Experiment(
+        "E-40", "Green-up slot", "CFFDRS mirror",
+        hypothesis="An S2 green-up date beats the CWFIS green-up product for the "
+                   "D-1/M-1/M-2 leafless-to-green switch. WRONG IF the two agree "
+                   "to within a few days, leaving nothing to gain.",
+        independent="green-up source: CWFIS product (2020-2025, held) vs S2 "
+                    "phenology",
+        dependent="spread and ignition on deciduous and mixedwood pixels",
+        conclusion="Whether the imager should own the leaf-state switch FBP "
+                   "applies to aspen and mixedwood.",
+        state="NEEDS_CODE",
+        blocker="greenup.py is not written; CWFIS green-up 2020-2023 is held, "
+                "2019 is not published",
+    ),
+    Experiment(
+        "E-41", "Spread R0 (CFSDS)", "CFFDRS mirror",
+        hypothesis="FBP ROS correlates with observed daily spread (Spearman "
+                   "rho > 0). WRONG IF it does not, which would bound everything "
+                   "the spread branch can claim.",
+        independent="none learned: FBP ROS on each fire-day",
+        dependent="Spearman rho and log-ratio error against CFSDS spread",
+        conclusion="Stage B's floor. CFSDS v1.1 (90 m, fires > 500 ha, "
+                   "2002-2024) covers all 99 fire patches: 82 fires, 7,835 "
+                   "fire-days.",
+        state="NEEDS_CODE",
+        blocker="FBP port; cfsds.py and the spread dataset are not written",
+    ),
+    Experiment(
+        "E-42", "Spread slot value", "CFFDRS mirror",
+        hypothesis="Fuel-side imagery slots improve per-fire-day spread "
+                   "prediction. WRONG IF only weather-side inputs move it.",
+        independent="slot sources, as in E-35 to E-40, on the spread target",
+        dependent="paired change in Spearman rho per fire-day",
+        conclusion="Imagery's value on the outcome FBP actually predicts.",
+        state="NEEDS_PACK",
+        blocker="the spread dataset and the slot network",
+    ),
+    Experiment(
+        "E-43", "Date-only control", "Controls",
+        hypothesis="Day of year and latitude alone separate fire from non-fire "
+                   "at about chance. WRONG IF they do not: the pseudo-date rule "
+                   "for negatives would then be a shortcut every arm can read.",
+        independent="date features only (day-of-year sin/cos, latitude)",
+        dependent="between-patch AUC",
+        conclusion="Guards the fire-date design (A-24).",
+        state="NEEDS_CODE",
+        blocker="pseudo-dates for negatives are not written (fire dates are)",
+        tags=("control",),
+    ),
+    Experiment(
+        "E-44", "Ignition R0", "CFFDRS mirror",
+        hypothesis="P(sustained flaming) x P(lightning holdover) ranks "
+                   "lightning starts above matched controls. WRONG IF at chance.",
+        independent="none learned: the published ignition relationships",
+        dependent="AUC and calibration, starts vs matched controls",
+        conclusion="Stage C's floor: ignition receptivity, not occurrence (A-28).",
+        state="NEEDS_DATA",
+        blocker="NFDB points not fetched; coefficients need Q26",
+    ),
+    Experiment(
+        "E-45", "Ignition slot value", "CFFDRS mirror",
+        hypothesis="Closure, green-up and fuel-type slots improve ignition "
+                   "ranking. WRONG IF the shuffled twins gain as much.",
+        independent="slot sources on the ignition target",
+        dependent="paired AUC change",
+        conclusion="Imagery's value on the ignition process.",
+        state="NEEDS_DATA",
+        blocker="E-44",
+    ),
+    Experiment(
+        "E-46", "Band and index decision", "CFFDRS mirror",
+        hypothesis="The combined ranking keeps at least one red-edge band and "
+                   "B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never "
+                   "earns a slot on any process's weighted evidence.",
+        independent="per-slot nested rankings weighted by slot value (A-29)",
+        dependent="the chosen band and index sets, with their margins",
+        conclusion="The CubeSat's bands and indices.",
+        state="NEEDS_PACK",
+        blocker="plan P6/P7 results",
+    ),
+    Experiment(
+        "E-47", "Architecture decision", "CFFDRS mirror",
+        hypothesis="A tier2-class model is within one SE of the best preset at "
+                   "the chosen bands. WRONG IF only tier3 or larger reaches it.",
+        independent="model preset, R2 vs R4 form",
+        dependent="paired skill at the chosen bands; the onboard/ground split",
+        conclusion="The onboard model.",
+        state="NEEDS_PACK",
+        blocker="E-46",
+    ),
+    Experiment(
+        "E-48", "Hardware decision", "Hardware",
+        hypothesis="The chosen model fits a Q8 at <= 80 % of every resource. "
+                   "WRONG IF only the Q9 fits, or none does.",
+        independent="board (Q7, Q8, Q9) x model x input channels",
+        dependent="BRAM / DSP / LUT, latency, power (A-29)",
+        conclusion="The onboard hardware.",
+        state="NEEDS_PACK",
+        blocker="E-47; latency and power budgets (Q28)",
     ),
 )
 

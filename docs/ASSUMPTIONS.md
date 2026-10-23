@@ -308,7 +308,8 @@ threshold in Phase 2** rather than continuing to adjust them one band at a time.
 
 ## A-16 — SCANFI is pinned to the 2020 time step
 
-**Status:** OPEN — affects every use of SCANFI, not just the fuel comparison
+**Status:** RESOLVED 2026-10-23 — all nine steps wired in, opt-in; 2020 stays
+the default for the legacy sidecars. Measured vintage leakage is in A-25.
 **File:** `Fire_Risk_Model/src/data/scanfi.py` (`_select_time_step`)
 
 `_select_time_step` returns **2020 for every patch year**: 2018, 2021, 2023
@@ -740,3 +741,127 @@ have not been applied to the counts above, so the usable total may be lower.
 **Revisit if:** Canadian field sampling becomes available, which would
 replace the analogue argument with the real thing, or if Globe-LFMC 3.0 adds
 Canadian sites.
+
+---
+
+## A-24 — Fire dates come from NBAC; negatives get matched pseudo-dates
+
+**What we assume:** each fire patch's fire starts on the hotspot start date
+(`HS_SDATE`) of the NBAC polygon covering most of it, falling back to the
+agency date (`AG_SDATE`); a confuser takes the start day-of-year of the fire it
+precedes, in its own year; other negatives draw a day-of-year from the
+start-date distribution of their latitude band, seeded by the stem.
+
+**Measured 2026-10-23** (`Fire_Risk_Model/scripts/python/nbac_fire_dates.py`,
+reading the .dbf directly because fiona cannot iterate NBAC's null dates):
+all 99 fire patches match a polygon, all with `HS_SDATE`; 95 of 108 confusers
+match (the rest need NBAC 2024/2025, Q27). The 99 patches are 82 fires; 91 are
+cause "Natural". **66 of 99 fires started on or before 30 June** -- inside the
+April-June composite and before the 30-June weather date every patch used.
+That is the size of the early-fire leakage the fire-date design removes.
+
+**Risk:** the pseudo-date rule is itself a possible shortcut (dates differ by
+class). Control: E-43, a classifier on day-of-year and latitude alone, must
+score about 0.5.
+
+---
+
+## A-25 — Fuel inventories: which vintage is pre-fire, measured
+
+**What we assume:** a fuel input is usable as "CFFDRS as is" on a fire patch
+only if it predates that fire, and this is checked on the burned pixels, not
+inferred from the nominal year.
+
+**Measured 2026-10-23** on NBAC-burned pixels of the 99 fire patches:
+
+| Source | Resolution | Burned pixels read as non-fuel | Pre-fire? |
+|---|---|---|---|
+| CWFIS FBP layer 2024 | 30 m | **73.9 %** | **no** -- burn scars are written in |
+| CWFIS 2019 (decision-tree build, v20191114) | 250 m | 1.0-4.5 % by fire year | yes, all years |
+| CWFIS national grid 2014b | 250 m | 1.2-6.0 % | yes, all years |
+| SCANFI v2 2015 | 30 m | no age reset or closure drop | yes, all years |
+| SCANFI v2 2020 | 30 m | shows the 2019 and 2020 fires | yes for 2021-2023 only |
+| SCANFI v2 2025 | 30 m | shows every fire | no -- the post-fire control |
+
+So the operational pre-fire fuel is the 2019 CWFIS layer (or 2014b), and the
+SCANFI pre-fire step is `mode="pre_fire"` (2015 for 2019-2020 fires, 2020
+otherwise). The 2014b and 2019 code tables collide with the 2024 one (101 is
+C-1 in 2014b and non-fuel in 2024), so each vintage keeps its own codes and
+sidecar (`fbp_fuel_layer.FUEL_VINTAGES`).
+
+**Also found:** SCANFI channels 13-17 (water, rock, shrubs, herbs, bryoids)
+come from ESA WorldCover **2021** for every step -- post-fire for 2019-2020
+fires and their confusers whatever SCANFI step is chosen. The 2019 archive
+ships the CFS decision tree (`FuelLayer_categorize_fbp_fuel_types_from_
+decision_tree.R`, Swystun 2018) whose closure and height cut points (black
+spruce C-1 < 30 % closure, C-2 30-70 %, C-4 >= 70 % and < 7 m; pine C-3 vs C-4
+at 7 m) are the official counterpart to A-11's judgement thresholds; the
+SCANFI fuel reference should be built with it.
+
+---
+
+## A-26 — CFFDRS "as is" means FWI1987 codes with FBP1992, at 13:00 LDT
+
+**What we assume:** the operational reference pairs the Van Wagner (1987) FWI
+codes in `fwi.py` with FBP1992 (ST-X-3, with the Wotton et al. 2009 updates).
+NRCan: **FWI2025 must not be used with FBP1992** (recorded here at last; Q18
+said it was). The weather observation is the FWI1987 standard **13:00 local
+daylight time** (GLC-X-42 p.6), with the 46 deg N day-length table, as the
+`cffdrs` R package does. A latitude-corrected day length is a separate,
+non-imagery variant (G5), not the reference.
+
+**Season start** follows GLC-X-42 Appendix C-2: DMC/DC start three days after
+snow disappears, or after three days above 12 C, both "surrogates" for ground
+thaw -- which is what an observed snow-off date (the imagery slot) replaces.
+
+---
+
+## A-27 — The final test set is grouped by fire as well as by place
+
+**What we assume:** patches are grouped as connected components over a shared
+0.1-degree block OR a shared NBAC fire, and the v2 test set is the v1 test set
+closed under that grouping.
+
+**Why:** the 99 fire patches are 82 fires; grouping by block alone let 8 fires
+sit in two splits of the current pack, 5 across train and test. Nothing has
+been reported on the test split yet, so it is fixed rather than retracted.
+Frozen in `Fire_Risk_Model/splits/test_groups_v1.json` (35 patches, 15 groups,
+sha256 `3e65e310...`). Cross-validation folds for v2 use the same groups.
+
+---
+
+## A-28 — Ignition receptivity is in scope; fire occurrence prediction is not
+
+**What we assume:** the mirror rates three CFFDRS processes (GLC-X-42 p.32 and
+Table 1): ignition, spread, intensity. Ignition means the probability of
+*sustained* ignition given a firebrand -- a fuel and moisture property.
+FOP (expected fires per 20 km cell from ignition-source density) stays out.
+
+**Stage C's limitation, stated:** the ignition outcome is NFDB/NBAC
+lightning-caused starts against controls matched on date and weather cell.
+Lightning strike locations are not held (CLDN is commercial), so controls hold
+weather fixed but not strike density. GOES GLM is a partial filter where it
+reaches.
+
+---
+
+## A-29 — The CubeSat decision rules, fixed before the results
+
+**What we assume:** the study's three decisions are made by these rules,
+written down on 2026-10-23 before any CFFDRS-mirror result exists.
+
+1. **Bands and indices.** Per-slot nested band-set rankings are weighted by
+   that slot's measured value to CFFDRS (its paired delta per process);
+   processes weigh equally until Q1/Q28 says otherwise. Whole nested sets are
+   combined, never single-band scores (rule 1). Choose the smallest k within
+   one SE of the best combined score, with every chosen band selected in at
+   least 4 of 6 folds; ties go to the cheaper chain (VNIR before SWIR). Keep an
+   index onboard only if the index front end matches raw bands at matched k.
+2. **Architecture.** At the chosen bands, the smallest preset within one SE of
+   the best. A weather-dependent process runs onboard only if its skill at the
+   expected uplink age is within one SE of fresh weather; otherwise ground.
+3. **Hardware.** The lowest-power Xiphos board (Q7, Q8, Q9) on which the
+   chosen model fits at <= 80 % of every resource and meets the per-scene
+   latency budget (placeholder until Q28); otherwise report the
+   accuracy-resource Pareto step that fits.
+

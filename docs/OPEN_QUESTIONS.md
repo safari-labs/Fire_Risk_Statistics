@@ -274,7 +274,14 @@ Note it is not purely free scientifically: changing the step changes what the
 ecology model was distilled from, so Stage 1 labels and any existing checkpoint
 would need re-examining.
 
-**Answer:**
+**Answer (2026-10-23, measured):** yes, and it is done. All nine steps
+(1985-2025) are hosted; `scanfi.py` now takes `time_step=` (a year, or
+`"pre_fire"` = latest step strictly before the fire year), writes
+`*_scanfi_v2_<year>.npy` beside the untouched legacy file, and keeps 2020 as
+the default so the ecology labels and checkpoints are unchanged. Measured on
+the fire patches (`scanfi_vintage_leakage.py`): the 2020 step already shows
+the 2019 and 2020 fires, is clean for 2021-2023 (90 of 99 fire patches), and
+2025 shows every fire. See [ASSUMPTIONS.md](ASSUMPTIONS.md) A-16 and A-25.
 
 ---
 
@@ -329,7 +336,12 @@ recorded in [ASSUMPTIONS.md](ASSUMPTIONS.md): **FWI2025 must not be used with
 FBP1992**, so a port has to pair with the classic Van Wagner codes `fwi.py`
 already implements, not with `cffdrs-ng`.
 
-**Answer:**
+**Answer (James, 2026-10-23):** port it. FBP's own outputs (ROS, HFI, CFB,
+TFC) plus the published sustained-ignition relationships become the
+non-learned "CFFDRS as is" baseline (R0) that every imagery slot is measured
+against; validated against the `cffdrs` R package. Paired with Van Wagner
+1987 codes (A-26, which also records the NRCan warning this question cites --
+it was not in fact in ASSUMPTIONS until now).
 
 ---
 
@@ -574,3 +586,54 @@ can eventually give?
 | What 96 HS bands buy over 6 | hyperspectral only — AVIRIS-NG, EnMAP, PRISMA |
 
 **Answer:**
+
+---
+
+### Q26 — Library access for the two paywalled ignition papers?
+
+**Status:** OPEN
+**Blocks:** the ignition branch of R0 (plan P1), not the spread or intensity
+branches.
+
+The ignition receptivity branch needs exact coefficients from
+Beverly & Wotton (2007), *IJWF* 16:161-173, doi:10.1071/WF06072 (logistic
+P(sustained flaming) from FWI components by fuel category) and
+Wotton & Beverly (2007), *IJWF* 16:463-472, doi:10.1071/WF06087 (FFMC adjusted
+to litter moisture by forest type, season and stand density -- the canopy-
+closure slot). Both are behind the CSIRO paywall. The third source,
+Wotton & Wheatley (2025), *IJWF* WF24164 (DMC and lightning ignition), is open
+access. Can ÉTS library supply the two PDFs, so the coefficients come from the
+papers rather than from memory?
+
+**Answer:**
+
+---
+
+### Q27 — Unpack NBAC 2024/2025 for the 13 unmatched confusers?
+
+**Status:** OPEN — the zips are held (downloaded 2026-10-23)
+**Blocks:** fire dates for 13 of 108 confusers.
+
+Thirteen confusers precede fires dated 2022-2026 with no NBAC polygon at
+their location in the years matched so far; most need NBAC 2024 or 2025.
+Unpack them into `data/nbac/` and re-run `nbac_fire_dates.py`, or drop those
+confusers from the fire-date design?
+
+**Answer:**
+
+---
+
+### Q28 — Process weights and the hardware budgets for the CubeSat decision
+
+**Status:** OPEN — placeholders written into A-29 so the rules exist before
+results do
+**Blocks:** nothing until plan P12; the rules are pre-registered regardless.
+
+The decision synthesis (A-29) combines evidence across ignition, spread and
+intensity (equal weights until set -- Q1 restated per process) and picks the
+board against a per-scene latency budget and a power budget that are not yet
+known. What latency per scene and what orbit-average power can the onboard
+model have?
+
+**Answer:**
+
