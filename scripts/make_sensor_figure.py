@@ -59,6 +59,8 @@ def main() -> int:
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
 
+    from safari_bands.band_names import band_label
+
     plt.rcParams.update({
         "font.family": "DejaVu Sans", "text.color": INK,
         "axes.labelcolor": INK, "xtick.color": MUTED, "ytick.color": MUTED,
@@ -66,7 +68,7 @@ def main() -> int:
         "savefig.facecolor": FIG_BG,
     })
 
-    fig, ax = plt.subplots(figsize=(11.2, 5.0), facecolor=FIG_BG)
+    fig, ax = plt.subplots(figsize=(11.2, 6.2), facecolor=FIG_BG)
     ax.set_facecolor(AX_BG)
     ax.set_xlim(370, 1810)
     ax.set_ylim(-0.35, 10)
@@ -111,10 +113,17 @@ def main() -> int:
         in_hs = HS_LO <= nm <= HS_HI
         in_sw = SW_LO <= nm <= SW_HI
         col = SW_C if in_sw else (MS_C if in_hs else CRIT)
-        ax.plot([nm, nm], [3.15, 4.15], color=col, lw=2.6,
+        ax.plot([nm, nm], [3.15, 3.7], color=col, lw=2.6,
                 solid_capstyle="round", zorder=3)
-        ax.text(nm, 4.3, name, color=INK if (in_hs or in_sw) else CRIT,
-                fontsize=7.3, ha="center", rotation=90, va="bottom")
+        colour = INK if (in_hs or in_sw) else CRIT
+        if in_sw:
+            # Beside the line, not above it: the SWIR bar sits right there.
+            ax.text(nm + 14, 3.42, band_label(name), color=colour,
+                    fontsize=7.3, ha="left", va="center")
+        else:
+            ax.text(nm + {"B8": -9, "B8A": 9}.get(name, 0), 3.82,
+                    band_label(name), color=colour, fontsize=7.0,
+                    ha="center", rotation=90, va="bottom")
         if in_ms and not in_hs:
             ax.plot(nm, 2.95, marker="v", color=CRIT, ms=5, zorder=4)
 

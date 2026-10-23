@@ -135,14 +135,16 @@ FORBID = [("O$_2$-A", 755, 772), ("O$_2$", 1262, 1288), ("H$_2$O", 1330, 1490)]
 
 
 def fig_band_pool():
+    from safari_bands.band_names import band_label
+
     plt = _plt()
-    fig, ax = plt.subplots(figsize=(7.6, 3.1), facecolor=FIG_BG)
+    fig, ax = plt.subplots(figsize=(7.6, 4.0), facecolor=FIG_BG)
     _axes(ax, "Candidate band pool, 400–1750 nm", xlabel="wavelength (nm)")
 
     for label, lo, hi in FORBID:
         ax.axvspan(lo, hi, color=CRIT, alpha=0.17, zorder=1, lw=0)
-        # Above the staggered band labels, which reach ~1.03.
-        ax.text((lo + hi) / 2, 1.15, label, color=CRIT, fontsize=8.5,
+        # Above the vertical band labels, which reach ~1.65.
+        ax.text((lo + hi) / 2, 1.78, label, color=CRIT, fontsize=8.5,
                 ha="center", va="bottom")
 
     for name, centre, fwhm, atm in BANDS:
@@ -150,18 +152,18 @@ def fig_band_pool():
         col = MUTED if atm else S1
         ax.bar(centre, h, width=max(fwhm, 7), color=col, zorder=3,
                edgecolor=AX_BG, linewidth=0.8)
-        # Stagger labels through the crowded red-edge/NIR cluster: at this
-        # scale B8 (842) and B8A (865) printed on top of each other as "BB8A".
-        stagger = 0.075 if name in ("B5", "B7", "B8A") else 0.0
-        ax.text(centre, h + 0.035 + stagger, name, color=INK, fontsize=8,
-                ha="center", va="bottom", family="monospace")
+        # Vertical: "B8 (NIR)" and "B8A (Narrow NIR)" sit 23 nm apart, and
+        # no horizontal label fits the red-edge/NIR cluster at this scale.
+        nudge = {"B8": -8, "B8A": 8}.get(name, 0)
+        ax.text(centre + nudge, h + 0.035, band_label(name), color=INK,
+                fontsize=7.6, ha="center", va="bottom", rotation=90)
 
     ax.axvline(1750, color=MUTED, ls=":", lw=1.3, zorder=2)
-    ax.text(1752, 1.30, "standard-InGaAs cutoff\nB12 (2190 nm) excluded",
+    ax.text(1745, 1.70, "standard-InGaAs cutoff\nB12 (2190 nm) excluded",
             color=MUTED, fontsize=8, ha="right", va="top", linespacing=1.35)
 
     ax.set_xlim(400, 1800)
-    ax.set_ylim(0, 1.46)
+    ax.set_ylim(0, 2.0)
     ax.set_yticks([])
     ax.grid(axis="y", visible=False)
 
