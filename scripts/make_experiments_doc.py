@@ -46,6 +46,32 @@ def main() -> int:
     L.append("")
 
     # ── State summary ────────────────────────────────────────────────────
+    L.append("## Read this first: the label")
+    L.append("")
+    L.append("**Every result on the original 11-band pack trained on a "
+             "circular label.** Its `/mask` is not NBAC: for fire scenes, "
+             "`download.py` writes `_mask.tif` as **dNBR > 0.27**, and NBAC "
+             "sat in a `_nbac.npy` sidecar that nothing in the tile or pack "
+             "path read. All 861 fire tiles across the three splits "
+             "reproduce `_mask.tif`'s dNBR exactly; against the patches' own "
+             "NBAC masks the mean IoU is 0.755. dNBR is "
+             "`NBR_pre - NBR_post` with `NBR = (B8 - B11)/(B8 + B11)`, so "
+             "`NBR_pre` is reconstructible from the input bands -- rule 3's "
+             "circularity. `sweep_bands.py --label nbac` was validated, "
+             "printed and recorded, and never read.")
+    L.append("")
+    L.append("The damage concentrates where it matters most: B8, B8A and "
+             "B11 in the ranking, and E-11 above all, because NDMI is "
+             "`(B8A - B11)/(B8A + B11)` -- nearly the label's own input.")
+    L.append("")
+    L.append("**Fixed:** `stage2_fire_11band_nbac` swaps NBAC into the fire "
+             "masks and changes nothing else -- tiles, splits and bands are "
+             "byte-identical, so the held-out test set does not move. It "
+             "declares `label_source = nbac`, and the sweep refuses any pack "
+             "that does not declare one. NBAC marks 43% more burned pixels "
+             "than dNBR did in the fire tiles: perimeters are filled "
+             "polygons, so they include the inclusions dNBR skipped.")
+    L.append("")
     L.append("## Feasibility at a glance")
     L.append("")
     L.append("| State | Count | What it means | Experiments |")
@@ -70,8 +96,8 @@ def main() -> int:
     for group, items in by_group().items():
         L.append(f"### {group}")
         L.append("")
-        L.append("| ID | Experiment | Independent variable | Dependent "
-                 "variable | Hypothesis | State | Runner |")
+        L.append("| ID | Experiment | Hypothesis | Independent "
+                 "variable | Dependent variable | State | Runner |")
         L.append("|---|---|---|---|---|---|---|")
         for e in items:
             star = " \u2605" if "primary" in e.tags else ""
@@ -79,8 +105,8 @@ def main() -> int:
             runner = f"`{e.runner}`" if e.runner != "--" else "*none yet*"
             L.append(
                 f"| **{e.eid}** | {_cell(e.name)}{star}{ctl} | "
-                f"{_cell(e.independent)} | {_cell(e.dependent)} | "
                 f"{_cell(e.hypothesis)} | "
+                f"{_cell(e.independent)} | {_cell(e.dependent)} | "
                 f"{STATES[e.state]['label']} | {runner} |")
         L.append("")
 
@@ -125,14 +151,47 @@ def main() -> int:
     # ── Runnable-now shortlist ───────────────────────────────────────────
     L.append("## Runnable today")
     L.append("")
-    L.append("| ID | Experiment | Command |")
-    L.append("|---|---|---|")
+    L.append("| ID | Experiment | Command | Narval resources per task |")
+    L.append("|---|---|---|---|")
     for e in runnable():
-        L.append(f"| **{e.eid}** | {_cell(e.name)} | `{e.runner}` |")
+        L.append(f"| **{e.eid}** | {_cell(e.name)} | `{e.runner}` | "
+                 f"{_cell(e.resources) or '--'} |")
     L.append("")
-    L.append("All of these read the `stage2_fire_11band` pack already in "
-             "`~/scratch` on Narval. None needs a new download or a "
-             "re-pack.")
+    L.append("All of these read the **`stage2_fire_11band_nbac`** pack. "
+             "It replaces the one already in `~/scratch`, which the sweep "
+             "now refuses.")
+    L.append("")
+    L.append("### How the resources were derived")
+    L.append("")
+    L.append("From the only completed runs (the imagery-free G1 floor, six "
+             "folds): every 35-epoch fit took **122 s**, identical across "
+             "folds, with the GPU at **0.2-0.6% utilisation** and 0.6 GB of "
+             "GPU memory; venv build and staging took under 45 s; sacct "
+             "MaxRSS 1.04 GB. Identical times on a 337-parameter model is an "
+             "input-bound signature -- the cost is h5py decompressing tiles "
+             "in the DataLoader, not the GPU.")
+    L.append("")
+    L.append("- **`--time`** is 2 x (fits x 2.5 min) + 2 min, rounded up to "
+             "30 min. 2.5 min is the measured 122 s plus a margin, because "
+             "no CNN fit has completed yet. The old request was 11:00:00 "
+             "for every job, including two-minute ones; jobs of 3 h or less "
+             "can start on far more of Narval.")
+    L.append("- **`--cpus-per-task=12`**: one A100's share of a 48-core, "
+             "4-GPU node, so free in billing -- and since the job is "
+             "CPU-bound, the workers are where speed comes from. Ten "
+             "DataLoader workers, kept alive across epochs.")
+    L.append("- **`--mem=16G`**: 1.04 GB measured at load plus ten workers' "
+             "buffers.")
+    L.append("- **Fit counts are simulated** by running each search through "
+             "the real greedy and leave-one-out code with a counting scorer. "
+             "Memoisation made the old formula wrong: it said 63 fits for "
+             "`vnir_swir`, which is 51.")
+    L.append("")
+    L.append("The whole programme is about **50 GPU-hours**. Recalibrate "
+             "once real CNN fits exist: every fit now appends its wall time "
+             "to `fits.jsonl`, and `narval_resources.py --runs` re-derives "
+             "every request from them. If a fit takes under ~1.4 min, the "
+             "band arms fit the 3 h bin.")
     L.append("")
     L.append("Two standing caveats on every number they produce. The "
              "35-epoch budget is a **ranking** budget, so the output is an "

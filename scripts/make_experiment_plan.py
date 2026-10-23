@@ -16,6 +16,7 @@ settle" and the state is a property of today rather than of the experiment.
 """
 from __future__ import annotations
 
+import re
 import sys
 import textwrap
 from pathlib import Path
@@ -39,12 +40,16 @@ HEAD = "#4ea1d3"
 COLS = [
     ("ID", 0.0, 4),
     ("EXPERIMENT", 3.6, 22),
-    ("VARIES (independent)", 18.5, 34),
-    ("MEASURES (dependent)", 37.0, 28),
-    ("HYPOTHESIS (and what would refute it)", 53.0, 54),
+    ("HYPOTHESIS (and what would refute it)", 18.5, 54),
+    ("VARIES (independent)", 47.5, 34),
+    ("MEASURES (dependent)", 66.0, 28),
     ("STATE", 82.0, 15),
     ("RUNNER", 93.0, 36),
 ]
+
+
+#: The walltime a task asks for, shown under its state.
+_TIME = re.compile(r"--time=\S+")
 
 
 def _wrap(text: str, width: int) -> list[str]:
@@ -73,10 +78,11 @@ def main() -> int:
             cells = [
                 [e.eid],
                 _wrap(e.name, COLS[1][2]),
-                _wrap(e.independent, COLS[2][2]),
-                _wrap(e.dependent, COLS[3][2]),
-                _wrap(e.hypothesis or "--", COLS[4][2]),
-                _wrap(STATES[e.state]["label"], COLS[5][2]),
+                _wrap(e.hypothesis or "--", COLS[2][2]),
+                _wrap(e.independent, COLS[3][2]),
+                _wrap(e.dependent, COLS[4][2]),
+                _wrap(STATES[e.state]["label"], COLS[5][2])
+                + ([m.group(0)] if (m := _TIME.search(e.resources)) else []),
                 _wrap(e.runner if e.runner != "--" else "(none yet)",
                       COLS[6][2]),
             ]

@@ -104,6 +104,10 @@ class Experiment:
     blocker: str = ""
     note: str = ""
     tags: tuple[str, ...] = field(default_factory=tuple)
+    #: What one task asks Narval for, derived by scripts/narval_resources.py
+    #: in Fire_Risk_FW from MEASURED timing (122 s per 35-epoch fit). A test
+    #: checks that any --time named here is what the runner's wrapper asks.
+    resources: str = ""
 
     @property
     def runnable(self) -> bool:
@@ -132,6 +136,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="sweep_arms.sh ARMS=vnir",
         tags=("primary",),
+        resources="49 fits/task x 6 tasks; est 2:05; --time=4:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-2", "All-11 greedy", "Band selection",
@@ -147,6 +153,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "cannot test a four-band mode.",
         state="RUNNABLE",
         runner="sweep_arms.sh ARMS=all11",
+        resources="60 fits/task x 6 tasks; est 2:32; --time=5:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-3", "Forced-SWIR delta", "Band selection",
@@ -160,6 +168,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "window, the sensor would carry 4.",
         state="RUNNABLE",
         runner="sweep_arms.sh ARMS=vnir_swir",
+        resources="51 fits/task x 6 tasks; est 2:10; --time=4:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
+        note="Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung "
+             "by rung, not at their deepest rungs, which would set k=7 against k=6.",
     ),
     Experiment(
         "E-4", "SWIR-only floor", "Band selection",
@@ -179,6 +191,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="sweep_arms.sh ARMS=swir_only",
         note="A quarter of the sensor. Read strictly as a floor.",
+        resources="1 fit/task x 6 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-5", "Leave-one-out band value", "Band selection",
@@ -199,6 +213,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "is essential.",
         state="RUNNABLE",
         runner="sweep_bands.py --leave-one-out (rides in E-1..E-4)",
+        resources="no separate job: rides inside E-1 to E-3",
     ),
     Experiment(
         "E-6", "Selection stability", "Band selection",
@@ -211,23 +226,32 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "single fold's ranking would be reported as the ranking.",
         state="RUNNABLE",
         runner="pool_bands.py (after E-1..E-4)",
+        resources="no job: pool_bands.py, minutes, on a login node",
     ),
     Experiment(
         "E-7", "Resolution requirement", "Band selection",
-        hypothesis="Graceful degradation from 20 to 40 m and a sharper fall by 80 "
-                   "m. This one matters: the Mantis MS mode is 32 m at 500 km, so "
-                   "if 20 -> 40 m already costs materially, our 20 m results "
-                   "overstate what the sensor would deliver.",
-        independent="ground sample distance: 20 / 40 / 80 m, coarsening only",
-        dependent=_M + " vs GSD",
-        conclusion="How much resolution the retrieval needs — a mission "
-                   "requirement, and sharper than it looks: the Mantis MS "
-                   "mode is 32 m at 500 km and 39.7 m at 620 km, so ~40 m is "
-                   "the real operating point and our 20 m results are "
-                   "optimistic.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="data.coarsen() exists; no CLI flag on sweep_bands.py",
+        hypothesis="Graceful degradation from 20 to 40 m and a sharper fall "
+                   "by 80 m. WRONG IF 20 -> 40 m already costs materially, "
+                   "which matters more than it sounds: the Mantis MS mode is "
+                   "32 m at 500 km, so our 20 m results would overstate what "
+                   "the sensor delivers.",
+        independent="ground sample distance 20 / 40 / 80 m, in 'pixels' mode: "
+                    "pooled then re-expanded, so INFORMATION is degraded "
+                    "while the tile keeps its shape",
+        dependent=_M + " vs GSD, paired against 20 m",
+        conclusion="How much resolution the retrieval needs -- a mission "
+                   "requirement. The Mantis MS mode is 32 m at 500 km and "
+                   "39.7 m at 620 km, so ~40 m is the real operating point "
+                   "and every 20 m result in this register is optimistic. "
+                   "This is the information cost only; the pixel-count cost "
+                   "(memory, latency) is E-27's.",
+        state="RUNNABLE",
+        runner="sweep_axes.sh SETS=gsd",
+        note="'extent' mode (shrink the tile) is refused: it shrinks the "
+             "input but not the mask, and the loss raises on the first batch. "
+             "As first wired it would have crashed every 40 m and 80 m run.",
+        resources="1 fit/task x 18 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
 
     # ─────────────────────────────── Controls ────────────────────────────
@@ -235,48 +259,74 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         "E-8", "Label independence control", "Controls",
         hypothesis="The ranking is largely preserved. WRONG IF B11's value "
                    "collapses specifically -- that would say it was reading "
-                   "NBR-like information shared with the perimeter delineation "
-                   "rather than fuel, which is exactly the circularity rule 3 "
-                   "exists to catch.",
+                   "NBR-like information shared with the perimeter "
+                   "delineation rather than fuel, which is exactly the "
+                   "circularity rule 3 exists to catch.",
         independent="the label source: NBAC perimeters vs VIIRS thermal",
         dependent="change in the band ranking and in " + _M,
         conclusion="A band whose value collapses when the label becomes "
-                   "thermal was exploiting the label, not reading fuel. "
-                   "VNP14 keys off 4 and 11 um emission, so it cannot share "
+                   "thermal was exploiting the label, not reading fuel. VNP14 "
+                   "keys off 4 and 11 um emission, so it cannot share "
                    "information with 400-1750 nm reflectance.",
-        state="RUNNABLE",
-        runner="sweep_bands.sh LABEL=vnp14",
+        state="NEEDS_PACK",
+        runner="--",
+        blocker="the thermal label is a per-patch scalar (_thermal.json) that "
+                "is not in the pack, and nothing selects a training target "
+                "other than the packed /mask",
+        note="WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, "
+             "printed and recorded, and never read: LABEL=vnp14 would have "
+             "trained on the packed mask and confirmed its own hypothesis. "
+             "sweep_bands.py now refuses any --label that is not the pack's "
+             "declared label_source.",
         tags=("control",),
     ),
     Experiment(
         "E-9", "Lightning cohort", "Controls",
-        hypothesis="Absolute skill drops (fewer and harder cases) but the band "
-                   "ranking holds. WRONG IF the ranking changes, which would say "
-                   "human-ignition access signals -- roads, settlement -- were "
-                   "driving it.",
+        hypothesis="Absolute skill drops (fewer and harder cases) but the "
+                   "band ranking holds. WRONG IF the ranking changes, which "
+                   "would say human-ignition access signals -- roads, "
+                   "settlement -- were driving it.",
         independent="fires filtered to NFDB CAUSE = lightning",
         dependent=_M + ", restricted cohort",
         conclusion="Human ignitions carry a roads-and-settlement signal that "
                    "a model can read off the imagery instead of the fuel. If "
                    "the ranking holds on lightning fires only, it is about "
                    "fuel.",
-        state="NEEDS_CODE",
+        state="NEEDS_DATA",
         runner="--",
-        blocker="labels.is_lightning() exists; no cohort filter at pack time",
+        blocker="NFDB is not held -- there is no NFDB directory in "
+                "Fire_Risk_Model/data. labels.is_lightning() exists but has "
+                "nothing to read. Fetch NFDB, attach CAUSE per patch, then "
+                "filter with sweep_bands.py --scenes's machinery",
+        note="Was listed as 'needs code'; the code exists, the data does not.",
         tags=("control",),
     ),
     Experiment(
         "E-10", "Negative control", "Controls",
-        hypothesis="At or near chance. Anything else means the pipeline is broken "
-                   "and no other result in this register is interpretable.",
-        independent="a deliberately redundant band pool",
-        dependent=_M,
-        conclusion="Sanity. If a deliberately poor set scores well, the "
-                   "pipeline is broken and no other result here is "
-                   "interpretable.",
+        hypothesis="The noise arm is within noise of 0.5, and the real-band "
+                   "arm clearly beats it. WRONG IF the noise arm sits clearly "
+                   "above 0.5: then a POSITIONAL PRIOR -- where burn tends to "
+                   "sit in a tile, learnable from zero padding without "
+                   "reading a band -- inflates every arm in this register, "
+                   "and must be subtracted before any of them is quoted.",
+        independent="the input: the 9 surface bands vs fresh Gaussian noise "
+                    "of the same width",
+        dependent=_M + " against chance, and against the real-band arm",
+        conclusion="Sanity and calibration at once. Near 0.5: the pipeline "
+                   "is sound and arms can be read at face value. Above it: "
+                   "the excess is the floor every arm got for free, and it is "
+                   "the number to subtract.",
         state="RUNNABLE",
-        runner="sweep_bands.sh BANDS=... (config/bands/negative_control.yaml)",
+        runner="sweep_axes.sh SETS=neg",
+        note="REDESIGNED. The old control was 'a deliberately redundant band "
+             "pool' with the hypothesis 'at or near chance', and those cannot "
+             "both hold: every real Sentinel-2 band carries surface signal, "
+             "and the YAML's four overlapping red bands cannot be built from a "
+             "sensor with one red band. Its runner was 'BANDS=...', not a "
+             "command. Run this set first.",
         tags=("control",),
+        resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
 
     # ────────────────────────── Index baselines ──────────────────────────
@@ -311,6 +361,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "at 1610 nm -- NDWI_Gao needs 1240 nm and NMDI/NDTI/NBR need "
              "SWIR2, none of which Sentinel-2 carries.",
         tags=("primary",),
+        resources="1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-12", "Index baseline vs learned bands", "Index baselines",
@@ -328,6 +380,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "baseline rule 4 asks for.",
         state="RUNNABLE",
         runner="sweep_indices.sh ARMS=raw,both",
+        resources="shares E-11's runs",
     ),
 
     # ─────────────────────────────── Covariates ──────────────────────────
@@ -352,6 +405,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="sweep_covariates.sh SETS=weather",
         note="No repack: the pack carries weather_arm=both, the union, so "
              "each arm is a column mask.",
+        resources="1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-14", "Fusion architecture", "Covariates",
@@ -371,28 +426,36 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "ranking is read from, which ties the two together.",
         state="RUNNABLE",
         runner="sweep_covariates.sh SETS=fusion",
+        resources="1 fit/task x 12 tasks (+ wx_both from E-13); est 0:05; --time=0:30:00 --mem=16G "
+                  "--cpus-per-task=12 --gpus=a100:1",
+        note="two_head is submitted once, as wx_both, and report_arms.py aliases it into the "
+             "fusion family; without that alias the main contrast was never produced. The second "
+             "baseline, bottleneck, tests the hypothesis's other clause.",
     ),
     Experiment(
         "E-15", "Imagery vs the FBP formula", "Covariates",
         hypothesis="Imagery plus the FMC scalar beats the scalar alone, "
-                   "substantially. The FBP equation is a function of latitude, "
-                   "longitude, elevation and date only -- it carries no "
-                   "information about the stand at all -- so a null here would be "
-                   "surprising and would cast doubt on the imagery rather than "
-                   "vindicate the formula.",
-        independent="the FBP foliar-moisture scalar alone vs that scalar "
-                    "plus all 9 surface bands",
+                   "substantially. The FBP equation is a function of "
+                   "latitude, longitude, elevation and date only -- it "
+                   "carries no information about the stand -- so a null here "
+                   "would be surprising, and would cast doubt on the imagery "
+                   "rather than vindicate the formula.",
+        independent="the FBP foliar-moisture scalar alone vs that scalar plus "
+                    "all 9 surface bands",
         dependent="the paired difference in " + _M,
         conclusion="G1 restated into something testable: does imagery carry "
                    "foliar-moisture information the FBP equation does not? "
                    "It CANNOT say our spectral estimate beats theirs -- that "
                    "needs an LFMC label (E-29).",
-        state="PARTIAL",
+        state="RUNNABLE",
         runner="sweep_covariates.sh SETS=g1",
         gap="G1 foliar moisture is computed, never observed",
-        note="The imagery-free floor has run: 6/6 folds, auc_px 0.5396-0.7660, "
-             "mean 0.642. Its counterpart was lost to the device bug, so the "
-             "contrast is still missing.",
+        note="The imagery-free floor that ran (6/6 folds, auc_px 0.5396 to "
+             "0.7660) was trained and scored on the dNBR pack, so it does NOT "
+             "count: both halves must be rerun on the NBAC pack. The spread "
+             "is still a fair picture of fold-to-fold variance.",
+        resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
     Experiment(
         "E-16", "FMC arms", "Covariates",
@@ -455,21 +518,28 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-19", "Latitude-banded weather", "CFFDRS gaps",
-        hypothesis="History beats codes at high latitude specifically, and not in "
-                   "the south. The day-length factors are tabulated for ~46 N, so "
-                   "the codes should be least trustworthy where that assumption is "
-                   "furthest from the truth. A uniform effect across bands would "
-                   "say the mechanism is something else.",
-        independent="the E-13 weather contrast, split by latitude band",
-        dependent="the paired difference per band",
+        hypothesis="History beats codes at high latitude specifically, and "
+                   "not in the south. The day-length factors are tabulated "
+                   "for ~46 N, so the codes should be least trustworthy where "
+                   "that assumption is furthest from the truth. WRONG IF the "
+                   "gain is uniform across bands, which would make the "
+                   "mechanism something other than day length.",
+        independent="the E-13 weather contrast, scored separately in "
+                    "0-55 / 55-60 / 60-90 N on the same trained models",
+        dependent="the INTERACTION: (history - codes) in 60-90 N minus the "
+                  "same in 0-55 N, paired by fold",
         conclusion="DMC and DC day-length factors are tabulated for ~46 N "
                    "while Canada spans 42-83. A pooled number cannot "
                    "distinguish 'history is better' from 'history is better "
-                   "at high latitude', which is the actual claim.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="a latitude-split flag on report_arms.py or pool_bands.py",
+                   "at high latitude', which is the actual claim -- so the "
+                   "test is the interaction, not either band alone.",
+        state="RUNNABLE",
+        runner="sweep_covariates.sh SETS=weather",
         gap="G5 day-length tabulated for ~46 N",
+        note="Bands hold 745 / 594 / 495 of the 1834 training tiles, so "
+             "~80-125 per band per validation fold -- above the 25-tile "
+             "floor below which a band is skipped rather than scored.",
+        resources="shares E-13's runs; latitude scoring adds seconds",
     ),
     Experiment(
         "E-20", "Weather staleness", "CFFDRS gaps",
@@ -592,20 +662,37 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="same as E-23",
     ),
     Experiment(
-        "E-26", "Conditional large fire", "Hyperspectral",
-        hypothesis="The fuel signal is stronger conditional on ignition than "
-                   "unconditionally, because conditioning removes the "
-                   "weather-and-chance component the sensor cannot see. This is "
-                   "the cleanest test of whether the imagery reads fuel at all.",
-        independent="burned area > 100 ha, conditional on having burned",
-        dependent=_M + " on the conditional task",
-        conclusion="36% base rate, and 97% of area burned is in the tail. "
-                   "Conditioning on ignition removes the weather-and-chance "
-                   "component, leaving a fuel-dominated target -- which is "
-                   "what the sensor can actually see.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="an NBAC area filter at pack time",
+        "E-26", "Within-fire burn pattern", "Controls",
+        hypothesis="Imagery separates burned from unburned pixels INSIDE fire "
+                   "patches at least as well as it does across all patches, "
+                   "because inside a perimeter the outcome is fuel, terrain "
+                   "and firebreaks rather than whether a fire started. WRONG "
+                   "IF within-fire skill is clearly lower, which would say "
+                   "most unconditional skill comes from recognising WHICH "
+                   "patches burned -- between-patch discrimination, not "
+                   "fuel.",
+        independent="the training cohort: all scenes vs fire patches only, "
+                    "with each fold's locations held fixed",
+        dependent=_M + " within fire tiles vs overall; and both models scored "
+                       "on the SAME fire tiles",
+        conclusion="Conditioning on ignition removes the component a "
+                   "reflectance spectrum structurally cannot see. AUC ignores "
+                   "prevalence, so within-fire against overall reads as which "
+                   "task the imagery predicts better. Water and rock inside a "
+                   "perimeter are easy unburned pixels, so part of any "
+                   "within-fire skill is 'non-fuel is visible' -- fuel, but "
+                   "not moisture.",
+        state="RUNNABLE",
+        runner="sweep_axes.sh SETS=cond",
+        note="REDESIGNED. As first written it asked 'burned > 100 ha, given "
+             "it burned'. Patches are ~530 x 530 px, ~11,257 ha, and every "
+             "one of the 99 fire patches exceeds 100 ha -- the smallest burned "
+             "area is 3,017 ha -- so the cut separated nothing. Folds are now "
+             "assigned BEFORE the scene filter: fold_indices deals the blocks "
+             "present round-robin, so filtering first had reshuffled which "
+             "ground landed in which fold.",
+        resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
+                  "--gpus=a100:1",
     ),
 
     # ─────────────────────────────── Hardware ────────────────────────────
@@ -627,22 +714,35 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "paying.",
         state="RUNNABLE",
         runner="sweep_architecture.py --widths",
+        resources="CPU only: model conversion, no Narval GPU allocation",
     ),
     Experiment(
         "E-28", "Co-registration tolerance", "Hardware",
-        hypothesis="Degradation is tolerable to about half a pixel and rises "
-                   "sharply beyond it, concentrated at snow/forest boundaries -- "
-                   "the flagged engineering risk. A tolerance looser than that "
-                   "would retire the risk; tighter would constrain the dichroic "
-                   "design.",
-        independent="sub-pixel VNIR/SWIR shift injected at hard edges",
-        dependent="retrieval error vs shift",
+        hypothesis="Negligible cost below a quarter pixel, material by one "
+                   "pixel. WRONG IF a half-pixel shift already costs "
+                   "materially, which would tighten the dichroic and "
+                   "focal-plane alignment budget; or if two pixels cost "
+                   "little, which would retire the registration risk.",
+        independent="SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, "
+                    "on a model trained with the channels registered",
+        dependent="the drop in " + _M + " against the unshifted score, "
+                  "paired by fold",
         conclusion="A number for the requirements table. The dichroic makes "
-                   "this small, not absent, and snow/forest boundaries are "
-                   "the flagged engineering risk.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="no shift-injection harness",
+                   "misregistration small, not absent. This is the "
+                   "deployment question -- a model built on co-registered "
+                   "imagery meeting a misregistered instrument.",
+        state="RUNNABLE",
+        runner="sweep_axes.sh SETS=shift",
+        note="REDESIGNED. Shifting during training too would understate the "
+             "cost, because a convolution can learn to compensate a fixed "
+             "offset. Rigid translation only -- not rotation, scale or "
+             "pushbroom keystone -- so the tolerance is NECESSARY, not "
+             "sufficient. The original hypothesis also placed the loss at "
+             "snow/forest boundaries; this reports the scene-average cost and "
+             "cannot localise it, so that clause was dropped rather than left "
+             "untestable.",
+        resources="1 fit + 5 evaluations/task x 6 tasks; est 0:06; "
+                  "--time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1",
     ),
 
     # ────────────────────────────── Out of reach ─────────────────────────

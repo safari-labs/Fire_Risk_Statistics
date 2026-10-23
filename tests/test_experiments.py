@@ -172,3 +172,45 @@ def test_a_runnable_hypothesis_says_what_would_refute_it(e: Experiment):
                                       "would be surprising", "anything else")), (
         f"{e.eid} predicts an outcome but never says what would refute it: "
         f"{e.hypothesis[:120]}")
+
+
+# ---------------------------------------------------------------------------
+# Resources: what the register says a task asks for is what it asks for
+# ---------------------------------------------------------------------------
+
+def _wrapper_of(runner: str) -> Path | None:
+    m = re.search(r"(sweep_\w+\.sh)", runner)
+    if not m:
+        return None
+    hit = FW / "scripts" / "shell" / m.group(1)
+    return hit if hit.exists() else None
+
+
+@pytest.mark.parametrize("e", EXPERIMENTS, ids=lambda e: e.eid)
+def test_a_launchable_experiment_states_its_resources(e: Experiment):
+    """A runnable experiment with a wrapper must say what it asks Narval for.
+    A request nobody wrote down is a request nobody checked."""
+    if e.runnable and _wrapper_of(e.runner):
+        assert e.resources, f"{e.eid} launches a job but states no resources"
+
+
+@pytest.mark.parametrize("e", EXPERIMENTS, ids=lambda e: e.eid)
+def test_stated_walltime_is_what_the_wrapper_requests(e: Experiment):
+    """The register documents; the wrapper decides. If they disagree, one
+    of them is stale, and it is usually the one people read."""
+    m = re.search(r"--time=(\S+)", e.resources)
+    w = _wrapper_of(e.runner)
+    if not (m and w):
+        return
+    assert m.group(1).rstrip(";,") in w.read_text(encoding="utf-8"), (
+        f"{e.eid} says --time={m.group(1)} but {w.name} does not request it")
+
+
+def test_nothing_runnable_rests_on_the_circular_pack():
+    """Every runnable experiment reads the pack the sweep defaults to, and
+    that default must be the NBAC pack -- the dNBR one is circular."""
+    sh = FW / "scripts" / "shell" / "sweep_bands.sh"
+    if not sh.exists():
+        pytest.skip("Fire_Risk_FW not checked out alongside")
+    text = sh.read_text(encoding="utf-8")
+    assert "stage2_fire_11band_nbac" in text
