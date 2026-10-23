@@ -1,0 +1,210 @@
+18 run(s) loaded
+  3 distinct configurations; reported separately. Pooling across preset, fusion, weather arm, label or metric would average over the axes the sweep is varying.
+
+====================================================================================================
+preset tier2-small   fusion rasters_only   fmc baseline   label nbac   metric auc_px   weather both
+pool B4,B8,B5,B3,B2,B6,B7,B8A,B1,B9   forced none
+folds: [0, 1, 2, 3, 4, 5]
+====================================================================================================
+
+ k  consensus set                       agree           score            gain   margin
+----------------------------------------------------------------------------------------------------
+ 1  (none above threshold)                0%  0.7663+-0.0623                   0.0154  <- split
+ 2  (none above threshold)                0%  0.7553+-0.0471 -0.0110+-0.0266   0.0047  <- split
+ 3  B7,B9                                50%  0.7602+-0.0775  0.0049+-0.0324   0.0051  <- split
+ 4  B2,B3,B6,B7,B9                       53%  0.7831+-0.0825  0.0229+-0.0131   0.0049  <- split
+ 5  B2,B7,B5,B9,B3,B6                    67%  0.7809+-0.0728 -0.0022+-0.0103   0.0105  <- split
+ 6  B5,B2,B7,B6,B9,B3,B4,B8              69%  0.7578+-0.0660 -0.0231+-0.0303   0.0113  <- split
+
+band      k=1    k=2    k=3    k=4    k=5    k=6
+------------------------------------------------
+B7        17%    33%    50%    50%    83%    83%
+B2        17%    33%    33%    67%    83%    83%
+B5         .    33%    33%    33%    67%   100%
+B9        17%    17%    50%    50%    67%    67%
+B6        17%    17%    33%    50%    50%    67%
+B4        17%    17%    33%    33%    33%    50%
+B8A       17%    33%    33%    33%    33%    33%
+B3         .     .    17%    50%    50%    50%
+B8         .    17%    17%    33%    33%    50%
+B1         .     .     .     .     .    17%
+
+Read down a column: which bands the folds chose for a set of that size.
+100% means every fold agreed. Anything between is the disagreement, not noise to average away.
+
+band    enters at k   folds  per fold
+--------------------------------------------------------
+B8A             1-2       2  1,2
+B9              1-5       4  1,3,3,5
+B2              1-5       5  1,2,4,4,5
+B7              1-5       5  1,2,3,5,5
+B4              1-6       3  1,3,6
+B6              1-6       4  1,3,4,6
+B3              3-4       3  3,4,4
+B8              2-6       3  2,4,6
+B5              2-6       6  2,2,5,5,6,6
+B1                6       1  6
+
+Leave-one-out at k=6, across 6 fold(s):
+
+band     mean drop       sd  folds  verdict
+------------------------------------------------------------
+B2          0.0153   0.0354      5  within noise
+B6          0.0078   0.0158      4  within noise
+B4         -0.0015   0.0078      3  within noise
+B9         -0.0017   0.0265      4  within noise
+B8         -0.0036   0.0166      3  within noise
+B7         -0.0070   0.0239      5  within noise
+B5         -0.0161   0.0427      6  within noise
+B3         -0.0178   0.0255      3  within noise
+B8A        -0.0442   0.0304      2  too few folds
+B1         -0.0567   0.0000      1  too few folds
+
+Drop = what the chosen set loses without that band, GIVEN the
+others. A band whose mean drop is under its own spread across
+folds has not been shown to contribute. Redundant pairs hide
+here -- cross-check against the selection frequency.
+
+CAVEATS
+  - folds still improving at the epoch budget: fold 2 29% -- this ranks convergence as much as band content
+
+  figure -> docs\results\band_search_nbac\band_selection_tier2-small_rasters_only_nbac_auc_px_wx-both_pool10.png
+
+====================================================================================================
+preset tier2-small   fusion rasters_only   fmc baseline   label nbac   metric auc_px   weather both
+pool B4,B8,B5,B3,B2,B6,B7,B8A,B11,B1,B9   forced B11
+folds: [0, 1, 2, 3, 4, 5]
+====================================================================================================
+
+ k  consensus set                       agree           score            gain   margin
+----------------------------------------------------------------------------------------------------
+ 1  B11                                 100%  0.7073+-0.0667                   0.0000
+ 2  B11,B9                               75%  0.7752+-0.0620  0.0680+-0.0431   0.0159
+ 3  B11,B9                               75%  0.7559+-0.0655 -0.0193+-0.0168   0.0148
+ 4  B11,B9                               75%  0.7726+-0.0806  0.0167+-0.0254   0.0030
+ 5  B11,B7,B9,B2,B8                      67%  0.7828+-0.0714  0.0103+-0.0217   0.0079  <- split
+ 6  B11,B6,B7,B8,B9,B2,B5,B8A            65%  0.7491+-0.0620 -0.0338+-0.0482   0.0056  <- split
+ 7  B11,B5,B8,B6,B7,B8A,B9,B1,B2,B3      68%  0.7783+-0.0666  0.0292+-0.0423   0.0145  <- split
+
+band      k=1    k=2    k=3    k=4    k=5    k=6    k=7
+-------------------------------------------------------
+B11      100%   100%   100%   100%   100%   100%   100%
+B9         .    50%    50%    50%    67%    67%    67%
+B8         .     .    33%    33%    50%    67%    83%
+B7         .     .    17%    33%    67%    67%    67%
+B8A        .    17%    33%    33%    33%    50%    67%
+B3         .    17%    33%    33%    33%    33%    50%
+B6         .     .    17%    17%    33%    67%    67%
+B1         .    17%    17%    33%    33%    33%    50%
+B2         .     .     .    33%    50%    50%    50%
+B5         .     .     .    17%    17%    50%    83%
+B4         .     .     .    17%    17%    17%    17%
+
+Read down a column: which bands the folds chose for a set of that size.
+100% means every fold agreed. Anything between is the disagreement, not noise to average away.
+
+band    enters at k   folds  per fold
+--------------------------------------------------------
+B11               1       6  1,1,1,1,1,1
+B9              2-5       4  2,2,2,5
+B4                4       1  4
+B3              2-7       3  2,3,7
+B7              3-5       4  3,4,5,5
+B2              4-5       3  4,4,5
+B1              2-7       3  2,4,7
+B8A             2-7       4  2,3,6,7
+B8              3-7       5  3,3,5,6,7
+B6              3-6       4  3,5,6,6
+B5              4-7       5  4,6,6,7,7
+
+Leave-one-out at k=7, across 6 fold(s):
+
+band     mean drop       sd  folds  verdict
+------------------------------------------------------------
+B2          0.0849   0.0803      3  within noise
+B6          0.0626   0.0485      4  CONTRIBUTES
+B7          0.0613   0.0465      4  CONTRIBUTES
+B3          0.0564   0.0723      3  within noise
+B4          0.0499   0.0000      1  too few folds
+B5          0.0367   0.0439      5  within noise
+B9          0.0365   0.0286      4  CONTRIBUTES
+B1          0.0294   0.0197      3  CONTRIBUTES
+B11         0.0279   0.0347      6  within noise
+B8A         0.0255   0.0076      4  CONTRIBUTES
+B8          0.0204   0.0096      5  CONTRIBUTES
+
+Drop = what the chosen set loses without that band, GIVEN the
+others. A band whose mean drop is under its own spread across
+folds has not been shown to contribute. Redundant pairs hide
+here -- cross-check against the selection frequency.
+
+  figure -> docs\results\band_search_nbac\band_selection_tier2-small_rasters_only_nbac_auc_px_wx-both_pool11_must-B11.png
+
+====================================================================================================
+preset tier2-small   fusion rasters_only   fmc baseline   label nbac   metric auc_px   weather both
+pool B4,B8,B5,B3,B2,B6,B7,B8A,B11,B1,B9   forced none
+folds: [0, 1, 2, 3, 4, 5]
+====================================================================================================
+
+ k  consensus set                       agree           score            gain   margin
+----------------------------------------------------------------------------------------------------
+ 1  (none above threshold)                0%  0.7670+-0.0619                   0.0168  <- split
+ 2  (none above threshold)                0%  0.7590+-0.0477 -0.0079+-0.0207   0.0080  <- split
+ 3  B11,B2,B9                            50%  0.7622+-0.0771  0.0032+-0.0335   0.0106  <- split
+ 4  B2,B11,B6,B7,B9                      53%  0.7897+-0.0835  0.0275+-0.0157   0.0044  <- split
+ 5  B2,B11,B7,B9,B6,B8                   64%  0.7850+-0.0752 -0.0046+-0.0132   0.0049  <- split
+ 6  B2,B4,B9,B11,B6,B7,B8                71%  0.7584+-0.0622 -0.0267+-0.0323   0.0101  <- split
+ 7  B11,B2,B4,B9,B6,B7,B8,B3,B5,B8A      68%  0.7833+-0.0809  0.0249+-0.0494   0.0165  <- split
+
+band      k=1    k=2    k=3    k=4    k=5    k=6    k=7
+-------------------------------------------------------
+B2        17%    33%    50%    67%    83%    83%    83%
+B9        17%    17%    50%    50%    67%    83%    83%
+B11        .    33%    50%    50%    67%    67%    83%
+B7        17%    33%    33%    50%    67%    67%    67%
+B6        17%    17%    33%    50%    50%    67%    67%
+B4        17%    17%    17%    33%    33%    83%    83%
+B8         .    17%    33%    33%    50%    50%    67%
+B5         .    17%    17%    17%    33%    33%    50%
+B8A       17%    17%    17%    17%    17%    33%    50%
+B3         .     .     .    33%    33%    33%    50%
+B1         .     .     .     .     .     .    17%
+
+Read down a column: which bands the folds chose for a set of that size.
+100% means every fold agreed. Anything between is the disagreement, not noise to average away.
+
+band    enters at k   folds  per fold
+--------------------------------------------------------
+B2              1-5       5  1,2,3,4,5
+B7              1-5       4  1,2,4,5
+B6              1-6       4  1,3,4,6
+B9              1-6       5  1,3,3,5,6
+B11             2-7       5  2,2,3,5,7
+B8              2-7       4  2,3,5,7
+B4              1-6       5  1,4,6,6,6
+B5              2-7       3  2,5,7
+B8A             1-7       3  1,6,7
+B3              4-7       3  4,4,7
+B1                7       1  7
+
+Leave-one-out at k=6, across 6 fold(s):
+
+band     mean drop       sd  folds  verdict
+------------------------------------------------------------
+B5          0.0099   0.0463      2  too few folds
+B6          0.0011   0.0096      4  within noise
+B2         -0.0017   0.0433      5  within noise
+B7         -0.0029   0.0172      4  within noise
+B11        -0.0090   0.0493      4  within noise
+B3         -0.0111   0.0308      2  too few folds
+B4         -0.0258   0.0422      5  within noise
+B8         -0.0293   0.0263      3  within noise
+B9         -0.0305   0.0325      5  COSTS accuracy
+B8A        -0.0574   0.0190      2  too few folds
+
+Drop = what the chosen set loses without that band, GIVEN the
+others. A band whose mean drop is under its own spread across
+folds has not been shown to contribute. Redundant pairs hide
+here -- cross-check against the selection frequency.
+
+  figure -> docs\results\band_search_nbac\band_selection_tier2-small_rasters_only_nbac_auc_px_wx-both_pool11.png

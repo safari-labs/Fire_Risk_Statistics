@@ -120,6 +120,10 @@ class Experiment:
 #: once rather than twenty times.
 _M = "auc_px, scenario-held-out folds"
 
+#: What the first NBAC band searches still need before they can be read.
+_REPLAY = ("Replay pending: sweep_replay.sh refits the chosen sets with "
+           "artefacts under the full-tile evaluation, seeds 0 and 1.")
+
 EXPERIMENTS: tuple[Experiment, ...] = (
     # ───────────────────────────── Band selection ────────────────────────
     Experiment(
@@ -133,9 +137,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Names the six bands for the Mantis MS mode. The one "
                    "complete answer the packed data can give today, and it "
                    "settles one of the three sensor modes outright.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="sweep_arms.sh ARMS=vnir",
         tags=("primary",),
+        note="First NBAC search done (job 6844532, 6/6 folds; "
+             "docs/results/band_search_nbac). Open: at "
+             "k=6 B5 is in 6/6 folds and B7 in 5/6, but B9 is in 4/6, and "
+             "the k=6 set scores no better than k=1 (0.758 vs 0.766). " + _REPLAY,
         resources="49 fits/task x 6 tasks; est 2:05; --time=4:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -151,8 +159,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "slot on fire-outcome evidence. If it never does, that is "
                    "weak evidence against, not strong -- one SWIR band "
                    "cannot test a four-band mode.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="sweep_arms.sh ARMS=all11",
+        note="First NBAC search done (job 6844530; "
+             "docs/results/band_search_nbac). B11 entry rung per "
+             "fold: never, 3, 2, 5, 2, 7 -- open. Under the old dNBR label it "
+             "entered at k=1 in two folds. " + _REPLAY,
         resources="60 fits/task x 6 tasks; est 2:32; --time=5:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -166,12 +178,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The marginal value of one SWIR band at equal band count. "
                    "A lower bound on the SWIR chain: we hold 1 band in the "
                    "window, the sensor would carry 4.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="sweep_arms.sh ARMS=vnir_swir",
         resources="51 fits/task x 6 tasks; est 2:10; --time=4:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
         note="Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung "
-             "by rung, not at their deepest rungs, which would set k=7 against k=6.",
+             "by rung, not at their deepest rungs, which would set k=7 against k=6. "
+             "First NBAC search done (job 6844531; "
+             "docs/results/band_search_nbac): within noise at every k "
+             "from 2 to 6 (2-SE about +-0.02), so the +0.02 bound is not yet "
+             "tested. SWIR's gain over vnir fell after the dNBR -> NBAC relabel "
+             "in 11 of 12 matched-k cells. " + _REPLAY,
     ),
     Experiment(
         "E-4", "SWIR-only floor", "Band selection",
@@ -211,8 +228,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "near-duplicates. Cannot see redundancy: B8 and B8A are "
                    "23 nm apart, so each may look worthless while the pair "
                    "is essential.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="sweep_bands.py --leave-one-out (rides in E-1..E-4)",
+        note="In the first NBAC searches no band clears 2 SE, and in vnir "
+             "fold 0 removing ANY of the six raised the score: the noise floor, "
+             "not redundancy, is what the drops show so far (docs/results/band_search_nbac).",
         resources="no separate job: rides inside E-1 to E-3",
     ),
     Experiment(
@@ -224,8 +244,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="the fraction of folds that select each band at each k",
         conclusion="6/6 is a finding, 3/6 is a coin flip. Without it a "
                    "single fold's ranking would be reported as the ranking.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="pool_bands.py (after E-1..E-4)",
+        note="WRONG so far, at this budget: no band is chosen at k=1 in more "
+             "than 1/6 vnir or all11 folds, and the median greedy margin "
+             "(0.005-0.008) is a tenth of the fold SD. Whether that is the "
+             "bands or the crop-based evaluation is what the replays decide "
+             "(docs/results/band_search_nbac).",
         resources="no job: pool_bands.py, minutes, on a login node",
     ),
     Experiment(
@@ -270,9 +295,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "information with 400-1750 nm reflectance.",
         state="NEEDS_PACK",
         runner="--",
-        blocker="the thermal label is a per-patch scalar (_thermal.json) that "
-                "is not in the pack, and nothing selects a training target "
-                "other than the packed /mask",
+        blocker="the thermal label is BROKEN, not just unpacked: only 6 of "
+                "99 fire patches carry thermal = 1, and n_granules is null "
+                "in every _thermal.json, so the VNP14 fetch never counted a "
+                "granule. Refetch before packing; a control built on it "
+                "would say the fires did not burn",
         note="WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, "
              "printed and recorded, and never read: LABEL=vnp14 would have "
              "trained on the packed mask and confirmed its own hypothesis. "
@@ -316,14 +343,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "is sound and arms can be read at face value. Above it: "
                    "the excess is the floor every arm got for free, and it is "
                    "the number to subtract.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="sweep_axes.sh SETS=neg",
         note="REDESIGNED. The old control was 'a deliberately redundant band "
              "pool' with the hypothesis 'at or near chance', and those cannot "
              "both hold: every real Sentinel-2 band carries surface signal, "
              "and the YAML's four overlapping red bands cannot be built from a "
              "sensor with one red band. Its runner was 'BANDS=...', not a "
-             "command. Run this set first.",
+             "command. Run this set first. RESULT, noise half (job 6844515): "
+             "0.5022 +- 0.0007, above 0.5 in 6/6 folds -- a positional prior "
+             "of 0.002, about 1% of any real arm's skill. neg_real was not "
+             "submitted (docs/results/band_search_nbac).",
         tags=("control",),
         resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",

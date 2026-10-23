@@ -16,7 +16,8 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 17 | data packed and staged; nothing missing | E-1, E-2, E-3, E-4, E-5, E-6, E-7, E-10, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
+| **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
+| **Partial result** | 6 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10 |
 | **Needs code** | 2 | no new data; a runner or a flag has to be written | E-18, E-29 |
 | **Needs a pack** | 4 | data held but not tiled, packed or transferred | E-8, E-20, E-21, E-22 |
 | **Needs new data** | 5 | free to obtain, not yet held | E-9, E-17, E-23, E-24, E-25 |
@@ -30,12 +31,12 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-1** | VNIR band selection ★ | Red-edge earns a slot: the best six include at least one of B5/B6/B7 and exclude both 60 m atmospheric bands (B1, B9). WRONG IF an atmospheric band survives into the best six, which would say the ranking is reading haze rather than vegetation. | which 6 of the 10 Sentinel-2 bands in 400-1000 nm | auc_px, scenario-held-out folds, per set size k | Runnable now | `sweep_arms.sh ARMS=vnir` |
-| **E-2** | All-11 greedy | B11 enters by k=3, because the NIR/SWIR contrast is the strongest single moisture signal available. WRONG IF it has not entered by k=7, which would be weak evidence against the SWIR chain -- weak, because one band cannot stand in for four. | unconstrained choice over all 11 packed bands | auc_px, scenario-held-out folds; the k at which B11 first enters | Runnable now | `sweep_arms.sh ARMS=all11` |
-| **E-3** | Forced-SWIR delta | Positive but small: under +0.02 auc_px. One band in the window is a poor proxy for a four-band mode, so a large gain would be surprising and a null is not disqualifying. | B11 held in the set vs the VNIR-only set, matched k | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_arms.sh ARMS=vnir_swir` |
+| **E-1** | VNIR band selection ★ | Red-edge earns a slot: the best six include at least one of B5/B6/B7 and exclude both 60 m atmospheric bands (B1, B9). WRONG IF an atmospheric band survives into the best six, which would say the ranking is reading haze rather than vegetation. | which 6 of the 10 Sentinel-2 bands in 400-1000 nm | auc_px, scenario-held-out folds, per set size k | Partial result | `sweep_arms.sh ARMS=vnir` |
+| **E-2** | All-11 greedy | B11 enters by k=3, because the NIR/SWIR contrast is the strongest single moisture signal available. WRONG IF it has not entered by k=7, which would be weak evidence against the SWIR chain -- weak, because one band cannot stand in for four. | unconstrained choice over all 11 packed bands | auc_px, scenario-held-out folds; the k at which B11 first enters | Partial result | `sweep_arms.sh ARMS=all11` |
+| **E-3** | Forced-SWIR delta | Positive but small: under +0.02 auc_px. One band in the window is a poor proxy for a four-band mode, so a large gain would be surprising and a null is not disqualifying. | B11 held in the set vs the VNIR-only set, matched k | the paired difference in auc_px, scenario-held-out folds | Partial result | `sweep_arms.sh ARMS=vnir_swir` |
 | **E-4** | SWIR-only floor | Clearly above chance and clearly below the VNIR set. The water features at 1200 and 1600 nm are physically present, so a learned model should find something; without the NIR anchor it cannot normalise for canopy structure or illumination. WRONG IF it matches the VNIR set, which would make the MS chain arguable. | B11 alone, no VNIR band | auc_px, scenario-held-out folds | Runnable now | `sweep_arms.sh ARMS=swir_only` |
-| **E-5** | Leave-one-out band value | Every individual drop is small, because the pool is redundant. B8 and B8A in particular each look worthless while the pair is not: leave-one-out cannot see mutual substitution, and reading a small drop as 'this band does not matter' is the trap. WRONG IF any single removal costs more than about 0.02, which would mean the pool is far less redundant than the near-duplicate pairs suggest and the chosen set is already minimal. | each band removed in turn from the chosen set | the drop in auc_px, scenario-held-out folds on removing each band | Runnable now | `sweep_bands.py --leave-one-out (rides in E-1..E-4)` |
-| **E-6** | Selection stability | The top two or three bands are selected in 6/6 folds and the tail is unstable. WRONG IF even the top band swings, which would mean the ranking is fold noise and no k is reportable. | the same search re-run inside each of 6 location folds | the fraction of folds that select each band at each k | Runnable now | `pool_bands.py (after E-1..E-4)` |
+| **E-5** | Leave-one-out band value | Every individual drop is small, because the pool is redundant. B8 and B8A in particular each look worthless while the pair is not: leave-one-out cannot see mutual substitution, and reading a small drop as 'this band does not matter' is the trap. WRONG IF any single removal costs more than about 0.02, which would mean the pool is far less redundant than the near-duplicate pairs suggest and the chosen set is already minimal. | each band removed in turn from the chosen set | the drop in auc_px, scenario-held-out folds on removing each band | Partial result | `sweep_bands.py --leave-one-out (rides in E-1..E-4)` |
+| **E-6** | Selection stability | The top two or three bands are selected in 6/6 folds and the tail is unstable. WRONG IF even the top band swings, which would mean the ranking is fold noise and no k is reportable. | the same search re-run inside each of 6 location folds | the fraction of folds that select each band at each k | Partial result | `pool_bands.py (after E-1..E-4)` |
 | **E-7** | Resolution requirement | Graceful degradation from 20 to 40 m and a sharper fall by 80 m. WRONG IF 20 -> 40 m already costs materially, which matters more than it sounds: the Mantis MS mode is 32 m at 500 km, so our 20 m results would overstate what the sensor delivers. | ground sample distance 20 / 40 / 80 m, in 'pixels' mode: pooled then re-expanded, so INFORMATION is degraded while the tile keeps its shape | auc_px, scenario-held-out folds vs GSD, paired against 20 m | Runnable now | `sweep_axes.sh SETS=gsd` |
 
 ### Controls
@@ -44,7 +45,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-8** | Label independence control (control) | The ranking is largely preserved. WRONG IF B11's value collapses specifically -- that would say it was reading NBR-like information shared with the perimeter delineation rather than fuel, which is exactly the circularity rule 3 exists to catch. | the label source: NBAC perimeters vs VIIRS thermal | change in the band ranking and in auc_px, scenario-held-out folds | Needs a pack | *none yet* |
 | **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Needs new data | *none yet* |
-| **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Runnable now | `sweep_axes.sh SETS=neg` |
+| **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Partial result | `sweep_axes.sh SETS=neg` |
 | **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `sweep_axes.sh SETS=cond` |
 
 ### Index baselines
@@ -111,11 +112,15 @@ The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit
 
 Names the six bands for the Mantis MS mode. The one complete answer the packed data can give today, and it settles one of the three sensor modes outright.
 
+*Note:* First NBAC search done (job 6844532, 6/6 folds; docs/results/band_search_nbac). Open: at k=6 B5 is in 6/6 folds and B7 in 5/6, but B9 is in 4/6, and the k=6 set scores no better than k=1 (0.758 vs 0.766). Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
+
 **E-2 — All-11 greedy**
 
 *Hypothesis:* B11 enters by k=3, because the NIR/SWIR contrast is the strongest single moisture signal available. WRONG IF it has not entered by k=7, which would be weak evidence against the SWIR chain -- weak, because one band cannot stand in for four.
 
 If greedy reaches for B11 early, the SWIR chain earns a slot on fire-outcome evidence. If it never does, that is weak evidence against, not strong -- one SWIR band cannot test a four-band mode.
+
+*Note:* First NBAC search done (job 6844530; docs/results/band_search_nbac). B11 entry rung per fold: never, 3, 2, 5, 2, 7 -- open. Under the old dNBR label it entered at k=1 in two folds. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
 
 **E-3 — Forced-SWIR delta**
 
@@ -123,7 +128,7 @@ If greedy reaches for B11 early, the SWIR chain earns a slot on fire-outcome evi
 
 The marginal value of one SWIR band at equal band count. A lower bound on the SWIR chain: we hold 1 band in the window, the sensor would carry 4.
 
-*Note:* Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung by rung, not at their deepest rungs, which would set k=7 against k=6.
+*Note:* Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung by rung, not at their deepest rungs, which would set k=7 against k=6. First NBAC search done (job 6844531; docs/results/band_search_nbac): within noise at every k from 2 to 6 (2-SE about +-0.02), so the +0.02 bound is not yet tested. SWIR's gain over vnir fell after the dNBR -> NBAC relabel in 11 of 12 matched-k cells. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
 
 **E-4 — SWIR-only floor**
 
@@ -139,11 +144,15 @@ The third sensor option -- SWIR instead of MS -- had no number. Structurally a S
 
 Per-band value CONDITIONAL on the rest, which is the only kind that means anything when bands are near-duplicates. Cannot see redundancy: B8 and B8A are 23 nm apart, so each may look worthless while the pair is essential.
 
+*Note:* In the first NBAC searches no band clears 2 SE, and in vnir fold 0 removing ANY of the six raised the score: the noise floor, not redundancy, is what the drops show so far (docs/results/band_search_nbac).
+
 **E-6 — Selection stability**
 
 *Hypothesis:* The top two or three bands are selected in 6/6 folds and the tail is unstable. WRONG IF even the top band swings, which would mean the ranking is fold noise and no k is reportable.
 
 6/6 is a finding, 3/6 is a coin flip. Without it a single fold's ranking would be reported as the ranking.
+
+*Note:* WRONG so far, at this budget: no band is chosen at k=1 in more than 1/6 vnir or all11 folds, and the median greedy margin (0.005-0.008) is a tenth of the fold SD. Whether that is the bands or the crop-based evaluation is what the replays decide (docs/results/band_search_nbac).
 
 **E-7 — Resolution requirement**
 
@@ -163,7 +172,7 @@ A band whose value collapses when the label becomes thermal was exploiting the l
 
 *Note:* WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, printed and recorded, and never read: LABEL=vnp14 would have trained on the packed mask and confirmed its own hypothesis. sweep_bands.py now refuses any --label that is not the pack's declared label_source.
 
-*Blocked on:* the thermal label is a per-patch scalar (_thermal.json) that is not in the pack, and nothing selects a training target other than the packed /mask
+*Blocked on:* the thermal label is BROKEN, not just unpacked: only 6 of 99 fire patches carry thermal = 1, and n_granules is null in every _thermal.json, so the VNP14 fetch never counted a granule. Refetch before packing; a control built on it would say the fires did not burn
 
 **E-9 — Lightning cohort**
 
@@ -181,7 +190,7 @@ Human ignitions carry a roads-and-settlement signal that a model can read off th
 
 Sanity and calibration at once. Near 0.5: the pipeline is sound and arms can be read at face value. Above it: the excess is the floor every arm got for free, and it is the number to subtract.
 
-*Note:* REDESIGNED. The old control was 'a deliberately redundant band pool' with the hypothesis 'at or near chance', and those cannot both hold: every real Sentinel-2 band carries surface signal, and the YAML's four overlapping red bands cannot be built from a sensor with one red band. Its runner was 'BANDS=...', not a command. Run this set first.
+*Note:* REDESIGNED. The old control was 'a deliberately redundant band pool' with the hypothesis 'at or near chance', and those cannot both hold: every real Sentinel-2 band carries surface signal, and the YAML's four overlapping red bands cannot be built from a sensor with one red band. Its runner was 'BANDS=...', not a command. Run this set first. RESULT, noise half (job 6844515): 0.5022 +- 0.0007, above 0.5 in 6/6 folds -- a positional prior of 0.002, about 1% of any real arm's skill. neg_real was not submitted (docs/results/band_search_nbac).
 
 **E-26 — Within-fire burn pattern**
 
