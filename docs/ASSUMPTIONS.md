@@ -755,7 +755,9 @@ start-date distribution of their latitude band, seeded by the stem.
 **Measured 2026-10-23** (`Fire_Risk_Model/scripts/python/nbac_fire_dates.py`,
 reading the .dbf directly because fiona cannot iterate NBAC's null dates):
 all 99 fire patches match a polygon, all with `HS_SDATE`; 95 of 108 confusers
-match (the rest need NBAC 2024/2025, Q27). The 99 patches are 82 fires; 91 are
+match. The other 13 have no NBAC polygon at their location even with NBAC
+2024 and 2025 unpacked (Q27): they get pseudo-dates like the other negatives,
+until the NFDB fetch (Stage C) can date their source fires. The 99 patches are 82 fires; 91 are
 cause "Natural". **66 of 99 fires started on or before 30 June** -- inside the
 April-June composite and before the 30-June weather date every patch used.
 That is the size of the early-fire leakage the fire-date design removes.
@@ -810,6 +812,23 @@ daylight time** (GLC-X-42 p.6), with the 46 deg N day-length table, as the
 `cffdrs` R package does. A latitude-corrected day length is a separate,
 non-imagery variant (G5), not the reference.
 
+**Validated 2026-10-23 against the `cffdrs` R package** (1.9.2;
+`Fire_Risk_Model/tests/test_fwi_cffdrs.py`, `test_fbp_behaviour.py`). The FBP
+port agrees to ~1e-12 on 6,000 seeded rows. `fwi.py` did not agree at first --
+up to 2.8 FFMC points -- and was corrected to the reference: the FFMC rain
+correction above 150 % moisture now uses the pre-rain moisture (Van Wagner
+1987 eq. 3b; it had used the updated value), the FFMC constant is the exact
+250 x 59.5 / 101 rather than the printed 147.2, and DMC wetting uses
+280 / e^(0.023 P0) with an unrounded 43.43 x 5.6348. All six codes now agree
+to ~1e-14. `_fwi.json` sidecars built before this are legacy.
+
+**Ignition, interim:** until the continuous ignition models' coefficients are
+in hand (Q26), R0's ignition branch uses the GLC-X-42 Table 1 classes (FFMC
+for sustainable flaming ignition, DMC for lightning ignition) as an ordinal
+score. Those thresholds are set against FBP2025/FWI2025; GLC-X-42 states an
+FWI1987 FFMC of 91 corresponds to about 91 in FWI2025, which is the basis
+for applying them to Van Wagner codes.
+
 **Season start** follows GLC-X-42 Appendix C-2: DMC/DC start three days after
 snow disappears, or after three days above 12 C, both "surrogates" for ground
 thaw -- which is what an observed snow-off date (the imagery slot) replaces.
@@ -862,6 +881,21 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
    expected uplink age is within one SE of fresh weather; otherwise ground.
 3. **Hardware.** The lowest-power Xiphos board (Q7, Q8, Q9) on which the
    chosen model fits at <= 80 % of every resource and meets the per-scene
-   latency budget (placeholder until Q28); otherwise report the
-   accuracy-resource Pareto step that fits.
+   latency budget; otherwise report the accuracy-resource Pareto step that
+   fits. James (Q28): meet the latency, then minimise power.
+
+   **Budgets, from `CubeSat_Sensors_and_Lenses.xlsx` (Main sheet, Mantis MS
+   6 bands, 500-620 km, 2,000 km imaged per orbit):** a scene is
+   1000 x 1000 px x 6 bands (12 MB); 63 scenes per orbit at 500 km (51 at
+   620 km); orbital period 95.3 min.
+   - **Required -- buffered:** every orbit's scenes processed within that
+     orbit, which the sheet sizes storage for (0.76 GB/orbit): **<= 91 s per
+     scene** (500 km, the binding case; 114 s at 620 km).
+   - **Reported -- real-time:** keeping up while imaging (2.63 MB/s): <= 4.6 s
+     per scene. Met or not is stated, not required.
+   - **Power:** no processor cap in the sheet (cameras draw 6 W imaging); the
+     rule minimises board power among boards that meet the latency.
+   The selected sheet configuration has no SWIR camera; if the band
+   decision adds one, the data rate and these budgets are re-derived from the
+   sheet with that camera selected.
 

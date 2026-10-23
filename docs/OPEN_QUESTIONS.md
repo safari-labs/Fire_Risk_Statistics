@@ -327,7 +327,7 @@ R package covers both systems.
 
 Porting means the fuel-type-specific rate-of-spread coefficients plus the
 crown-fire and intensity equations. Sizeable but bounded, and the reference
-implementation is open (MPL-2.0).
+implementation is open (GPL-2 -- not MPL-2.0 as first written here; checked 2026-10-23 from the installed package. The port therefore implements the published equations and uses the package only for reference outputs).
 
 The question is whether head fire intensity is worth that, or whether FWI as
 the operational danger rating is a sufficient baseline. FWI is what a duty
@@ -619,7 +619,12 @@ their location in the years matched so far; most need NBAC 2024 or 2025.
 Unpack them into `data/nbac/` and re-run `nbac_fire_dates.py`, or drop those
 confusers from the fire-date design?
 
-**Answer:**
+**Answer (James, 2026-10-23): unpack.** Done -- and it did not help: none of
+the 13 has an NBAC polygon at its location in 2022-2025 (three would need
+2026, which NBAC does not yet cover). They are most likely NFDB sites whose
+fires were too small or off-centre for NBAC to map at the patch. They take
+latitude-band pseudo-dates like the other negatives (A-24); the Stage C NFDB
+fetch can recover their real dates.
 
 ---
 
@@ -635,5 +640,9 @@ board against a per-scene latency budget and a power budget that are not yet
 known. What latency per scene and what orbit-average power can the onboard
 model have?
 
-**Answer:**
+**Answer (James, 2026-10-23):** derive them from
+`CubeSat_Sensors_and_Lenses.xlsx`; meet the latency, then minimise power.
+Derived: <= 91 s per 1000 x 1000 x 6-band scene (buffered, 500 km),
+real-time 4.6 s reported as a bonus, no processor power cap. Process weights
+stay equal (Q1). Recorded in A-29.
 

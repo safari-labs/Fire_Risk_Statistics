@@ -862,8 +862,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The non-learned reference every imagery slot is measured "
                    "against -- CFFDRS itself, not a model trained on its inputs.",
         state="NEEDS_CODE",
-        blocker="needs the FBP port and ignition relationships (plan P1; "
-                "ignition coefficients need Q26)",
+        blocker="FBP port done and validated (P1); eval_cffdrs_reference.py "
+                "(plan P2) is not written. Ignition runs on GLC-X-42 classes "
+                "until Q26's coefficients arrive",
         tags=("primary",),
     ),
     Experiment(
@@ -956,7 +957,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The ignition-side slot GLC-X-42 p.32 points at: fuel "
                    "moisture by canopy closure.",
         state="NEEDS_CODE",
-        blocker="the ignition relationships need the coefficients in Q26",
+        blocker="instand_ffmc needs Wotton & Beverly (2007) coefficients "
+                "(Q26); the function exists and refuses to guess",
     ),
     Experiment(
         "E-40", "Green-up slot", "CFFDRS mirror",
@@ -1015,7 +1017,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="AUC and calibration, starts vs matched controls",
         conclusion="Stage C's floor: ignition receptivity, not occurrence (A-28).",
         state="NEEDS_DATA",
-        blocker="NFDB points not fetched; coefficients need Q26",
+        blocker="NFDB points not fetched; the continuous model needs Q26 or "
+                "the Wotton & Wheatley (2025) GAM table (from the authors); "
+                "GLC-X-42 classes are the interim score",
     ),
     Experiment(
         "E-45", "Ignition slot value", "CFFDRS mirror",
@@ -1056,7 +1060,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="BRAM / DSP / LUT, latency, power (A-29)",
         conclusion="The onboard hardware.",
         state="NEEDS_PACK",
-        blocker="E-47; latency and power budgets (Q28)",
+        blocker="E-47 (budgets set in A-29: <= 91 s per scene, then lowest power)",
     ),
 )
 

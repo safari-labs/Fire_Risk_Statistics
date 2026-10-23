@@ -134,7 +134,7 @@ The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit
 
 The non-learned reference every imagery slot is measured against -- CFFDRS itself, not a model trained on its inputs.
 
-*Blocked on:* needs the FBP port and ignition relationships (plan P1; ignition coefficients need Q26)
+*Blocked on:* FBP port done and validated (P1); eval_cffdrs_reference.py (plan P2) is not written. Ignition runs on GLC-X-42 classes until Q26's coefficients arrive
 
 **E-33 — Fuel inventory comparison**
 
@@ -198,7 +198,7 @@ The FWI2025 curing input, tested where grass exists.
 
 The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
 
-*Blocked on:* the ignition relationships need the coefficients in Q26
+*Blocked on:* instand_ffmc needs Wotton & Beverly (2007) coefficients (Q26); the function exists and refuses to guess
 
 **E-40 — Green-up slot**
 
@@ -230,7 +230,7 @@ Imagery's value on the outcome FBP actually predicts.
 
 Stage C's floor: ignition receptivity, not occurrence (A-28).
 
-*Blocked on:* NFDB points not fetched; coefficients need Q26
+*Blocked on:* NFDB points not fetched; the continuous model needs Q26 or the Wotton & Wheatley (2025) GAM table (from the authors); GLC-X-42 classes are the interim score
 
 **E-45 — Ignition slot value**
 
@@ -530,7 +530,7 @@ A number for the requirements table. The dichroic makes misregistration small, n
 
 The onboard hardware.
 
-*Blocked on:* E-47; latency and power budgets (Q28)
+*Blocked on:* E-47 (budgets set in A-29: <= 91 s per scene, then lowest power)
 
 ### Out of reach
 
