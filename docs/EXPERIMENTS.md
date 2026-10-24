@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-53 experiments. **26 can run today** on data already packed and staged.
+54 experiments. **26 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -18,7 +18,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 |---|---|---|---|
 | **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
 | **Partial result** | 15 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53 |
-| **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
+| **Needs code** | 7 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-54 |
 | **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
 | **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -70,6 +70,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Partial result | `sweep_axes.sh SETS=neg` |
 | **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `sweep_axes.sh SETS=cond` |
 | **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-54** | Legacy composite leakage | For fires that started before 30 June, the legacy April-June composite already shows the burn: on burned pixels its NIR-SWIR1 index (B8, B11) is lower than in the pre-fire composite ending D-1, relative to the same change on the patch's unburned pixels, and the drop grows with the days between the fire's start and 30 June. Fires starting in July or later show no drop. WRONG IF the early fires show no drop: then the v1 imagery did not read the outcome, whatever its weather did. | composite: legacy April-June of the patch year vs pre-fire (D-45 to D-1, extended to D-90, else last summer) | difference-in-differences of the B8/B11 index (legacy minus pre-fire, burned minus unburned pixels) per fire patch, against days of overlap (30 June minus D) | Needs code | *none yet* |
 
 ### Index baselines
 
@@ -394,6 +395,14 @@ Guards the fire-date design (A-24).
 *Note:* P3 (docs/results/p3_dated): SUPPORTED. Day of year 0.55 [0.50, 0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the year (0.87), not the pseudo-dates.
 
 *Blocked on:* the learned date-only classifier waits for P5 (training is Narval only)
+
+**E-54 — Legacy composite leakage**
+
+*Hypothesis:* For fires that started before 30 June, the legacy April-June composite already shows the burn: on burned pixels its NIR-SWIR1 index (B8, B11) is lower than in the pre-fire composite ending D-1, relative to the same change on the patch's unburned pixels, and the drop grows with the days between the fire's start and 30 June. Fires starting in July or later show no drop. WRONG IF the early fires show no drop: then the v1 imagery did not read the outcome, whatever its weather did.
+
+How much the v1 band searches (E-1 to E-14) could have read the burn itself, and so which of their results survive P4.
+
+*Blocked on:* P4 code: pre-fire composites (src/data/prefire.py)
 
 ### Index baselines
 

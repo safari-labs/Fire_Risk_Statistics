@@ -1238,6 +1238,28 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "-0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 "
              "and DMC -0.12, as fast as FFMC.",
     ),
+    # P4 prediction, registered 2026-10-24 before any pre-fire composite was
+    # downloaded.
+    Experiment(
+        "E-54", "Legacy composite leakage", "Controls",
+        hypothesis="For fires that started before 30 June, the legacy April-June "
+                   "composite already shows the burn: on burned pixels its NIR-SWIR1 "
+                   "index (B8, B11) is lower than in the pre-fire composite ending "
+                   "D-1, relative to the same change on the patch's unburned pixels, "
+                   "and the drop grows with the days between the fire's start and 30 "
+                   "June. Fires starting in July or later show no drop. WRONG IF the "
+                   "early fires show no drop: then the v1 imagery did not read the "
+                   "outcome, whatever its weather did.",
+        independent="composite: legacy April-June of the patch year vs pre-fire "
+                    "(D-45 to D-1, extended to D-90, else last summer)",
+        dependent="difference-in-differences of the B8/B11 index (legacy minus "
+                  "pre-fire, burned minus unburned pixels) per fire patch, against "
+                  "days of overlap (30 June minus D)",
+        conclusion="How much the v1 band searches (E-1 to E-14) could have read the "
+                   "burn itself, and so which of their results survive P4.",
+        state="NEEDS_CODE",
+        blocker="P4 code: pre-fire composites (src/data/prefire.py)",
+    ),
 )
 
 
