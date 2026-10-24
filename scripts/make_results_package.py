@@ -303,25 +303,25 @@ def p2_fuel_types(S, out):
     _save(fig, out, "fuel_types.png")
 
 
-def p2_tiles(S, run, out):
+def _tile_grid(S, run, out, cols, title, caption, name="tiles.png", heat_from=None):
+    """Seeded qualitative tiles, one row per tile. Column one is always the
+    Sentinel-2 true-colour view of the patch, so every map beside it can be
+    read against the ground it describes; the caption names its composite."""
     from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
     plt = _plt()
     stems = S["config"]["qual_stems"]
-    cols = [("nbac", "NBAC burned"), ("cwfis_2019_fuel", "fuel: CWFIS 2019"),
-            ("scanfi_tree_prefire_fuel", "fuel: SCANFI pre-fire"),
-            ("cwfis_2019_hfi", "HFI: CWFIS 2019"),
-            ("scanfi_tree_prefire_hfi", "HFI: SCANFI pre-fire"),
-            ("cwfis_2024_hfi", "HFI: CWFIS 2024 (post-fire)")]
+    cols = [("rgb", "Sentinel-2 true colour")] + list(cols)
     fam_of = {f: i for i, (_, fs, _) in enumerate(FAMILY) for f in fs}
     fam_cmap = ListedColormap([c for _, _, c in FAMILY] + [AX_BG])
     heat = LinearSegmentedColormap.from_list("heat", ["#241a17", "#8a3a1c", ORANGE, "#ffd2a6"])
-    norm = LogNorm(10, 30000)
-    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.3 * len(cols), 2.4 * len(stems)),
-                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.18,
+    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.35 * len(cols), 2.45 * len(stems)),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.2,
                                                             "top": 0.86, "bottom": 0.04})
-    im = None
+    im, sources = None, set()
     for r, stem in enumerate(stems):
         z = np.load(run / "qual" / f"{stem}.npz")
+        if "rgb_source" in z:
+            sources.add(str(z["rgb_source"]))
         for c, (k, lab) in enumerate(cols):
             ax = axes[r, c]
             ax.set_facecolor(AX_BG)
@@ -333,32 +333,48 @@ def p2_tiles(S, run, out):
                 ax.text(0.5, 0.5, "not held", color=MUTED, ha="center", transform=ax.transAxes)
                 continue
             a = z[k]
-            if k == "nbac":
-                ax.imshow(a, cmap=ListedColormap([AX_BG, INK_BRIGHT]), vmin=0, vmax=1,
-                          interpolation="nearest")
+            if k == "rgb":
+                ax.imshow(a, interpolation="nearest")
+            elif k in ("nbac", "leaf"):
+                ax.imshow(a, cmap=ListedColormap([AX_BG, INK_BRIGHT if k == "nbac" else GREEN]),
+                          vmin=0, vmax=1, interpolation="nearest")
             elif k.endswith("_fuel"):
                 idx = np.vectorize(lambda f: fam_of.get(f, len(FAMILY)))(a)
                 ax.imshow(idx, cmap=fam_cmap, vmin=-0.5, vmax=len(FAMILY) + 0.5,
                           interpolation="nearest")
             else:
-                im = ax.imshow(np.clip(a, 10, None), cmap=heat, norm=norm, interpolation="nearest")
+                im = ax.imshow(np.clip(a, 10, None), cmap=heat, norm=LogNorm(10, 30000),
+                               interpolation="nearest")
             if r == 0:
                 ax.set_title(lab, color=INK, fontsize=8.5, loc="left")
             if c == 0:
                 ax.set_ylabel(stem.replace("_fire", ""), color=INK, fontsize=7.5)
-    handles = [plt.Rectangle((0, 0), 1, 1, color=c, label=name) for name, _, c in FAMILY]
-    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 0.955),
-               ncol=4, frameon=False, labelcolor=INK, fontsize=8)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c, label=nm) for nm, _, c in FAMILY]
+    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 0.955), ncol=4,
+               frameon=False, labelcolor=INK, fontsize=8)
     if im is not None:
-        cb = fig.colorbar(im, ax=axes[:, 3:], fraction=0.025, pad=0.01)
+        first = heat_from or next(i for i, (k, _) in enumerate(cols) if k.endswith("_hfi"))
+        cb = fig.colorbar(im, ax=axes[:, first:], fraction=0.025, pad=0.01)
         cb.set_label("head fire intensity (kW/m, log)", color=INK, fontsize=8)
         cb.ax.tick_params(colors=INK, labelsize=7.5)
-    fig.suptitle("E-32/E-33  Four development fire tiles, chosen by seed before scoring",
-                 color=INK_BRIGHT, x=0.01, y=0.99, ha="left", fontsize=12)
-    _caption(fig, "White = burned (NBAC). Fuel families from each inventory; HFI from the same "
-             "patch-level 30-June weather, so within a tile only fuel and slope vary. The "
-             "CWFIS 2024 column shows how a post-fire layer rewrites the burned ground.", y=0.0)
-    _save(fig, out, "tiles.png")
+    fig.suptitle(title, color=INK_BRIGHT, x=0.01, y=0.99, ha="left", fontsize=12)
+    rgb_note = ("True colour: " + "; ".join(sorted(sources)) + ". ") if sources else ""
+    _caption(fig, rgb_note + caption, y=0.0)
+    _save(fig, out, name)
+
+
+def p2_tiles(S, run, out):
+    _tile_grid(
+        S, run, out,
+        [("nbac", "NBAC burned"), ("cwfis_2019_fuel", "fuel: CWFIS 2019"),
+         ("scanfi_tree_prefire_fuel", "fuel: SCANFI pre-fire"),
+         ("cwfis_2019_hfi", "HFI: CWFIS 2019"),
+         ("scanfi_tree_prefire_hfi", "HFI: SCANFI pre-fire"),
+         ("cwfis_2024_hfi", "HFI: CWFIS 2024 (post-fire)")],
+        "E-32/E-33  Four development fire tiles, chosen by seed before scoring",
+        "White = burned (NBAC). Fuel families from each inventory; HFI from the same "
+        "patch-level 30-June weather, so within a tile only fuel and slope vary. The "
+        "CWFIS 2024 column shows how a post-fire layer rewrites the burned ground.")
 
 
 def _csv(path: Path, rows: list[dict]):
@@ -703,60 +719,16 @@ def p3_dates(W, out):
 
 
 def p3_tiles(S, run, out):
-    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
-    plt = _plt()
-    stems = S["config"]["qual_stems"]
-    cols = [("nbac", "NBAC burned"), ("leaf", "leaf-on on D (CWFIS): green"),
-            ("scanfi_tree_prefire_fuel", "fuel: SCANFI pre-fire"),
-            ("scanfi_tree_prefire_hfi", "HFI: SCANFI, dated weather"),
-            ("cwfis_2019_hfi", "HFI: CWFIS 2019, dated weather")]
-    fam_of = {f: i for i, (_, fs, _) in enumerate(FAMILY) for f in fs}
-    fam_cmap = ListedColormap([c for _, _, c in FAMILY] + [AX_BG])
-    heat = LinearSegmentedColormap.from_list("heat", ["#241a17", "#8a3a1c", ORANGE, "#ffd2a6"])
-    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.4 * len(cols), 2.5 * len(stems)),
-                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.2,
-                                                            "top": 0.86, "bottom": 0.04})
-    im = None
-    for r, stem in enumerate(stems):
-        z = np.load(run / "qual" / f"{stem}.npz")
-        for c, (k, lab) in enumerate(cols):
-            ax = axes[r, c]
-            ax.set_facecolor(AX_BG)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            for s in ax.spines.values():
-                s.set_color(SPINE)
-            if k not in z:
-                ax.text(0.5, 0.5, "not held", color=MUTED, ha="center", transform=ax.transAxes)
-                continue
-            a = z[k]
-            if k in ("nbac", "leaf"):
-                ax.imshow(a, cmap=ListedColormap([AX_BG, INK_BRIGHT if k == "nbac" else GREEN]),
-                          vmin=0, vmax=1, interpolation="nearest")
-            elif k.endswith("_fuel"):
-                idx = np.vectorize(lambda f: fam_of.get(f, len(FAMILY)))(a)
-                ax.imshow(idx, cmap=fam_cmap, vmin=-0.5, vmax=len(FAMILY) + 0.5,
-                          interpolation="nearest")
-            else:
-                im = ax.imshow(np.clip(a, 10, None), cmap=heat, norm=LogNorm(10, 30000),
-                               interpolation="nearest")
-            if r == 0:
-                ax.set_title(lab, color=INK, fontsize=8.5, loc="left")
-            if c == 0:
-                ax.set_ylabel(stem.replace("_fire", ""), color=INK, fontsize=7.5)
-    handles = [plt.Rectangle((0, 0), 1, 1, color=c, label=name) for name, _, c in FAMILY]
-    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 0.955), ncol=4,
-               frameon=False, labelcolor=INK, fontsize=8)
-    if im is not None:
-        cb = fig.colorbar(im, ax=axes[:, 3:], fraction=0.03, pad=0.01)
-        cb.set_label("head fire intensity (kW/m, log)", color=INK, fontsize=8)
-        cb.ax.tick_params(colors=INK, labelsize=7.5)
-    fig.suptitle("P3  The same seeded tiles under the dated design", color=INK_BRIGHT,
-                 x=0.01, y=0.99, ha="left", fontsize=12)
-    _caption(fig, "White = burned (NBAC). Green = deciduous leaf-on on D per the CWFIS "
-             "product (1 km), which switches D-1/D-2 and M-1/M-2 in FBP. HFI from each "
-             "patch's D-1 weather at 13:00 LDT with the C-2 start-up.", y=0.0)
-    _save(fig, out, "tiles.png")
+    _tile_grid(
+        S, run, out,
+        [("nbac", "NBAC burned"), ("leaf", "leaf-on on D (CWFIS): green"),
+         ("scanfi_tree_prefire_fuel", "fuel: SCANFI pre-fire"),
+         ("scanfi_tree_prefire_hfi", "HFI: SCANFI, dated weather"),
+         ("cwfis_2019_hfi", "HFI: CWFIS 2019, dated weather")],
+        "P3  The same seeded tiles under the dated design",
+        "White = burned (NBAC). Green = deciduous leaf-on on D per the CWFIS product "
+        "(1 km), which switches D-1/D-2 and M-1/M-2 in FBP. HFI from each patch's D-1 "
+        "weather at 13:00 LDT with the C-2 start-up.")
 
 
 def _within_pairs(run_a: Path, run_b: Path, variants=("scanfi_tree_prefire", "cwfis_2019"),
