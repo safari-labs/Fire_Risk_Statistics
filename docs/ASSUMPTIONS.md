@@ -981,3 +981,31 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - Provincial agency stations are not in the export.
   - **Distance cap.** A station more than 300 km away is not one CFFDRS would use for the patch. One 2018 confuser's nearest reporting station was in Nebraska, 1,062 km away. Such patches get no station weather. The median distance is 56 km (90th percentile 132 km).
 - **Imagery estimators move to P6.** Sentinel-2 snow-off and green-up (E-18's and E-40's imagery arms) go to P6, so P3 uses no imagery (James).
+
+---
+
+## A-33: Pre-fire imagery, dated labels and the v2 pack (P4)
+
+**Assumption.** From P4 on, the imagery the models see ends the day before D, and the labels count only what burned from D on.
+
+- **Pre-fire composite** (`Fire_Risk_Model/src/data/prefire.py`). It is a Sentinel-2 SR median over D−45 to D−1, built on the exact grid of each patch's existing `_bands.tif`, so every sidecar stays aligned.
+  - **Widening.** If fewer than 90 % of the patch's pixels have at least one clear observation, the window widens to D−90 to D−1.
+  - **Fallback.** If it is still too thin, the composite comes from the previous year's 1 July to 30 September. That is leaf-on and pre-fire, but a season early, and it is flagged (`composite_fallback`).
+  - **Clear observation.** s2cloudless probability below 40, as in the existing pipeline, and Scene Classification not cloud shadow, cloud, cirrus or snow.
+  - **Masking snow and shadow is new.** The legacy pipeline masked cloud only. Its April–June composites therefore carry spring snow: on one 55 °N patch, B4 is 750 against 339 and B11 937 against 1,382.
+  - **Unchanged legacy.** The legacy `_bands.tif` is untouched.
+- **Dated labels** (`labels.rasterize_dated`).
+  - **1:** inside an NBAC polygon whose fire (earliest of HS/AG start) began on or after D.
+  - **255 (ignore):** inside one that began before D, or has no start date.
+  - **0:** elsewhere.
+  - **Current effect.** Because D is the earliest start of any polygon overlapping a fire patch, no development or test pixel is currently ignored. Every burned pixel carries over from the legacy label.
+  - **NBAC 2016–2018** were fetched so the 19 confusers from those years are labelled too.
+- **v2 pack** (`src/data/pack_v2.py`, `scripts/python/pack_cffdrs_v2.py`).
+  - **Contents.** Fire, confuser and unburned patches, as 256 px tiles on the v1 grid rule. The bands are reflectance from the pre-fire composite. Alongside them: the dated label, CWFIS 2019 and SCANFI-tree fuel codes, eight per-pixel slots (percent conifer from each source, closure, height, slope, aspect, leaf state on D), and a per-patch scalar vector. The scalars hold:
+    - the operational codes at lags 1, 2, 3 and 7;
+    - the start-up, day-length and daily-aggregate variants;
+    - the station codes and station distance;
+    - FMC on D, day of year, place, and the composite window and fallback.
+  - **Excluded.** The bare, cloud and water patches are spectral hard negatives without dates or weather. They stay in the v1 line.
+  - **Splits.** The test set is the frozen v1 test set exactly (asserted). Every other group goes whole to train or val by its members' v1 split (majority, ties to train), so no fire or 0.1° block straddles train and val.
+  - **Radiometry** is left to the loader (P5), unlike v1's pre-normalised tiles.

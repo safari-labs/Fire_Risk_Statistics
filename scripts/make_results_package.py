@@ -938,7 +938,254 @@ def p3(run: Path, out: Path, legacy: Path | None = None, station: Path | None = 
          "git": S["git"], "written": S["written"], "config": S["config"]}, indent=1))
 
 
-PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated")}
+# ── P4 ──────────────────────────────────────────────────────────────────────
+
+WINDOW_ORDER = (("D-45..D-1", "D-45 to D-1", BLUE), ("D-90..D-1", "D-90 to D-1", AMBER),
+                ("fallback", "last summer (fallback)", ORANGE))
+
+
+def _rank(x):
+    x = np.asarray(x, float)
+    order = np.argsort(x, kind="stable")
+    r = np.empty(len(x))
+    r[order] = np.arange(len(x))
+    for v in np.unique(x):                      # average ties
+        m = x == v
+        r[m] = r[m].mean()
+    return r
+
+
+def _spearman(a, b):
+    ra, rb = _rank(a), _rank(b)
+    return float(np.corrcoef(ra, rb)[0, 1]) if len(ra) > 2 else float("nan")
+
+
+def _win_key(c):
+    return "fallback" if c.get("fallback") else c.get("window")
+
+
+def _boot_groups(rows, stat, n=2000, seed=0):
+    by = {}
+    for r in rows:
+        by.setdefault(r["group"], []).append(r)
+    keys = sorted(by)
+    rng = np.random.default_rng(seed)
+    reps = [stat([r for i in rng.choice(len(keys), len(keys)) for r in by[keys[i]]])
+            for _ in range(n)]
+    return [float(np.nanpercentile(reps, 2.5)), float(np.nanpercentile(reps, 97.5))]
+
+
+def p4_composites(S, out):
+    plt = _plt()
+    C = S["composites"]
+    kinds = ("fire", "confuser", "unburned")
+    fig, (a, b, c) = plt.subplots(1, 3, figsize=(14, 4), facecolor=FIG_BG,
+                                  gridspec_kw={"wspace": 0.3})
+    bottom = np.zeros(len(kinds))
+    for key, lab, col in WINDOW_ORDER:
+        h = np.array([sum(1 for v in C.values() if v["kind"] == k and _win_key(v) == key)
+                      for k in kinds])
+        a.bar(range(len(kinds)), h, bottom=bottom, color=col, width=0.6, label=lab,
+              edgecolor=AX_BG, linewidth=2)
+        for i, (hh, bb) in enumerate(zip(h, bottom, strict=True)):
+            if hh:
+                a.text(i, bb + hh / 2, str(hh), ha="center", va="center", color=FIG_BG,
+                       fontsize=8, fontweight="bold")
+        bottom += h
+    a.set_xticks(range(len(kinds)), kinds)
+    a.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    _axes(a, "Window each composite used", "", "development patches")
+    cov = [v["cover"] for v in C.values() if v.get("cover") is not None]
+    b.hist(cov, bins=np.linspace(0, 1, 21), color=BLUE, edgecolor=AX_BG)
+    b.axvline(0.9, color=MUTED, lw=1, ls=":")
+    _axes(b, "Share of pixels with a clear observation", "coverage", "patches")
+    obs = [v["median_clear_obs"] for v in C.values() if v.get("median_clear_obs") is not None]
+    c.hist(obs, bins=np.arange(0, max(obs + [1]) + 2) - 0.5, color=GREEN, edgecolor=AX_BG)
+    _axes(c, "Clear observations per pixel (median)", "observations", "patches")
+    fig.suptitle("P4  Pre-fire composites: windows, coverage, depth", color=INK_BRIGHT,
+                 x=0.01, y=1.05, ha="left", fontsize=12)
+    _caption(fig, "Each development patch's Sentinel-2 median ending the day before D (A-33). "
+             "The window widens from 45 to 90 days when under 90 % of pixels (dotted) have a "
+             "clear observation; the fallback is the previous July-September. Cloud, shadow "
+             "and snow are masked.")
+    _save(fig, out, "composites.png")
+
+
+def p4_leakage(S, out):
+    plt = _plt()
+    L = S["leakage_E54"]
+    early = [r for r in L if r["overlap_days"] > 0]
+    late = [r for r in L if r["overlap_days"] <= 0]
+    fig, (a, b) = plt.subplots(1, 2, figsize=(13, 4.6), facecolor=FIG_BG,
+                               gridspec_kw={"wspace": 0.25, "width_ratios": (2, 1)})
+    for rows, col, lab in ((early, ORANGE, f"started before 30 June (n={len(early)})"),
+                           (late, BLUE, f"started 30 June or later (n={len(late)})")):
+        a.scatter([r["overlap_days"] for r in rows], [r["did"] for r in rows], s=22,
+                  color=col, edgecolor=AX_BG, lw=0.8, label=lab, zorder=3)
+    a.axhline(0, color=MUTED, lw=1, ls=":")
+    a.axvline(0, color=MUTED, lw=1, ls=":")
+    rho = _spearman([r["overlap_days"] for r in L], [r["did"] for r in L])
+    ci = _boot_groups(L, lambda rs: _spearman([r["overlap_days"] for r in rs],
+                                              [r["did"] for r in rs]))
+    a.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower left")
+    _axes(a, f"Burn already in the legacy imagery?  Spearman rho {rho:+.2f} {_ci(ci)}",
+          "days the legacy window overlapped the fire (30 June minus D)",
+          "B8/B11 index change on burned minus unburned\n(legacy minus pre-fire)")
+    measures = (("did", "registered: fire patch", BLUE),
+                ("did_minus_confuser", "control: minus same-place confuser", GREEN))
+    for gi, rows in enumerate((early, late)):
+        for mi, (key, _, col) in enumerate(measures):
+            rs = [r for r in rows if np.isfinite(r.get(key, np.nan))]
+            if not rs:
+                continue
+            x = gi + (mi - 0.5) * 0.36
+            m = float(np.mean([r[key] for r in rs]))
+            mci = _boot_groups(rs, lambda q, key=key: float(np.mean([r[key] for r in q])))
+            b.bar(x, m, color=col, width=0.32)
+            b.vlines(x, *mci, color=INK_BRIGHT, lw=1.3)
+            b.annotate(f"{m:+.3f}  n={len(rs)}", (x, max(0.0, mci[1])), xytext=(0, 4),
+                       textcoords="offset points", ha="center", va="bottom",
+                       color=INK, fontsize=7, rotation=90)
+    b.axhline(0, color=MUTED, lw=1)
+    b.set_xticks([0, 1], ["before\n30 June", "30 June\nor later"])
+    b.set_xlim(-0.6, 1.6)
+    b.legend(handles=[plt.Rectangle((0, 0), 1, 1, color=c, label=lab) for _, lab, c in measures],
+             fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower left")
+    _axes(b, "Mean by fire start", "", "difference-in-differences")
+    fig.suptitle("E-54  Did the v1 imagery already show the burn?", color=INK_BRIGHT,
+                 x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Per development fire patch: the change in (B8 - B11) / (B8 + B11) from the "
+             "pre-fire composite to the legacy April-June one, on burned pixels minus unburned "
+             "pixels, so season and snow cancel. Negative = the burned ground is already darker "
+             "in SWIR in the legacy imagery. 95 % CIs from a fire/block-group bootstrap. "
+             "Registered prediction: negative for early fires, growing with overlap; about 0 "
+             "for late fires. The control (added after registration, reported as a control) "
+             "subtracts the same quantity at the same pixels in the confuser year, removing "
+             "the phenology of whatever later burned.")
+    _save(fig, out, "leakage.png")
+
+
+def p4_tiles(S, run, out):
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, TwoSlopeNorm
+    plt = _plt()
+    stems = S["qual_stems"]
+    cols = [("rgb_pre", "S2 true colour, pre-fire"),
+            ("rgb_legacy", "S2 true colour, legacy"),
+            ("label", "NBAC: burned on/after D"),
+            ("d_index", "B8/B11 index, legacy minus pre-fire")]
+    div = LinearSegmentedColormap.from_list("div", [ORANGE, "#5a5f70", BLUE])
+    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.6 * len(cols), 2.55 * len(stems)),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.05, "hspace": 0.28,
+                                                            "top": 0.9, "bottom": 0.04})
+    im = None
+    for r, stem in enumerate(stems):
+        z = np.load(run / "qual" / f"{stem}.npz")
+        for c, (k, lab) in enumerate(cols):
+            ax = axes[r, c]
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            a = z[k]
+            if k.startswith("rgb"):
+                ax.imshow(a, interpolation="nearest")
+            elif k == "label":
+                ax.imshow(np.where(a == 1, 1, 0), cmap=ListedColormap([AX_BG, INK_BRIGHT]),
+                          vmin=0, vmax=1, interpolation="nearest")
+            else:
+                im = ax.imshow(np.clip(a, -0.3, 0.3), cmap=div,
+                               norm=TwoSlopeNorm(0, -0.3, 0.3), interpolation="nearest")
+            if r == 0:
+                ax.set_title(lab, color=INK, fontsize=8, loc="left")
+            if c == 0:
+                ax.set_ylabel(f"{stem.replace('_fire', '')}\nD = {z['fire_date']}\n{z['window']}",
+                              color=INK, fontsize=7)
+    if im is not None:
+        cb = fig.colorbar(im, ax=axes[:, 3], fraction=0.05, pad=0.02)
+        cb.set_label("index change (orange = darker in SWIR in legacy)", color=INK, fontsize=7.5)
+        cb.ax.tick_params(colors=INK, labelsize=7)
+    fig.suptitle("P4  Pre-fire against legacy imagery on seeded fire tiles (half started "
+                 "before 30 June)", color=INK_BRIGHT, x=0.01, y=0.98, ha="left", fontsize=12)
+    _caption(fig, "Tiles drawn by seed before viewing: half from fires that started before 30 "
+             "June (inside the legacy window), half after. Orange in the last column marks "
+             "ground darker in SWIR relative to NIR in the legacy composite than before the "
+             "fire, which is what burned or snow-free ground looks like.", y=0.0)
+    _save(fig, out, "composite_tiles.png")
+
+
+def p4_tables(S, out):
+    C, L = S["composites"], S["leakage_E54"]
+    lines = ["# P4 tables: pre-fire imagery, dated labels, the v2 pack\n",
+             f"Development patches: {S['n_dev']} (test patches excluded: "
+             f"{S['n_test_excluded']}).\n", "## T-composite: window used, by patch kind\n",
+             "| kind | D-45..D-1 | D-90..D-1 | fallback | median coverage | median clear obs |",
+             "|---|---|---|---|---|---|"]
+    rows = []
+    for k in ("fire", "confuser", "unburned"):
+        vs = [v for v in C.values() if v["kind"] == k]
+        n = {key: sum(1 for v in vs if _win_key(v) == key) for key, _, _ in WINDOW_ORDER}
+        cov = np.median([v["cover"] for v in vs]) if vs else float("nan")
+        ob = np.median([v["median_clear_obs"] for v in vs]) if vs else float("nan")
+        lines.append(f"| {k} | {n['D-45..D-1']} | {n['D-90..D-1']} | {n['fallback']} | "
+                     f"{cov:.3f} | {ob:.0f} |")
+        rows.append({"kind": k, **n, "median_cover": cov, "median_obs": ob})
+    _csv(out / "T_composite.csv", rows)
+    early = [r for r in L if r["overlap_days"] > 0]
+    late = [r for r in L if r["overlap_days"] <= 0]
+    rho = _spearman([r["overlap_days"] for r in L], [r["did"] for r in L])
+    ci = _boot_groups(L, lambda rs: _spearman([r["overlap_days"] for r in rs],
+                                              [r["did"] for r in rs]))
+    lines += ["", "## T-leak: E-54\n",
+              "| fires | n | mean diff-in-diff | 95 % CI | share negative |",
+              "|---|---|---|---|---|"]
+    for lab, rs in (("started before 30 June", early), ("started 30 June or later", late)):
+        if rs:
+            m = float(np.mean([r["did"] for r in rs]))
+            mci = _boot_groups(rs, lambda x: float(np.mean([r["did"] for r in x])))
+            neg = float(np.mean([r["did"] < 0 for r in rs]))
+            lines.append(f"| {lab} | {len(rs)} | {m:+.4f} | {_ci(mci, 4)} | {neg:.2f} |")
+    lines += ["", "Control (added after registration): the same, minus the same-place confuser "
+              "at the same pixels.", "", "| fires | n | mean | 95 % CI | share negative |",
+              "|---|---|---|---|---|"]
+    for lab, rs in (("started before 30 June", early), ("started 30 June or later", late)):
+        rs = [r for r in rs if np.isfinite(r.get("did_minus_confuser", np.nan))]
+        if rs:
+            m = float(np.mean([r["did_minus_confuser"] for r in rs]))
+            mci = _boot_groups(rs, lambda x: float(np.mean([r["did_minus_confuser"] for r in x])))
+            neg = float(np.mean([r["did_minus_confuser"] < 0 for r in rs]))
+            lines.append(f"| {lab} | {len(rs)} | {m:+.4f} | {_ci(mci, 4)} | {neg:.2f} |")
+    lines.append(f"\nSpearman rho (overlap days, diff-in-diff): {rho:+.3f} {_ci(ci, 3)}, "
+                 f"{len(L)} fire patches.")
+    _csv(out / "T_leak.csv", L)
+    lab = S["labels"]
+    lines += ["", "## T-labels: dated NBAC labels\n",
+              "| kind | patches | mean burned on/after D | mean ignored |", "|---|---|---|---|"]
+    for k in ("fire", "confuser", "unburned"):
+        vs = [v for s, v in lab.items() if s.endswith(k)]
+        if vs:
+            lines.append(f"| {k} | {len(vs)} | {np.mean([v['burned_after_D'] for v in vs]):.3f} | "
+                         f"{np.mean([v['ignored'] for v in vs]):.4f} |")
+    if S.get("pack"):
+        p = S["pack"]
+        lines += ["", "## T-pack: the v2 pack\n", "| split | patches | tiles |", "|---|---|---|"]
+        for sp in ("train", "val", "test"):
+            lines.append(f"| {sp} | {p['n_patches'].get(sp, 0)} | {p['counts'].get(sp, 0)} |")
+    (out / "tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p4(run: Path, out: Path):
+    S = json.loads((run / "summary.json").read_text())
+    out.mkdir(parents=True, exist_ok=True)
+    p4_tables(S, out)
+    p4_composites(S, out)
+    p4_leakage(S, out)
+    p4_tiles(S, run, out)
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)), "seed": S["seed"],
+                                              "qual_stems": S["qual_stems"]}, indent=1))
+
+
+PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire")}
 
 
 def main(argv=None) -> int:
