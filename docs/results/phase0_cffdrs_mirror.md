@@ -1,6 +1,6 @@
 # P0 — CFFDRS mirror: verify and freeze (2026-10-23)
 
-Phase 0 of the CFFDRS-mirror plan checks the data each later phase depends on. It fixes the problems that turned up and freezes the test set. No model was trained.
+Phase 0 of the CFFDRS-mirror plan checks the data each later phase depends on. It fixes the problems that turned up and freezes the test set. No model was trained. **At a glance:** [p0_verify/experiments.md](p0_verify/experiments.md).
 
 ## What P0 established
 

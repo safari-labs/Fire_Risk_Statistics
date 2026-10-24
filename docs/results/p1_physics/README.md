@@ -1,6 +1,6 @@
 # P1 — Physics port: FBP, FWI and ignition (2026-10-23)
 
-P1 builds the non-learned "CFFDRS as is" baseline (R0, register E-32/E-41/E-44). It is validated against the CFS reference implementation, the `cffdrs` R package (version 1.9.2, run on R 4.6.1).
+P1 builds the non-learned "CFFDRS as is" baseline (R0, register E-32/E-41/E-44). **At a glance:** [experiments.md](experiments.md). It is validated against the CFS reference implementation, the `cffdrs` R package (version 1.9.2, run on R 4.6.1).
 
 ## Results
 

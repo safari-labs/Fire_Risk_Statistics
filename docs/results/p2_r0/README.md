@@ -7,7 +7,7 @@ R0 is the non-learned CFFDRS reference that every later imagery result is measur
 - **Design.** Legacy: each patch's 30-June FWI1987 codes and a "green" leaf state. 66 of the 99 fires had already started by 30 June (A-24), so the weather half is provisional until P3 re-dates it.
 - **Patches.** 196 development patches (train and val): 83 fire, 113 confuser or unburned. The 35 frozen test patches were not read.
 
-Register: E-32, E-33, E-21. Tables are in [`tables.md`](tables.md), with CSVs alongside.
+Register: E-32, E-33, E-21. **At a glance:** [experiments.md](experiments.md), one card per experiment and control. Tables are in [`tables.md`](tables.md), with CSVs alongside.
 
 ## What R0 says
 
