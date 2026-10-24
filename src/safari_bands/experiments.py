@@ -608,7 +608,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         hypothesis="A positive slope: the advantage of a refreshed estimate grows "
                    "with the staleness gap. At gap 0 our estimate should LOSE, "
                    "because it is a noisy copy of its own training target -- which "
-                   "is why the slope and not the level is the estimator.",
+                   "is why the slope and not the level is the estimator. WRONG IF "
+                   "the slope is flat or negative. (This clause restates the "
+                   "prediction's negation; it was written 2026-10-24, after P2's "
+                   "inventory-half result, and changes nothing it predicts.)",
         independent="the fuel inventory's vintage (SCANFI v2 2005-2020, "
                     "pre-fire steps only), and later our refreshed estimate, "
                     "against the gap to the fire year",
@@ -618,15 +621,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "slope is the estimator because at gap 0 our estimate is "
                    "a noisy copy of its own training target and would lose "
                    "on noise alone.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="the inventory half needs only R0 (E-32, which needs the FBP "
-                "port); the refreshed-estimate half still needs E-22",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="the refreshed-estimate half needs E-22; the 2005 SCANFI step "
+                "and 2010 for half the fires are still being fetched",
         gap="G2 fuel-type layer is a fixed vintage",
-        note="SCANFI v2 now carries all nine steps; sidecars for 2005-2025 are "
-             "fetched for every patch, so the staleness slope can be read off "
-             "the inventory itself before any model exists. Pre-fire steps "
-             "only: the 2020 step already shows the 2019-2020 fires (A-25).",
+        note="P2 (docs/results/p2_r0): inventory half done under R0. Within-"
+             "patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, "
+             "+0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No "
+             "staleness cost to recover on this sample, so the prediction is at "
+             "risk before E-22 runs. Pre-fire steps only: the 2020 step already "
+             "shows the 2019-2020 fires (A-25).",
     ),
     Experiment(
         "E-22", "Ecology arm", "CFFDRS gaps",
@@ -861,10 +866,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="within-patch and between-patch AUC, per process",
         conclusion="The non-learned reference every imagery slot is measured "
                    "against -- CFFDRS itself, not a model trained on its inputs.",
-        state="NEEDS_CODE",
-        blocker="FBP port done and validated (P1); eval_cffdrs_reference.py "
-                "(plan P2) is not written. Ignition runs on GLC-X-42 classes "
-                "until Q26's coefficients arrive",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="legacy 30-June design only; P3 re-dates the weather to each "
+                "fire's start",
+        note="P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire "
+             "patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 "
+             "on CWFIS 2019; half that margin is water and non-fuel (land only: "
+             "0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; "
+             "fire beats its own confuser on DC in 88 % of 68 pairs. "
+             "P(sustained flaming) is ~0.5 within patches: NBAC is not an "
+             "ignition outcome (Stage C is).",
         tags=("primary",),
     ),
     Experiment(
@@ -880,9 +892,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "pre- and post-fire inventories",
         conclusion="Which operational fuel input is honest on burned ground, "
                    "and how much a post-fire inventory would flatter a result.",
-        state="NEEDS_CODE",
-        blocker="R0 (E-32); the SCANFI v1 adapter is not written",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="the SCANFI v1 adapter is not written; SCANFI 2005 pending",
         gap="G2 fuel-type layer is a fixed vintage",
+        note="P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire "
+             "inventories are not equal: SCANFI through the CFS tree beats "
+             "CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC "
+             "(+0.031 on land only; resolution alone adds nothing once water is "
+             "masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, "
+             "SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but "
+             "unlearned physics reads it backwards; a learner would not. The "
+             "CFS tree beats the A-11 rules by +0.081 on land.",
     ),
     Experiment(
         "E-34", "Learned CFFDRS (R1/R2)", "CFFDRS mirror",

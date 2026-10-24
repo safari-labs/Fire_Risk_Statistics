@@ -1,0 +1,24 @@
+{
+ "run": "runs\\20261024-1430_cffdrs_r0",
+ "git": {
+  "Fire_Risk_Model": "6485f9584cd65f59b9c458620baf141fece63964",
+  "freeze_sha256": "3e65e310a9604a3cb8627f79a76dd162b12553bec0da9ddbaeab4065a1078c10"
+ },
+ "written": "2026-10-24T13:46:02",
+ "config": {
+  "patch_dir": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\data\\stage2_fire\\patches_11band",
+  "freeze": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\splits\\test_groups_v1.json",
+  "out": "..\\Fire_Risk_Statistics\\runs\\20261024-1430_cffdrs_r0",
+  "stride": 2,
+  "px_per_patch": 4000,
+  "n_qual": 4,
+  "workers": 5,
+  "seed": 0,
+  "qual_stems": [
+   "-112.674_60.020_2023_fire",
+   "-119.992_61.008_2023_fire",
+   "-121.912_58.062_2023_fire",
+   "-74.131_50.453_2023_fire"
+  ]
+ }
+}

@@ -605,7 +605,12 @@ Wotton & Wheatley (2025), *IJWF* WF24164 (DMC and lightning ignition), is open
 access. Can ÉTS library supply the two PDFs, so the coefficients come from the
 papers rather than from memory?
 
+**Status (2026-10-24): PARTLY ANSWERED.**
+
 **Answer:**
+- **Beverly & Wotton (2007): obtained** from James. The Table 6 coefficients are implemented in `Fire_Risk_Model/src/data/ignition.py`, and the tests reproduce the paper's own worked probabilities (A-30).
+- **Wotton & Beverly (2007): requested** by James. `instand_ffmc` keeps refusing to run until it arrives.
+- **Wotton & Wheatley (2025): read.** It publishes only shape-constrained GAM curves (Figs 2–3). The table of estimates per integer DMC is "available from the authors". The paper also finds no support for the operational DMC = 20 threshold. Until the authors' table is in hand, lightning ignition stays on the GLC-X-42 DMC classes. **Optional follow-up:** James could ask Mike Wotton for that table.
 
 ---
 

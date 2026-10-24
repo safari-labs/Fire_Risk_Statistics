@@ -899,3 +899,49 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
    decision adds one, the data rate and these budgets are re-derived from the
    sheet with that camera selected.
 
+
+---
+
+## A-30: Ignition receptivity from Beverly & Wotton (2007), mapped onto FBP fuel types
+
+**Assumption.** Until the canopy-closure model arrives (Q26), R0's ignition branch is P(sustained flaming) from Beverly & Wotton (2007), *IJWF* 16:161–173, Table 6. Their ten categories come from test-fire sites at Fort Smith and 100 Mile House (1958–61). The FBP fuel types map onto them as follows:
+
+| FBP fuel | Category | Predictors |
+|---|---|---|
+| C-1 | FC3, pine–lichen | FFMC |
+| C-2 | FC8, spruce–moss | FFMC, DMC |
+| C-3, C-4 | FC4, pine–moss | FWI |
+| C-5, C-6, C-7 | FC5, pine–needles (analogue) | DMC, ISI |
+| M-1 to M-4 | FC6, mixedwood–moss | FFMC, DMC |
+| D-1, D-2 | FC10, aspen–leaf, FWI-System model | DMC |
+| O-1a/b, before leaf flush | FC1 | RH |
+| O-1a/b, after leaf flush | FC2 | FFMC |
+| S-1 to S-3 | none (NaN) | — |
+
+**Why each choice:**
+
+- **Pine (C-3, C-4).** FC3, FC4 and FC5 come from one jack pine stand and differ only in the ground fuel that was lit. The site description names moss and lichen as predominant, so moss is the default. Ground fuel is an explicit argument, which makes it a candidate imagery slot: lichen is spectrally distinct.
+- **Aspen (D-1, D-2).** FC10's FWI-System model has "considerably less support" than its site model. The site model needs measured litter moisture, which we do not have.
+- **Seasons.** The paper's spring/summer split is leaf flush, so leaf state selects the grass category.
+- **Inputs.** The fits used diurnally adjusted FFMC and ISI. R0 uses the daily 13:00 LDT codes in their place, and the FWI System ISI rather than FBP's slope-adjusted one. Below FFMC 70 the curves are extrapolations, because test fires were only run at FFMC ≥ 70.
+
+**Check.** Our implementation reproduces the paper's own reading of its curves: about 90 % for FC3 at FFMC 86, and about 90 % and 96 % for FC6 and FC8 at DMC 80, FFMC 89.
+
+---
+
+## A-31: The CFS fuel decision tree, run on SCANFI
+
+**Assumption.** The SCANFI fuel reference is the CFS decision tree that built the 2019 CWFIS layer (Swystun 2018, shipped with that layer), run on each SCANFI v2 time step. It is implemented in `Fire_Risk_Model/src/data/fuel_tree.py` and outputs the 2019 code space. The A-11 judgement rules (`fuel_type_from_ecology`) are kept only as a rule-set comparison.
+
+SCANFI cannot feed the tree everything it expects. The deviations:
+
+- **Non-fuel.** The kNN layer splits fuel from non-fuel at 60 % vegetated; SCANFI has no such layer. Only WorldCover water is used as non-fuel, because WorldCover 2021 is post-fire for the 2019–2020 fires: a burn scar reads as bare ground. Rock outcrops therefore fall to the open-ground rule (D-1/2).
+- **Layers not held.** Ecozone, NALCMS, cropland and urban are not held. The open-ground refinements (O-1, non-fuel, D-2) are skipped, and the taiga branches take their non-taiga side (C-2 instead of C-1).
+- **Species.** SCANFI's species channels stand in for the kNN leading species:
+  - OtherCon (white spruce, lodgepole and Douglas-fir, merged when sidecars are aligned) takes the spruce/subalpine-fir rules.
+  - WRPine takes the white-pine rules.
+  - Poplar takes the broadleaf-fill rules.
+  - Tamarack counts as broadleaf, as in the tree.
+- **A-11 comparison arm.** The same post-fire concern applies, so its non-treed channels are restricted to water.
+
+**Leaf state for the legacy R0.** The legacy R0 uses 30-June weather (A-24), so leaf state is "green": D-1/2 resolves to D-2, M-1/2 to M-2, and an unresolved O-1 to O-1b. Codes a layer names explicitly (D-1, M-1 at 15 or 25 %) keep their name. P3 replaces this with the green-up date.

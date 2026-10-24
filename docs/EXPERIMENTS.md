@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-48 experiments. **17 can run today** on data already packed and staged.
+48 experiments. **20 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -17,8 +17,8 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 | State | Count | What it means | Experiments |
 |---|---|---|---|
 | **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
-| **Partial result** | 6 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10 |
-| **Needs code** | 10 | no new data; a runner or a flag has to be written | E-17, E-18, E-21, E-29, E-32, E-33, E-39, E-40, E-41, E-43 |
+| **Partial result** | 9 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33 |
+| **Needs code** | 7 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-43 |
 | **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
 | **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -31,8 +31,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-32** | CFFDRS as is (R0) ★ | FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor. | none learned: FBP ROS / HFI / CFB per pixel and FWI codes per patch, computed from the operational inputs | within-patch and between-patch AUC, per process | Needs code | *none yet* |
-| **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Needs code | *none yet* |
+| **E-32** | CFFDRS as is (R0) ★ | FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor. | none learned: FBP ROS / HFI / CFB per pixel and FWI codes per patch, computed from the operational inputs | within-patch and between-patch AUC, per process | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-34** | Learned CFFDRS (R1/R2) | A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it. | R0 vs R1 vs R2 on identical inputs and folds | paired within/between-patch AUC per process | Needs a pack | *none yet* |
 | **E-35** | Fuel-type slot | Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut. | the fuel-type slot's source: pre-fire inventory vs imagery_replace (ecology model) vs imagery_correct | paired delta in within-patch AUC per process | Needs a pack | *none yet* |
 | **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Needs a pack | *none yet* |
@@ -93,7 +93,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-18** | Snow-off startup | Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. | FWI start date: per-pixel NDSI snow-off vs our flat 90-day spinup | change in the FWI codes, and auc_px, scenario-held-out folds | Needs code | *none yet* |
 | **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `sweep_covariates.sh SETS=weather` |
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
-| **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Needs code | *none yet* |
+| **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Needs a pack | `train_ecology.sh` |
 
 ### Hyperspectral
@@ -134,7 +134,9 @@ The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit
 
 The non-learned reference every imagery slot is measured against -- CFFDRS itself, not a model trained on its inputs.
 
-*Blocked on:* FBP port done and validated (P1); eval_cffdrs_reference.py (plan P2) is not written. Ignition runs on GLC-X-42 classes until Q26's coefficients arrive
+*Note:* P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 on CWFIS 2019; half that margin is water and non-fuel (land only: 0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; fire beats its own confuser on DC in 88 % of 68 pairs. P(sustained flaming) is ~0.5 within patches: NBAC is not an ignition outcome (Stage C is).
+
+*Blocked on:* legacy 30-June design only; P3 re-dates the weather to each fire's start
 
 **E-33 — Fuel inventory comparison**
 
@@ -142,7 +144,9 @@ The non-learned reference every imagery slot is measured against -- CFFDRS itsel
 
 Which operational fuel input is honest on burned ground, and how much a post-fire inventory would flatter a result.
 
-*Blocked on:* R0 (E-32); the SCANFI v1 adapter is not written
+*Note:* P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land.
+
+*Blocked on:* the SCANFI v1 adapter is not written; SCANFI 2005 pending
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -462,13 +466,13 @@ Every FWI code is defined on a same-day noon observation and a daily uplink cann
 
 **E-21 — Fuel-layer refresh**
 
-*Hypothesis:* A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator.
+*Hypothesis:* A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.)
 
 FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, insects, fire and regrowth. The slope is the estimator because at gap 0 our estimate is a noisy copy of its own training target and would lose on noise alone.
 
-*Note:* SCANFI v2 now carries all nine steps; sidecars for 2005-2025 are fetched for every patch, so the staleness slope can be read off the inventory itself before any model exists. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25).
+*Note:* P2 (docs/results/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25).
 
-*Blocked on:* the inventory half needs only R0 (E-32, which needs the FBP port); the refreshed-estimate half still needs E-22
+*Blocked on:* the refreshed-estimate half needs E-22; the 2005 SCANFI step and 2010 for half the fires are still being fetched
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -580,9 +584,12 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-14** | Fusion architecture | `sweep_covariates.sh SETS=fusion` | 1 fit/task x 12 tasks (+ wx_both from E-13); est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-15** | Imagery vs the FBP formula | `sweep_covariates.sh SETS=g1` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-19** | Latitude-banded weather | `sweep_covariates.sh SETS=weather` | shares E-13's runs; latitude scoring adds seconds |
+| **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-26** | Within-fire burn pattern | `sweep_axes.sh SETS=cond` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 
