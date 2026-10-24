@@ -1043,9 +1043,9 @@ def p4_leakage(S, out):
             mci = _boot_groups(rs, lambda q, key=key: float(np.mean([r[key] for r in q])))
             b.bar(x, m, color=col, width=0.32)
             b.vlines(x, *mci, color=INK_BRIGHT, lw=1.3)
-            b.annotate(f"{m:+.3f}  n={len(rs)}", (x, max(0.0, mci[1])), xytext=(0, 4),
-                       textcoords="offset points", ha="center", va="bottom",
-                       color=INK, fontsize=7, rotation=90)
+            b.annotate(f"{m:+.3f}  n={len(rs)}", (x + 0.09, 0.97),
+                       xycoords=("data", "axes fraction"),
+                       ha="center", va="top", color=INK, fontsize=7, rotation=90)
     b.axhline(0, color=MUTED, lw=1)
     b.set_xticks([0, 1], ["before\n30 June", "30 June\nor later"])
     b.set_xlim(-0.6, 1.6)
@@ -1056,8 +1056,10 @@ def p4_leakage(S, out):
                  x=0.01, y=1.04, ha="left", fontsize=12)
     _caption(fig, "Per development fire patch: the change in (B8 - B11) / (B8 + B11) from the "
              "pre-fire composite to the legacy April-June one, on burned pixels minus unburned "
-             "pixels, so season and snow cancel. Negative = the burned ground is already darker "
-             "in SWIR in the legacy imagery. 95 % CIs from a fire/block-group bootstrap. "
+             "pixels, meant to cancel season and snow (the control shows it does not entirely: "
+             "what later burns changes differently with season). Negative = the burned "
+             "ground is darker in SWIR in the legacy imagery. 95 % CIs from a fire/block-group "
+             "bootstrap. "
              "Registered prediction: negative for early fires, growing with overlap; about 0 "
              "for late fires. The control (added after registration, reported as a control) "
              "subtracts the same quantity at the same pixels in the confuser year, removing "
@@ -1124,8 +1126,10 @@ def p4_tables(S, out):
     for k in ("fire", "confuser", "unburned"):
         vs = [v for v in C.values() if v["kind"] == k]
         n = {key: sum(1 for v in vs if _win_key(v) == key) for key, _, _ in WINDOW_ORDER}
-        cov = np.median([v["cover"] for v in vs]) if vs else float("nan")
-        ob = np.median([v["median_clear_obs"] for v in vs]) if vs else float("nan")
+        cv = [v["cover"] for v in vs if v.get("cover") is not None]
+        oo = [v["median_clear_obs"] for v in vs if v.get("median_clear_obs") is not None]
+        cov = float(np.median(cv)) if cv else float("nan")
+        ob = float(np.median(oo)) if oo else float("nan")
         lines.append(f"| {k} | {n['D-45..D-1']} | {n['D-90..D-1']} | {n['fallback']} | "
                      f"{cov:.3f} | {ob:.0f} |")
         rows.append({"kind": k, **n, "median_cover": cov, "median_obs": ob})

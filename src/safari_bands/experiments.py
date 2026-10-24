@@ -1257,8 +1257,20 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "days of overlap (30 June minus D)",
         conclusion="How much the v1 band searches (E-1 to E-14) could have read the "
                    "burn itself, and so which of their results survive P4.",
-        state="NEEDS_CODE",
-        blocker="P4 code: pre-fire composites (src/data/prefire.py)",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/build_prefire.py",
+        blocker="the v1 band searches have to be re-run on the v2 pack to see "
+                "what their results were worth",
+        note="P4 (docs/results/p4_prefire): MIXED. As registered, early fires "
+             "show the drop (-0.061 [-0.081, -0.041], 83 % negative, n=54), but "
+             "late fires show it too (-0.082, n=29) and it does not grow with "
+             "overlap (rho +0.05 [-0.20, +0.30]). A control added after "
+             "registration -- the same pixels at the same place in the "
+             "confuser year -- takes both to about 0 (early -0.005 [-0.033, "
+             "+0.023], late +0.005): the drop is the seasonal change of what "
+             "later burns, not the burn. At most a weak leak in the longest "
+             "overlaps (41+ days: -0.029). The legacy imagery's fault is snow "
+             "and season, not a visible burn.",
     ),
 )
 

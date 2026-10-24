@@ -399,6 +399,77 @@ PHASES: tuple[Phase, ...] = (
                              "start-up rule never left a fire un-started."),
         ),
     ),
+    Phase(
+        "P4", "Pre-fire imagery, dated labels, the v2 pack", "2026-10-25",
+        "p4_prefire", "README.md",
+        "Rebuilt every patch's imagery to end the day before D, re-labelled NBAC "
+        "by fire start, and packed the CFFDRS-mirror dataset (v2) for Narval. "
+        "E-54 was registered before any composite was downloaded. Measurements "
+        "on 196 development patches; the test groups were not read.",
+        (
+            Entry("E-54", "experiment", "MIXED",
+                  result="Early fires: -0.061 [-0.081, -0.041] (83 % negative, "
+                         "n=54). Late fires: -0.082 [-0.122, -0.049] (n=29). "
+                         "No growth with overlap (rho +0.05). Minus the same "
+                         "pixels in the confuser year: early -0.005, late +0.005, "
+                         "both CIs spanning 0.",
+                  conclusion="The registered drop is there, but it is seasonal "
+                             "change in what later burns, not the burn: the "
+                             "legacy imagery did not visibly carry the outcome "
+                             "(at most -0.03 in the longest overlaps). Its fault "
+                             "is snow and season. The v1 band searches still "
+                             "need re-running on v2."),
+            Entry("P4-C1", "control", "MEASURED",
+                  title="Same-place confuser control for E-54",
+                  question="Is E-54's drop the burn, or the season's effect on "
+                           "the pixels that later burn?",
+                  independent="the fire patch vs the same pixels at the same "
+                              "place in its confuser's year",
+                  dependent="difference-in-differences, fire minus confuser",
+                  result="Early fires: -0.005 [-0.033, +0.023] (n=41); late "
+                         "+0.005 [-0.031, +0.044] (n=25). By overlap: 1-20 days "
+                         "+0.063, 21-40 -0.019, 41+ -0.029.",
+                  conclusion="Added after registration and labelled as such. It "
+                             "removes the drop: phenology, not leakage."),
+            Entry("P4-M1", "measurement", "MEASURED",
+                  title="Pre-fire composites as built",
+                  question="Could every patch get clear imagery ending D-1?",
+                  independent="229 dated patches; windows D-45, D-90, last summer",
+                  dependent="window used, coverage, clear observations",
+                  result="Development: fire 82 D-45 / 1 fallback; confuser 67 / "
+                         "6 D-90 / 18 fallback; unburned 16 / 6 fallback. Median "
+                         "coverage 1.00; 5-9 clear observations per pixel. 3 "
+                         "early-year confusers below 90 %; 2 left out of the pack.",
+                  conclusion="Every fire has imagery from its own 45 days before "
+                             "ignition. Cloud, shadow and snow are now masked; "
+                             "the legacy composites carried spring snow."),
+            Entry("P4-M2", "measurement", "MEASURED",
+                  title="Dated labels",
+                  question="How many pixels burned before D and must be ignored?",
+                  independent="NBAC polygons by start date relative to D "
+                              "(2016-2023 years held)",
+                  dependent="share burned on/after D; share ignored",
+                  result="Fire patches 0.656 burned on/after D; 0 pixels ignored "
+                         "anywhere (D is the earliest overlapping start). Every "
+                         "legacy burned pixel carries over.",
+                  conclusion="The dated label equals the legacy one on these "
+                             "patches; the ignore value is a guard for later "
+                             "label sources."),
+            Entry("P4-C2", "check", "PASS",
+                  title="The v2 pack",
+                  question="The test split is exactly the frozen test set's "
+                           "cohort; no group straddles splits; every sidecar is "
+                           "aligned on the patch grid.",
+                  independent="pack_cffdrs_v2.py on 227 patches",
+                  dependent="split membership, group spans, grid checks, NaNs",
+                  result="Test = the 33 frozen cohort patches (asserted); 0 "
+                         "groups span splits; every composite on its patch's "
+                         "transform. Train 1,388 / val 283 / test 287 tiles; "
+                         "only the capped station's scalars are NaN (1 patch).",
+                  conclusion="The v2 pack is ready for Narval (2.4 GB, sha256 "
+                             "177717f1...)."),
+        ),
+    ),
 )
 
 

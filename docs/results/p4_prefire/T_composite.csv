@@ -1,0 +1,4 @@
+kind,D-45..D-1,D-90..D-1,fallback,median_cover,median_obs
+fire,82,0,1,1.0,7.0
+confuser,67,6,18,1.0,5.0
+unburned,16,0,6,1.0,9.0

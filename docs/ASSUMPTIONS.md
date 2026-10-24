@@ -1009,3 +1009,9 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **Excluded.** The bare, cloud and water patches are spectral hard negatives without dates or weather. They stay in the v1 line.
   - **Splits.** The test set is the frozen v1 test set exactly (asserted). Every other group goes whole to train or val by its members' v1 split (majority, ties to train), so no fire or 0.1° block straddles train and val.
   - **Radiometry** is left to the loader (P5), unlike v1's pre-normalised tiles.
+- **As built (2026-10-25).**
+  - **Best window.** When no window reaches 90 % coverage and last summer has no scenes, the composite is the best-covered window, recorded `accepted: false`. This affects three 2016–2017 confusers, from before Sentinel-2 surface reflectance covered these areas well.
+  - **Excluded from the pack.** Development patches whose composite covers under half the patch are left out of the pack (2 patches).
+  - **Memory limit.** High-latitude 90-day windows exceed Earth Engine's per-request memory; those are fetched four bands at a time, giving the same composite.
+  - **Test set.** It is the 33 frozen test patches of the cohort's kinds. The other 2 frozen test patches are bare, cloud or water, outside the cohort.
+  - **Pack size.** Train 162 patches (1,388 tiles), val 32 (283), test 33 (287). The bundle is `Fire_Risk_Model/data/stage2_fire_cffdrs_v2.tar`, sha256 `177717f1…`.
