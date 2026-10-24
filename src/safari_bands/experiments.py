@@ -549,7 +549,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="NEEDS_CODE",
         runner="--",
         blocker="an Earth Engine NDSI reduction over the S2 collection; no "
-                "new imagery",
+                "new imagery. Moved to P6 with the other imagery estimators "
+                "(James, 2026-10-24); the operational-rule half is E-51 (P3)",
         gap="G4 snow-off keyed by regional rule",
     ),
     Experiment(
@@ -992,8 +993,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the imager should own the leaf-state switch FBP "
                    "applies to aspen and mixedwood.",
         state="NEEDS_CODE",
-        blocker="greenup.py is not written; CWFIS green-up 2020-2023 is held, "
-                "2019 is not published",
+        blocker="the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 "
+                "builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is "
+                "held, 2019 is not published",
     ),
     Experiment(
         "E-41", "Spread R0 (CFSDS)", "CFFDRS mirror",
@@ -1082,6 +1084,118 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The onboard hardware.",
         state="NEEDS_PACK",
         blocker="E-47 (budgets set in A-29: <= 91 s per scene, then lowest power)",
+    ),
+    # P3 predictions, registered 2026-10-24 before any P3 number existed.
+    # Each is scored under R0 (no learning); the latitude bands hold 30 / 34
+    # / 19 development fire patches (<55 / 55-60 / >=60 N), so per-band AUC
+    # is weak and is read only beside the code shifts, which are measured on
+    # every patch.
+    Experiment(
+        "E-49", "Dating the weather (R0)", "CFFDRS mirror",
+        hypothesis="Moving R0's weather from the legacy 30-June daily "
+                   "aggregates to each patch's D-1 at 13:00 LDT RAISES the "
+                   "between-patch AUC of the fast codes (FFMC, ISI) and LOWERS "
+                   "that of the slow codes (DC, BUI): the fast codes will "
+                   "describe the day before the fire rather than 30 June, and "
+                   "part of the slow codes' legacy 0.83 (DC) came from reading "
+                   "the fire year's drought after most fires had started. "
+                   "WRONG IF the fast and slow codes move in the same direction, "
+                   "or no code moves outside its CI.",
+        independent="weather design, as a chain on the same patches: legacy -> "
+                    "dated (daily aggregates, flat spin-up) -> dated at 13:00 "
+                    "LDT -> dated with the Appendix C-2 start-up and "
+                    "overwintered DC (the P3 design)",
+        dependent="between-patch AUC and paired fire-vs-own-confuser win rate "
+                  "per FWI code; within-patch HFI AUC, reported",
+        conclusion="Whether the legacy design flattered or hid CFFDRS, and what "
+                   "each design step moves -- the baseline every later delta "
+                   "is read against.",
+        state="NEEDS_CODE",
+        blocker="P3 code: fire_dates.py, the 13:00 LDT ERA5 fetch, start-up "
+                "and overwintering in fwi.py",
+    ),
+    Experiment(
+        "E-50", "Latitude-correct day length (R0)", "CFFDRS gaps",
+        hypothesis="Scaling the DMC day-length factors from 46 N to each "
+                   "patch's latitude raises DMC more at >=60 N than at <55 N "
+                   "(longer summer days), and raises R0's between-patch AUC of "
+                   "DMC and BUI more in the north. WRONG IF the DMC shift is "
+                   "uniform across bands. The AUC half rests on 19 northern "
+                   "fire patches and is read only beside the shift.",
+        independent="DMC day-length factors: Van Wagner's 46 N table vs the "
+                    "same table scaled by astronomical day length at the "
+                    "patch latitude over that at 46 N (our construction)",
+        dependent="DMC and BUI shift by latitude band; between-patch AUC per "
+                  "band",
+        conclusion="Whether the fixed 46 N day length (gap G5) costs CFFDRS "
+                   "skill where Canada burns most.",
+        state="NEEDS_CODE",
+        blocker="P3 code",
+        gap="G5 day-length tabulated for ~46 N",
+        note="cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only "
+             "changes the factors at or south of 30 N, so it is a no-op for "
+             "every patch here. FWI2025's sunrise-to-sunset hourly DMC changes "
+             "far more than day length and may not feed FBP1992. DC's monthly "
+             "factor is a seasonal adjustment, not a day length, and is left.",
+    ),
+    Experiment(
+        "E-51", "Operational start-up (R0)", "CFFDRS gaps",
+        hypothesis="The GLC-X-42 Appendix C-2 start-up (codes begin 3 days "
+                   "after ERA5-Land snow cover is gone, or after 3 days at or "
+                   "above 12 C at 13:00 where snow is absent) with an "
+                   "overwintered DC moves DC and DMC at D-1 more at >=60 N "
+                   "than at <55 N, compared with a flat 90-day spin-up from "
+                   "the default start values, and its effect on R0's between-"
+                   "patch AUC is larger in the north. WRONG IF the code shift "
+                   "does not grow with latitude. This is E-18's mechanism "
+                   "under the operational rule; E-18's imagery arm is P6.",
+        independent="start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / "
+                    "DC 15 vs Appendix C-2 start-up with overwintered DC "
+                    "(cffdrs coefficients a = b = 0.75)",
+        dependent="DC and DMC shift at D-1 by latitude band; between-patch "
+                  "AUC per band",
+        conclusion="How much the operational start-up matters before imagery "
+                   "tries to improve on it (G4).",
+        state="NEEDS_CODE",
+        blocker="P3 code",
+        gap="G4 snow-off keyed by regional rule",
+    ),
+    Experiment(
+        "E-52", "Weather source: station vs ERA5 (R0)", "CFFDRS mirror",
+        hypothesis="The nearest CWFIS station's reported codes at D-1 rank fire "
+                   "above non-fire patches at least as well as ERA5-Land at "
+                   "13:00 LDT (they are what CFFDRS actually runs on), and the "
+                   "ERA5-to-station disagreement in the codes grows with "
+                   "distance to the station. WRONG IF the disagreement is flat "
+                   "with distance: E-17's mechanism (weather error grows away "
+                   "from stations) would then have no support in the codes.",
+        independent="weather source for the same patches and date: ERA5-Land "
+                    "at the patch centre vs the nearest CWFIS station's "
+                    "reported observation and codes",
+        dependent="between-patch AUC per code and source; |ERA5 - station| per "
+                  "code against station distance (Spearman)",
+        conclusion="How far the reanalysis we use stands from operational "
+                   "CFFDRS input, and whether station distance is a real "
+                   "stratifier for E-17.",
+        state="NEEDS_CODE",
+        blocker="P3 code: stations.py; the 2010s station file for the 2019 "
+                "fires is not held",
+        gap="G3 station density",
+    ),
+    Experiment(
+        "E-53", "Weather staleness under R0", "CFFDRS gaps",
+        hypothesis="R0's between-patch AUC decays with the age of the weather "
+                   "(D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest "
+                   "for DC and BUI. WRONG IF the fast codes do not lose more "
+                   "than the slow ones by D-7. This is E-20's mechanism without "
+                   "learning: the curve E-20's learned arms are compared with.",
+        independent="weather age at scoring: 1, 2, 3, 7 days before D",
+        dependent="between-patch AUC per code against weather age",
+        conclusion="How stale CFFDRS's own inputs can get -- the bar for a "
+                   "weather-dependent onboard product (A-29 rule 2).",
+        state="NEEDS_CODE",
+        blocker="P3 code",
+        gap="G7 CFFDRS assumes same-day observations",
     ),
 )
 

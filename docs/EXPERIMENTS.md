@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-48 experiments. **20 can run today** on data already packed and staged.
+53 experiments. **20 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -18,7 +18,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 |---|---|---|---|
 | **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
 | **Partial result** | 9 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33 |
-| **Needs code** | 7 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-43 |
+| **Needs code** | 12 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-43, E-49, E-50, E-51, E-52, E-53 |
 | **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
 | **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -46,6 +46,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-45** | Ignition slot value | Closure, green-up and fuel-type slots improve ignition ranking. WRONG IF the shuffled twins gain as much. | slot sources on the ignition target | paired AUC change | Needs new data | *none yet* |
 | **E-46** | Band and index decision | The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence. | per-slot nested rankings weighted by slot value (A-29) | the chosen band and index sets, with their margins | Needs a pack | *none yet* |
 | **E-47** | Architecture decision | A tier2-class model is within one SE of the best preset at the chosen bands. WRONG IF only tier3 or larger reaches it. | model preset, R2 vs R4 form | paired skill at the chosen bands; the onboard/ground split | Needs a pack | *none yet* |
+| **E-49** | Dating the weather (R0) | Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI. | weather design, as a chain on the same patches: legacy -> dated (daily aggregates, flat spin-up) -> dated at 13:00 LDT -> dated with the Appendix C-2 start-up and overwintered DC (the P3 design) | between-patch AUC and paired fire-vs-own-confuser win rate per FWI code; within-patch HFI AUC, reported | Needs code | *none yet* |
+| **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Needs code | *none yet* |
 
 ### Band selection
 
@@ -95,6 +97,9 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
 | **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Needs a pack | `train_ecology.sh` |
+| **E-50** | Latitude-correct day length (R0) | Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift. | DMC day-length factors: Van Wagner's 46 N table vs the same table scaled by astronomical day length at the patch latitude over that at 46 N (our construction) | DMC and BUI shift by latitude band; between-patch AUC per band | Needs code | *none yet* |
+| **E-51** | Operational start-up (R0) | The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6. | start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / DC 15 vs Appendix C-2 start-up with overwintered DC (cffdrs coefficients a = b = 0.75) | DC and DMC shift at D-1 by latitude band; between-patch AUC per band | Needs code | *none yet* |
+| **E-53** | Weather staleness under R0 | R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with. | weather age at scoring: 1, 2, 3, 7 days before D | between-patch AUC per code against weather age | Needs code | *none yet* |
 
 ### Hyperspectral
 
@@ -210,7 +215,7 @@ The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
 
 Whether the imager should own the leaf-state switch FBP applies to aspen and mixedwood.
 
-*Blocked on:* greenup.py is not written; CWFIS green-up 2020-2023 is held, 2019 is not published
+*Blocked on:* the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is held, 2019 is not published
 
 **E-41 — Spread R0 (CFSDS)**
 
@@ -259,6 +264,24 @@ The CubeSat's bands and indices.
 The onboard model.
 
 *Blocked on:* E-46
+
+**E-49 — Dating the weather (R0)**
+
+*Hypothesis:* Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI.
+
+Whether the legacy design flattered or hid CFFDRS, and what each design step moves -- the baseline every later delta is read against.
+
+*Blocked on:* P3 code: fire_dates.py, the 13:00 LDT ERA5 fetch, start-up and overwintering in fwi.py
+
+**E-52 — Weather source: station vs ERA5 (R0)**
+
+*Hypothesis:* The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes.
+
+How far the reanalysis we use stands from operational CFFDRS input, and whether station distance is a real stratifier for E-17.
+
+*Blocked on:* P3 code: stations.py; the 2010s station file for the 2019 fires is not held
+
+*CFFDRS gap:* G3 station density
 
 ### Band selection
 
@@ -438,7 +461,7 @@ CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel
 
 Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is frozen and snow-covered, so the recursion accumulates weeks of spurious drying and the error scales with latitude. Then it tests whether a per-pixel snow-off date beats the regional rule.
 
-*Blocked on:* an Earth Engine NDSI reduction over the S2 collection; no new imagery
+*Blocked on:* an Earth Engine NDSI reduction over the S2 collection; no new imagery. Moved to P6 with the other imagery estimators (James, 2026-10-24); the operational-rule half is E-51 (P3)
 
 *CFFDRS gap:* G4 snow-off keyed by regional rule
 
@@ -483,6 +506,38 @@ FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, ins
 THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome per patch, so it has orders of magnitude more signal per scene than the fire arm and measures what the bands actually retrieve rather than what correlates with ignition.
 
 *Blocked on:* 279 patches on disk, never tiled or packed; needs a pack and a second transfer
+
+**E-50 — Latitude-correct day length (R0)**
+
+*Hypothesis:* Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift.
+
+Whether the fixed 46 N day length (gap G5) costs CFFDRS skill where Canada burns most.
+
+*Note:* cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only changes the factors at or south of 30 N, so it is a no-op for every patch here. FWI2025's sunrise-to-sunset hourly DMC changes far more than day length and may not feed FBP1992. DC's monthly factor is a seasonal adjustment, not a day length, and is left.
+
+*Blocked on:* P3 code
+
+*CFFDRS gap:* G5 day-length tabulated for ~46 N
+
+**E-51 — Operational start-up (R0)**
+
+*Hypothesis:* The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6.
+
+How much the operational start-up matters before imagery tries to improve on it (G4).
+
+*Blocked on:* P3 code
+
+*CFFDRS gap:* G4 snow-off keyed by regional rule
+
+**E-53 — Weather staleness under R0**
+
+*Hypothesis:* R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with.
+
+How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard product (A-29 rule 2).
+
+*Blocked on:* P3 code
+
+*CFFDRS gap:* G7 CFFDRS assumes same-day observations
 
 ### Hyperspectral
 
