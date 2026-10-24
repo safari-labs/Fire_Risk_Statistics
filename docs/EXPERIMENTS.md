@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-53 experiments. **20 can run today** on data already packed and staged.
+53 experiments. **26 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -17,8 +17,8 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 | State | Count | What it means | Experiments |
 |---|---|---|---|
 | **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
-| **Partial result** | 9 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33 |
-| **Needs code** | 12 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-43, E-49, E-50, E-51, E-52, E-53 |
+| **Partial result** | 15 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53 |
+| **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
 | **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
 | **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -46,8 +46,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-45** | Ignition slot value | Closure, green-up and fuel-type slots improve ignition ranking. WRONG IF the shuffled twins gain as much. | slot sources on the ignition target | paired AUC change | Needs new data | *none yet* |
 | **E-46** | Band and index decision | The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence. | per-slot nested rankings weighted by slot value (A-29) | the chosen band and index sets, with their margins | Needs a pack | *none yet* |
 | **E-47** | Architecture decision | A tier2-class model is within one SE of the best preset at the chosen bands. WRONG IF only tier3 or larger reaches it. | model preset, R2 vs R4 form | paired skill at the chosen bands; the onboard/ground split | Needs a pack | *none yet* |
-| **E-49** | Dating the weather (R0) | Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI. | weather design, as a chain on the same patches: legacy -> dated (daily aggregates, flat spin-up) -> dated at 13:00 LDT -> dated with the Appendix C-2 start-up and overwintered DC (the P3 design) | between-patch AUC and paired fire-vs-own-confuser win rate per FWI code; within-patch HFI AUC, reported | Needs code | *none yet* |
-| **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Needs code | *none yet* |
+| **E-49** | Dating the weather (R0) | Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI. | weather design, as a chain on the same patches: legacy -> dated (daily aggregates, flat spin-up) -> dated at 13:00 LDT -> dated with the Appendix C-2 start-up and overwintered DC (the P3 design) | between-patch AUC and paired fire-vs-own-confuser win rate per FWI code; within-patch HFI AUC, reported | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 
 ### Band selection
 
@@ -69,7 +69,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Needs new data | *none yet* |
 | **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Partial result | `sweep_axes.sh SETS=neg` |
 | **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `sweep_axes.sh SETS=cond` |
-| **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Needs code | *none yet* |
+| **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 
 ### Index baselines
 
@@ -97,9 +97,9 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
 | **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Needs a pack | `train_ecology.sh` |
-| **E-50** | Latitude-correct day length (R0) | Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift. | DMC day-length factors: Van Wagner's 46 N table vs the same table scaled by astronomical day length at the patch latitude over that at 46 N (our construction) | DMC and BUI shift by latitude band; between-patch AUC per band | Needs code | *none yet* |
-| **E-51** | Operational start-up (R0) | The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6. | start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / DC 15 vs Appendix C-2 start-up with overwintered DC (cffdrs coefficients a = b = 0.75) | DC and DMC shift at D-1 by latitude band; between-patch AUC per band | Needs code | *none yet* |
-| **E-53** | Weather staleness under R0 | R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with. | weather age at scoring: 1, 2, 3, 7 days before D | between-patch AUC per code against weather age | Needs code | *none yet* |
+| **E-50** | Latitude-correct day length (R0) | Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift. | DMC day-length factors: Van Wagner's 46 N table vs the same table scaled by astronomical day length at the patch latitude over that at 46 N (our construction) | DMC and BUI shift by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-51** | Operational start-up (R0) | The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6. | start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / DC 15 vs Appendix C-2 start-up with overwintered DC (cffdrs coefficients a = b = 0.75) | DC and DMC shift at D-1 by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-53** | Weather staleness under R0 | R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with. | weather age at scoring: 1, 2, 3, 7 days before D | between-patch AUC per code against weather age | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 
 ### Hyperspectral
 
@@ -139,7 +139,7 @@ The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit
 
 The non-learned reference every imagery slot is measured against -- CFFDRS itself, not a model trained on its inputs.
 
-*Note:* P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 on CWFIS 2019; half that margin is water and non-fuel (land only: 0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; fire beats its own confuser on DC in 88 % of 68 pairs. P(sustained flaming) is ~0.5 within patches: NBAC is not an ignition outcome (Stage C is).
+*Note:* P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 on CWFIS 2019; half that margin is water and non-fuel (land only: 0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; fire beats its own confuser on DC in 88 % of 68 pairs. P(sustained flaming) is ~0.5 within patches: NBAC is not an ignition outcome (Stage C is). P3, dated design: SUPPORTED. Within HFI 0.681 (SCANFI), dated minus legacy +0.005 [-0.002, +0.012]; between: patch-mean HFI 0.863, BUI 0.878, FWI 0.841.
 
 *Blocked on:* legacy 30-June design only; P3 re-dates the weather to each fire's start
 
@@ -215,6 +215,8 @@ The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
 
 Whether the imager should own the leaf-state switch FBP applies to aspen and mixedwood.
 
+*Note:* P3: the CWFIS side is built (greenup.py); leaf state on D from the product for 191 patches, climatology for 37.
+
 *Blocked on:* the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is held, 2019 is not published
 
 **E-41 — Spread R0 (CFSDS)**
@@ -271,7 +273,9 @@ The onboard model.
 
 Whether the legacy design flattered or hid CFFDRS, and what each design step moves -- the baseline every later delta is read against.
 
-*Blocked on:* P3 code: fire_dates.py, the 13:00 LDT ERA5 fetch, start-up and overwintering in fwi.py
+*Note:* P3 (docs/results/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 -> 0.799, ISI 0.701 -> 0.781, but BUI 0.765 -> 0.878 and DC 0.828 -> 0.830. Year alone scores 0.87, and within a year the fast codes do not gain (FFMC 0.730 -> 0.717) while the slow ones do (DMC 0.673 -> 0.839, BUI 0.691 -> 0.845, DC 0.743 -> 0.827). Dating helps through the slow codes; the prediction had them backwards.
+
+*Blocked on:* needs the same chain on the frozen test set (P10)
 
 **E-52 — Weather source: station vs ERA5 (R0)**
 
@@ -279,7 +283,9 @@ Whether the legacy design flattered or hid CFFDRS, and what each design step mov
 
 How far the reanalysis we use stands from operational CFFDRS input, and whether station distance is a real stratifier for E-17.
 
-*Blocked on:* P3 code: stations.py; the 2010s station file for the 2019 fires is not held
+*Note:* P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC 0.78 vs 0.83.
+
+*Blocked on:* 2019 station file now held; needs the frozen test set (P10)
 
 *CFFDRS gap:* G3 station density
 
@@ -385,7 +391,9 @@ Conditioning on ignition removes the component a reflectance spectrum structural
 
 Guards the fire-date design (A-24).
 
-*Blocked on:* pseudo-dates for negatives are not written (fire dates are)
+*Note:* P3 (docs/results/p3_dated): SUPPORTED. Day of year 0.55 [0.50, 0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the year (0.87), not the pseudo-dates.
+
+*Blocked on:* the learned date-only classifier waits for P5 (training is Narval only)
 
 ### Index baselines
 
@@ -449,7 +457,7 @@ NOTHING. fmc_measured is read in four places and written in none, so all three a
 
 CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel moisture is the integral of weather, so satellite fuel state should be worth most where the weather grid is weakest -- the north, which is also where most of the area burns.
 
-*Note:* Measured 2026-10-23: fire patches sit a median 37 km from the nearest reporting CWFIS station (IQR 23-63, max 191); terciles at 30 and 54 km. Provincial agency stations are not in the CWFIS export, so true density is higher than this says.
+*Note:* Measured 2026-10-23: fire patches sit a median 37 km from the nearest reporting CWFIS station (IQR 23-63, max 191); terciles at 30 and 54 km. Provincial agency stations are not in the CWFIS export, so true density is higher than this says. P3 (E-52): ERA5 vs station disagreement does not grow with distance (rho about 0), so the premise is AT RISK before the imagery increment is measured.
 
 *Blocked on:* station data now held (CWFIS fwi_obs: 2020s daily FWI with coordinates, station list); stations.py and the stratified readout are not written, and 2019 fires need the 2010s file
 
@@ -460,6 +468,8 @@ CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel
 *Hypothesis:* Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude.
 
 Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is frozen and snow-covered, so the recursion accumulates weeks of spurious drying and the error scales with latitude. Then it tests whether a per-pixel snow-off date beats the regional rule.
+
+*Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix.
 
 *Blocked on:* an Earth Engine NDSI reduction over the S2 collection; no new imagery. Moved to P6 with the other imagery estimators (James, 2026-10-24); the operational-rule half is E-51 (P3)
 
@@ -481,7 +491,7 @@ DMC and DC day-length factors are tabulated for ~46 N while Canada spans 42-83. 
 
 Every FWI code is defined on a same-day noon observation and a daily uplink cannot supply one. The input drift is already measured (DC 8.2% over three days against ISI's 89.9%) and fwi.py reasons from it to a recommendation -- BUI best, FWI worst. Drift in a feature is not loss in a prediction, and this measures the half nobody has.
 
-*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer.
+*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04.
 
 *Blocked on:* lagged FWI sidecars: an ERA5 pass over data already held, then a repack
 
@@ -493,7 +503,7 @@ Every FWI code is defined on a same-day noon observation and a daily uplink cann
 
 FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, insects, fire and regrowth. The slope is the estimator because at gap 0 our estimate is a noisy copy of its own training target and would lose on noise alone.
 
-*Note:* P2 (docs/results/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25).
+*Note:* P2 (docs/results/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade.
 
 *Blocked on:* the refreshed-estimate half needs E-22; the 2005 SCANFI step and 2010 for half the fires are still being fetched
 
@@ -513,9 +523,9 @@ THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome 
 
 Whether the fixed 46 N day length (gap G5) costs CFFDRS skill where Canada burns most.
 
-*Note:* cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only changes the factors at or south of 30 N, so it is a no-op for every patch here. FWI2025's sunrise-to-sunset hourly DMC changes far more than day length and may not feed FBP1992. DC's monthly factor is a seasonal adjustment, not a day length, and is left.
+*Note:* cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only changes the factors at or south of 30 N, so it is a no-op for every patch here. FWI2025's sunrise-to-sunset hourly DMC changes far more than day length and may not feed FBP1992. DC's monthly factor is a seasonal adjustment, not a day length, and is left. P3 (docs/results/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / +6.4 by band; AUC moves by 0.006 or less: a calibration gap, not a skill gap, under R0.
 
-*Blocked on:* P3 code
+*Blocked on:* needs the frozen test set (P10)
 
 *CFFDRS gap:* G5 day-length tabulated for ~46 N
 
@@ -525,7 +535,9 @@ Whether the fixed 46 N day length (gap G5) costs CFFDRS skill where Canada burns
 
 How much the operational start-up matters before imagery tries to improve on it (G4).
 
-*Blocked on:* P3 code
+*Note:* P3 (docs/results/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 by band (grows north), DC AUC 0.77 -> 0.91 at >=60 N (19 fires); DMC shift -1.3 / -2.0 / -1.4 (flat).
+
+*Blocked on:* needs the frozen test set (P10)
 
 *CFFDRS gap:* G4 snow-off keyed by regional rule
 
@@ -535,7 +547,9 @@ How much the operational start-up matters before imagery tries to improve on it 
 
 How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard product (A-29 rule 2).
 
-*Blocked on:* P3 code
+*Note:* P3 (docs/results/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC -0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 and DMC -0.12, as fast as FFMC.
+
+*Blocked on:* needs the frozen test set (P10)
 
 *CFFDRS gap:* G7 CFFDRS assumes same-day observations
 
@@ -645,6 +659,12 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-51** | Operational start-up (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-52** | Weather source: station vs ERA5 (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-53** | Weather staleness under R0 | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

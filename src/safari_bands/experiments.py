@@ -527,9 +527,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "readout are not written, and 2019 fires need the 2010s file",
         gap="G3 station density",
         note="Measured 2026-10-23: fire patches sit a median 37 km from the "
-             "nearest reporting CWFIS station (IQR 23-63, max 191); terciles "
-             "at 30 and 54 km. Provincial agency stations are not in the CWFIS "
-             "export, so true density is higher than this says.",
+             "nearest reporting CWFIS station (IQR 23-63, max 191); terciles at "
+             "30 and 54 km. Provincial agency stations are not in the CWFIS "
+             "export, so true density is higher than this says. P3 (E-52): ERA5 "
+             "vs station disagreement does not grow with distance (rho about "
+             "0), so the premise is AT RISK before the imagery increment is "
+             "measured.",
     ),
     Experiment(
         "E-18", "Snow-off startup", "CFFDRS gaps",
@@ -552,6 +555,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "new imagery. Moved to P6 with the other imagery estimators "
                 "(James, 2026-10-24); the operational-rule half is E-51 (P3)",
         gap="G4 snow-off keyed by regional rule",
+        note="P3 (E-51): the operational start-up moves DC by +38 at >=60 N and "
+             "lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is "
+             "the error an S2 snow-off date could fix.",
     ),
     Experiment(
         "E-19", "Latitude-banded weather", "CFFDRS gaps",
@@ -602,7 +608,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "then a repack",
         gap="G7 CFFDRS assumes same-day observations",
         note="Train once, score at each lag: one model, five scores. The "
-             "leakage guard makes an earlier target date strictly safer.",
+             "leakage guard makes an earlier target date strictly safer. P3 "
+             "(E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to "
+             "D-7 with ERA5, DC and BUI about 0.03-0.04.",
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
@@ -627,12 +635,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="the refreshed-estimate half needs E-22; the 2005 SCANFI step "
                 "and 2010 for half the fires are still being fetched",
         gap="G2 fuel-type layer is a fixed vintage",
-        note="P2 (docs/results/p2_r0): inventory half done under R0. Within-"
-             "patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, "
-             "+0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No "
-             "staleness cost to recover on this sample, so the prediction is at "
-             "risk before E-22 runs. Pre-fire steps only: the 2020 step already "
-             "shows the 2019-2020 fires (A-25).",
+        note="P2 (docs/results/p2_r0): inventory half done under R0. "
+             "Within-patch HFI AUC moves -0.005 per decade of SCANFI age "
+             "[-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 "
+             "y). No staleness cost to recover on this sample, so the "
+             "prediction is at risk before E-22 runs. Pre-fire steps only: the "
+             "2020 step already shows the 2019-2020 fires (A-25). P3, dated "
+             "design: -0.009 per decade [-0.017, +0.001]; a cost of age of at "
+             "most about 0.02 AUC per decade.",
     ),
     Experiment(
         "E-22", "Ecology arm", "CFFDRS gaps",
@@ -877,7 +887,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; "
              "fire beats its own confuser on DC in 88 % of 68 pairs. "
              "P(sustained flaming) is ~0.5 within patches: NBAC is not an "
-             "ignition outcome (Stage C is).",
+             "ignition outcome (Stage C is). P3, dated design: SUPPORTED. "
+             "Within HFI 0.681 (SCANFI), dated minus legacy +0.005 [-0.002, "
+             "+0.012]; between: patch-mean HFI 0.863, BUI 0.878, FWI 0.841.",
         tags=("primary",),
     ),
     Experiment(
@@ -996,6 +1008,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 "
                 "builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is "
                 "held, 2019 is not published",
+        note="P3: the CWFIS side is built (greenup.py); leaf state on D from "
+             "the product for 191 patches, climatology for 37.",
     ),
     Experiment(
         "E-41", "Spread R0 (CFSDS)", "CFFDRS mirror",
@@ -1028,9 +1042,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="date features only (day-of-year sin/cos, latitude)",
         dependent="between-patch AUC",
         conclusion="Guards the fire-date design (A-24).",
-        state="NEEDS_CODE",
-        blocker="pseudo-dates for negatives are not written (fire dates are)",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="the learned date-only classifier waits for P5 (training is Narval only)",
         tags=("control",),
+        note="P3 (docs/results/p3_dated): SUPPORTED. Day of year 0.55 [0.50, "
+             "0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the "
+             "year (0.87), not the pseudo-dates.",
     ),
     Experiment(
         "E-44", "Ignition R0", "CFFDRS mirror",
@@ -1110,9 +1128,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the legacy design flattered or hid CFFDRS, and what "
                    "each design step moves -- the baseline every later delta "
                    "is read against.",
-        state="NEEDS_CODE",
-        blocker="P3 code: fire_dates.py, the 13:00 LDT ERA5 fetch, start-up "
-                "and overwintering in fwi.py",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="needs the same chain on the frozen test set (P10)",
+        note="P3 (docs/results/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 "
+             "-> 0.799, ISI 0.701 -> 0.781, but BUI 0.765 -> 0.878 and DC 0.828 "
+             "-> 0.830. Year alone scores 0.87, and within a year the fast "
+             "codes do not gain (FFMC 0.730 -> 0.717) while the slow ones do "
+             "(DMC 0.673 -> 0.839, BUI 0.691 -> 0.845, DC 0.743 -> 0.827). "
+             "Dating helps through the slow codes; the prediction had them "
+             "backwards.",
     ),
     Experiment(
         "E-50", "Latitude-correct day length (R0)", "CFFDRS gaps",
@@ -1129,14 +1154,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "band",
         conclusion="Whether the fixed 46 N day length (gap G5) costs CFFDRS "
                    "skill where Canada burns most.",
-        state="NEEDS_CODE",
-        blocker="P3 code",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="needs the frozen test set (P10)",
         gap="G5 day-length tabulated for ~46 N",
         note="cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only "
              "changes the factors at or south of 30 N, so it is a no-op for "
              "every patch here. FWI2025's sunrise-to-sunset hourly DMC changes "
              "far more than day length and may not feed FBP1992. DC's monthly "
-             "factor is a seasonal adjustment, not a day length, and is left.",
+             "factor is a seasonal adjustment, not a day length, and is left. "
+             "P3 (docs/results/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / "
+             "+6.4 by band; AUC moves by 0.006 or less: a calibration gap, not "
+             "a skill gap, under R0.",
     ),
     Experiment(
         "E-51", "Operational start-up (R0)", "CFFDRS gaps",
@@ -1156,9 +1185,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "AUC per band",
         conclusion="How much the operational start-up matters before imagery "
                    "tries to improve on it (G4).",
-        state="NEEDS_CODE",
-        blocker="P3 code",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="needs the frozen test set (P10)",
         gap="G4 snow-off keyed by regional rule",
+        note="P3 (docs/results/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 "
+             "by band (grows north), DC AUC 0.77 -> 0.91 at >=60 N (19 fires); "
+             "DMC shift -1.3 / -2.0 / -1.4 (flat).",
     ),
     Experiment(
         "E-52", "Weather source: station vs ERA5 (R0)", "CFFDRS mirror",
@@ -1177,10 +1210,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="How far the reanalysis we use stands from operational "
                    "CFFDRS input, and whether station distance is a real "
                    "stratifier for E-17.",
-        state="NEEDS_CODE",
-        blocker="P3 code: stations.py; the 2010s station file for the 2019 "
-                "fires is not held",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="2019 station file now held; needs the frozen test set (P10)",
         gap="G3 station density",
+        note="P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, "
+             "distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 "
+             "km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC "
+             "0.78 vs 0.83.",
     ),
     Experiment(
         "E-53", "Weather staleness under R0", "CFFDRS gaps",
@@ -1193,9 +1230,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="between-patch AUC per code against weather age",
         conclusion="How stale CFFDRS's own inputs can get -- the bar for a "
                    "weather-dependent onboard product (A-29 rule 2).",
-        state="NEEDS_CODE",
-        blocker="P3 code",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
+        blocker="needs the frozen test set (P10)",
         gap="G7 CFFDRS assumes same-day observations",
+        note="P3 (docs/results/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC "
+             "-0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 "
+             "and DMC -0.12, as fast as FFMC.",
     ),
 )
 

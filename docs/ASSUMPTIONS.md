@@ -746,9 +746,10 @@ Canadian sites.
 
 ## A-24 — Fire dates come from NBAC; negatives get matched pseudo-dates
 
-**What we assume:** each fire patch's fire starts on the hotspot start date
-(`HS_SDATE`) of the NBAC polygon covering most of it, falling back to the
-agency date (`AG_SDATE`); a confuser takes the start day-of-year of the fire it
+**What we assume:** each fire patch's fire starts on the EARLIEST of the hotspot
+start (`HS_SDATE`), the agency start (`AG_SDATE`) and the start of any NBAC
+polygon overlapping it (amended 2026-10-24, James; was `HS_SDATE` first; see
+A-32); a confuser takes the start day-of-year of the fire it
 precedes, in its own year; other negatives draw a day-of-year from the
 start-date distribution of their latitude band, seeded by the stem.
 
@@ -945,3 +946,38 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **A-11 comparison arm.** The same post-fire concern applies, so its non-treed channels are restricted to water.
 
 **Leaf state for the legacy R0.** The legacy R0 uses 30-June weather (A-24), so leaf state is "green": D-1/2 resolves to D-2, M-1/2 to M-2, and an unresolved O-1 to O-1b. Codes a layer names explicitly (D-1, M-1 at 15 or 25 %) keep their name. P3 replaces this with the green-up date.
+
+---
+
+## A-32: The dated design, which supplies P3's weather, start-up and leaf state
+
+**Assumption.** From P3 on, each patch is scored on its own date D (A-24), with inputs built the way operational CFFDRS builds them. The P3 decisions were made by James on 2026-10-24.
+
+- **Fire date.** D is the earliest of NBAC's `HS_SDATE`, its `AG_SDATE`, and the start of any other NBAC polygon overlapping the patch. This amends A-24, which used `HS_SDATE` first. An earlier D can only make every input more strictly pre-fire. Confusers take their target fire's day of year in their own year. Unburned patches, and the 13 confusers with no target polygon, draw a day of year from the development fires in their latitude band (<55, 55–60, ≥60 °N), seeded by the stem. Test-group fires are excluded from that pool.
+- **Weather is read on D−1**, from ERA5-Land *hourly* at 13:00 LDT:
+  - **Observation time.** 13:00 LDT equals 12:00 LST, the FWI1987 observation time. The UTC hour uses the nominal standard zone round(lon/15). Across our patches this sits within an hour of the legal zone.
+  - **Variables.** Temperature, RH (Magnus, over water) and 10 m wind speed and direction at that hour.
+  - **Rain** is the 24 h ending then. It comes from ERA5-Land's accumulated `total_precipitation` as acc(d, h) + acc(d, 00) − acc(d−1, h), checked against `total_precipitation_hourly`.
+  - **Previous scheme.** The pre-P3 daily-aggregate scheme (daily maximum temperature, daily-mean dewpoint and wind, UTC-day rain) is kept as the variant `daily_flat`.
+- **Start-up (GLC-X-42 Appendix C-2), operationalised:**
+  - A day is snow-covered when ERA5-Land snow cover is at least 50 %.
+  - **Snowy winters.** If any day from 1 January to 1 March is snow-covered, the season starts on the third consecutive snow-free day on or after 1 March.
+  - **Snowless winters.** Otherwise it starts on the third consecutive day at or above 12 °C at 13:00.
+  - **Season end.** The season ends the day before the first run of three snow-covered days on or after 1 August, or on 31 December if there is none.
+  - **Previous season.** It starts from the default values (FFMC 85, DMC 6, DC 15).
+- **Overwintered DC** (Lawson & Armitage 2008) uses `cffdrs`'s coefficients, a = b = 0.75 (James).
+  - Winter precipitation is ERA5's total precipitation, rain plus the water equivalent of snow, from the fall end to the spring start.
+  - Overwintering often returns the floor of 15 after wet boreal winters. That is the formula working, not a missing value.
+- **Before the season starts.** If the season has not started by a lag day, the codes there are the start values, flagged `season_started = False`.
+- **Day length (E-50).** The variant scales Van Wagner's 46 °N DMC factors by astronomical day length at the patch latitude over that at 46 °N, mid-month. This is our construction:
+  - `cffdrs`'s `lat.adjust` only changes latitudes at or south of 30 °N.
+  - FWI2025's hourly sunrise-to-sunset DMC changes more than day length.
+- **Leaf state on D** comes from the CWFIS daily green-up product (1 km, 1 = green, held for 2020–2023), per pixel.
+  - **Fallback.** For 2019, or dates outside 1 April–31 October, each pixel takes the majority of its 2020–2023 values on the same calendar day, and is leafless outside that window.
+  - **FBP and ignition.** Green resolves D-1/2 to D-2, M-1/2 to M-2, O-1 to O-1b, and Beverly & Wotton grass to FC2.
+  - **FMC.** It is computed for day of year D.
+- **Second "cffdrs" weather source (E-52).** It is the nearest CWFIS station reporting all six codes on D−1 (2010s and 2020s exports), kept for every lag.
+  - Those codes are CWFIS's own, under each agency's start-up.
+  - Provincial agency stations are not in the export.
+  - **Distance cap.** A station more than 300 km away is not one CFFDRS would use for the patch. One 2018 confuser's nearest reporting station was in Nebraska, 1,062 km away. Such patches get no station weather. The median distance is 56 km (90th percentile 132 km).
+- **Imagery estimators move to P6.** Sentinel-2 snow-off and green-up (E-18's and E-40's imagery arms) go to P6, so P3 uses no imagery (James).

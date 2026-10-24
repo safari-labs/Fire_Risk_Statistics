@@ -29,6 +29,7 @@ from safari_bands.experiments import by_id
 VERDICTS: dict[str, str] = {
     "SUPPORTED": "the registered prediction held",
     "REFUTED": "the registered prediction failed",
+    "MIXED": "part of the registered prediction held and part failed",
     "AT RISK": "the half that could run removes what the prediction needs",
     "PASS": "the check met its criterion",
     "FIXED": "the check failed, the cause was fixed, and it now passes",
@@ -279,6 +280,123 @@ PHASES: tuple[Phase, ...] = (
                          "80, FFMC 89 (paper: about 90 %, 90 %, 96 %).",
                   conclusion="The ignition branch runs on the published model "
                              "(A-30)."),
+        ),
+    ),
+    Phase(
+        "P3", "Dated design: dates, 13:00 LDT weather, start-up", "2026-10-24",
+        "p3_dated", "README.md",
+        "Dated every patch, rebuilt the weather the way CFFDRS defines it "
+        "(ERA5-Land at 13:00 LDT on D-1, Appendix C-2 start-up, overwintered "
+        "DC), read leaf state on D from the CWFIS green-up product, added the "
+        "nearest CWFIS station as a second weather source, and re-scored R0. "
+        "196 development patches (83 fire); the test groups were not read. "
+        "Predictions E-49 to E-53 were registered before any P3 number existed.",
+        (
+            Entry("E-49", "experiment", "REFUTED",
+                  result="Legacy -> dated: FFMC 0.695 -> 0.799 and ISI 0.701 -> "
+                         "0.781 (fast, up as predicted), but DC 0.828 -> 0.830 "
+                         "(flat) and BUI 0.765 -> 0.878 (slow, UP). Dating alone "
+                         "dropped DC to 0.777; the C-2 start-up restored it. "
+                         "Within a year the fast codes do not gain (FFMC 0.730 -> "
+                         "0.717) and the slow ones do (BUI 0.691 -> 0.845).",
+                  conclusion="Dating helps CFFDRS through the SLOW codes: within "
+                             "a year, D-1 DMC, BUI and DC separate fire from "
+                             "non-fire at 0.83-0.85. The fast codes' gain across "
+                             "years is the 2023 year effect. The prediction had "
+                             "the codes backwards."),
+            Entry("E-50", "experiment", "SUPPORTED",
+                  result="DMC shift +1.4 / +3.8 / +6.4 (<55 / 55-60 / >=60 N), "
+                         "CIs separate. Between-patch AUC moves by 0.006 or less "
+                         "in every band.",
+                  conclusion="The 46 N day length understates northern DMC by "
+                             "about 6 points at D-1, but correcting it does not "
+                             "change the ranking: under R0, G5 is a calibration "
+                             "gap, not a skill gap."),
+            Entry("E-51", "experiment", "MIXED",
+                  result="DC shift -19.8 / +30.1 / +38.4 by band (grows north); "
+                         "DMC -1.3 / -2.0 / -1.4 (flat). DC AUC, flat -> C-2: "
+                         "0.80 -> 0.80 (<55 N), 0.78 -> 0.82, 0.77 -> 0.91 "
+                         "(>=60 N, 19 fire patches).",
+                  conclusion="The operational start-up and overwintering move "
+                             "DC, most in the north, where they also add skill; "
+                             "DMC barely notices. Start-up is a live slot for "
+                             "the far north (E-18's imagery arm, P6)."),
+            Entry("E-52", "experiment", "REFUTED",
+                  result="|ERA5 - station| against station distance: rho -0.03 "
+                         "to +0.05 for every code, all CIs span 0 (195 patches, "
+                         "median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, "
+                         "BUI 0.87 vs 0.88, DC 0.78 vs 0.83. ERA5 runs lower "
+                         "(DC -77, BUI -15).",
+                  conclusion="ERA5 at 13:00 LDT ranks as well as the stations "
+                             "CFFDRS runs on (better for DC). Its error does not "
+                             "grow with distance, so E-17's mechanism finds no "
+                             "support in the codes."),
+            Entry("E-53", "experiment", "SUPPORTED",
+                  result="D-1 -> D-7 with ERA5: FFMC -0.10, ISI -0.11, DC -0.03, "
+                         "BUI -0.04. With the station: FFMC -0.09, ISI -0.08, "
+                         "DC -0.05, but BUI -0.11 and DMC -0.12.",
+                  conclusion="With ERA5 the fast codes lose about three times "
+                             "more skill in a week than the slow ones, so a "
+                             "week-old product can still carry DC and BUI. The "
+                             "station series' BUI decays as fast as FFMC: the "
+                             "ordering depends on the source."),
+            Entry("E-43", "experiment", "SUPPORTED",
+                  result="Day of year 0.55 [0.50, 0.59]; sin 0.45 and cos 0.45 "
+                         "[0.40, 0.50]; latitude 0.53 [0.46, 0.60]. Year alone: "
+                         "0.87 [0.81, 0.93].",
+                  conclusion="The pseudo-dates leave at most a small shortcut "
+                             "(about 0.05). The year, not the date design, is "
+                             "the confound; P3-C1 scores within years."),
+            Entry("E-32", "experiment", "SUPPORTED",
+                  result="Within fire patches HFI 0.681 (SCANFI), 0.622 (CWFIS "
+                         "2019): dated minus legacy +0.005 [-0.002, +0.012]. "
+                         "Between patches: patch-mean HFI 0.863, FWI 0.841, BUI "
+                         "0.878.",
+                  conclusion="Dated R0 is the reference from here on. Within-"
+                             "patch skill is insensitive to dating; between-"
+                             "patch skill is not."),
+            Entry("E-21", "experiment", "AT RISK",
+                  result="Dated design: -0.009 AUC per decade of SCANFI age "
+                         "[-0.017, +0.001] (legacy: -0.005).",
+                  conclusion="A cost of inventory age of at most about 0.02 AUC "
+                             "per decade: still too small for a refreshed fuel "
+                             "map to pay through recency alone."),
+            Entry("P3-C1", "control", "MEASURED",
+                  title="Year-stratified scoring",
+                  question="Is the between-patch weather skill only the 2023 "
+                           "year effect?",
+                  independent="pairs scored: every fire/non-fire pair vs pairs "
+                              "from the same year only",
+                  dependent="between-patch AUC per code, legacy and dated",
+                  result="Dated, within-year: DMC 0.84, BUI 0.85, DC 0.83, FWI "
+                         "0.81, FFMC 0.72, ISI 0.72 (721 pairs, mostly 2023; wide "
+                         "CIs). Legacy, within-year: 0.67-0.75.",
+                  conclusion="The slow codes' skill survives the year control; "
+                             "the fast codes' across-year gain does not."),
+            Entry("P3-C2", "check", "PASS",
+                  title="Overwintered DC and rain accumulation",
+                  question="Overwintered DC matches cffdrs::overwinter_drought_code; "
+                           "24 h rain from the accumulated ERA5 field equals the "
+                           "sum of hourly values.",
+                  independent="implementation vs cffdrs 1.9.2; accumulated vs "
+                              "hourly precipitation",
+                  dependent="relative error (35 DC cases); rain at a test day",
+                  result="DC to 1e-12 on all 35 cases. Rain over the 24 h ending "
+                         "19 UTC on 10 July 2021: 0.082 mm both ways.",
+                  conclusion="The start-up machinery runs on the reference "
+                             "equations and on correctly accumulated rain."),
+            Entry("P3-M1", "measurement", "MEASURED",
+                  title="Inputs as built",
+                  question="Where did each patch's date, leaf state and station "
+                           "come from?",
+                  independent="229 patches (fire, confuser, unburned)",
+                  dependent="date rule, leaf source, station distance, season state",
+                  result="Dates: 99 fire, 95 confuser, 35 pseudo. Leaf: 191 CWFIS "
+                         "product, 37 climatology. Station median 56 km (one "
+                         "beyond the 300 km cap). Season not started by D-1: 0 "
+                         "fires, 11 confusers, 4 unburned.",
+                  conclusion="Every fire has an observed date and leaf state; the "
+                             "start-up rule never left a fire un-started."),
         ),
     ),
 )

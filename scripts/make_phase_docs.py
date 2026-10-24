@@ -31,9 +31,10 @@ from safari_bands.phases import PHASES, VERDICTS, Phase, by_pid  # noqa: E402
 FIG_BG, CARD_BG, BOX_BG = "#0f1117", "#1a1d27", "#232735"
 SPINE, INK, INK_BRIGHT, MUTED = "#333344", "#cccccc", "#eeeeee", "#8b8b9a"
 VERDICT_COLOUR = {"SUPPORTED": "#199e70", "PASS": "#199e70", "REFUTED": "#e66767",
-                  "AT RISK": "#fab219", "FIXED": "#fab219", "MEASURED": "#3987e5",
+                  "AT RISK": "#fab219", "MIXED": "#fab219", "FIXED": "#fab219",
+                  "MEASURED": "#3987e5",
                   "PENDING": "#5a5f70"}
-VERDICT_INK = {"AT RISK": FIG_BG, "FIXED": FIG_BG}
+VERDICT_INK = {"AT RISK": FIG_BG, "FIXED": FIG_BG, "MIXED": FIG_BG}
 DPI = 150
 
 W = 15.0                       # sheet width, inches

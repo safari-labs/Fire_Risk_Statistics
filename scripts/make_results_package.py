@@ -520,7 +520,453 @@ def p2(run: Path, out: Path):
          "git": S["git"], "written": S["written"], "config": S["config"]}, indent=1))
 
 
-PHASES = {"P2": (p2, "p2_r0")}
+# ── P3 ──────────────────────────────────────────────────────────────────────
+
+CODE_LABEL = {"ffmc": "FFMC", "dmc": "DMC", "dc": "DC", "isi": "ISI", "bui": "BUI",
+              "fwi": "FWI"}
+#: E-49's prediction splits the codes: fast (FFMC, ISI) should gain, slow
+#: (DC, BUI) should lose. DMC and FWI are in between and predicted nothing.
+CODE_GROUP = {"ffmc": ("fast", BLUE), "isi": ("fast", BLUE), "dc": ("slow", ORANGE),
+              "bui": ("slow", ORANGE), "dmc": ("no prediction", MUTED),
+              "fwi": ("no prediction", MUTED)}
+CHAIN = [("legacy@1", "legacy\n30 June"), ("daily_flat@1", "D-1\ndaily\nflat"),
+         ("flat@1", "D-1\n13:00\nflat"), ("c2@1", "D-1\n13:00\nC-2")]
+BAND_COL = (BLUE, GREEN, AMBER)
+#: Latitude bands, as eval_cffdrs_reference.dated_analysis keys them.
+BANDS = ("<55 N", "55-60 N", ">=60 N")
+
+
+def p3_chain(W, out):
+    plt = _plt()
+    ch = W["E49_chain"]
+    fig, axes = plt.subplots(2, 3, figsize=(13.5, 7.6), sharey=True, facecolor=FIG_BG,
+                             gridspec_kw={"hspace": 0.6, "wspace": 0.12})
+    x = np.arange(len(CHAIN))
+    for ax, k in zip(axes.ravel(), CODE_LABEL, strict=True):
+        grp, col = CODE_GROUP[k]
+        m = [ch[c][k]["auc"] for c, _ in CHAIN]
+        lo = [ch[c][k]["ci"][0] for c, _ in CHAIN]
+        hi = [ch[c][k]["ci"][1] for c, _ in CHAIN]
+        ax.vlines(x, lo, hi, color=col, lw=2)
+        ax.plot(x, m, "-o", color=col, ms=7, mec=AX_BG, mew=2, lw=1.5)
+        for xi, mi in zip(x, m, strict=True):
+            ax.annotate(f"{mi:.2f}", (xi, mi), xytext=(9, 0), textcoords="offset points",
+                        color=INK, fontsize=7.5, va="center")
+        ax.axhline(0.5, color=MUTED, lw=1, ls=":")
+        ax.set_xticks(x, [lab for _, lab in CHAIN], fontsize=7)
+        ax.set_ylim(0.3, 1.0)
+        d = m[-1] - m[0]
+        _axes(ax, f"{CODE_LABEL[k]}  ({grp})   legacy -> dated: {d:+.2f}",
+              "", "between-patch AUC" if k in ("ffmc", "dc") else "")
+    handles = [plt.Line2D([], [], marker="o", color=c, label=lab, ms=7)
+               for lab, c in (("fast codes: predicted to GAIN", BLUE),
+                              ("slow codes: predicted to LOSE", ORANGE),
+                              ("no prediction", MUTED))]
+    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 1.0), ncol=3,
+               frameon=False, labelcolor=INK, fontsize=8.5)
+    fig.suptitle("E-49  Dating the weather: what each design step does to each code",
+                 color=INK_BRIGHT, x=0.01, y=1.04, ha="left", fontsize=12)
+    n = ch["c2@1"]["fwi"]
+    _caption(fig, f"Fire vs non-fire patches (n = {n['n_fire']} vs {n['n_nonfire']}), 95 % "
+             "fire/block-group bootstrap CI. Left to right: the pre-P3 design; the same "
+             "daily-aggregate weather read the day before each patch's date; 13:00 LDT "
+             "hourly weather with the same flat 90-day spin-up; and the operational Appendix "
+             "C-2 start-up with an overwintered DC. Registered prediction: fast codes rise, "
+             "slow codes fall.")
+    _save(fig, out, "chain.png")
+
+
+def p3_startup(W, out):
+    plt = _plt()
+    s51 = W["E51_startup"]["shift_c2_minus_flat"]
+    s50 = W["E50_daylength"]["shift_daylat_minus_c2"]
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.4), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.3})
+    panels = [(axes[0], s51["dc"], "E-51  DC: C-2 start-up minus flat spin-up"),
+              (axes[1], s51["dmc"], "E-51  DMC: C-2 start-up minus flat spin-up"),
+              (axes[2], s50["dmc"], "E-50  DMC: latitude day length minus 46 N")]
+    for ax, sh, title in panels:
+        for i, (bn, col) in enumerate(zip(BANDS, BAND_COL, strict=True)):
+            r = sh[bn]
+            ax.bar(i, r["mean"], color=col, width=0.6)
+            if r["ci"]:
+                ax.vlines(i, *r["ci"], color=INK_BRIGHT, lw=1.5)
+            ax.annotate(f"{r['mean']:+.1f}\nn={r['n']}", (i + 0.3, r["mean"] / 2),
+                        xytext=(4, 0), textcoords="offset points", ha="left", va="center",
+                        color=INK, fontsize=7.5)
+        ax.axhline(0, color=MUTED, lw=1)
+        ax.set_xticks(range(3), BANDS)
+        ax.set_xlim(-0.6, 2.9)
+        _axes(ax, title, "latitude band", "mean shift at D-1 (code units)")
+    fig.suptitle("Start-up and day length: do they matter more in the north?",
+                 color=INK_BRIGHT, x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Mean shift per patch at D-1 by latitude band, 95 % group-bootstrap CI; "
+             "measured on every development patch. Registered predictions: both shifts grow "
+             "with latitude (E-51: WRONG IF the start-up shift does not; E-50: WRONG IF the "
+             "day-length shift is uniform).")
+    _save(fig, out, "startup_daylength.png")
+
+
+def p3_station(W, out):
+    plt = _plt()
+    e = W["E52_station"]
+    pts = e["points"]
+    fig, axes = plt.subplots(1, 5, figsize=(17, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.32})
+    for ax, k in zip(axes[:4], ("ffmc", "dmc", "dc", "bui"), strict=True):
+        a = np.array([p[f"stn_{k}"] for p in pts])
+        b = np.array([p[f"era5_{k}"] for p in pts])
+        ax.scatter(a, b, s=12, color=BLUE, alpha=0.7, lw=0)
+        lo, hi = np.nanmin([a.min(), b.min()]), np.nanmax([a.max(), b.max()])
+        ax.plot([lo, hi], [lo, hi], color=MUTED, lw=0.8, ls=":")
+        bias = e["bias"][k]["mean_era5_minus_station"]
+        _axes(ax, f"{CODE_LABEL[k]}  (ERA5 - station {bias:+.1f})",
+              "nearest station, reported", "ERA5-Land 13:00 LDT, C-2")
+    ax = axes[4]
+    km = np.array([p["km"] for p in pts])
+    dd = np.abs(np.array([p["era5_dc"] - p["stn_dc"] for p in pts]))
+    ax.scatter(km, dd, s=12, color=ORANGE, alpha=0.7, lw=0)
+    r = e["disagreement_vs_distance"]["dc"]
+    _axes(ax, f"|DC difference| vs distance\nrho {r['rho']:+.2f} {_ci(r['ci'])}",
+          "distance to the station (km)", "|ERA5 - station| DC")
+    fig.suptitle(f"E-52  Reanalysis against the stations CFFDRS runs on  "
+                 f"({e['n_patches']} development patches with a reporting station on D-1)",
+                 color=INK_BRIGHT, x=0.01, y=1.06, ha="left", fontsize=12)
+    _caption(fig, "Each point a patch at D-1. Station codes are CWFIS's own, under each "
+             "agency's start-up; ERA5 codes are ours (A-32). Registered prediction: the "
+             "disagreement grows with distance (WRONG IF flat). Rank correlations per code "
+             "are in T-station.")
+    _save(fig, out, "station.png")
+
+
+def p3_staleness(W, out):
+    plt = _plt()
+    st = W["E53_staleness"]
+    lags = ["1", "2", "3", "7"]
+    fig, axes = plt.subplots(1, 6, figsize=(17, 3.6), sharey=True, facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.08})
+    for ax, k in zip(axes, CODE_LABEL, strict=True):
+        for src, col, lab in (("c2", BLUE, "ERA5"), ("station", GREEN, "station")):
+            m = [st[src][k][lag]["auc"] for lag in lags]
+            ci = [st[src][k][lag]["ci"] for lag in lags]
+            xs = [int(lag) for lag in lags]
+            ax.fill_between(xs, [c[0] for c in ci], [c[1] for c in ci], color=col, alpha=0.12, lw=0)
+            ax.plot(xs, m, "-o", color=col, ms=5, mec=AX_BG, mew=1.5, label=lab)
+        ax.axhline(0.5, color=MUTED, lw=1, ls=":")
+        ax.set_xticks([1, 2, 3, 7])
+        _axes(ax, f"{CODE_LABEL[k]}  ({CODE_GROUP[k][0]})", "days before D",
+              "between-patch AUC" if k == "ffmc" else "")
+    axes[0].legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    fig.suptitle("E-53  How stale can CFFDRS's own inputs get?", color=INK_BRIGHT,
+                 x=0.01, y=1.06, ha="left", fontsize=12)
+    _caption(fig, "Between-patch AUC of each code read 1, 2, 3 or 7 days before D, 95 % "
+             "group-bootstrap band. Registered prediction: the fast codes (FFMC, ISI) lose "
+             "more than the slow ones (DC, BUI) by D-7.")
+    _save(fig, out, "staleness.png")
+
+
+def p3_dates(W, out):
+    plt = _plt()
+    sd = W["start_dates"]
+    e43 = W["E43_date_only"]
+    fig, (a, b) = plt.subplots(1, 2, figsize=(13, 4.2), facecolor=FIG_BG,
+                               gridspec_kw={"wspace": 0.3, "width_ratios": (1.4, 1)})
+    bins = np.arange(90, 260, 7)
+    for kind, col in (("fire", ORANGE), ("confuser", BLUE), ("unburned", GREEN)):
+        d = [r["doy"] for r in sd if r["kind"] == kind]
+        a.hist(d, bins=bins, histtype="step", lw=2, color=col, label=f"{kind} (n={len(d)})")
+    a.axvline(181, color=MUTED, lw=1, ls=":")
+    a.annotate("legacy 30 June", (181, a.get_ylim()[1] * 0.92), xytext=(4, 0),
+               textcoords="offset points", color=MUTED, fontsize=8)
+    a.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper left")
+    _axes(a, "Each patch's date D (day of year)", "day of year", "patches")
+    names = list(e43)
+    ys = np.arange(len(names))[::-1]
+    for y, nme in zip(ys, names, strict=True):
+        r = e43[nme]
+        col = MUTED if "confound" in nme else BLUE
+        b.plot(r["ci"], [y, y], color=col, lw=2)
+        b.plot([r["auc"]], [y], "o", ms=7, color=col, mec=AX_BG, mew=2)
+        b.annotate(f"{r['auc']:.2f}", (r["auc"], y), xytext=(8, 6), textcoords="offset points",
+                   color=INK, fontsize=8)
+    b.axvline(0.5, color=MUTED, lw=1, ls=":")
+    b.set_yticks(ys, [nme.split(" (")[0] + (" (confound)" if "confound" in nme else "")
+                      for nme in names])
+    b.set_xlim(0.2, 1.0)
+    _axes(b, "E-43  Date-only control", "between-patch AUC (fire vs non-fire)")
+    fig.suptitle("Dates: fires, matched confusers and pseudo-dated negatives",
+                 color=INK_BRIGHT, x=0.01, y=1.05, ha="left", fontsize=12)
+    _caption(fig, "Left: D by patch kind (A-32). Right: each date feature alone as a score; "
+             "the registered prediction is about 0.5 for each. Year is shown as the known "
+             "confound (72 of 99 fires are 2023), not as a design feature.")
+    _save(fig, out, "dates.png")
+
+
+def p3_tiles(S, run, out):
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
+    plt = _plt()
+    stems = S["config"]["qual_stems"]
+    cols = [("nbac", "NBAC burned"), ("leaf", "leaf-on on D (CWFIS): green"),
+            ("scanfi_tree_prefire_fuel", "fuel: SCANFI pre-fire"),
+            ("scanfi_tree_prefire_hfi", "HFI: SCANFI, dated weather"),
+            ("cwfis_2019_hfi", "HFI: CWFIS 2019, dated weather")]
+    fam_of = {f: i for i, (_, fs, _) in enumerate(FAMILY) for f in fs}
+    fam_cmap = ListedColormap([c for _, _, c in FAMILY] + [AX_BG])
+    heat = LinearSegmentedColormap.from_list("heat", ["#241a17", "#8a3a1c", ORANGE, "#ffd2a6"])
+    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.4 * len(cols), 2.5 * len(stems)),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.2,
+                                                            "top": 0.86, "bottom": 0.04})
+    im = None
+    for r, stem in enumerate(stems):
+        z = np.load(run / "qual" / f"{stem}.npz")
+        for c, (k, lab) in enumerate(cols):
+            ax = axes[r, c]
+            ax.set_facecolor(AX_BG)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            if k not in z:
+                ax.text(0.5, 0.5, "not held", color=MUTED, ha="center", transform=ax.transAxes)
+                continue
+            a = z[k]
+            if k in ("nbac", "leaf"):
+                ax.imshow(a, cmap=ListedColormap([AX_BG, INK_BRIGHT if k == "nbac" else GREEN]),
+                          vmin=0, vmax=1, interpolation="nearest")
+            elif k.endswith("_fuel"):
+                idx = np.vectorize(lambda f: fam_of.get(f, len(FAMILY)))(a)
+                ax.imshow(idx, cmap=fam_cmap, vmin=-0.5, vmax=len(FAMILY) + 0.5,
+                          interpolation="nearest")
+            else:
+                im = ax.imshow(np.clip(a, 10, None), cmap=heat, norm=LogNorm(10, 30000),
+                               interpolation="nearest")
+            if r == 0:
+                ax.set_title(lab, color=INK, fontsize=8.5, loc="left")
+            if c == 0:
+                ax.set_ylabel(stem.replace("_fire", ""), color=INK, fontsize=7.5)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c, label=name) for name, _, c in FAMILY]
+    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 0.955), ncol=4,
+               frameon=False, labelcolor=INK, fontsize=8)
+    if im is not None:
+        cb = fig.colorbar(im, ax=axes[:, 3:], fraction=0.03, pad=0.01)
+        cb.set_label("head fire intensity (kW/m, log)", color=INK, fontsize=8)
+        cb.ax.tick_params(colors=INK, labelsize=7.5)
+    fig.suptitle("P3  The same seeded tiles under the dated design", color=INK_BRIGHT,
+                 x=0.01, y=0.99, ha="left", fontsize=12)
+    _caption(fig, "White = burned (NBAC). Green = deciduous leaf-on on D per the CWFIS "
+             "product (1 km), which switches D-1/D-2 and M-1/M-2 in FBP. HFI from each "
+             "patch's D-1 weather at 13:00 LDT with the C-2 start-up.", y=0.0)
+    _save(fig, out, "tiles.png")
+
+
+def _within_pairs(run_a: Path, run_b: Path, variants=("scanfi_tree_prefire", "cwfis_2019"),
+                  output="hfi", n_boot=4000, seed=0):
+    """Paired within-patch AUC, run A minus run B, same fire patches."""
+    import csv
+
+    def load(run):
+        d = {}
+        with (run / "per_patch.csv").open(encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                if r["kind"] == "fire" and r[f"auc_{output}"]:
+                    d[(r["stem"], r["variant"])] = (float(r[f"auc_{output}"]), r["group"])
+        return d
+    A, B = load(run_a), load(run_b)
+    rng = np.random.default_rng(seed)
+    out = []
+    for v in variants:
+        by = {}
+        for (s, vv), (a, g) in A.items():
+            if vv == v and (s, v) in B:
+                by.setdefault(g, []).append(a - B[(s, v)][0])
+        if not by:
+            continue
+        keys = sorted(by)
+        flat = np.array([x for k in keys for x in by[k]])
+        reps = [np.mean([x for i in rng.choice(len(keys), len(keys)) for x in by[keys[i]]])
+                for _ in range(n_boot)]
+        out.append({"inventory": v, "delta": float(flat.mean()),
+                    "ci": [float(np.percentile(reps, 2.5)), float(np.percentile(reps, 97.5))],
+                    "n": len(flat)})
+    return out
+
+
+def _year_stratified(run: Path, codes=("ffmc", "dmc", "dc", "isi", "bui", "fwi"),
+                     n_boot=2000, seed=0) -> dict:
+    """Between-patch AUC counting only fire/non-fire pairs from the SAME year:
+    the year confound (72 of 99 fires are 2023) removed by construction.
+    CI from resampling groups."""
+    import csv
+    rows = {}
+    with (run / "per_patch.csv").open(encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            rows[r["stem"]] = r
+    rows = list(rows.values())
+
+    def stat(rs, k):
+        num = den = 0.0
+        for yv in {r["year"] for r in rs}:
+            sub = [r for r in rs if r["year"] == yv]
+            pos = np.array([float(r[f"w_{k}"]) for r in sub if r["kind"] == "fire"])
+            neg = np.array([float(r[f"w_{k}"]) for r in sub if r["kind"] != "fire"])
+            if len(pos) and len(neg):
+                gt = (pos[:, None] > neg[None, :]).sum()
+                num += gt + 0.5 * (pos[:, None] == neg[None, :]).sum()
+                den += len(pos) * len(neg)
+        return (num / den if den else float("nan")), den
+
+    by = {}
+    for r in rows:
+        by.setdefault(r["group"], []).append(r)
+    keys = sorted(by)
+    rng = np.random.default_rng(seed)
+    picks = [rng.choice(len(keys), len(keys)) for _ in range(n_boot)]
+    out = {}
+    for k in codes:
+        a, n = stat(rows, k)
+        reps = [stat([r for i in pk for r in by[keys[i]]], k)[0] for pk in picks]
+        out[k] = {"auc": a, "pairs": int(n),
+                  "ci": [float(np.nanpercentile(reps, 2.5)), float(np.nanpercentile(reps, 97.5))]}
+    return out
+
+
+def p3_tables(S, W, out, legacy=None, station=None, run=None):
+    lines = ["# P3 tables: the dated design\n",
+             f"Development patches: {W['n_patches']} ({W['n_fire']} fire). Main design: "
+             f"{S['design']}.\n"]
+
+    rows = []
+    lines += ["## T-chain: E-49, between-patch AUC per design step\n",
+              "| code | " + " | ".join(lab.replace("\n", " ") for _, lab in CHAIN)
+              + " | dated - legacy | paired win rate, legacy -> dated |",
+              "|---" * (len(CHAIN) + 3) + "|"]
+    for k in CODE_LABEL:
+        cells = []
+        for c, _ in CHAIN:
+            r = W["E49_chain"][c][k]
+            cells.append(f"{r['auc']:.3f} {_ci(r['ci'])}")
+            rows.append({"code": k, "step": c, "auc": r["auc"], "ci_lo": r["ci"][0],
+                         "ci_hi": r["ci"][1], "paired_win_rate": r["win_rate"],
+                         "n_pairs": r["n_pairs"]})
+        d = W["E49_chain"]["c2@1"][k]["auc"] - W["E49_chain"]["legacy@1"][k]["auc"]
+        lines.append(f"| {CODE_LABEL[k]} ({CODE_GROUP[k][0]}) | " + " | ".join(cells)
+                     + f" | {d:+.3f} | {W['E49_chain']['legacy@1'][k]['win_rate']:.2f} -> "
+                     f"{W['E49_chain']['c2@1'][k]['win_rate']:.2f} |")
+    _csv(out / "T_chain.csv", rows)
+
+    if legacy is not None and run is not None:
+        yl, yd = _year_stratified(legacy), _year_stratified(run)
+        year_auc = next(v for n, v in W["E43_date_only"].items() if n.startswith("year"))["auc"]
+        lines += ["", "## T-year: the same comparison within each year (year confound removed)\n",
+                  "Only fire/non-fire pairs from the same year count; year alone separates "
+                  "the classes at AUC "
+                  f"{year_auc:.2f} "
+                  "across years. Within-year pairs: "
+                  f"{yd['ffmc']['pairs']}, most from 2023 (58 fire, 7 non-fire patches).\n",
+                  "| code | legacy, within-year | dated (C-2), within-year |", "|---|---|---|"]
+        for k in CODE_LABEL:
+            lines.append(f"| {CODE_LABEL[k]} | {yl[k]['auc']:.3f} {_ci(yl[k]['ci'])} | "
+                         f"{yd[k]['auc']:.3f} {_ci(yd[k]['ci'])} |")
+        _csv(out / "T_year.csv", [{"code": k, "legacy": yl[k]["auc"], "dated": yd[k]["auc"],
+                                   "dated_ci_lo": yd[k]["ci"][0], "dated_ci_hi": yd[k]["ci"][1],
+                                   "pairs": yd[k]["pairs"]} for k in CODE_LABEL])
+
+    for key, title, sub in (("E51_startup", "T-startup: E-51, C-2 start-up minus flat spin-up",
+                             "shift_c2_minus_flat"),
+                            ("E50_daylength", "T-daylength: E-50, latitude day length minus 46 N",
+                             "shift_daylat_minus_c2")):
+        lines += ["", f"## {title}\n", "| code | " + " | ".join(BANDS) + " |", "|---|---|---|---|"]
+        for k, sh in W[key][sub].items():
+            lines.append(f"| {CODE_LABEL[k]} | " + " | ".join(
+                f"{sh[b]['mean']:+.2f} {_ci(sh[b]['ci'])} (n={sh[b]['n']})" for b in BANDS) + " |")
+        lines += ["", "Between-patch AUC per band:", "",
+                  "| variant:code | " + " | ".join(BANDS) + " |", "|---|---|---|---|"]
+        for vk, bands in W[key]["auc_by_band"].items():
+            lines.append(f"| {vk} | " + " | ".join(
+                f"{bands[b]['auc']:.3f} {_ci(bands[b]['ci'])} ({bands[b]['n_fire']}/"
+                f"{bands[b]['n_nonfire']})" for b in BANDS) + " |")
+    ns = W["E51_startup"]["season_not_started"]
+    lines += ["", f"Season not yet started at D-1 (C-2 rule): {ns}."]
+
+    e = W["E52_station"]
+    lines += ["", f"## T-station: E-52, station vs ERA5 ({e['n_patches']} patches with a "
+                  "reporting station)\n",
+              "| code | AUC ERA5 (C-2) | AUC station | mean ERA5 - station | median abs diff | "
+              "rho(abs diff, distance) |", "|---|---|---|---|---|---|"]
+    srows = []
+    for k in CODE_LABEL:
+        a, s_ = e["auc"][k]["era5_c2"], e["auc"][k]["station"]
+        r = e["disagreement_vs_distance"][k]
+        lines.append(f"| {CODE_LABEL[k]} | {a['auc']:.3f} {_ci(a['ci'])} | {s_['auc']:.3f} "
+                     f"{_ci(s_['ci'])} | {e['bias'][k]['mean_era5_minus_station']:+.2f} | "
+                     f"{e['bias'][k]['median_abs']:.2f} | {r['rho']:+.2f} {_ci(r['ci'])} |")
+        srows.append({"code": k, "auc_era5": a["auc"], "auc_station": s_["auc"],
+                      "bias": e["bias"][k]["mean_era5_minus_station"], "rho": r["rho"],
+                      "rho_ci_lo": r["ci"][0], "rho_ci_hi": r["ci"][1]})
+    _csv(out / "T_station.csv", srows)
+
+    st = W["E53_staleness"]
+    lines += ["", "## T-staleness: E-53, between-patch AUC by weather age\n",
+              "| code | source | D-1 | D-2 | D-3 | D-7 | D-7 minus D-1 |",
+              "|---|---|---|---|---|---|---|"]
+    for k in CODE_LABEL:
+        for src in ("c2", "station"):
+            v = st[src][k]
+            lines.append(f"| {CODE_LABEL[k]} | {'ERA5' if src == 'c2' else 'station'} | "
+                         + " | ".join(f"{v[lag]['auc']:.3f}" for lag in ("1", "2", "3", "7"))
+                         + f" | {v['7']['auc'] - v['1']['auc']:+.3f} |")
+
+    lines += ["", "## T-dates: E-43, date-only control\n", "| feature | AUC | 95 % CI |",
+              "|---|---|---|"]
+    for nme, r in W["E43_date_only"].items():
+        lines.append(f"| {nme} | {r['auc']:.3f} | {_ci(r['ci'])} |")
+
+    lines += ["", "## T-inventory (dated): within-patch AUC under the dated design\n",
+              "| inventory | ROS | HFI | P(sf) | HFI, land only |", "|---|---|---|---|---|"]
+    for v, lab, _ in VARIANTS:
+        if v not in S["variants"]:
+            continue
+        sv = S["variants"][v]
+        lines.append(f"| {lab.strip()} | " + " | ".join(
+            f"{sv[f'within_{o}']['mean']:.3f} {_ci(sv[f'within_{o}']['ci'])}"
+            for o in ("ros", "hfi", "p_sf")) + f" | {sv['withinland_hfi']['mean']:.3f} |")
+    if legacy is not None and run is not None:
+        lines += ["", "Within-patch HFI AUC, dated minus legacy, same fire patches:", "",
+                  "| inventory | delta | 95 % CI | n |", "|---|---|---|---|"]
+        for r in _within_pairs(run, legacy):
+            lines.append(f"| {r['inventory']} | {r['delta']:+.3f} | {_ci(r['ci'], 3)} | {r['n']} |")
+    if station is not None:
+        Ss = json.loads((station / "summary.json").read_text())
+        lines += ["", "R0 with the station weather (E-52), between-patch AUC:", "",
+                  "| score | ERA5 run | station run |", "|---|---|---|"]
+        for k in ("ffmc", "dc", "bui", "fwi"):
+            lines.append(f"| {CODE_LABEL[k]} | {S['weather_between'][k]['auc']:.3f} | "
+                         f"{Ss['weather_between'][k]['auc']:.3f} (n={Ss['n_dev']}) |")
+        for v in ("scanfi_tree_prefire", "cwfis_2019"):
+            lines.append(f"| patch-mean HFI, {v} | {S['variants'][v]['between_hfi']['auc']:.3f} | "
+                         f"{Ss['variants'][v]['between_hfi']['auc']:.3f} |")
+    (out / "tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p3(run: Path, out: Path, legacy: Path | None = None, station: Path | None = None):
+    S = json.loads((run / "summary.json").read_text())
+    W = S["dated_weather"]
+    out.mkdir(parents=True, exist_ok=True)
+    p3_tables(S, W, out, legacy, station, run)
+    p3_chain(W, out)
+    p3_startup(W, out)
+    p3_station(W, out)
+    p3_staleness(W, out)
+    p3_dates(W, out)
+    p3_tiles(S, run, out)
+    (out / "run.json").write_text(json.dumps(
+        {"run": str(_rel(run)), "legacy_run": str(_rel(legacy)) if legacy else None,
+         "station_run": str(_rel(station)) if station else None,
+         "git": S["git"], "written": S["written"], "config": S["config"]}, indent=1))
+
+
+PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated")}
 
 
 def main(argv=None) -> int:
@@ -528,10 +974,17 @@ def main(argv=None) -> int:
     ap.add_argument("--phase", required=True, choices=sorted(PHASES))
     ap.add_argument("--run", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--legacy-run", type=Path, default=None, help="P3: the P2 legacy run")
+    ap.add_argument("--station-run", type=Path, default=None, help="P3: the station-weather run")
     args = ap.parse_args(argv)
     fn, sub = PHASES[args.phase]
-    run = args.run if args.run.is_absolute() else _ROOT / args.run
-    fn(run.resolve(), args.out or _ROOT / "docs" / "results" / sub)
+
+    def resolve(p):
+        return None if p is None else (p if p.is_absolute() else _ROOT / p).resolve()
+    extra = {}
+    if args.phase == "P3":
+        extra = {"legacy": resolve(args.legacy_run), "station": resolve(args.station_run)}
+    fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 
 
