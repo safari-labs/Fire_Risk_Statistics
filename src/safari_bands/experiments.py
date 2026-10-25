@@ -501,6 +501,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="BLOCKED",
         runner="-- (do not run)",
         blocker="fmc_measured is never written; needs E-29",
+        note="P5: the correct form of the FMC slot runs as r3_fmc (+/- 30 % "
+             "through the physics); the replace form stays blocked on E-29.",
     ),
 
     # ───────────────────────────── CFFDRS gaps ───────────────────────────
@@ -610,7 +612,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="Train once, score at each lag: one model, five scores. The "
              "leakage guard makes an earlier target date strictly safer. P3 "
              "(E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to "
-             "D-7 with ERA5, DC and BUI about 0.03-0.04.",
+             "D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 "
+             "on 7-day-old codes; the train-once-score-at-each-lag design still "
+             "needs a scoring mode in run_slots.",
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
@@ -928,9 +932,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired within/between-patch AUC per process",
         conclusion="The learned baseline the imagery slots are added to, and "
                    "whether the physics layer costs or buys anything.",
-        state="NEEDS_PACK",
-        blocker="pack v2 (fire dates, pre-fire imagery, per-pixel slots) and "
-                "the slot network (plan P4-P5)",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
+               "CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis",
+        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit "
+                  "(first guess; recalibrate from fits.jsonl after the first array)",
+        note="P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts "
+             "as R0 by construction.",
     ),
     Experiment(
         "E-35", "Fuel-type slot", "CFFDRS mirror",
@@ -944,6 +953,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="NEEDS_PACK",
         blocker="E-22 (ecology model) and pack v2",
         gap="G2 fuel-type layer is a fixed vintage",
+        note="P5: the cffdrs half runs now (r2 vs r2_cwfis: SCANFI tree vs "
+             "CWFIS 2019 under R2); the imagery replace form waits for E-22.",
     ),
     Experiment(
         "E-36", "Percent-conifer slot", "CFFDRS mirror",
@@ -952,9 +963,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="percent-conifer source for M-1/M-2: inventory vs imagery",
         dependent="paired delta on M-1/M-2 pixels",
         conclusion="Brief target T4 as a CFFDRS input rather than a map.",
-        state="NEEDS_PACK",
-        blocker="E-22 and pack v2",
+        state="RUNNABLE",
+        blocker="",
         gap="G2 fuel-type layer is a fixed vintage",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
+               "CONFIGS=r3_pc,r3_pc_shuffled",
+        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit "
+                  "(first guess; recalibrate from fits.jsonl after the first array)",
+        note="P5: the imagery_correct form is runnable (pc + 30 tanh(head), "
+             "through the physics); the imagery_replace form waits for the "
+             "ecology estimator (E-22, P6).",
     ),
     Experiment(
         "E-37", "Crown-base-height slot", "CFFDRS mirror",
@@ -965,8 +983,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired delta in the intensity branch",
         conclusion="Whether stand height from orbit belongs in FBP's crown "
                    "fire initiation.",
-        state="NEEDS_PACK",
-        blocker="FBP port and pack v2; the CBH-from-height rule is not set",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
+               "CONFIGS=r3_cbh,r3_cbh_shuffled",
+        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit "
+                  "(first guess; recalibrate from fits.jsonl after the first array)",
+        note="P5: the imagery_correct form is runnable (CBH x exp(0.7 "
+             "tanh(head))); the height-derived replace form waits for P6.",
     ),
     Experiment(
         "E-38", "Curing slot", "CFFDRS mirror",
@@ -977,9 +1001,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                     "time-of-year default vs S2 curing",
         dependent="ignition and spread on O-1 pixels",
         conclusion="The FWI2025 curing input, tested where grass exists.",
-        state="NEEDS_DATA",
-        blocker="CWFIS pcuring zips (about 2 GB a year) not fetched; little grass",
+        state="RUNNABLE",
+        blocker="",
         gap="curing",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
+               "CONFIGS=r3_curing,r3_curing_shuffled",
+        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit "
+                  "(first guess; recalibrate from fits.jsonl after the first array)",
+        note="P5: the imagery_correct form is runnable against the cffdrs "
+             "default (80 %); the CWFIS curing product is still not held, so "
+             "the operational comparison waits.",
     ),
     Experiment(
         "E-39", "Canopy closure to in-stand moisture", "CFFDRS mirror",
@@ -1009,7 +1040,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is "
                 "held, 2019 is not published",
         note="P3: the CWFIS side is built (greenup.py); leaf state on D from "
-             "the product for 191 patches, climatology for 37.",
+             "the product for 191 patches, climatology for 37. P5: "
+             "r2_leaf_ablated (leaf state forced green) measures what the CWFIS "
+             "green-up product is worth under R2.",
     ),
     Experiment(
         "E-41", "Spread R0 (CFSDS)", "CFFDRS mirror",

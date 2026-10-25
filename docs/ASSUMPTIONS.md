@@ -1015,3 +1015,39 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **Memory limit.** High-latitude 90-day windows exceed Earth Engine's per-request memory; those are fetched four bands at a time, giving the same composite.
   - **Test set.** It is the 33 frozen test patches of the cohort's kinds. The other 2 frozen test patches are bare, cloud or water, outside the cohort.
   - **Pack size.** Train 162 patches (1,388 tiles), val 32 (283), test 33 (287). The bundle is `Fire_Risk_Model/data/stage2_fire_cffdrs_v2.tar`, sha256 `177717f1…`.
+
+---
+
+## A-34: The CFFDRS-structured network (P5)
+
+**Assumption.** The learned rungs (`Fire_Risk_FW/src/fire_risk_fw/cffdrs_net.py`) are built and trained as follows.
+
+- **The physics in the network** is a torch copy of the validated NumPy port.
+  - **Parity.** The torch FBP matches the NumPy port to 1e-9 on the 6,000-row `cffdrs` fixture, and gradients are finite everywhere.
+  - **Non-fuel convention.** Non-fuel and water get intensity 0 *and* P(sustained flaming) 0, where the P2/P3 evaluator excluded them from the ignition score. Within-patch ignition AUC therefore reads higher under the network (fold 0, same 18 fires: 0.672 against 0.573).
+- **Starting point.** R2's logit starts as log1p(HFI) − 7, so HFI ≈ 1,100 kW/m maps to 0.5. Its residual on the CFFDRS inputs, every imagery correction and R4's free imagery branch start at exactly zero. R2 begins as R0, R3 and R4 begin as R2, and anything they add is learned.
+- **Imagery corrections** pass through the unchanged physics:
+  - percent conifer ± 30 points;
+  - foliar moisture ± 30 % (clamped to 60–140);
+  - crown base height × e^(±0.7);
+  - curing ± 30 points.
+  
+  Leaf state has no correction form: its imagery arm is a replacement (Sentinel-2 green-up, P6).
+- **Operational ("cffdrs") values:**
+  - percent conifer from the fuel source (CWFIS code, or SCANFI continuous);
+  - FMC on D from the FBP equations;
+  - CBH from the ST-X-3 defaults;
+  - curing 80 %, the FBP default, because the CWFIS curing product is not held;
+  - leaf state from the CWFIS green-up product.
+- **Weather.** Codes come from the configured source, variant and lag. Wind, RH and FMC are packed at lag 1 from ERA5 only, so lagged and station configurations pair their codes with those.
+- **Scalars never broadcast as inputs.** They enter only through the physics and one per-patch danger term in the logit, as in `fusion.TwoHeadFusion`.
+- **Training.**
+  - **Crops.** Random 128 px crops, with no flips or rotations: aspect and wind are bearings, so rotating a tile changes the fire FBP computes. Evaluation uses full 256 px tiles.
+  - **Loss.** Masked BCE: ignored and invalid pixels drop out.
+  - **Selection.** Pooled pixel AUC on the held-out fold. Pooled, within-patch and between-patch AUC are all reported.
+- **Folds.** 5 folds of whole groups (fire / 0.1° block, from the frozen file) over train plus val, split seed 0, and 3 training seeds. Contrasts are paired by fold and seed. The test split is never staged to the node.
+- **Data handling.**
+  - A patch missing any scalar a configuration reads is dropped (the one station-capped patch).
+  - R0 is evaluated, not trained.
+  - Configurations are JSON, so the cluster environment needs no YAML wheel.
+- **Resources** are a first guess: 3 h, one A100, 12 CPUs, 24 GB per fit. They get recalibrated from `fits.jsonl` after the first array.

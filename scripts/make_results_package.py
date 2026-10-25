@@ -14,6 +14,13 @@ P2 (R0, the CFFDRS reference without learning; E-32, E-33, E-21):
     fuel_types.png    burn rate vs FBP intensity by fuel type
     tiles.png         NBAC, fuel and intensity maps on four seeded fire tiles
     tables.md         T-inventory, T-weather, T-fuel, T-vintage (+ CSVs)
+
+P5 (the CFFDRS-structured network; checks, no registered result):
+    python scripts/make_results_package.py --phase P5 --run runs/<ts>_p5_smoke \
+        --p3-run runs/<ts>_cffdrs_r0_dated
+    r0_agreement.png  network R0 vs the P3 evaluator, per fire (fold 0)
+    tiles.png         true colour, label and R0 maps on the seeded sample tiles
+    tables.md         T-r0, T-agree, T-smoke (+ CSVs)
 """
 from __future__ import annotations
 
@@ -1189,7 +1196,169 @@ def p4(run: Path, out: Path):
                                               "qual_stems": S["qual_stems"]}, indent=1))
 
 
-PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire")}
+# ── P5 ──────────────────────────────────────────────────────────────────────
+
+
+def _read_csv(path: Path) -> list[dict]:
+    import csv
+    with path.open(encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+def _p5_pairs(run: Path, p3_run: Path, variant="scanfi_tree_prefire"):
+    """Per fire on fold 0: (P3 evaluator, network R0) within-patch HFI AUC.
+    R0's patches.csv carries its first output, HFI."""
+    net = {r["patch"]: float(r["auc_within"])
+           for r in _read_csv(run / "r0_scanfi" / "f0s0" / "patches.csv") if r["kind"] == "fire"}
+    p3 = {r["stem"]: r["auc_hfi"] for r in _read_csv(p3_run / "per_patch.csv")
+          if r["variant"] == variant}
+    return [(float(p3[k]), net[k], k) for k in sorted(net) if p3.get(k)]
+
+
+def p5_agreement(run, p3_run, out):
+    plt = _plt()
+    pairs = _p5_pairs(run, p3_run)
+    x, y = np.array([p[0] for p in pairs]), np.array([p[1] for p in pairs])
+    rho = _spearman(list(x), list(y))
+    fig, ax = plt.subplots(figsize=(5.2, 4.8), facecolor=FIG_BG)
+    _axes(ax, f"R0 HFI, within-patch AUC per fire (n = {len(pairs)}, Spearman {rho:.2f})",
+          "P3 evaluator (SCANFI pre-fire, stride 2)", "P5 network R0 (v2 pack, full tiles)")
+    lo = min(x.min(), y.min()) - 0.03
+    ax.plot([lo, 1], [lo, 1], color=MUTED, lw=1, ls="--", zorder=1)
+    ax.scatter(x, y, s=46, color=BLUE, edgecolor=FIG_BG, linewidth=1.5, zorder=3)
+    ax.set_xlim(lo, 1)
+    ax.set_ylim(lo, 1)
+    ax.text(0.98, 0.04, f"mean {x.mean():.3f} (P3) vs {y.mean():.3f} (P5)\nmax gap "
+            f"{np.abs(x - y).max():.2f}", transform=ax.transAxes, ha="right", va="bottom",
+            color=INK, fontsize=8.5)
+    fig.suptitle("P5-M1  R0 carries over into the network", color=INK_BRIGHT, x=0.01, y=1.0,
+                 ha="left", fontsize=12)
+    _caption(fig, "Development fold 0 (split seed 0), fire patches only; dashed = equal. "
+             "Differences come from the pack's 256 px tiles and valid mask against P3's "
+             "stride-2 sampling of the whole patch. No hypothesis was registered: this is a "
+             "carry-over check.", y=-0.02)
+    _save(fig, out, "r0_agreement.png")
+    return pairs
+
+
+def _stretch(rgb):
+    """(3, H, W) reflectance -> (H, W, 3), one 2-98 % stretch shared by the
+    channels and gamma 0.8, as display_rgb.patch_true_colour does."""
+    a = np.moveaxis(rgb.astype(np.float32), 0, -1)
+    ok = a.sum(-1) > 0
+    if not ok.any():
+        return np.zeros_like(a)
+    lo, hi = np.percentile(a[ok], [2, 98])
+    return np.clip((a - lo) / max(hi - lo, 1e-6), 0, 1) ** 0.8 * ok[..., None]
+
+
+def p5_tiles(run, out):
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, LogNorm
+    plt = _plt()
+    z = np.load(run / "r0_scanfi" / "f0s0" / "samples.npz")
+    stems = list(z["stems"])
+    cols = [("rgb", "Sentinel-2 true colour"), ("label", "NBAC burned on/after D"),
+            ("r0_hfi", "R0 HFI"), ("r0_cfb", "R0 CFB"), ("r0_p_sf", "R0 P(sust. flaming)")]
+    heat = LinearSegmentedColormap.from_list("heat", ["#241a17", "#8a3a1c", ORANGE, "#ffd2a6"])
+    seq = LinearSegmentedColormap.from_list("seq", ["#151b2b", "#1f4f8f", BLUE, "#bcd8fb"])
+    fig, axes = plt.subplots(len(stems), len(cols), figsize=(2.35 * len(cols), 2.4 * len(stems)),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.18,
+                                                            "top": 0.93, "bottom": 0.04})
+    im_h = im_s = None
+    for r, stem in enumerate(stems):
+        for c, (k, lab) in enumerate(cols):
+            ax = axes[r, c]
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            if k == "rgb":
+                ax.imshow(_stretch(z["rgb"][r]), interpolation="nearest")
+            elif k == "label":
+                a = z["label"][r, 0]
+                ax.imshow(np.where(a < 0, 2, a), cmap=ListedColormap([AX_BG, INK_BRIGHT, MUTED]),
+                          vmin=0, vmax=2, interpolation="nearest")
+            elif k == "r0_hfi":
+                im_h = ax.imshow(np.clip(z[k][r, 0], 10, None), cmap=heat, norm=LogNorm(10, 30000),
+                                 interpolation="nearest")
+            else:
+                im_s = ax.imshow(z[k][r, 0], cmap=seq, vmin=0, vmax=1, interpolation="nearest")
+            if r == 0:
+                ax.set_title(lab, color=INK, fontsize=8.5, loc="left")
+            if c == 0:
+                ax.set_ylabel(stem.replace("_fire_tile", "\n"), color=INK, fontsize=7)
+    # Colour bars in their own axes under the grid, so no map column shrinks
+    # out of line with the true-colour column.
+    for im, (c0, c1), lab in ((im_h, (2, 2), "HFI (kW/m, log)"),
+                              (im_s, (3, 4), "CFB, P(sustained flaming) (0-1)")):
+        if im is not None:
+            a, b = axes[-1, c0].get_position(), axes[-1, c1].get_position()
+            cax = fig.add_axes([a.x0, a.y0 - 0.022, b.x1 - a.x0, 0.006])
+            cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+            cb.set_label(lab, color=INK, fontsize=8)
+            cb.ax.tick_params(colors=INK, labelsize=7.5)
+    fig.suptitle("P5  R0 inside the network on six fold-0 fire tiles (drawn by seed from "
+                 "stems)", color=INK_BRIGHT, x=0.01, y=0.985, ha="left", fontsize=12)
+    _caption(fig, "True colour: the v2 pack's pre-fire composite (S2 SR median, D-45..D-1, "
+             "B4/B3/B2). White = burned on or after D; grey = ignored or invalid. Every "
+             "configuration on fold 0 saves these same tiles, so P7 can set each rung beside "
+             "this R0 start. Water and non-fuel are 0 in every R0 map (A-34).", y=-0.025)
+    _save(fig, out, "tiles.png")
+    return stems
+
+
+def p5_tables(run, out, pairs):
+    r0 = json.loads((run / "r0_scanfi" / "f0s0" / "result.json").read_text())
+    r3 = json.loads((run / "r3_pc_fmc_cbh" / "f0s0" / "result.json").read_text())
+    lines = ["# P5 tables: the CFFDRS-structured network\n",
+             f"Development fold 0 of {r0['n_folds']} (split seed {r0['split_seed']}): "
+             f"{r0['n_train_patches']} training / {r0['n_val_patches']} held-out patches. "
+             "The test split was not staged.\n",
+             "## T-r0: R0 through the network, fold 0\n",
+             "| output | pooled AUC | within-patch AUC (mean over fires) | between-patch AUC | "
+             "fires |", "|---|---|---|---|---|"]
+    rows = []
+    for k in OUTPUTS:
+        m = r0["metrics"][k]
+        lines.append(f"| {OUT_LABEL[k]} | {_f(m['auc_pooled'])} | {_f(m['auc_within_mean'])} | "
+                     f"{_f(m['auc_between'])} | {m['n_fire']} |")
+        rows.append({"output": k, **m})
+    _csv(out / "T_r0.csv", rows)
+    x, y = [p[0] for p in pairs], [p[1] for p in pairs]
+    lines += ["", "## T-agree: network R0 against the P3 evaluator (same fires)\n",
+              "| output | fires | P3 mean | P5 mean | Spearman | max gap |",
+              "|---|---|---|---|---|---|",
+              f"| HFI | {len(pairs)} | {np.mean(x):.3f} | {np.mean(y):.3f} | "
+              f"{_spearman(x, y):.2f} | {np.max(np.abs(np.subtract(x, y))):.2f} |"]
+    _csv(out / "T_agree.csv", [{"patch": k, "p3_auc_hfi": a, "p5_auc_hfi": b} for a, b, k in pairs])
+    m = r3["metrics"]["score"]
+    lines += ["", "## T-smoke: R3 (pc, fmc, cbh corrected) after 3 CPU batches\n",
+              "| pooled | within | between | HFI weight | other weights (max abs) | bias | "
+              "wall (s) |", "|---|---|---|---|---|---|---|",
+              f"| {_f(m['auc_pooled'])} | {_f(m['auc_within_mean'])} | {_f(m['auc_between'])} | "
+              f"{r3['learned']['phys_w']['hfi']:.3f} | "
+              f"{max(abs(v) for k, v in r3['learned']['phys_w'].items() if k != 'hfi'):.3f} | "
+              f"{r3['learned']['phys_b']:.3f} | {r3['wall_s']:.0f} |",
+              "", "A smoke test, not a result: the fit is truncated by design. It shows the "
+              "rung starts at R0 (pooled "
+              f"{_f(r0['metrics']['hfi']['auc_pooled'])}) and that a real-data fit runs."]
+    (out / "tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p5(run: Path, out: Path, p3: Path | None = None):
+    if p3 is None:
+        raise SystemExit("P5 needs --p3-run (the dated R0 run) for the carry-over check")
+    out.mkdir(parents=True, exist_ok=True)
+    pairs = p5_agreement(run, p3, out)
+    stems = p5_tiles(run, out)
+    p5_tables(run, out, pairs)
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)), "p3_run": str(_rel(p3)),
+                                              "sample_stems": stems}, indent=1))
+
+
+PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
+          "P5": (p5, "p5_slotnet")}
 
 
 def main(argv=None) -> int:
@@ -1199,6 +1368,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--legacy-run", type=Path, default=None, help="P3: the P2 legacy run")
     ap.add_argument("--station-run", type=Path, default=None, help="P3: the station-weather run")
+    ap.add_argument("--p3-run", type=Path, default=None, help="P5: the dated R0 run")
     args = ap.parse_args(argv)
     fn, sub = PHASES[args.phase]
 
@@ -1207,6 +1377,8 @@ def main(argv=None) -> int:
     extra = {}
     if args.phase == "P3":
         extra = {"legacy": resolve(args.legacy_run), "station": resolve(args.station_run)}
+    elif args.phase == "P5":
+        extra = {"p3": resolve(args.p3_run)}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 

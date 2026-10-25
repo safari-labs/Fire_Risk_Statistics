@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-54 experiments. **27 can run today** on data already packed and staged.
+54 experiments. **31 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,11 +16,11 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 11 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28 |
+| **Runnable now** | 15 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
 | **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
-| **Needs a pack** | 11 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-34, E-35, E-36, E-37, E-42, E-46, E-47, E-48 |
-| **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-38, E-44, E-45 |
+| **Needs a pack** | 8 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48 |
+| **Needs new data** | 6 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
 Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audit. They were renumbered into this single register rather than left as a second scheme; `docs/CFFDRS_GAPS.md` points at the new ids.
@@ -33,11 +33,11 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-32** | CFFDRS as is (R0) ★ | FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor. | none learned: FBP ROS / HFI / CFB per pixel and FWI codes per patch, computed from the operational inputs | within-patch and between-patch AUC, per process | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
-| **E-34** | Learned CFFDRS (R1/R2) | A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it. | R0 vs R1 vs R2 on identical inputs and folds | paired within/between-patch AUC per process | Needs a pack | *none yet* |
+| **E-34** | Learned CFFDRS (R1/R2) | A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it. | R0 vs R1 vs R2 on identical inputs and folds | paired within/between-patch AUC per process | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` |
 | **E-35** | Fuel-type slot | Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut. | the fuel-type slot's source: pre-fire inventory vs imagery_replace (ecology model) vs imagery_correct | paired delta in within-patch AUC per process | Needs a pack | *none yet* |
-| **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Needs a pack | *none yet* |
-| **E-37** | Crown-base-height slot | Imagery-informed CBH changes crown fraction burned enough to move intensity skill. WRONG IF the CFB term never engages at our fire weather. | CBH source: ST-X-3 default vs height-derived | paired delta in the intensity branch | Needs a pack | *none yet* |
-| **E-38** | Curing slot | Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'. | curing source: CWFIS percent curing (2020-2025) or the time-of-year default vs S2 curing | ignition and spread on O-1 pixels | Needs new data | *none yet* |
+| **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` |
+| **E-37** | Crown-base-height slot | Imagery-informed CBH changes crown fraction burned enough to move intensity skill. WRONG IF the CFB term never engages at our fire weather. | CBH source: ST-X-3 default vs height-derived | paired delta in the intensity branch | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` |
+| **E-38** | Curing slot | Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'. | curing source: CWFIS percent curing (2020-2025) or the time-of-year default vs S2 curing | ignition and spread on O-1 pixels | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` |
 | **E-39** | Canopy closure to in-stand moisture | Imagery stand density sharpens ignition receptivity through the stand-specific FFMC adjustment. WRONG IF the adjusted in-stand FFMC ranks ignitions no better than open FFMC. | closure source for the in-stand FFMC adjustment | Stage C ignition AUC and calibration | Needs code | *none yet* |
 | **E-40** | Green-up slot | An S2 green-up date beats the CWFIS green-up product for the D-1/M-1/M-2 leafless-to-green switch. WRONG IF the two agree to within a few days, leaving nothing to gain. | green-up source: CWFIS product (2020-2025, held) vs S2 phenology | spread and ignition on deciduous and mixedwood pixels | Needs code | *none yet* |
 | **E-41** | Spread R0 (CFSDS) | FBP ROS correlates with observed daily spread (Spearman rho > 0). WRONG IF it does not, which would bound everything the spread branch can claim. | none learned: FBP ROS on each fire-day | Spearman rho and log-ratio error against CFSDS spread | Needs code | *none yet* |
@@ -162,13 +162,15 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
 
-*Blocked on:* pack v2 (fire dates, pre-fire imagery, per-pixel slots) and the slot network (plan P4-P5)
+*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction.
 
 **E-35 — Fuel-type slot**
 
 *Hypothesis:* Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut.
 
 Whether the imager should refresh FBP fuel type.
+
+*Note:* P5: the cffdrs half runs now (r2 vs r2_cwfis: SCANFI tree vs CWFIS 2019 under R2); the imagery replace form waits for E-22.
 
 *Blocked on:* E-22 (ecology model) and pack v2
 
@@ -180,7 +182,7 @@ Whether the imager should refresh FBP fuel type.
 
 Brief target T4 as a CFFDRS input rather than a map.
 
-*Blocked on:* E-22 and pack v2
+*Note:* P5: the imagery_correct form is runnable (pc + 30 tanh(head), through the physics); the imagery_replace form waits for the ecology estimator (E-22, P6).
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -190,7 +192,7 @@ Brief target T4 as a CFFDRS input rather than a map.
 
 Whether stand height from orbit belongs in FBP's crown fire initiation.
 
-*Blocked on:* FBP port and pack v2; the CBH-from-height rule is not set
+*Note:* P5: the imagery_correct form is runnable (CBH x exp(0.7 tanh(head))); the height-derived replace form waits for P6.
 
 **E-38 — Curing slot**
 
@@ -198,7 +200,7 @@ Whether stand height from orbit belongs in FBP's crown fire initiation.
 
 The FWI2025 curing input, tested where grass exists.
 
-*Blocked on:* CWFIS pcuring zips (about 2 GB a year) not fetched; little grass
+*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits.
 
 *CFFDRS gap:* curing
 
@@ -216,7 +218,7 @@ The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
 
 Whether the imager should own the leaf-state switch FBP applies to aspen and mixedwood.
 
-*Note:* P3: the CWFIS side is built (greenup.py); leaf state on D from the product for 191 patches, climatology for 37.
+*Note:* P3: the CWFIS side is built (greenup.py); leaf state on D from the product for 191 patches, climatology for 37. P5: r2_leaf_ablated (leaf state forced green) measures what the CWFIS green-up product is worth under R2.
 
 *Blocked on:* the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is held, 2019 is not published
 
@@ -458,6 +460,8 @@ G1 restated into something testable: does imagery carry foliar-moisture informat
 
 NOTHING. fmc_measured is read in four places and written in none, so all three arms reduce to the FBP equation and would return three identical numbers looking like 'no difference'. Listed so it is not run by mistake.
 
+*Note:* P5: the correct form of the FMC slot runs as r3_fmc (+/- 30 % through the physics); the replace form stays blocked on E-29.
+
 *Blocked on:* fmc_measured is never written; needs E-29
 
 ### CFFDRS gaps
@@ -502,7 +506,7 @@ DMC and DC day-length factors are tabulated for ~46 N while Canada spans 42-83. 
 
 Every FWI code is defined on a same-day noon observation and a daily uplink cannot supply one. The input drift is already measured (DC 8.2% over three days against ISI's 89.9%) and fwi.py reasons from it to a recommendation -- BUI best, FWI worst. Drift in a feature is not loss in a prediction, and this measures the half nobody has.
 
-*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04.
+*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 on 7-day-old codes; the train-once-score-at-each-lag design still needs a scoring mode in run_slots.
 
 *Blocked on:* lagged FWI sidecars: an ERA5 pass over data already held, then a repack
 
@@ -670,6 +674,10 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
+| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
+| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
+| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |

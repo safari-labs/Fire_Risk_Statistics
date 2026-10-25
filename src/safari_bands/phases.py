@@ -470,6 +470,111 @@ PHASES: tuple[Phase, ...] = (
                              "177717f1...)."),
         ),
     ),
+    Phase(
+        "P5", "The CFFDRS-structured network", "2026-10-25",
+        "p5_slotnet", "README.md",
+        "Built the R0-R4 ladder in Fire_Risk_FW: torch copies of the FBP and "
+        "ignition ports, slot configurations, the network and its Narval sweep. "
+        "Nothing was trained beyond smoke tests; the registered experiments are "
+        "queued for Narval. Real-data checks on fold 0 of the development set; "
+        "the test groups were not staged.",
+        (
+            Entry("P5-C1", "check", "PASS",
+                  title="Torch physics against the NumPy port",
+                  question="The torch FBP and ignition match Fire_Risk_Model's "
+                           "validated port to 1e-9, with finite gradients.",
+                  independent="the 6,000-row cffdrs FBP fixture; every fuel x "
+                              "green-up x 40 weather draws for P(sustained "
+                              "flaming); the 2019 fuel-code table",
+                  dependent="max relative error; gradient finiteness",
+                  result="FBP: every output within 1e-9 of the port, gradients "
+                         "finite for all fuels. Ignition: coefficients identical, "
+                         "probabilities within 1e-9 (0 where the port has no "
+                         "category). Code table identical for green and leafless.",
+                  conclusion="Learning through the physics changes nothing about "
+                             "the physics: any difference between rungs is the "
+                             "learned part."),
+            Entry("P5-C2", "check", "PASS",
+                  title="Ladder contracts",
+                  question="R2 starts as R0's HFI score; R3 and R4 start as R2; "
+                           "R1 cannot see imagery; corrections learn through the "
+                           "physics; invalid configurations are refused.",
+                  independent="each rung on a synthetic v2 pack",
+                  dependent="outputs at initialisation; gradients; refusals",
+                  result="All hold (14 tests): R2 = log1p(HFI) - 7 at start, R3/R4 "
+                         "equal R2 to 1e-5, R1 unchanged by random bands, "
+                         "correction-head gradients finite and non-zero. Replace "
+                         "sources stop with a P6 message.",
+                  conclusion="Any rung's gain over the one below is learned from "
+                             "data, not built in at initialisation."),
+            Entry("P5-C3", "check", "PASS",
+                  title="One fit end to end",
+                  question="run_slots.py writes everything the interpretation "
+                           "step needs, for every rung and a shuffled twin.",
+                  independent="r0, r2, r2_station, r3_pc_shuffled, r4 on a "
+                              "synthetic pack",
+                  dependent="result.json, patches.csv, hist.npz, samples.npz, "
+                            "fits.jsonl present and consistent",
+                  result="5 / 5 configurations write every artefact; the four "
+                         "on the same patches save the same sample tiles.",
+                  conclusion="A Narval fit leaves enough behind for P11 without "
+                             "re-running it, and arms can be compared tile by "
+                             "tile."),
+            Entry("P5-M1", "measurement", "MEASURED",
+                  title="R0 through the network on real data",
+                  question="Does R0 inside the network score the fold-0 fires as "
+                           "the P3 evaluator did?",
+                  independent="network R0 (v2 pack, 256 px tiles) vs the P3 "
+                              "evaluator (scanfi_tree_prefire, stride 2)",
+                  dependent="within-patch AUC per fire",
+                  result="Same 18 fires: HFI 0.667 vs 0.682 (Spearman 0.95 across "
+                         "fires, max gap 0.10). Pooled 0.723, between-patch 0.826. "
+                         "P(sustained flaming) 0.672 vs 0.573.",
+                  conclusion="R0 carries over. The P(sf) gap is the network's "
+                             "non-fuel convention (P = 0 on water and bare ground), "
+                             "which P3 excluded; read P5+ P(sf) against P5+ only "
+                             "(A-34)."),
+            Entry("P5-M2", "measurement", "MEASURED",
+                  title="R3 on real data, one truncated epoch",
+                  question="Does a real-data fit run, and does it start where "
+                           "the contracts say?",
+                  independent="r3_pc_fmc_cbh, fold 0, seed 0, 3 batches on CPU",
+                  dependent="validation AUC; learned physics weights; wall time",
+                  result="Pooled 0.722 (R0 0.723); HFI weight 0.994, others "
+                         "within 0.006 of 0; 63 s.",
+                  conclusion="The fit runs on the real pack and starts at R0; "
+                             "nothing is learned yet, as intended. The 3 h per-fit "
+                             "budget is a guess until the first Narval array."),
+            Entry("P5-C4", "check", "FIXED",
+                  title="The runner at real scale",
+                  question="The scorer finishes on real tiles; the full test suite "
+                           "passes with the P5 tests in it; sample maps show fire "
+                           "tiles, the same for every configuration.",
+                  independent="R0 and R3 on fold 0; the full Fire_Risk_FW suite",
+                  dependent="run time; pass count; sample tiles",
+                  result="Rank AUC had a quadratic tie loop and timed out; "
+                         "vectorised, exact against brute force. A preflight test "
+                         "re-imported h5py and broke 23 later tests; it now "
+                         "restores the modules (381 pass). Samples were the first "
+                         "batch (one confuser patch); now 6 fire tiles drawn by "
+                         "seed from stems, with true colour. Metrics unchanged.",
+                  conclusion="Tooling faults; none touched a result."),
+            Entry("E-34", "experiment", "PENDING",
+                  result="Queued for Narval: r0_scanfi, r0_cwfis, r1, r2, "
+                         "r2_cwfis.",
+                  conclusion="Scored in P7."),
+            Entry("E-36", "experiment", "PENDING",
+                  result="Queued: r3_pc and its shuffled twin (correct form).",
+                  conclusion="Scored in P7; the replace form waits for E-22 (P6)."),
+            Entry("E-37", "experiment", "PENDING",
+                  result="Queued: r3_cbh and its shuffled twin (correct form).",
+                  conclusion="Scored in P7."),
+            Entry("E-38", "experiment", "PENDING",
+                  result="Queued: r3_curing and its shuffled twin, against the "
+                         "80 % default.",
+                  conclusion="Scored in P7; grass is rare here, so expect low n."),
+        ),
+    ),
 )
 
 
