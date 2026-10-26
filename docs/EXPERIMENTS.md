@@ -162,7 +162,7 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
 
-*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction.
+*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0).
 
 **E-35 — Fuel-type slot**
 
@@ -170,7 +170,7 @@ The learned baseline the imagery slots are added to, and whether the physics lay
 
 Whether the imager should refresh FBP fuel type.
 
-*Note:* P5: the cffdrs half runs now (r2 vs r2_cwfis: SCANFI tree vs CWFIS 2019 under R2); the imagery replace form waits for E-22.
+*Note:* P5: the cffdrs half runs now (r2 vs r2_cwfis: SCANFI tree vs CWFIS 2019 under R2); the imagery replace form waits for E-22. P7: CWFIS 2019 vs SCANFI fuel under R2 -0.007 [-0.017, +0.003] within (under R0 -0.048): learning absorbs most of the inventory gap.
 
 *Blocked on:* E-22 (ecology model) and pack v2
 
@@ -182,7 +182,7 @@ Whether the imager should refresh FBP fuel type.
 
 Brief target T4 as a CFFDRS input rather than a map.
 
-*Note:* P5: the imagery_correct form is runnable (pc + 30 tanh(head), through the physics); the imagery_replace form waits for the ecology estimator (E-22, P6).
+*Note:* P5: the imagery_correct form is runnable (pc + 30 tanh(head), through the physics); the imagery_replace form waits for the ecology estimator (E-22, P6). P7: AT RISK. Correct form -0.001 [-0.004, +0.001] within, equal to its twin; the head learned a near-uniform -24-point shift. M-1/M-2-restricted scoring added to run_slots after this sweep.
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -192,7 +192,7 @@ Brief target T4 as a CFFDRS input rather than a map.
 
 Whether stand height from orbit belongs in FBP's crown fire initiation.
 
-*Note:* P5: the imagery_correct form is runnable (CBH x exp(0.7 tanh(head))); the height-derived replace form waits for P6.
+*Note:* P5: the imagery_correct form is runnable (CBH x exp(0.7 tanh(head))); the height-derived replace form waits for P6. P7: AT RISK. Correct form -0.0005 [-0.003, +0.002], equal to its twin; CFB > 0 on 47 % of burnable pixels, so the falsifier did not fire. Height-derived form waits for P6.
 
 **E-38 — Curing slot**
 
@@ -200,7 +200,7 @@ Whether stand height from orbit belongs in FBP's crown fire initiation.
 
 The FWI2025 curing input, tested where grass exists.
 
-*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits.
+*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits. P7: not tested. The SCANFI fuel tree has no O-1 pixel, so the correction never acts (delta exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of pixels).
 
 *CFFDRS gap:* curing
 
@@ -218,7 +218,7 @@ The ignition-side slot GLC-X-42 p.32 points at: fuel moisture by canopy closure.
 
 Whether the imager should own the leaf-state switch FBP applies to aspen and mixedwood.
 
-*Note:* P3: the CWFIS side is built (greenup.py); leaf state on D from the product for 191 patches, climatology for 37. P5: r2_leaf_ablated (leaf state forced green) measures what the CWFIS green-up product is worth under R2.
+*Note:* P3: the CWFIS side is built (greenup.py); leaf state on D from the product for 191 patches, climatology for 37. P5: r2_leaf_ablated (leaf state forced green) measures what the CWFIS green-up product is worth under R2. P7: leaf state forced green under R2 +0.001 [-0.002, +0.004]: the CWFIS green-up product adds nothing measurable.
 
 *Blocked on:* the S2 green-up estimator moved to P6 (James, 2026-10-24); P3 builds the CWFIS side (greenup.py). CWFIS green-up 2020-2023 is held, 2019 is not published
 
@@ -286,7 +286,7 @@ Whether the legacy design flattered or hid CFFDRS, and what each design step mov
 
 How far the reanalysis we use stands from operational CFFDRS input, and whether station distance is a real stratifier for E-17.
 
-*Note:* P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC 0.78 vs 0.83.
+*Note:* P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC 0.78 vs 0.83. P7: under R2, station weather -0.017 [-0.034, -0.001] within and +0.024 [-0.027, +0.076] between, relative to ERA5.
 
 *Blocked on:* 2019 station file now held; needs the frozen test set (P10)
 
@@ -460,7 +460,7 @@ G1 restated into something testable: does imagery carry foliar-moisture informat
 
 NOTHING. fmc_measured is read in four places and written in none, so all three arms reduce to the FBP equation and would return three identical numbers looking like 'no difference'. Listed so it is not run by mistake.
 
-*Note:* P5: the correct form of the FMC slot runs as r3_fmc (+/- 30 % through the physics); the replace form stays blocked on E-29.
+*Note:* P5: the correct form of the FMC slot runs as r3_fmc (+/- 30 % through the physics); the replace form stays blocked on E-29. P7: r3_fmc (correct form) +0.002 [-0.001, +0.005] within, its twin +0.0015; the correction is a near-uniform +24 %.
 
 *Blocked on:* fmc_measured is never written; needs E-29
 
@@ -506,7 +506,7 @@ DMC and DC day-length factors are tabulated for ~46 N while Canada spans 42-83. 
 
 Every FWI code is defined on a same-day noon observation and a daily uplink cannot supply one. The input drift is already measured (DC 8.2% over three days against ISI's 89.9%) and fwi.py reasons from it to a recommendation -- BUI best, FWI worst. Drift in a feature is not loss in a prediction, and this measures the half nobody has.
 
-*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 on 7-day-old codes; the train-once-score-at-each-lag design still needs a scoring mode in run_slots.
+*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 on 7-day-old codes; the train-once-score-at-each-lag design still needs a scoring mode in run_slots. P7: r2_lag7 within -0.024 [-0.039, -0.011], between -0.052 [-0.101, -0.010]: decay is not flat (PARTIAL; per-code ordering and score-at-lag not run).
 
 *Blocked on:* lagged FWI sidecars: an ERA5 pass over data already held, then a repack
 
@@ -674,10 +674,10 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
-| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
-| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
-| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=12 --mem=24G per fit (first guess; recalibrate from fits.jsonl after the first array) |
+| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
+| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
+| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
+| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |

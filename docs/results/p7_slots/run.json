@@ -1,0 +1,11 @@
+{
+ "run": "narval_results\\slots_v2\\7289478",
+ "tile_stems": [
+  "-104.087_55.036_2023_fire_tile_r0300_c0000",
+  "-111.146_58.867_2023_fire_tile_r0256_c0256",
+  "-107.046_57.877_2023_fire_tile_r0316_c0256",
+  "-105.852_56.068_2023_fire_tile_r0000_c0312",
+  "-121.583_50.226_2021_fire_tile_r0256_c0403"
+ ],
+ "freeze": "test_groups_v1.json"
+}

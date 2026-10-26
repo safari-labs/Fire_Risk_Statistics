@@ -1051,3 +1051,28 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - R0 is evaluated, not trained.
   - Configurations are JSON, so the cluster environment needs no YAML wheel.
 - **Resources** are a first guess: 3 h, one A100, 12 CPUs, 24 GB per fit. They get recalibrated from `fits.jsonl` after the first array.
+
+---
+
+## A-35: How the slot sweep runs on Narval, and what it scores (after P7)
+
+**Assumption.** From the second sweep on, `Fire_Risk_FW/scripts/shell/sweep_slots.sh` and `run_slots.py` work as follows. The first sweep (slots_v2, job 7289478) ran under A-34's first-guess request.
+
+- **Measured on slots_v2** (300 fits, A100):
+  - R0: 13–16 s per fit.
+  - Trained fits: median 3.4 min, max 4.1 min (35 epochs at about 5 s each).
+  - Median best epoch: 17 (R1) to 30.
+  - Total about 15 GPU-hours.
+  - That sweep ran no resource monitor, so GPU and RAM use are not measured for these fits.
+- **The request per task** is 0:30:00, one A100, 12 CPUs and 16G:
+  - Each task runs 3 fits, so the worst case is 3 × 4.1 min × 2 (safety) plus setup. That rounds up to `narval_resources.py`'s 30-minute floor.
+  - 16G follows the v1 measurement on the same input path (1.04 GB MaxRSS).
+  - The GPU stays a full A100. A MIG slice would fit in memory but carries its own CPU limit, and the job is input-bound.
+- **How the sweep is cut:**
+  - The fit list is written once at submission.
+  - Tasks are grouped into sub-arrays of 20 (`CHUNK`). Each sub-array waits for the previous one with `afterany`, so a failed task does not stall the chain.
+  - `PARALLEL` optionally caps running tasks within a sub-array.
+  - R0 runs at seed 0 only, because its three seeds are identical.
+  - Results go to `$EXP_NAME/$RUN_ID/<config>/f<fold>s<seed>/`, with task logs and `resource_usage.csv` under `tasks/`.
+  - `SKIP_DONE=1` resubmits only the missing fits.
+- **Per-fuel-family scores.** Each fit also reports pooled AUC per fuel family (C, D, M, O) and, per patch, within-patch AUC on that family's pixels. These are the outcomes E-36 (M-1/M-2) and E-38 (O-1) registered, which slots_v2 could not provide. The family comes from the fuel layer and leaf state the configuration's physics uses.

@@ -1357,8 +1357,513 @@ def p5(run: Path, out: Path, p3: Path | None = None):
                                               "sample_stems": stems}, indent=1))
 
 
+# ── P7 ──────────────────────────────────────────────────────────────────────
+# Stage A slot experiments: the Narval sweep (run_slots.py) read straight from
+# its output tree, <run>/<config>/f<fold>s<seed>/{result.json, patches.csv,
+# samples.npz}.
+
+FREEZE = _ROOT.parent / "Fire_Risk_Model" / "splits" / "test_groups_v1.json"
+
+LADDER = [("r0_scanfi", "R0  physics only (HFI)"), ("r1", "R1  learned on CFFDRS inputs"),
+          ("r2", "R2  physics + learned residual"), ("r4", "R4  R2 + free imagery branch")]
+#: (label, real, shuffled twin, register entry)
+SLOTS = [("Percent conifer, +/-30 points", "r3_pc", "r3_pc_shuffled", "E-36"),
+         ("Foliar moisture, +/-30 %", "r3_fmc", "r3_fmc_shuffled", "E-16"),
+         ("Crown base height, x e^+/-0.7", "r3_cbh", "r3_cbh_shuffled", "E-37"),
+         ("Curing, +/-30 points", "r3_curing", "r3_curing_shuffled", "E-38"),
+         ("PC + FMC + CBH together", "r3_pc_fmc_cbh", "r3_pc_fmc_cbh_shuffled", "E-36/37"),
+         ("Free imagery branch (R4)", "r4", "r4_shuffled", "R4")]
+#: (label, configuration, register entry): operational-input variants of R2.
+OPS = [("CWFIS 2019 fuel instead of SCANFI", "r2_cwfis", "E-35"),
+       ("Station weather instead of ERA5", "r2_station", "E-52"),
+       ("7-day-old codes instead of 1-day", "r2_lag7", "E-20"),
+       ("Leaf state forced green", "r2_leaf_ablated", "E-40")]
+CORR = [("pc", "percent conifer (points)", 30.0), ("fmc", "foliar moisture (%)", 30.0),
+        ("cbh", "CBH (log factor)", 0.7)]
+
+
+def _auc(s, y) -> float:
+    """Rank AUC with tied ranks averaged; NaN scores dropped."""
+    s, y = np.asarray(s, float), np.asarray(y, bool)
+    ok = np.isfinite(s)
+    s, y = s[ok], y[ok]
+    n1, n0 = int(y.sum()), int((~y).sum())
+    if not n1 or not n0:
+        return float("nan")
+    o = np.argsort(s, kind="mergesort")
+    _, inv, cnt = np.unique(s[o], return_inverse=True, return_counts=True)
+    e = np.cumsum(cnt)
+    r = np.empty(len(s))
+    r[o] = ((e - cnt + 1 + e) / 2.0)[inv]
+    return float((r[y].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
+class _Sweep:
+    """Every fit of one sweep, indexed for paired comparisons.
+
+    Each development patch is held out in exactly one fold, so a patch's
+    within-patch AUC (averaged over seeds) comes from the models that never
+    trained on it, and two configurations are paired patch by patch.
+    Between-patch AUC is computed per fold -- scores from different folds'
+    models are not on one scale -- and averaged over the five folds."""
+
+    def __init__(self, run: Path, freeze: Path = FREEZE, n_boot=2000, seed=0):
+        self.run = run
+        self.fits: dict[str, list[dict]] = {}
+        self.patch: dict[str, dict[str, dict]] = {}
+        for cdir in sorted(p for p in run.iterdir() if p.is_dir() and p.name != "tasks"):
+            fits, P = [], {}
+            for f in sorted(cdir.glob("f*s*/result.json")):
+                r = json.loads(f.read_text(encoding="utf-8"))
+                fits.append(r)
+                for row in _read_csv(f.parent / "patches.csv"):
+                    d = P.setdefault(row["patch"], {"kind": row["kind"], "fold": r["fold"],
+                                                    "w": [], "s": []})
+                    d["w"].append(float(row["auc_within"]))
+                    d["s"].append(float(row["mean_score"]))
+            if fits:
+                self.fits[cdir.name], self.patch[cdir.name] = fits, P
+        groups = {s: g for g, ss in json.loads(freeze.read_text())["groups"].items() for s in ss}
+        self.pat = sorted(self.patch["r2"])
+        grp = np.array([groups.get(p, p) for p in self.pat])
+        ug = np.unique(grp)
+        gi = {g: np.where(grp == g)[0] for g in ug}
+        rng = np.random.default_rng(seed)
+        self.boots = [np.concatenate([gi[g] for g in rng.choice(ug, len(ug))])
+                      for _ in range(n_boot)]
+        self.n_groups = len(ug)
+        self.year = np.array([int(p.split("_")[2]) for p in self.pat])
+
+    def within(self, c) -> np.ndarray:
+        P = self.patch[c]
+        return np.array([np.nanmean(P[p]["w"]) if p in P and P[p]["kind"] == "fire"
+                         else np.nan for p in self.pat])
+
+    def _score(self, c):
+        P = self.patch[c]
+        s = np.array([np.mean(P[p]["s"]) if p in P else np.nan for p in self.pat])
+        fold = np.array([P[p]["fold"] if p in P else -1 for p in self.pat])
+        fire = np.array([p in P and P[p]["kind"] == "fire" for p in self.pat])
+        return s, fold, fire
+
+    def between(self, c, idx=None) -> float:
+        s, fold, fire = self._score(c)
+        idx = np.arange(len(self.pat)) if idx is None else idx
+        per = [_auc(s[idx][fold[idx] == f], fire[idx][fold[idx] == f]) for f in range(5)]
+        return float(np.nanmean(per))
+
+    def between_folds(self, c) -> list[float]:
+        s, fold, fire = self._score(c)
+        return [_auc(s[fold == f], fire[fold == f]) for f in range(5)]
+
+    def within_folds(self, c) -> list[float]:
+        w = self.within(c)
+        _, fold, _ = self._score("r2")
+        return [float(np.nanmean(w[fold == f])) for f in range(5)]
+
+    def within_year_between(self, c) -> float:
+        """Fire vs non-fire AUC over same-year pairs only (the year confound:
+        year alone ranks patches at 0.87, P3 E-43). Scores are ranked within
+        their fold first, so the folds' models share one scale."""
+        s, fold, fire = self._score(c)
+        q = np.full(len(s), np.nan)
+        for f in range(5):
+            m = (fold == f) & np.isfinite(s)
+            q[m] = _rank(s[m]) / max(m.sum() - 1, 1)
+        num = den = 0.0
+        for y in np.unique(self.year):
+            m = self.year == y
+            n1, n0 = int((fire & m).sum()), int((~fire & m).sum())
+            if n1 and n0:
+                num += _auc(q[m], fire[m]) * n1 * n0
+                den += n1 * n0
+        return num / den if den else float("nan")
+
+    def level(self, c) -> dict:
+        w = self.within(c)
+        cw = np.nanpercentile([np.nanmean(w[i]) for i in self.boots], [2.5, 97.5])
+        cb = np.nanpercentile([self.between(c, i) for i in self.boots[:500]], [2.5, 97.5])
+        return {"config": c, "within": float(np.nanmean(w)), "within_ci": list(cw),
+                "between": self.between(c), "between_ci": list(cb),
+                "within_year_between": self.within_year_between(c),
+                "n_fire": int(np.isfinite(w).sum()), "n_fits": len(self.fits[c])}
+
+    def paired(self, a, b) -> dict:
+        d = self.within(a) - self.within(b)
+        cw = np.nanpercentile([np.nanmean(d[i]) for i in self.boots], [2.5, 97.5])
+        db = [self.between(a, i) - self.between(b, i) for i in self.boots[:500]]
+        fw = np.subtract(self.within_folds(a), self.within_folds(b))
+        fb = np.subtract(self.between_folds(a), self.between_folds(b))
+        return {"a": a, "b": b, "d_within": float(np.nanmean(d)), "d_within_ci": list(cw),
+                "d_between": self.between(a) - self.between(b),
+                "d_between_ci": list(np.nanpercentile(db, [2.5, 97.5])),
+                "folds_won_within": int((fw > 0).sum()), "folds_won_between": int((fb > 0).sum()),
+                "n_fire": int(np.isfinite(d).sum())}
+
+
+def _p7_forest_rows(W):
+    rows = [("Imagery corrections through the physics (R3) and R4, vs R2", None, None)]
+    for lab, real, twin, eid in SLOTS:
+        rows.append((f"{lab}  [{eid}]", W.paired(real, "r2"), W.paired(twin, "r2")))
+    rows.append(("Operational inputs swapped under R2, vs R2", None, None))
+    for lab, c, eid in OPS:
+        rows.append((f"{lab}  [{eid}]", W.paired(c, "r2"), None))
+    return rows
+
+
+def p7_ladder(W, out):
+    plt = _plt()
+    lv = [W.level(c) for c, _ in LADDER]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.08})
+    for ax, key, title in ((axes[0], "within", "Within-patch AUC (which pixels burn)"),
+                           (axes[1], "between", "Between-patch AUC (which patches burn)")):
+        _axes(ax, title)
+        for i, ((c, _lab), L) in enumerate(zip(LADDER, lv, strict=True)):
+            y = len(LADDER) - 1 - i
+            per = W.within_folds(c) if key == "within" else W.between_folds(c)
+            ax.scatter(per, [y] * len(per), s=26, color=MUTED, alpha=0.8, zorder=2,
+                       label="one fold (mean of 3 seeds)" if i == 0 else None)
+            lo, hi = L[f"{key}_ci"]
+            ax.plot([lo, hi], [y, y], color=BLUE, lw=2.2, zorder=3, solid_capstyle="round")
+            ax.scatter([L[key]], [y], s=70, color=BLUE, edgecolor=FIG_BG, linewidth=1.5,
+                       zorder=4, label="all folds, 95 % CI (fire-group bootstrap)" if i == 0
+                       else None)
+            ax.text(hi + 0.006, y + 0.18, f"{L[key]:.3f}", color=INK, fontsize=8.5, va="center")
+        ax.set_yticks(range(len(LADDER)))
+        ax.set_yticklabels([lab for _, lab in LADDER][::-1] if ax is axes[0] else [],
+                           color=INK_BRIGHT, fontsize=9)
+        ax.set_ylim(-0.6, len(LADDER) - 0.4)
+    axes[0].set_xlim(0.55, 0.82)
+    axes[1].set_xlim(0.70, 0.98)
+    axes[1].axvline(0.87, color=AMBER, lw=1, ls="--", zorder=1)
+    axes[1].text(0.872, -0.45, "fire year alone (P3, E-43)", color=AMBER, fontsize=7.5)
+    axes[0].legend(loc="upper right", frameon=False, labelcolor=INK, fontsize=7.5)
+    fig.suptitle(f"E-34  The reference ladder on {lv[0]['n_fire']} held-out fires "
+                 f"({W.n_groups} fire/block groups, 5 folds x 3 seeds)", color=INK_BRIGHT,
+                 x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Every development patch is scored by the fold model that never saw it. "
+             "Within-patch: mean over fire patches of the AUC among that patch's pixels. "
+             "Between-patch: per-fold AUC of patch mean score, averaged over folds. R0 is not "
+             "trained (its three seeds are identical).", y=-0.04)
+    _save(fig, out, "ladder.png")
+    return lv
+
+
+def p7_forest(W, out):
+    plt = _plt()
+    rows = _p7_forest_rows(W)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 0.42 * len(rows) + 1.4), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.06})
+    for ax, key, title in ((axes[0], "within", "Change in within-patch AUC vs R2"),
+                           (axes[1], "between", "Change in between-patch AUC vs R2")):
+        _axes(ax, title)
+        ax.axvline(0, color=INK, lw=0.8, zorder=1)
+        labels = []
+        for i, (lab, real, twin) in enumerate(rows):
+            y = len(rows) - 1 - i
+            labels.append(lab)
+            if real is None:
+                continue
+            for d, off, col, face, name in ((real, 0.12, BLUE, BLUE, "real imagery or input"),
+                                            (twin, -0.14, MUTED, FIG_BG, "shuffled-imagery twin")):
+                if d is None:
+                    continue
+                lo, hi = d[f"d_{key}_ci"]
+                ax.plot([lo, hi], [y + off] * 2, color=col, lw=2, zorder=3,
+                        solid_capstyle="round")
+                ax.scatter([d[f"d_{key}"]], [y + off], s=46, color=face, edgecolor=col,
+                           linewidth=1.6, zorder=4,
+                           label=name if (i == 1 and ax is axes[0]) else None)
+        ax.set_yticks(range(len(rows)))
+        tl = ax.set_yticklabels(labels[::-1] if ax is axes[0] else [], fontsize=8.5)
+        for t, (_lab, real, _) in zip(tl, rows[::-1], strict=True):
+            t.set_color(MUTED if real is None else INK_BRIGHT)
+            if real is None:
+                t.set_fontweight("bold")
+        ax.set_ylim(-0.6, len(rows) - 0.4)
+    axes[0].set_xlim(-0.05, 0.035)
+    axes[1].set_xlim(-0.11, 0.08)
+    axes[0].legend(loc="lower left", frameon=False, labelcolor=INK, fontsize=8)
+    fig.suptitle("P7  What each slot and input changes, paired by fire against R2 "
+                 "(95 % CI, fire-group bootstrap)", color=INK_BRIGHT, x=0.01, y=1.0,
+                 ha="left", fontsize=12)
+    _caption(fig, "Right of zero = better than R2. A slot's gain counts only if it clears its "
+             "shuffled twin, which sees real imagery from the wrong tiles. Curing is exactly 0: "
+             "the SCANFI fuel tree assigns no O-1 grass pixel, so the correction never acts.",
+             y=-0.01)
+    _save(fig, out, "slots_forest.png")
+    return rows
+
+
+def _corr_tiles(run, c, name):
+    pts = []
+    for f in sorted((run / c).glob("f*s*/samples.npz")):
+        z = np.load(f)
+        if f"delta_{name}" not in z.files:
+            continue
+        for t in range(len(z["stems"])):
+            ok = z["label"][t, 0] >= 0
+            v = z[f"delta_{name}"][t, 0][ok]
+            if v.size:
+                pts.append((float(v.mean()), float(v.std())))
+    return np.array(pts)
+
+
+def p7_corrections(W, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 3, figsize=(12, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.25})
+    stats = []
+    for ax, (name, lab, bound) in zip(axes, CORR, strict=True):
+        _axes(ax, lab, "mean correction on the tile", "spread within the tile (SD)")
+        for c, col, face, tag in ((f"r3_{name}", BLUE, BLUE, "real imagery"),
+                                  (f"r3_{name}_shuffled", MUTED, FIG_BG, "shuffled twin")):
+            p = _corr_tiles(W.run, c, name)
+            ax.scatter(p[:, 0], p[:, 1], s=22, color=face, edgecolor=col, linewidth=1.1,
+                       alpha=0.85, label=tag, zorder=3)
+            stats.append({"slot": name, "config": c, "tiles": len(p),
+                          "median_mean": float(np.median(p[:, 0])),
+                          "median_sd": float(np.median(p[:, 1])),
+                          "share_at_bound": float(np.mean(np.abs(p[:, 0]) > 0.9 * bound))})
+        for b in (-bound, bound):
+            ax.axvline(b, color=AMBER, lw=1, ls="--", zorder=1)
+        ax.set_xlim(-bound * 1.12, bound * 1.12)
+        ax.set_ylim(bottom=0)
+    h, lab = axes[0].get_legend_handles_labels()
+    fig.legend(h, lab, loc="upper right", bbox_to_anchor=(0.99, 1.05), ncol=2, frameon=False,
+               labelcolor=INK, fontsize=8.5)
+    fig.suptitle("P7  The learned corrections are mostly one shift per tile, pinned near "
+                 "their bounds", color=INK_BRIGHT, x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Each point is one seeded fire tile of one fit (6 tiles x 15 fits per "
+             "configuration; dashed = the correction's bound). A correction that only moves "
+             "the whole tile cannot reorder its pixels, so it cannot change within-patch AUC. "
+             "Real imagery leaves some spread inside tiles; the shuffled twin learns a "
+             "constant.", y=-0.04)
+    _save(fig, out, "corrections.png")
+    return stats
+
+
+def p7_weights(W, out):
+    plt = _plt()
+    keys = list(OUTPUTS)
+    fig, ax = plt.subplots(figsize=(7.5, 3.8), facecolor=FIG_BG)
+    _axes(ax, "Weights R2 learned on the physics outputs (15 fits)", "",
+          "weight on the physics term")
+    ax.axhline(0, color=INK, lw=0.8, zorder=1)
+    rows = []
+    rng = np.random.default_rng(0)
+    for i, k in enumerate(keys):
+        w = np.array([r["learned"]["phys_w"][k] for r in W.fits["r2"]])
+        ax.scatter(i + rng.uniform(-0.12, 0.12, len(w)), w, s=26, color=BLUE, alpha=0.85,
+                   zorder=3, label="one fit" if i == 0 else None)
+        ax.scatter([i + 0.3], [1.0 if k == "hfi" else 0.0], s=60, facecolor=FIG_BG,
+                   edgecolor=AMBER, linewidth=1.6, zorder=3,
+                   label="starting value (R2 = R0)" if i == 0 else None)
+        rows.append({"output": k, "median": float(np.median(w)),
+                     "q25": float(np.percentile(w, 25)), "q75": float(np.percentile(w, 75))})
+    ax.set_xticks(range(len(keys)))
+    ax.set_xticklabels([OUT_LABEL[k].replace(" (", "\n(") for k in keys], color=INK,
+                       fontsize=8.5)
+    ax.legend(loc="upper right", frameon=False, labelcolor=INK, fontsize=8)
+    fig.suptitle("P7  R2 keeps intensity and leans against spread and crowning",
+                 color=INK_BRIGHT, x=0.01, y=1.03, ha="left", fontsize=12)
+    _caption(fig, "R2's logit is a weighted sum of log1p(ROS), log1p(HFI), CFB, log1p(TFC) and "
+                  "logit P(sustained flaming), plus a residual. "
+                  "The outputs are strongly correlated, so a negative weight means 'less, at "
+                  "equal intensity', not 'protective'.", y=-0.06)
+    _save(fig, out, "weights.png")
+    return rows
+
+
+def p7_curves(W, out):
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(7.5, 3.9), facecolor=FIG_BG)
+    _axes(ax, "Validation pixel AUC by epoch (median and IQR over 15 fits)", "epoch",
+          "pooled pixel AUC, held-out fold")
+    for c, lab, col in (("r1", "R1", GREEN), ("r2", "R2", BLUE), ("r4", "R4", ORANGE),
+                        ("r2_lag7", "R2, 7-day-old codes", PINK)):
+        cu = np.array([[h["auc_px"] for h in r["history"]] for r in W.fits[c]])
+        x = np.arange(1, cu.shape[1] + 1)
+        med = np.median(cu, 0)
+        ax.fill_between(x, np.percentile(cu, 25, 0), np.percentile(cu, 75, 0), color=col,
+                        alpha=0.18, lw=0)
+        ax.plot(x, med, color=col, lw=2, label=lab)
+        ax.text(x[-1] + 0.6, med[-1], lab, color=INK, fontsize=8, va="center")
+    ax.set_xlim(1, 41)
+    ax.legend(loc="lower right", frameon=False, labelcolor=INK, fontsize=8)
+    be = {c: int(np.median([r["best_epoch"] for r in W.fits[c]])) for c in ("r1", "r2", "r4")}
+    fig.suptitle("P7  Training converges inside 35 epochs", color=INK_BRIGHT, x=0.01, y=1.03,
+                 ha="left", fontsize=12)
+    _caption(fig, f"Median best epoch: R1 {be['r1']}, R2 {be['r2']}, R4 {be['r4']}. The model "
+             "kept is the best epoch on this curve (pooled pixel AUC of the held-out fold), so "
+             "selection used the fold the scores are read on; the paired comparisons share "
+             "that bias.", y=-0.06)
+    _save(fig, out, "curves.png")
+    return be
+
+
+def _pct(a):
+    """Within-tile percentile of each pixel's score: what within-patch AUC sees."""
+    v = a.astype(np.float64)
+    ok = np.isfinite(v)
+    q = np.full(v.shape, np.nan)
+    q[ok] = _rank(v[ok]) / max(ok.sum() - 1, 1)
+    return q
+
+
+def p7_tiles(W, out):
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, TwoSlopeNorm
+    plt = _plt()
+    seq = LinearSegmentedColormap.from_list("seq", ["#151b2b", "#1f4f8f", BLUE, "#bcd8fb"])
+    div = LinearSegmentedColormap.from_list("div", [ORANGE, "#5a5f70", BLUE])
+    cols = [("rgb", "Sentinel-2 true colour"), ("label", "NBAC burned on/after D"),
+            ("r0_scanfi:r0_hfi", "R0 HFI"), ("r1:pred", "R1"), ("r2:pred", "R2"),
+            ("r4:pred", "R4"), ("r3_pc_fmc_cbh:delta_pc", "R3 PC correction"),
+            ("r3_pc_fmc_cbh:delta_fmc", "R3 FMC correction")]
+    Z = {c: [np.load(W.run / c / f"f{f}s0" / "samples.npz") for f in range(5)]
+         for c in ("r0_scanfi", "r1", "r2", "r4", "r3_pc_fmc_cbh")}
+    fig, axes = plt.subplots(5, len(cols), figsize=(2.05 * len(cols), 2.2 * 5),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.16,
+                                                            "top": 0.9, "bottom": 0.12})
+    im_s = im_d = None
+    stems = []
+    for f in range(5):
+        base = Z["r2"][f]
+        stem = str(base["stems"][0])
+        stems.append(stem)
+        for c, (k, lab) in enumerate(cols):
+            ax = axes[f, c]
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            if k == "rgb":
+                ax.imshow(_stretch(base["rgb"][0]), interpolation="nearest")
+            elif k == "label":
+                a = base["label"][0, 0]
+                ax.imshow(np.where(a < 0, 2, a), cmap=ListedColormap([AX_BG, INK_BRIGHT, MUTED]),
+                          vmin=0, vmax=2, interpolation="nearest")
+            else:
+                cfg, key = k.split(":")
+                z = Z[cfg][f]
+                assert str(z["stems"][0]) == stem, (cfg, f)
+                a = z[key][0, 0]
+                if key.startswith("delta_"):
+                    im_d = ax.imshow(np.clip(a, -30, 30), cmap=div, norm=TwoSlopeNorm(0, -30, 30),
+                                     interpolation="nearest")
+                else:
+                    im_s = ax.imshow(_pct(a), cmap=seq, vmin=0, vmax=1, interpolation="nearest")
+            if f == 0:
+                ax.set_title(lab, color=INK, fontsize=8, loc="left")
+            if c == 0:
+                ax.set_ylabel(f"fold {f}\n" + stem.replace("_fire_tile", "\n"), color=INK,
+                              fontsize=6.5)
+    for im, (c0, c1), lab in ((im_s, (2, 5), "score percentile within the tile"),
+                              (im_d, (6, 7), "correction (points / %)")):
+        if im is not None:
+            a, b = axes[-1, c0].get_position(), axes[-1, c1].get_position()
+            cax = fig.add_axes([a.x0 + 0.01, a.y0 - 0.028, b.x1 - a.x0 - 0.02, 0.008])
+            cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+            cb.set_label(lab, color=INK, fontsize=8)
+            cb.ax.tick_params(colors=INK, labelsize=7.5)
+    fig.suptitle("P7  One seeded fire tile per fold, every rung on the same pixels (seed 0)",
+                 color=INK_BRIGHT, x=0.01, y=0.975, ha="left", fontsize=12)
+    _caption(fig, "True colour: the v2 pack's pre-fire composite (S2 SR median, D-45..D-1, "
+             "B4/B3/B2). White = burned on or after D; grey = ignored or invalid. Scores are shown "
+             "as percentiles within the tile, which is what within-patch AUC ranks. Corrections: "
+             "orange = lower than the operational value, blue = higher.", y=0.025)
+    _save(fig, out, "tiles.png")
+    return stems
+
+
+def _cfb_engagement(run):
+    v = []
+    for f in sorted((run / "r0_scanfi").glob("f*s0/samples.npz")):
+        z = np.load(f)
+        ok = (z["label"] >= 0) & (z["r0_hfi"] > 0)
+        v.append(z["r0_cfb"][ok])
+    v = np.concatenate(v)
+    return {"pixels": int(v.size), "cfb_pos": float((v > 0).mean()),
+            "cfb_over_0.1": float((v > 0.1).mean())}
+
+
+def p7_tables(W, out, lv, rows, corr, weights, best):
+    L = ["# P7 tables: Stage A slot experiments (Narval sweep slots_v2)\n",
+         f"Run: `{_rel(W.run)}`. {len(W.pat)} development patches ({lv[0]['n_fire']} fire), "
+         f"{W.n_groups} fire/block groups, 5 folds x 3 seeds per configuration. CIs: 2,000 "
+         "(within) and 500 (between) bootstrap resamples of whole groups. The test split was "
+         "not read.\n", "## T-ladder\n",
+         "| rung | within-patch AUC | 95 % CI | between-patch AUC | 95 % CI | "
+         "between, same-year pairs only |", "|---|---|---|---|---|---|"]
+    for (_c, lab), d in zip(LADDER, lv, strict=True):
+        L.append(f"| {lab} | {d['within']:.3f} | {_ci(d['within_ci'], 3)} | {d['between']:.3f} | "
+                 f"{_ci(d['between_ci'], 3)} | {d['within_year_between']:.3f} |")
+    _csv(out / "T_ladder.csv", [{k: v for k, v in d.items()} for d in lv])
+    lad = [W.paired("r1", "r0_scanfi"), W.paired("r2", "r1"), W.paired("r2", "r0_scanfi"),
+           W.paired("r0_cwfis", "r0_scanfi")]
+    L += ["", "## T-contrast: paired by fire (a minus b)\n",
+          "| a - b | within | 95 % CI | folds won | between | 95 % CI | folds won |",
+          "|---|---|---|---|---|---|---|"]
+    flat = lad + [r for _, r, _ in rows if r] + [t for *_, t in rows if t]
+    for d in flat:
+        L.append(f"| {d['a']} - {d['b']} | {d['d_within']:+.4f} | {_ci(d['d_within_ci'], 4)} | "
+                 f"{d['folds_won_within']}/5 | {d['d_between']:+.4f} | "
+                 f"{_ci(d['d_between_ci'], 4)} | {d['folds_won_between']}/5 |")
+    _csv(out / "T_contrast.csv", flat)
+    L += ["", "Real minus shuffled twin, within-patch:\n", "| slot | real - twin | 95 % CI |",
+          "|---|---|---|"]
+    for lab, real, twin, _ in SLOTS:
+        d = W.paired(real, twin)
+        L.append(f"| {lab} | {d['d_within']:+.4f} | {_ci(d['d_within_ci'], 4)} |")
+    L += ["", "## T-corrections: the learned correction on the seeded tiles\n",
+          "| configuration | tiles | median tile mean | median within-tile SD | share of tiles "
+          "within 10 % of the bound |", "|---|---|---|---|---|"]
+    for s in corr:
+        L.append(f"| {s['config']} | {s['tiles']} | {s['median_mean']:+.2f} | "
+                 f"{s['median_sd']:.3f} | {s['share_at_bound']:.2f} |")
+    _csv(out / "T_corrections.csv", corr)
+    cf = _cfb_engagement(W.run)
+    L += ["", f"CFB engagement (E-37's falsifier), R0 on the 30 seeded tiles: CFB > 0 on "
+          f"{cf['cfb_pos']:.1%} of {cf['pixels']:,} burnable valid pixels, > 0.1 on "
+          f"{cf['cfb_over_0.1']:.1%}.", "", "## T-weights: R2's learned physics weights\n",
+          "| output | median | IQR |", "|---|---|---|"]
+    for w in weights:
+        L.append(f"| {OUT_LABEL[w['output']]} | {w['median']:+.2f} | "
+                 f"[{w['q25']:+.2f}, {w['q75']:+.2f}] |")
+    L += ["", "## T-time: what the fits took (A100, Narval)\n",
+          "| configuration | fits | median wall (s) | max wall (s) | median best epoch |",
+          "|---|---|---|---|---|"]
+    for c in sorted(W.fits):
+        ws = [r["wall_s"] for r in W.fits[c]]
+        be = [r["best_epoch"] for r in W.fits[c] if r.get("trained")]
+        L.append(f"| {c} | {len(ws)} | {np.median(ws):.0f} | {max(ws):.0f} | "
+                 f"{int(np.median(be)) if be else '-'} |")
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+    return lad, cf
+
+
+def p7(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    lv = p7_ladder(W, out)
+    rows = p7_forest(W, out)
+    corr = p7_corrections(W, out)
+    weights = p7_weights(W, out)
+    best = p7_curves(W, out)
+    stems = p7_tiles(W, out)
+    lad, cf = p7_tables(W, out, lv, rows, corr, weights, best)
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)), "tile_stems": stems,
+                                              "freeze": str(FREEZE.name)}, indent=1))
+    (out / "summary.json").write_text(json.dumps(
+        {"ladder": lv, "contrasts": lad, "slots": [r for _, r, _ in rows if r],
+         "twins": [t for *_, t in rows if t], "corrections": corr, "weights": weights,
+         "cfb": cf}, indent=1, default=float))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet")}
+          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots")}
 
 
 def main(argv=None) -> int:

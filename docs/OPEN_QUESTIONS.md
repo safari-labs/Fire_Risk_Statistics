@@ -651,3 +651,16 @@ Derived: <= 91 s per 1000 x 1000 x 6-band scene (buffered, 500 km),
 real-time 4.6 s reported as a bonus, no processor power cap. Process weights
 stay equal (Q1). Recorded in A-29.
 
+
+---
+
+### Q29 — Three design choices before the second slot sweep
+
+**Status:** OPEN (raised by P7, 2026-10-26)
+**Blocks:** a meaningful E-38, and any imagery-correction result that is more than a recalibration.
+
+1. **Curing on CWFIS fuel.** The SCANFI fuel tree assigns no O-1 pixel, so `r3_curing` changed nothing: its delta was exactly 0. CWFIS 2019 fuel has O-1b on 4.6 % of pixels. Should the curing run, and its twin, move to CWFIS fuel? This adds two configurations and leaves SCANFI as the fuel source everywhere else.
+2. **Corrections that carry only a shift.** Every bounded correction learned a near-uniform shift toward less crown fire and sat near its bound (P7-C1). The shuffled twin learned the same shift, so nothing spatial reached the score.
+   - Proposed: give each slot a learned, imagery-free offset, so the imagery head models only the deviation from it, and widen the bound or move it off the tanh's flat part.
+   - This changes what "correct form" means for E-36 and E-37, so it would be registered as a new arm, not swapped in.
+3. **R2's within-patch gap to R1** (−0.025). R2's residual is the same network as R1, so capacity is not the difference. What differs is the zero start and the physics terms alongside it, so R2 settles in a worse place inside patches. Should a variant try warm-starting the residual from R1, or a higher learning rate for the residual? Or is the gap the cost of keeping the physics, to be reported as such?
