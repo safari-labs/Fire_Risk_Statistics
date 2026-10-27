@@ -664,3 +664,27 @@ stay equal (Q1). Recorded in A-29.
    - Proposed: give each slot a learned, imagery-free offset, so the imagery head models only the deviation from it, and widen the bound or move it off the tanh's flat part.
    - This changes what "correct form" means for E-36 and E-37, so it would be registered as a new arm, not swapped in.
 3. **R2's within-patch gap to R1** (−0.025). R2's residual is the same network as R1, so capacity is not the difference. What differs is the zero start and the physics terms alongside it, so R2 settles in a worse place inside patches. Should a variant try warm-starting the residual from R1, or a higher learning rate for the residual? Or is the gap the cost of keeping the physics, to be reported as such?
+
+---
+
+### Q30 — The CWFIS archive: as issued, or reprocessed? And is older FBP held anywhere?
+
+**Status:** OPEN (raised 2026-10-26, with E-55 and E-56)
+**Blocks:** how E-55 is read; whether E-56 needs a new 2024–2025 cohort at all.
+
+The CWFIS GeoServer (`cwfis.cfs.nrcan.gc.ca/geoserver`, WCS, `time=YYYY-MM-DD`) archives these daily 2 km grids:
+
+| Grid | Archived from |
+|---|---|
+| FWI (`public:fwi`) | 2018-01-01 |
+| Fire danger class (`public:fdr`) | 2018-01-01 |
+| FFMC, DMC, DC, ISI, BUI | 2024-01-01 |
+| HFI, ROS, CFB, SFC, TFC, FMC, fuel type | 2024-01-01 |
+| Green-up, grass curing | 2024 |
+
+Two things the documentation does not say:
+
+1. Are the archived grids the values CWFIS published on the day, or later reprocessing (for example, with late station reports or a changed interpolation)? E-55 compares against "what operations used", which only the as-issued values are.
+2. Does CWFIS or the CFS hold FBP grids before 2024 that are not served? If so, E-56 could run on the existing 2019–2023 cohort instead of a new one.
+
+Both are questions for CWFIS (cwfisitnotify-scifvtinotification@nrcan-rncan.gc.ca, from their data-services guide).

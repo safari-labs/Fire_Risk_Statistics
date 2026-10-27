@@ -1331,6 +1331,64 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "overlaps (41+ days: -0.029). The legacy imagery's fault is snow "
              "and season, not a visible burn.",
     ),
+    # E-55 and E-56 were registered on 2026-10-26, before any operational
+    # CWFIS grid value for a study patch was fetched. The only values seen
+    # were a 20 x 20-cell availability probe around one patch (FWI on
+    # 2019-07-01 and 2023-05-20/21, HFI on 2024-07-01), never scored.
+    Experiment(
+        "E-55", "Operational FWI grid vs the reconstruction", "CFFDRS mirror",
+        hypothesis="The FWI grid CWFIS issued for D-1 ranks fire above non-fire "
+                   "development patches as well as our ERA5-Land FWI does: the two "
+                   "between-patch AUCs are within 0.03 of each other, and the two "
+                   "FWI values agree across patches (Spearman rho >= 0.8). WRONG IF "
+                   "they differ by more than 0.03 with a CI excluding 0, or rho < "
+                   "0.8: then R0 does not stand in for operational CFFDRS, and every "
+                   "imagery delta measured against R0 or R2 is measured against a "
+                   "different baseline from the one operations use.",
+        independent="FWI source on D-1 for the same patches: CWFIS operational grid "
+                    "(GeoServer public:fwi, 2 km, archived from 2018-01-01) vs "
+                    "ERA5-Land at 13:00 LDT (fwi.py, variant c2) vs the nearest CWFIS "
+                    "station's reported FWI",
+        dependent="between-patch AUC per source (all pairs and same-year pairs), "
+                  "paired by patch with a fire/block-group bootstrap; Spearman rho and "
+                  "median difference, operational vs ERA5 and vs station",
+        conclusion="Whether R0 can stand in for operational CFFDRS when imagery "
+                   "deltas are reported, and how far it is from it where it cannot.",
+        state="NEEDS_DATA",
+        runner="--",
+        blocker="the fetch (Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py) is "
+                "not written. The grid covers 188 of 194 development patches "
+                "(all 83 fires; the 6 confusers dated 2016-2017 precede it)",
+        note="Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and "
+             "every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All "
+             "CWFIS grids are 2 km, so the comparison is between patches only: an "
+             "operational map cannot rank pixels inside a 5 km patch. Whether the "
+             "archive is as issued or reprocessed is not documented (Q30).",
+    ),
+    Experiment(
+        "E-56", "Operational FBP outputs on a 2024-2025 cohort", "CFFDRS mirror",
+        hypothesis="On fires that started in 2024-2025, the HFI CWFIS issued for D-1 "
+                   "ranks fire above non-fire patches within 0.03 of our R0 HFI for "
+                   "the same patches and day (between-patch AUC), and the two agree "
+                   "across patches (Spearman rho >= 0.7). WRONG IF they differ by "
+                   "more than 0.03 with a CI excluding 0: the operational inputs our "
+                   "reconstruction replaces (interpolated station weather, the CWFIS "
+                   "fuel grid, its FMC, green-up and curing) then carry, or lose, "
+                   "skill R0 does not.",
+        independent="HFI (and ROS, CFB, FMC, fuel type) source on D-1: CWFIS operational "
+                    "grids (public:hfi etc., 2 km, from 2024-01-01) vs our R0 on the "
+                    "same patches",
+        dependent="between-patch AUC per source, paired by patch; Spearman rho per "
+                  "output; fuel-type agreement (share of area)",
+        conclusion="The first comparison against what operational FBP actually "
+                   "reported. The cohort is also an out-of-time test for every model "
+                   "trained on 2019-2023.",
+        state="NEEDS_PACK",
+        runner="--",
+        blocker="NBAC 2024-2025 are held; patches, pre-fire composites, dated "
+                "weather and the v2 sidecars for a 2024-2025 cohort are not built",
+        note="Registered with E-55, before any grid value was scored.",
+    ),
 )
 
 
