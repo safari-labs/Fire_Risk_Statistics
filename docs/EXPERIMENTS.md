@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-56 experiments. **31 can run today** on data already packed and staged.
+56 experiments. **32 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,11 +16,11 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 15 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38 |
+| **Runnable now** | 16 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
 | **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
 | **Needs a pack** | 9 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48, E-56 |
-| **Needs new data** | 7 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45, E-55 |
+| **Needs new data** | 6 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
 Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audit. They were renumbered into this single register rather than left as a second scheme; `docs/CFFDRS_GAPS.md` points at the new ids.
@@ -48,7 +48,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-47** | Architecture decision | A tier2-class model is within one SE of the best preset at the chosen bands. WRONG IF only tier3 or larger reaches it. | model preset, R2 vs R4 form | paired skill at the chosen bands; the onboard/ground split | Needs a pack | *none yet* |
 | **E-49** | Dating the weather (R0) | Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI. | weather design, as a chain on the same patches: legacy -> dated (daily aggregates, flat spin-up) -> dated at 13:00 LDT -> dated with the Appendix C-2 start-up and overwintered DC (the P3 design) | between-patch AUC and paired fire-vs-own-confuser win rate per FWI code; within-patch HFI AUC, reported | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
-| **E-55** | Operational FWI grid vs the reconstruction | The FWI grid CWFIS issued for D-1 ranks fire above non-fire development patches as well as our ERA5-Land FWI does: the two between-patch AUCs are within 0.03 of each other, and the two FWI values agree across patches (Spearman rho >= 0.8). WRONG IF they differ by more than 0.03 with a CI excluding 0, or rho < 0.8: then R0 does not stand in for operational CFFDRS, and every imagery delta measured against R0 or R2 is measured against a different baseline from the one operations use. | FWI source on D-1 for the same patches: CWFIS operational grid (GeoServer public:fwi, 2 km, archived from 2018-01-01) vs ERA5-Land at 13:00 LDT (fwi.py, variant c2) vs the nearest CWFIS station's reported FWI | between-patch AUC per source (all pairs and same-year pairs), paired by patch with a fire/block-group bootstrap; Spearman rho and median difference, operational vs ERA5 and vs station | Needs new data | *none yet* |
+| **E-55** | Operational FWI grid vs the reconstruction | The FWI grid CWFIS issued for D-1 ranks fire above non-fire development patches as well as our ERA5-Land FWI does: the two between-patch AUCs are within 0.03 of each other, and the two FWI values agree across patches (Spearman rho >= 0.8). WRONG IF they differ by more than 0.03 with a CI excluding 0, or rho < 0.8: then R0 does not stand in for operational CFFDRS, and every imagery delta measured against R0 or R2 is measured against a different baseline from the one operations use. | FWI source on D-1 for the same patches: CWFIS operational grid (GeoServer public:fwi, 2 km, archived from 2018-01-01) vs ERA5-Land at 13:00 LDT (fwi.py, variant c2) vs the nearest CWFIS station's reported FWI | between-patch AUC per source (all pairs and same-year pairs), paired by patch with a fire/block-group bootstrap; Spearman rho and median difference, operational vs ERA5 and vs station | Runnable now | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` |
 | **E-56** | Operational FBP outputs on a 2024-2025 cohort | On fires that started in 2024-2025, the HFI CWFIS issued for D-1 ranks fire above non-fire patches within 0.03 of our R0 HFI for the same patches and day (between-patch AUC), and the two agree across patches (Spearman rho >= 0.7). WRONG IF they differ by more than 0.03 with a CI excluding 0: the operational inputs our reconstruction replaces (interpolated station weather, the CWFIS fuel grid, its FMC, green-up and curing) then carry, or lose, skill R0 does not. | HFI (and ROS, CFB, FMC, fuel type) source on D-1: CWFIS operational grids (public:hfi etc., 2 km, from 2024-01-01) vs our R0 on the same patches | between-patch AUC per source, paired by patch; Spearman rho per output; fuel-type agreement (share of area) | Needs a pack | *none yet* |
 
 ### Band selection
@@ -164,7 +164,7 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
 
-*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0).
+*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between patches, every CI spanning 0.
 
 **E-35 — Fuel-type slot**
 
@@ -300,9 +300,7 @@ How far the reanalysis we use stands from operational CFFDRS input, and whether 
 
 Whether R0 can stand in for operational CFFDRS when imagery deltas are reported, and how far it is from it where it cannot.
 
-*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30).
-
-*Blocked on:* the fetch (Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py) is not written. The grid covers 188 of 194 development patches (all 83 fires; the 6 confusers dated 2016-2017 precede it)
+*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30). P7b (docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: AUC operational 0.860 vs ERA5 0.851 (-0.009 [-0.073, +0.057], within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI lower (median); 10 of 19 large misses are ERA5 light rain the station did not see, 4 a later snow start-up. Same-year pairs: operational 0.744, ERA5 0.799.
 
 **E-56 — Operational FBP outputs on a 2024-2025 cohort**
 
@@ -707,6 +705,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-52** | Weather source: station vs ERA5 (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-53** | Weather staleness under R0 | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-54** | Legacy composite leakage | `Fire_Risk_Model/scripts/python/build_prefire.py` | -- |
+| **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

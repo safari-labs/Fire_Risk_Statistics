@@ -1533,19 +1533,27 @@ def p7_ladder(W, out):
         ax.set_yticks(range(len(LADDER)))
         ax.set_yticklabels([lab for _, lab in LADDER][::-1] if ax is axes[0] else [],
                            color=INK_BRIGHT, fontsize=9)
-        ax.set_ylim(-0.6, len(LADDER) - 0.4)
+        ax.set_ylim(-1.0, len(LADDER) - 0.4)
     axes[0].set_xlim(0.55, 0.82)
     axes[1].set_xlim(0.70, 0.98)
-    axes[1].axvline(0.87, color=AMBER, lw=1, ls="--", zorder=1)
-    axes[1].text(0.872, -0.45, "fire year alone (P3, E-43)", color=AMBER, fontsize=7.5)
-    axes[0].legend(loc="upper right", frameon=False, labelcolor=INK, fontsize=7.5)
+    axes[1].axvline(0.87, color=MUTED, lw=1, ls="--", zorder=1)
+    axes[1].text(0.872, -0.85, "fire year alone (P3, E-43)", color=MUTED, fontsize=7.5)
+    if (PATCHES / f"{W.pat[0]}_cwfis_grid.json").exists():
+        op = _op_between(W)
+        axes[1].axvline(op, color=AMBER, lw=1.4, zorder=1)
+        axes[1].text(op - 0.003, len(LADDER) - 0.5, f"operational CWFIS FWI {op:.3f}",
+                     color=AMBER, fontsize=7.5, ha="right")
+    axes[0].legend(loc="lower left", frameon=False, labelcolor=INK, fontsize=7.5)
     fig.suptitle(f"E-34  The reference ladder on {lv[0]['n_fire']} held-out fires "
                  f"({W.n_groups} fire/block groups, 5 folds x 3 seeds)", color=INK_BRIGHT,
                  x=0.01, y=1.04, ha="left", fontsize=12)
     _caption(fig, "Every development patch is scored by the fold model that never saw it. "
              "Within-patch: mean over fire patches of the AUC among that patch's pixels. "
              "Between-patch: per-fold AUC of patch mean score, averaged over folds. R0 is not "
-             "trained (its three seeds are identical).", y=-0.04)
+             "trained (its three seeds are identical). Amber line: the FWI CWFIS issued for "
+             "D-1, on the 188 patches its 2018+ archive covers (paired comparison: P7b, "
+             "E-55). Within-patch has no operational counterpart: CWFIS grids are 2 km.",
+             y=-0.04)
     _save(fig, out, "ladder.png")
     return lv
 
@@ -1862,8 +1870,285 @@ def p7(run: Path, out: Path):
          "cfb": cf}, indent=1, default=float))
 
 
+# ── P7b: the operational CFFDRS reference (E-55) ───────────────────────────
+# The FWI grid CWFIS issued for D-1 (fetch_cwfis_grids.py sidecars), set
+# against our reconstruction and against every rung of the sweep. 2 km grids:
+# between-patch comparisons only.
+
+PATCHES = _ROOT.parent / "Fire_Risk_Model" / "data" / "stage2_fire" / "patches_11band"
+#: (key, label) for the per-patch FWI sources compared in E-55.
+FWI_SRC = [("op", "CWFIS operational FWI grid (patch mean)"),
+           ("op_c", "CWFIS operational FWI grid (patch centre)"),
+           ("era5", "ERA5-Land FWI, 13:00 LDT (ours, R0's weather)"),
+           ("station", "Nearest CWFIS station FWI"),
+           ("fdr", "CWFIS fire danger class (majority)")]
+
+
+def _ops(W) -> dict:
+    """Per development patch (W.pat order): each FWI source on D-1, NaN where
+    absent. 'op_issued' is False where CWFIS issued no FWI for the patch."""
+    out = {k: np.full(len(W.pat), np.nan) for k, _ in FWI_SRC}
+    issued = np.zeros(len(W.pat), bool)
+    for i, p in enumerate(W.pat):
+        g = PATCHES / f"{p}_cwfis_grid.json"
+        if g.exists():
+            L = json.loads(g.read_text())["layers"]
+            fw = L.get("fwi") or {}
+            if fw.get("mean") is not None:
+                out["op"][i], issued[i] = fw["mean"], True
+            if fw.get("centre") is not None:
+                out["op_c"][i] = fw["centre"]
+            if (L.get("fdr") or {}).get("majority") is not None:
+                out["fdr"][i] = L["fdr"]["majority"]
+        f = json.loads((PATCHES / f"{p}_fwi_v2.json").read_text())
+        out["era5"][i] = f["variants"]["c2"]["lags"]["1"]["fwi"]
+        s = PATCHES / f"{p}_station.json"
+        if s.exists():
+            v = (json.loads(s.read_text()).get("lags") or {}).get("1") or {}
+            if v.get("fwi") is not None:
+                out["station"][i] = v["fwi"]
+    out["op_issued"] = issued
+    out["covered"] = np.array([json.loads((PATCHES / f"{p}_date.json").read_text())["date"]
+                               >= "2018-01-02" for p in W.pat])
+    return out
+
+
+def _fire(W):
+    return np.array([W.patch["r2"][p]["kind"] == "fire" for p in W.pat])
+
+
+def _same_year_auc(s, fire, year):
+    num = den = 0.0
+    for y in np.unique(year):
+        m = (year == y) & np.isfinite(s)
+        n1, n0 = int((fire & m).sum()), int((~fire & m).sum())
+        if n1 and n0:
+            num += _auc(s[m], fire[m]) * n1 * n0
+            den += n1 * n0
+    return num / den if den else float("nan")
+
+
+def p7b_compare(W, ops, keep):
+    """Pooled between-patch AUC per source on the patches in ``keep``, and
+    paired group-bootstrap deltas against the operational grid."""
+    fire = _fire(W)
+    idx = np.where(keep)[0]
+    pos = {j: k for k, j in enumerate(idx)}
+    boots = [np.array([pos[j] for j in b if j in pos]) for b in W.boots]
+    rows = []
+    for k, lab in FWI_SRC:
+        s, f, y = ops[k][idx], fire[idx], W.year[idx]
+        auc = _auc(s, f)
+        reps = [_auc(s[b], f[b]) for b in boots[:1000]]
+        d = [_auc(s[b], f[b]) - _auc(ops["op"][idx][b], f[b]) for b in boots[:1000]]
+        rows.append({"source": k, "label": lab, "n": int(np.isfinite(s).sum()),
+                     "n_fire": int((np.isfinite(s) & f).sum()), "auc": auc,
+                     "auc_ci": list(np.nanpercentile(reps, [2.5, 97.5])),
+                     "auc_same_year": _same_year_auc(s, f, y),
+                     "d_vs_op": auc - _auc(ops["op"][idx], f),
+                     "d_vs_op_ci": list(np.nanpercentile(d, [2.5, 97.5]))})
+    return rows
+
+
+def p7b_agreement(W, ops, keep):
+    out = {}
+    for k in ("era5", "station", "op_c"):
+        m = keep & np.isfinite(ops[k]) & np.isfinite(ops["op"])
+        idx = np.where(m)[0]
+        pos = {j: q for q, j in enumerate(idx)}
+        a, b = ops["op"][idx], ops[k][idx]
+        reps = []
+        for bb in W.boots[:1000]:
+            sel = np.array([pos[j] for j in bb if j in pos])
+            reps.append(_spearman(a[sel], b[sel]))
+        out[k] = {"n": int(m.sum()), "rho": _spearman(a, b),
+                  "rho_ci": list(np.nanpercentile(reps, [2.5, 97.5])),
+                  "median_diff": float(np.median(b - a)),
+                  "mad": float(np.median(np.abs(b - a)))}
+    return out
+
+
+def p7b_scatter(W, ops, keep, agree, out):
+    plt = _plt()
+    fire = _fire(W)
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.6), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.22})
+    for ax, k, lab in ((axes[0], "era5", "ERA5-Land FWI (ours)"),
+                       (axes[1], "station", "nearest-station FWI")):
+        _axes(ax, f"{lab} vs the CWFIS grid (rho {agree[k]['rho']:.2f}, n {agree[k]['n']})",
+              "CWFIS operational FWI on D-1 (patch mean, 2 km grid)", lab)
+        m = keep & np.isfinite(ops[k]) & np.isfinite(ops["op"])
+        hi = float(np.nanmax([ops["op"][m].max(), ops[k][m].max()])) * 1.05
+        ax.plot([0, hi], [0, hi], color=MUTED, lw=1, ls="--", zorder=1)
+        for sel, col, name in ((~fire, BLUE, "non-fire patch"), (fire, ORANGE, "fire patch")):
+            q = m & sel
+            ax.scatter(ops["op"][q], ops[k][q], s=26, color=col, edgecolor=FIG_BG, linewidth=1,
+                       alpha=0.9, zorder=3, label=name)
+        ax.set_xlim(0, hi)
+        ax.set_ylim(0, hi)
+    axes[0].legend(loc="upper left", frameon=False, labelcolor=INK, fontsize=8.5)
+    fig.suptitle("E-55  What CWFIS issued against what we reconstruct, per development patch",
+                 color=INK_BRIGHT, x=0.01, y=1.02, ha="left", fontsize=12)
+    _caption(fig, "Dashed = equal. FWI on D-1. The CWFIS grid interpolates station reports "
+             "to 2 km; ours runs FWI1987 on ERA5-Land at the patch centre. Patches where "
+             "CWFIS issued no FWI (the season had not started in the grid) are left out.",
+             y=-0.04)
+    _save(fig, out, "agreement.png")
+
+
+def p7b_auc(rows, rows0, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.6), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.12})
+    for ax, key, title in ((axes[0], "auc", "Between-patch AUC, all pairs"),
+                           (axes[1], "auc_same_year", "Between-patch AUC, same-year pairs")):
+        _axes(ax, title)
+        for i, r in enumerate(rows):
+            y = len(rows) - 1 - i
+            col = AMBER if r["source"].startswith("op") or r["source"] == "fdr" else BLUE
+            if key == "auc":
+                lo, hi = r["auc_ci"]
+                ax.plot([lo, hi], [y, y], color=col, lw=2, zorder=2, solid_capstyle="round")
+            ax.scatter([r[key]], [y], s=60, color=col, edgecolor=FIG_BG, lw=1.4, zorder=3)
+            r0 = next(q for q in rows0 if q["source"] == r["source"])
+            ax.scatter([r0[key]], [y - 0.22], s=34, facecolor=FIG_BG, edgecolor=col, lw=1.3,
+                       zorder=3, label="not-issued counted as FWI 0" if (i == 0 and key == "auc")
+                       else None)
+            ax.text(r[key] + 0.006, y + 0.18, f"{r[key]:.3f}", color=INK, fontsize=8)
+        ax.set_yticks(range(len(rows)))
+        ax.set_yticklabels([r["label"] for r in rows][::-1] if ax is axes[0] else [],
+                           color=INK_BRIGHT, fontsize=8.5)
+        ax.set_ylim(-0.7, len(rows) - 0.4)
+        ax.set_xlim(0.55, 1.0)
+    axes[0].legend(loc="lower left", frameon=False, labelcolor=INK, fontsize=8)
+    fig.suptitle(f"E-55  Fire vs non-fire ranking by FWI source ({rows[0]['n']} development "
+                 f"patches, {rows[0]['n_fire']} fires; 95 % CI, group bootstrap)",
+                 color=INK_BRIGHT, x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Amber = issued by CWFIS; blue = reconstructed (ERA5) or reported at the "
+             "nearest station. Filled = patches where every source exists; ring = the same "
+             "with CWFIS's not-issued patches scored as FWI 0. Fire year alone gives 0.87 "
+             "(E-43), so the same-year column is the fairer one.", y=-0.05)
+    _save(fig, out, "auc.png")
+
+
+def _op_between(W, ops=None) -> float:
+    """Per-fold between-patch AUC of the FWI CWFIS issued for D-1 (patches the
+    2018+ grid covers; not-issued counts as 0) -- the operational reference
+    line on the P7 ladder. The paired comparison is P7b's."""
+    ops = _ops(W) if ops is None else ops
+    _, fold, _ = W._score("r2")
+    fire = _fire(W)
+    op = np.where(ops["op_issued"], ops["op"], 0.0)
+    m = ops["covered"]
+    return float(np.nanmean([_auc(op[m & (fold == f)], fire[m & (fold == f)])
+                             for f in range(5)]))
+
+
+def p7b_ladder(W, ops, out):
+    """The sweep's rungs against the operational FWI, per fold, between patches."""
+    plt = _plt()
+    fire = _fire(W)
+    _, fold, _ = W._score("r2")
+    op = np.where(ops["op_issued"], ops["op"], 0.0)
+    op[~ops["covered"]] = np.nan
+    have = np.isfinite(op)
+
+    def per_fold(s, idx=None):
+        idx = np.arange(len(W.pat)) if idx is None else idx
+        m = have[idx]
+        return float(np.nanmean([_auc(s[idx][m & (fold[idx] == f)], fire[idx][m & (fold[idx] == f)])
+                                 for f in range(5)]))
+    rows = [("op", "CWFIS operational FWI (issued)", op), ("era5", "ERA5 FWI (ours)", ops["era5"])]
+    for c, lab in LADDER:
+        rows.append((c, lab, W._score(c)[0]))
+    res = []
+    for c, lab, s in rows:
+        est = per_fold(s)
+        d = [per_fold(s, b) - per_fold(op, b) for b in W.boots[:500]]
+        res.append({"config": c, "label": lab, "between": est,
+                    "d_vs_op": est - per_fold(op),
+                    "d_vs_op_ci": list(np.nanpercentile(d, [2.5, 97.5]))})
+    fig, ax = plt.subplots(figsize=(8.5, 3.8), facecolor=FIG_BG)
+    _axes(ax, "Between-patch AUC minus the operational FWI's, paired by fold and group",
+          "difference in between-patch AUC (right = better than operational CFFDRS)")
+    ax.axvline(0, color=AMBER, lw=1.2, zorder=1)
+    for i, r in enumerate(res[1:]):
+        y = len(res) - 2 - i
+        lo, hi = r["d_vs_op_ci"]
+        ax.plot([lo, hi], [y, y], color=BLUE, lw=2, zorder=2, solid_capstyle="round")
+        ax.scatter([r["d_vs_op"]], [y], s=56, color=BLUE, edgecolor=FIG_BG, lw=1.4, zorder=3)
+        ax.text(hi + 0.004, y, f"{r['between']:.3f}", color=INK, fontsize=8, va="center")
+    ax.set_yticks(range(len(res) - 1))
+    ax.set_yticklabels([r["label"] for r in res[1:]][::-1], color=INK_BRIGHT, fontsize=8.5)
+    ax.set_ylim(-0.6, len(res) - 1.4)
+    fig.suptitle(f"P7b  Every rung against operational CFFDRS (operational FWI: "
+                 f"{res[0]['between']:.3f})", color=INK_BRIGHT, x=0.01, y=1.04, ha="left",
+                 fontsize=12)
+    _caption(fig, "Same 5 folds as the slots_v2 sweep, AUC per fold then averaged; patches "
+             "dated before the grid's 2018 start are left out, and not-issued patches count as "
+             "FWI 0. Numbers at right are each rung's own between-patch AUC on these patches. "
+             "Within-patch skill has no operational counterpart: the grid is 2 km.", y=-0.05)
+    _save(fig, out, "ladder_vs_operational.png")
+    return res
+
+
+def p7b_tables(rows, rows0, agree, lad, ops, keep, out):
+    L = ["# P7b tables: the operational CFFDRS reference (E-55)\n",
+         f"Development patches with a CWFIS FWI value and both reconstructed sources: "
+         f"{rows[0]['n']} ({rows[0]['n_fire']} fire). Not covered (dated before 2018): "
+         f"{int((~ops['covered']).sum())}; covered but not issued: "
+         f"{int((ops['covered'] & ~ops['op_issued']).sum())}.\n",
+         "## T-auc: between-patch AUC by FWI source\n",
+         "| source | n | AUC | 95 % CI | same-year pairs | minus operational | 95 % CI | "
+         "AUC, not-issued as 0 |", "|---|---|---|---|---|---|---|---|"]
+    for r, r0 in zip(rows, rows0, strict=True):
+        L.append(f"| {r['label']} | {r['n']} | {r['auc']:.3f} | {_ci(r['auc_ci'], 3)} | "
+                 f"{r['auc_same_year']:.3f} | {r['d_vs_op']:+.3f} | {_ci(r['d_vs_op_ci'], 3)} | "
+                 f"{r0['auc']:.3f} |")
+    _csv(out / "T_auc.csv", rows)
+    L += ["", "## T-agree: agreement with the operational grid (patch mean)\n",
+          "| source | n | Spearman rho | 95 % CI | median (source - operational) | median "
+          "absolute difference |", "|---|---|---|---|---|---|"]
+    for k, a in agree.items():
+        L.append(f"| {k} | {a['n']} | {a['rho']:.2f} | {_ci(a['rho_ci'], 2)} | "
+                 f"{a['median_diff']:+.1f} | {a['mad']:.1f} |")
+    L += ["", "## T-ladder: rungs against the operational FWI (per fold, between patches)\n",
+          "| rung | between-patch AUC | minus operational | 95 % CI |", "|---|---|---|---|"]
+    for r in lad:
+        L.append(f"| {r['label']} | {r['between']:.3f} | {r['d_vs_op']:+.3f} | "
+                 f"{_ci(r['d_vs_op_ci'], 3)} |")
+    _csv(out / "T_ladder_vs_operational.csv", lad)
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p7b(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    ops = _ops(W)
+    keep = (ops["covered"] & ops["op_issued"] & np.isfinite(ops["era5"])
+            & np.isfinite(ops["station"]))
+    rows = p7b_compare(W, ops, keep)
+    ops0 = dict(ops)
+    ops0["op"] = np.where(ops["covered"] & ~ops["op_issued"], 0.0, ops["op"])
+    ops0["op_c"] = np.where(ops["covered"] & ~ops["op_issued"], 0.0, ops["op_c"])
+    keep0 = ops["covered"] & np.isfinite(ops["era5"]) & np.isfinite(ops["station"])
+    rows0 = p7b_compare(W, ops0, keep0)
+    agree = p7b_agreement(W, ops, keep)
+    p7b_scatter(W, ops, keep, agree, out)
+    p7b_auc(rows, rows0, out)
+    lad = p7b_ladder(W, ops, out)
+    p7b_tables(rows, rows0, agree, lad, ops, keep, out)
+    (out / "summary.json").write_text(json.dumps(
+        {"auc": rows, "auc_not_issued_as_0": rows0, "agreement": agree, "ladder": lad,
+         "n_keep": int(keep.sum()), "not_covered": int((~ops["covered"]).sum()),
+         "not_issued": int((ops["covered"] & ~ops["op_issued"]).sum())}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)), "patches": str(PATCHES),
+                                              "freeze": FREEZE.name}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots")}
+          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots"), "P7b": (p7b, "p7b_operational")}
 
 
 def main(argv=None) -> int:

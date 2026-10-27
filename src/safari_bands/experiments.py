@@ -946,7 +946,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts "
              "as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 "
              "within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 "
-             "[-0.034, -0.015], between -0.006 (CI spans 0).",
+             "[-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI "
+             "CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between "
+             "patches, every CI spanning 0.",
     ),
     Experiment(
         "E-35", "Fuel-type slot", "CFFDRS mirror",
@@ -1354,16 +1356,21 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "median difference, operational vs ERA5 and vs station",
         conclusion="Whether R0 can stand in for operational CFFDRS when imagery "
                    "deltas are reported, and how far it is from it where it cannot.",
-        state="NEEDS_DATA",
-        runner="--",
-        blocker="the fetch (Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py) is "
-                "not written. The grid covers 188 of 194 development patches "
-                "(all 83 fires; the 6 confusers dated 2016-2017 precede it)",
-        note="Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and "
-             "every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All "
-             "CWFIS grids are 2 km, so the comparison is between patches only: an "
-             "operational map cannot rank pixels inside a 5 km patch. Whether the "
-             "archive is as issued or reprocessed is not documented (Q30).",
+        state="RUNNABLE",
+        runner="Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py",
+        blocker="",
+        note="Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, "
+             "BUI and every FBP output start 2024-01-01 (GetCapabilities, "
+             "2026-10-26). All CWFIS grids are 2 km, so the comparison is "
+             "between patches only: an operational map cannot rank pixels "
+             "inside a 5 km patch. Whether the archive is as issued or "
+             "reprocessed is not documented (Q30). P7b "
+             "(docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: "
+             "AUC operational 0.860 vs ERA5 0.851 (-0.009 [-0.073, +0.057], "
+             "within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI "
+             "lower (median); 10 of 19 large misses are ERA5 light rain the "
+             "station did not see, 4 a later snow start-up. Same-year pairs: "
+             "operational 0.744, ERA5 0.799.",
     ),
     Experiment(
         "E-56", "Operational FBP outputs on a 2024-2025 cohort", "CFFDRS mirror",

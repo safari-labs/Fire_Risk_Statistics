@@ -23,6 +23,7 @@ The P5 ladder ran on Narval as sweep `slots_v2` (job 7289478): 20 configurations
 - **R1 beats R0 where it matters most:** +0.051 [+0.034, +0.068] within patches, in all five folds. The falsifier did not fire.
 - **R2 is not within noise of R1 inside patches:** −0.025 [−0.034, −0.015], 0 of 5 folds. Between patches the two match (−0.006, CI spans 0).
   - R2's residual is the same network as R1, so the gap is the cost of anchoring the score to the physics (Q29).
+- **Against operational CFFDRS.** The amber line is the FWI CWFIS issued for D−1 (0.857, P7b, E-55). Between patches, no rung separates from it: R1 +0.042, R2 +0.035, R4 +0.035, every CI spanning 0. Within patches there is no operational counterpart, because CWFIS grids are 2 km.
 - **Year and between-patch scores.** Between-patch numbers sit near what the fire year alone gives (0.87, E-43). Restricted to same-year pairs, every rung drops by 0.03–0.05, but the order holds.
 
 ## Slots and inputs against R2

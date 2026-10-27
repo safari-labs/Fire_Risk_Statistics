@@ -674,6 +674,67 @@ PHASES: tuple[Phase, ...] = (
                              "resource monitor on (A-35)."),
         ),
     ),
+    Phase(
+        "P7b", "The operational CFFDRS reference (E-55)", "2026-10-26",
+        "p7b_operational", "README.md",
+        "Fetched the FWI and fire danger grids CWFIS issued for each development "
+        "patch's D-1 (GeoServer WCS, archived from 2018, 2 km) and set them against "
+        "our reconstruction and against every rung of the slots_v2 sweep. E-55 was "
+        "registered before any grid value was scored. Between patches only: a 2 km "
+        "grid cannot rank pixels inside a patch. The test split was not requested.",
+        (
+            Entry("E-55", "experiment", "MIXED",
+                  result="181 patches (83 fires). AUC: operational 0.860, ERA5 0.851, "
+                         "difference -0.009 [-0.073, +0.057]. Spearman rho, ERA5 vs "
+                         "operational: 0.76 [0.63, 0.85]; ERA5 runs a median 3.6 FWI "
+                         "lower. Station vs operational: rho 0.84, median 0.0.",
+                  conclusion="R0's weather ranks patches as operational CFFDRS does, so "
+                             "imagery deltas are not inflated by a weak baseline. But the "
+                             "values do not track the issued FWI closely enough (rho < "
+                             "0.8): where agreement matters, the operational grid or the "
+                             "station is the closer reference."),
+            Entry("P7b-C1", "control", "MEASURED",
+                  title="Where the reconstruction departs from the issued FWI",
+                  question="Why does ERA5 FWI fall near 0 on patches where CWFIS "
+                           "issued 10 or more?",
+                  independent="the 19 patches with operational FWI > 10 and ERA5 FWI "
+                              "< 3",
+                  dependent="ERA5 24 h rain, our start-up state, FFMC; the same at the "
+                            "nearest station",
+                  result="10 had > 2 mm of ERA5 rain where the station reported about "
+                         "0 (FFMC 46-75 vs 85-91); 4 had not started the season under "
+                         "our snow rule while CWFIS was issuing FWI 11-32; 5 are FFMC "
+                         "differences.",
+                  conclusion="Added after registration. The weakness is ERA5-Land's "
+                             "light rain and a late snow start-up, not the FWI port."),
+            Entry("P7b-M1", "measurement", "MEASURED",
+                  title="Every rung against operational CFFDRS",
+                  question="Between patches, does any rung beat the FWI CWFIS issued?",
+                  independent="R0, R1, R2, R4 and ERA5 FWI vs the operational FWI, same "
+                              "folds, paired by group",
+                  dependent="per-fold between-patch AUC minus the operational FWI's",
+                  result="Operational 0.857. ERA5 -0.007, R0 HFI +0.016, R1 +0.042 "
+                         "[-0.020, +0.104], R2 +0.035, R4 +0.035; every CI spans 0. "
+                         "Same-year pairs: operational 0.744, ERA5 0.799, fire danger "
+                         "class 0.806, station 0.718.",
+                  conclusion="No rung is separable from operational CFFDRS between "
+                             "patches at 83 fires. Within years the issued FWI ranks "
+                             "worse than ours; much of its all-pairs AUC is the fire "
+                             "year."),
+            Entry("P7b-C2", "check", "FIXED",
+                  title="The grid as fetched",
+                  question="Each patch reads native 2 km cells, aligned with the patch "
+                           "footprint; missing values are recorded, not filled.",
+                  independent="196 patches, WCS GetCoverage at D-1",
+                  dependent="cell size, cells inside the patch, missing values",
+                  result="The first fetch came back resampled (1.8-2.3 km cells): the "
+                         "request box was off the native grid. Snapping to it gives 2 km "
+                         "everywhere, 15-49 cells per patch. 6 patches predate the "
+                         "archive; 7 early-season ones were not issued (whole tile empty).",
+                  conclusion="Not-issued patches are left out of the primary result and "
+                             "scored as FWI 0 in a sensitivity check (AUC 0.868)."),
+        ),
+    ),
 )
 
 

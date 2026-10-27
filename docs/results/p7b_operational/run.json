@@ -1,0 +1,5 @@
+{
+ "run": "narval_results\\slots_v2\\7289478",
+ "patches": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\data\\stage2_fire\\patches_11band",
+ "freeze": "test_groups_v1.json"
+}

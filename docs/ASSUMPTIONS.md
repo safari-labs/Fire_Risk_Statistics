@@ -1076,3 +1076,23 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - Results go to `$EXP_NAME/$RUN_ID/<config>/f<fold>s<seed>/`, with task logs and `resource_usage.csv` under `tasks/`.
   - `SKIP_DONE=1` resubmits only the missing fits.
 - **Per-fuel-family scores.** Each fit also reports pooled AUC per fuel family (C, D, M, O) and, per patch, within-patch AUC on that family's pixels. These are the outcomes E-36 (M-1/M-2) and E-38 (O-1) registered, which slots_v2 could not provide. The family comes from the fuel layer and leaf state the configuration's physics uses.
+
+---
+
+## A-36: The operational CFFDRS reference (E-55)
+
+**Assumption.** Wherever CWFIS archived what it issued, results are also set against that, not only against our reconstruction. James asked for this on 2026-10-26.
+
+- **Source.** The CWFIS GeoServer's time-enabled WCS (`public:<layer>`, `time=YYYY-MM-DD`), fetched by `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py`.
+- **What is archived:**
+  - FWI and the danger class from 2018-01-01;
+  - FFMC, DMC, DC, ISI, BUI and the FBP outputs (HFI, ROS, CFB, SFC, TFC, FMC, fuel type) from 2024-01-01.
+  - All grids are 2 km in EPSG:3978.
+- **Grid alignment.** Requests are snapped to the native grid (origin −2378164.08107, 3854382.22888). An unaligned box is resampled by GeoServer.
+- **Per patch:**
+  - **The date** is D−1, matching R0's weather.
+  - **The value** is the mean of the cells whose centres fall inside the patch footprint. The centre cell is kept as a check (ρ 1.00 with the mean).
+  - **The danger class** uses the majority class.
+- **Not issued is not missing.** Where CWFIS issued nothing (its season had not started), the patch is left out of the primary result and scored as FWI 0 in a sensitivity check. It is never imputed from our reconstruction.
+- **Between patches only.** No operational counterpart exists for within-patch results.
+- **Assumed as issued.** The archive is taken to be what was issued on the day. Q30 asks CWFIS whether it was reprocessed.
