@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-58 experiments. **34 can run today** on data already packed and staged.
+62 experiments. **34 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -18,9 +18,9 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 |---|---|---|---|
 | **Runnable now** | 18 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
-| **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
-| **Needs a pack** | 9 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48, E-56 |
-| **Needs new data** | 6 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45 |
+| **Needs code** | 7 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-60 |
+| **Needs a pack** | 10 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48, E-56, E-59 |
+| **Needs new data** | 8 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45, E-61, E-62 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
 Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audit. They were renumbered into this single register rather than left as a second scheme; `docs/CFFDRS_GAPS.md` points at the new ids.
@@ -82,6 +82,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-11** | Greenness vs moisture indices ★ | `both` beats `greenness` by a small but fold-consistent margin, because direct water absorption at 1610 nm carries information a greenness proxy cannot; and `moisture` (2 bands) draws with `greenness` (5 bands). WRONG IF `both` does not beat `greenness`, which would say the 1610 nm moisture signal adds nothing this label can see -- a publishable null, and one that would weaken the case for the SWIR chain considerably. | the index family given to the model: greenness (NDVI, EVI, VARI, NDRE) / moisture (NDMI, MSI) / both / raw bands | the paired difference in auc_px, scenario-held-out folds, against greenness | Runnable now | `sweep_indices.sh` |
 | **E-12** | Index baseline vs learned bands | The learned model on raw bands beats every index family, because an index is a fixed projection that discards information a model could use. WRONG IF indices match it, which would be a strong argument for shipping indices -- cheap on an FPGA and interpretable to an operational user. | hand-built indices vs the learned model on raw bands | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_indices.sh ARMS=raw,both` |
+| **E-59** | Indices as model inputs | For the P6 ecology estimators, giving the model every index its bands can form, alongside the raw bands, lowers error at matched band count, most at small k (k <= 4), under the sensor noise model; indices alone do worse than raw + indices. WRONG IF raw + indices beats raw at no k (spatial-block paired CI spanning 0 at every k, every target). | input mode at each nested band set: raw bands / indices only / raw + indices (an index enters only when its bands are in the set); same bands, folds and seeds | per-target held-out error (RMSE for percent conifer, closure, height; balanced accuracy for fuel family), noisy and noise-free | Needs a pack | *none yet* |
 
 ### Covariates
 
@@ -105,6 +106,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-50** | Latitude-correct day length (R0) | Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift. | DMC day-length factors: Van Wagner's 46 N table vs the same table scaled by astronomical day length at the patch latitude over that at 46 N (our construction) | DMC and BUI shift by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-51** | Operational start-up (R0) | The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6. | start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / DC 15 vs Appendix C-2 start-up with overwintered DC (cffdrs coefficients a = b = 0.75) | DC and DMC shift at D-1 by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-53** | Weather staleness under R0 | R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with. | weather age at scoring: 1, 2, 3, 7 days before D | between-patch AUC per code against weather age | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-60** | Snow-off without SWIR | A per-pixel snow-off date from visible and NIR bands alone is within 7 days of the NDSI-based date (green + SWIR1), median absolute difference over development fire patches. WRONG IF the median difference exceeds 7 days: snow-off then needs the SWIR chain, which counts toward its cost in P12. | snow index for the per-pixel snow-off date: NDSI (B3, B11) vs the best visible/NIR-only index found inside training folds | median and 90th-percentile \|difference\| in snow-off date (days); the downstream FWI start-up change (E-18) | Needs code | *none yet* |
 
 ### Hyperspectral
 
@@ -113,6 +115,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-23** | SWIR band placement | The best four cluster near 1240, 1610 and 1680-1730 nm, with the fourth in the 1500s. From brief hypotheses H1 and H3: resolving a dry-matter change needs two water-sensitive bands with different water-to-dry-matter absorption ratios. | any 4 centres and widths in 1003-1359 and 1414-1749 nm (140 usable channels) | retrieval error per candidate set | Needs new data | `fetch_aviris.py + ingest_aviris.py` |
 | **E-24** | 1209 vs 1240 nm | 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome. | WorldView-3's flown centre against Gao's NDWI band | retrieval error, and O2 absorption margin | Needs new data | `ingest_aviris.py --mode both` |
 | **E-25** | Spectral resolution: HS vs MS | Diminishing returns beyond roughly 10-15 well-placed bands, so the HS mode's 96 channels buy little over a well-chosen MS set. WRONG IF the curve keeps climbing, which would make the HS mode the better instrument and change the payload decision. | 140 SWIR channels at 5 nm vs the best 4-6 broad bands | retrieval error vs channel count | Needs new data | `ingest_aviris.py, then sweep_bands.py` |
+| **E-61** | Best SWIR bands, searched broadly | For the ecology targets, the best 4-band SWIR set within standard InGaAs (1000-1750 nm) recovers at least 90 % of the error reduction of the best 4-band set allowed to reach 2000-2400 nm (extended InGaAs), with the VNIR set fixed. WRONG IF allowing 2000-2400 nm improves any target by more than 10 % of its standard-window gain, with a CI excluding 0: then structure retrieval pays for the extended detector. Reported alongside, not predicted: how much of each optimum a vendor filter set (e.g. the best 4 of DFA's 12) recovers. | SWIR band sets from a broad grid (centres every 10 nm, FWHM 20-100 nm, in 1003-1359, 1414-1749 and 1970-2400 nm, A-22), nested k = 1-4, per detector window; vendor sets as reference points | per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 2020), spatial-block folds by flight line, under the noise model | Needs new data | *none yet* |
+| **E-62** | Best VNIR bands, searched broadly | The best 6-band VNIR set from a broad grid includes at least one band in 700-760 nm (red edge), and the best 6-band set with no band there is at least 5 % worse on percent conifer and canopy closure. WRONG IF the best set has no red-edge band, or the best no-red-edge set is within 5 % on both targets. | VNIR band sets from a broad grid (centres every 10 nm, FWHM 10-100 nm, 400-1000 nm), nested k = 1-6; the same search with 700-760 nm excluded; vendor sets (e.g. DFA's standard 6) and Sentinel-2's bands as reference points | per-target held-out error on AVIRIS-NG and, for Sentinel-2's bands, on the P6 ecology pack; under the noise model | Needs new data | *none yet* |
 
 ### Hardware
 
@@ -464,6 +468,16 @@ THE MISSION'S CENTRAL CLAIM. FWI2025 accepts grassland curing from remote sensin
 
 If the learned model beats every index family by a wide margin, the recommendation to CFFDRS is to take BANDS rather than indices — a finding about the system's interface, not only about our sensor. The heritage baseline rule 4 asks for.
 
+**E-59 — Indices as model inputs**
+
+*Hypothesis:* For the P6 ecology estimators, giving the model every index its bands can form, alongside the raw bands, lowers error at matched band count, most at small k (k <= 4), under the sensor noise model; indices alone do worse than raw + indices. WRONG IF raw + indices beats raw at no k (spatial-block paired CI spanning 0 at every k, every target).
+
+Whether the on-board model should compute indices before the network, which changes both the band value (a band is worth the indices it unlocks) and the compute budget (P12).
+
+*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile.
+
+*Blocked on:* the P6 ecology pack (S2 with B12) and the extended index front end
+
 ### Covariates
 
 **E-13 — Weather representation**
@@ -606,6 +620,14 @@ How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard
 
 *CFFDRS gap:* G7 CFFDRS assumes same-day observations
 
+**E-60 — Snow-off without SWIR**
+
+*Hypothesis:* A per-pixel snow-off date from visible and NIR bands alone is within 7 days of the NDSI-based date (green + SWIR1), median absolute difference over development fire patches. WRONG IF the median difference exceeds 7 days: snow-off then needs the SWIR chain, which counts toward its cost in P12.
+
+Whether a VNIR-only camera can supply the start-up date.
+
+*Blocked on:* the Sentinel-2 spring time-series reduction (P6c)
+
 ### Hyperspectral
 
 **E-23 — SWIR band placement**
@@ -633,6 +655,24 @@ Water sensitivity traded against O2 margin. The validator flagged the conflict; 
 What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked: ten Sentinel-2 bands cannot be interpolated into ninety-six, and rule 2 forbids trying.
 
 *Blocked on:* same as E-23
+
+**E-61 — Best SWIR bands, searched broadly**
+
+*Hypothesis:* For the ecology targets, the best 4-band SWIR set within standard InGaAs (1000-1750 nm) recovers at least 90 % of the error reduction of the best 4-band set allowed to reach 2000-2400 nm (extended InGaAs), with the VNIR set fixed. WRONG IF allowing 2000-2400 nm improves any target by more than 10 % of its standard-window gain, with a CI excluding 0: then structure retrieval pays for the extended detector. Reported alongside, not predicted: how much of each optimum a vendor filter set (e.g. the best 4 of DFA's 12) recovers.
+
+Which SWIR placements, and which detector, the structure targets need; feeds E-46 and the SWIR chain choice.
+
+*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22).
+
+*Blocked on:* 39 of 42 pre-fire AVIRIS-NG lines to fetch and ingest (P6a-HS)
+
+**E-62 — Best VNIR bands, searched broadly**
+
+*Hypothesis:* The best 6-band VNIR set from a broad grid includes at least one band in 700-760 nm (red edge), and the best 6-band set with no band there is at least 5 % worse on percent conifer and canopy closure. WRONG IF the best set has no red-edge band, or the best no-red-edge set is within 5 % on both targets.
+
+Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
+
+*Blocked on:* the AVIRIS-NG ingest (P6a-HS)
 
 ### Hardware
 

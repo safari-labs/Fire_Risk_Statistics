@@ -1471,6 +1471,89 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "anchor. Warm start best between patches (0.892; ISSUED by CWFIS "
              "0.857).",
     ),
+    # E-59 to E-62 were registered on 2026-10-27, at the start of P6, before
+    # any P6 pack, AVIRIS table beyond the three 2018 lines (never ingested)
+    # or band search existed. E-61 and E-62 search broadly by design (James:
+    # the DFA filter tables are examples of an option under consideration,
+    # not a constraint); vendor sets enter only as reference points.
+    Experiment(
+        "E-59", "Indices as model inputs", "Index baselines",
+        hypothesis="For the P6 ecology estimators, giving the model every index its "
+                   "bands can form, alongside the raw bands, lowers error at matched "
+                   "band count, most at small k (k <= 4), under the sensor noise "
+                   "model; indices alone do worse than raw + indices. WRONG IF raw + "
+                   "indices beats raw at no k (spatial-block paired CI spanning 0 at "
+                   "every k, every target).",
+        independent="input mode at each nested band set: raw bands / indices only / "
+                    "raw + indices (an index enters only when its bands are in the "
+                    "set); same bands, folds and seeds",
+        dependent="per-target held-out error (RMSE for percent conifer, closure, "
+                  "height; balanced accuracy for fuel family), noisy and noise-free",
+        conclusion="Whether the on-board model should compute indices before the "
+                   "network, which changes both the band value (a band is worth the "
+                   "indices it unlocks) and the compute budget (P12).",
+        state="NEEDS_PACK",
+        blocker="the P6 ecology pack (S2 with B12) and the extended index front end",
+        note="Indices are inputs only, never labels (rule 3). ECVs are not inputs "
+             "unless one is shown worthwhile.",
+    ),
+    Experiment(
+        "E-60", "Snow-off without SWIR", "CFFDRS gaps",
+        hypothesis="A per-pixel snow-off date from visible and NIR bands alone is "
+                   "within 7 days of the NDSI-based date (green + SWIR1), median "
+                   "absolute difference over development fire patches. WRONG IF the "
+                   "median difference exceeds 7 days: snow-off then needs the SWIR "
+                   "chain, which counts toward its cost in P12.",
+        independent="snow index for the per-pixel snow-off date: NDSI (B3, B11) vs the "
+                    "best visible/NIR-only index found inside training folds",
+        dependent="median and 90th-percentile |difference| in snow-off date (days); "
+                  "the downstream FWI start-up change (E-18)",
+        conclusion="Whether a VNIR-only camera can supply the start-up date.",
+        state="NEEDS_CODE",
+        blocker="the Sentinel-2 spring time-series reduction (P6c)",
+    ),
+    Experiment(
+        "E-61", "Best SWIR bands, searched broadly", "Hyperspectral",
+        hypothesis="For the ecology targets, the best 4-band SWIR set within standard "
+                   "InGaAs (1000-1750 nm) recovers at least 90 % of the error "
+                   "reduction of the best 4-band set allowed to reach 2000-2400 nm "
+                   "(extended InGaAs), with the VNIR set fixed. WRONG IF allowing "
+                   "2000-2400 nm improves any target by more than 10 % of its "
+                   "standard-window gain, with a CI excluding 0: then structure "
+                   "retrieval pays for the extended detector. Reported alongside, not "
+                   "predicted: how much of each optimum a vendor filter set (e.g. the "
+                   "best 4 of DFA's 12) recovers.",
+        independent="SWIR band sets from a broad grid (centres every 10 nm, FWHM 20-"
+                    "100 nm, in 1003-1359, 1414-1749 and 1970-2400 nm, A-22), nested "
+                    "k = 1-4, per detector window; vendor sets as reference points",
+        dependent="per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 "
+                  "2020), spatial-block folds by flight line, under the noise model",
+        conclusion="Which SWIR placements, and which detector, the structure targets "
+                   "need; feeds E-46 and the SWIR chain choice.",
+        state="NEEDS_DATA",
+        blocker="39 of 42 pre-fire AVIRIS-NG lines to fetch and ingest (P6a-HS)",
+        note="Broadens E-23 (which stays as registered) beyond 1750 nm and adds "
+             "vendor reference points. DFA L5 (1348/64) has ~28 % of its response "
+             "inside the 1364-1408 nm water-vapour gap (A-22).",
+    ),
+    Experiment(
+        "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
+        hypothesis="The best 6-band VNIR set from a broad grid includes at least one "
+                   "band in 700-760 nm (red edge), and the best 6-band set with no "
+                   "band there is at least 5 % worse on percent conifer and canopy "
+                   "closure. WRONG IF the best set has no red-edge band, or the best "
+                   "no-red-edge set is within 5 % on both targets.",
+        independent="VNIR band sets from a broad grid (centres every 10 nm, FWHM 10-"
+                    "100 nm, 400-1000 nm), nested k = 1-6; the same search with 700-760 "
+                    "nm excluded; vendor sets (e.g. DFA's standard 6) and Sentinel-2's "
+                    "bands as reference points",
+        dependent="per-target held-out error on AVIRIS-NG and, for Sentinel-2's bands, "
+                  "on the P6 ecology pack; under the noise model",
+        conclusion="Whether a VNIR camera without red edge (as some standard filter "
+                   "sets are) gives up structure skill, and which placements win.",
+        state="NEEDS_DATA",
+        blocker="the AVIRIS-NG ingest (P6a-HS)",
+    ),
 )
 
 
