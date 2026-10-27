@@ -151,6 +151,34 @@ def _cmd_bands(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_snr(args: argparse.Namespace) -> int:
+    from safari_bands.sensor import noise_model
+
+    config = load_study_config()
+    band_set = config.band_sets.get(args.band_set)
+    if band_set is None:
+        print(f"unknown band set {args.band_set!r}. "
+              f"Available: {', '.join(sorted(config.band_sets))}", file=sys.stderr)
+        return 2
+    nm = noise_model(band_set, config.detectors, config.optics, config.orbit,
+                     sza_deg=args.sza)
+    label = "PLACEHOLDER instrument (Q2-Q4)" if nm.placeholder else "instrument from configs"
+    print(f"{band_set.name}: per-band noise, SZA {nm.sza_deg:.0f} deg, "
+          f"T_atm {nm.t_atm}, {label}")
+    header = (f"{'band':<12s} {'centre':>7s} {'FWHM':>6s}  {'e-/rho':>10s}  "
+              f"{'SNR@0.05':>8s} {'SNR@0.20':>8s}  {'sigma@0.20':>10s}")
+    print(header)
+    print("-" * len(header))
+    for band in band_set.sorted_bands():
+        bn = nm.bands[band.name]
+        print(f"{band.name:<12s} {band.centre_nm:>7.1f} {band.fwhm_nm:>6.1f}  "
+              f"{bn.gain_e_per_rho:>10.0f}  {float(bn.snr(0.05)):>8.1f} "
+              f"{float(bn.snr(0.2)):>8.1f}  {float(bn.sigma(0.2)):>10.4f}")
+    for n in nm.notes:
+        print(f"  note: {n}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="safari-bands",
@@ -178,6 +206,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_bands = sub.add_parser("bands", help="print one band set in detail")
     p_bands.add_argument("band_set", help="band set name, e.g. config_b")
     p_bands.set_defaults(func=_cmd_bands)
+
+    p_snr = sub.add_parser("snr", help="per-band noise from the sensor model (rule 6)")
+    p_snr.add_argument("band_set", help="band set name, e.g. sentinel2_msi")
+    p_snr.add_argument("--sza", type=float, default=55.0, help="solar zenith angle, degrees")
+    p_snr.set_defaults(func=_cmd_snr)
 
     return parser
 

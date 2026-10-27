@@ -56,6 +56,7 @@ safari-bands validate --run             # ... and write runs/<timestamp>_validat
 safari-bands indices                    # index feasibility matrix
 safari-bands indices --band-set config_b
 safari-bands bands config_c
+safari-bands snr sentinel2_msi              # per-band noise from the sensor model (rule 6, A-37)
 ```
 
 `safari-bands validate` exits non-zero on any error and must stay clean.

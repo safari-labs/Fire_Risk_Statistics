@@ -1112,3 +1112,17 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Memory.** `--mem` is now 32G: two of fifteen `r2_warm` fits were killed at 16G at the R1→R2 hand-off. `run_slots.py` frees R1 before R2 trains.
 - **Monitor.** `start_monitor` adds `job_mem_MiB`, the job's own cgroup memory. The existing RAM columns are node-wide.
 - **Measured use** (45 tasks): 10 min median and 17 min max per task of 3 fits; GPU 25 % median, 1.5 GB peak; setup 38 s.
+
+---
+
+## A-37: The sensor noise model (rule 6; P6)
+
+**Assumption.** Every P6 evaluation adds the noise a CubeSat band would carry, computed by `src/safari_bands/sensor.py` from the detector, optics and orbit configurations (`safari-bands snr <band_set>`). James approved using the placeholder instrument for now (2026-10-27).
+
+- **Signal.** Electrons per unit reflectance, g. A Lambertian surface under a 5778 K blackbody sun at 1 AU (within about 15 % of measured irradiance at 500–2190 nm) is integrated over the band's Gaussian response × QE. The integral is taken through the pupil area, the pixel's solid angle, the optics transmission and the integration time × TDI.
+- **Noise.** σ_ρ = √(ρ/g + (dark·t + TDI·read²)/g²): shot noise on the signal, dark current, and read noise once per TDI stage (the conservative digital-TDI case).
+- **Reference geometry.** Solar zenith angle 55° (spring overpasses at 45–60°N, brief §4) and a two-way atmospheric transmittance of 0.8 in windows. Both are placeholders.
+- **Detector choice.** A band uses the detector it names, else the cheapest that covers its centre: silicon to 1000 nm, standard InGaAs to 1700 nm, extended InGaAs beyond (brief §5).
+- **Not subtracted: the source data's own noise.** The P6 inputs are medians of 5–20 Sentinel-2 observations, or 4 × 4 block means of AVIRIS-NG pixels, so their noise is well below one CubeSat acquisition's. The full CubeSat noise is added on top, which slightly overstates the total and errs toward penalising a band.
+- **Not modelled yet (Phase 5):** saturation (reported, not clipped; with the placeholder silicon full well, the blue band fills at reflectance 0.24), quantisation, PRNU, stray light, and residual atmospheric-correction error.
+- **Every result is reported twice,** noisy and noise-free (rule 6), and labelled as using a placeholder instrument until Q2–Q4 are answered.

@@ -79,3 +79,15 @@ def test_no_command_exits_with_usage_error():
     with pytest.raises(SystemExit) as exc:
         main([])
     assert exc.value.code == 2
+
+
+def test_snr_reports_every_band_and_the_placeholder_label(capsys):
+    assert main(["snr", "sentinel2_msi"]) == 0
+    out = capsys.readouterr().out
+    assert "PLACEHOLDER" in out
+    for b in ("B2", "B8A", "B11", "B12"):
+        assert b in out
+
+
+def test_snr_rejects_an_unknown_band_set(capsys):
+    assert main(["snr", "no_such_set"]) == 2
