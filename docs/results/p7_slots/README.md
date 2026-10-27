@@ -1,5 +1,7 @@
 # P7: Stage A slot experiments, first sweep (2026-10-26)
 
+> **Reference.** Unless a line says **ISSUED by CWFIS**, every CFFDRS number here is our reconstruction (R0, or the R2 it is compared against), not what CWFIS published. The issued comparison is in [P7b](../p7b_operational/README.md).
+
 The P5 ladder ran on Narval as sweep `slots_v2` (job 7289478): 20 configurations × 5 fire-aware folds × 3 seeds, 300 fits, all completed.
 
 **How the results are read**
@@ -23,7 +25,7 @@ The P5 ladder ran on Narval as sweep `slots_v2` (job 7289478): 20 configurations
 - **R1 beats R0 where it matters most:** +0.051 [+0.034, +0.068] within patches, in all five folds. The falsifier did not fire.
 - **R2 is not within noise of R1 inside patches:** −0.025 [−0.034, −0.015], 0 of 5 folds. Between patches the two match (−0.006, CI spans 0).
   - R2's residual is the same network as R1, so the gap is the cost of anchoring the score to the physics (Q29).
-- **Against operational CFFDRS.** The amber line is the FWI CWFIS issued for D−1 (0.857, P7b, E-55). Between patches, no rung separates from it: R1 +0.042, R2 +0.035, R4 +0.035, every CI spanning 0. Within patches there is no operational counterpart, because CWFIS grids are 2 km.
+- **Against what CWFIS actually issued.** The amber line is the FWI **ISSUED by CWFIS** for D−1 (0.857, P7b, E-55). Every other number in this note is our reconstruction. Between patches, none of our rungs separates from the issued FWI: R1 +0.042, R2 +0.035, R4 +0.035, every CI spanning 0. Within patches there is no issued counterpart, because CWFIS grids are 2 km.
 - **Year and between-patch scores.** Between-patch numbers sit near what the fire year alone gives (0.87, E-43). Restricted to same-year pairs, every rung drops by 0.03–0.05, but the order holds.
 
 ## Slots and inputs against R2
@@ -45,7 +47,7 @@ The P5 ladder ran on Narval as sweep `slots_v2` (job 7289478): 20 configurations
 - **E-37's falsifier did not fire:** CFB is above 0 on 47 % of burnable pixels. Crowning engages, but a learned CBH still does not move skill.
 - **All the imagery R4 can add here** is about +0.01 within patches, and at 83 fires that cannot be separated from zero.
 
-**Operational inputs swapped under R2:**
+**Operational input products swapped under R2** (CWFIS's fuel layer and green-up product, and station weather, fed into our reconstruction; not values CWFIS issued):
 - **Fuel inventory (E-35):** CWFIS 2019 instead of SCANFI costs −0.007 [−0.017, +0.003] within, against −0.048 under R0. Learning absorbs most of the inventory gap.
 - **Weather source (E-52):** station weather is −0.017 [−0.034, −0.001] within and +0.024 [−0.027, +0.076] between.
 - **Stale codes (E-20, PARTIAL):** 7-day-old codes cost −0.024 within and −0.052 [−0.101, −0.010] between, in all five folds. Decay is not flat. The per-code ordering and the score-at-each-lag design have not run.

@@ -1096,3 +1096,13 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Not issued is not missing.** Where CWFIS issued nothing (its season had not started), the patch is left out of the primary result and scored as FWI 0 in a sensitivity check. It is never imputed from our reconstruction.
 - **Between patches only.** No operational counterpart exists for within-patch results.
 - **Assumed as issued.** The archive is taken to be what was issued on the day. Q30 asks CWFIS whether it was reprocessed.
+
+**Naming (James, 2026-10-26).** Every comparison must say clearly whether its CFFDRS values were actually issued by CWFIS or reconstructed by us. Three terms are used, never interchangeably:
+
+| Term | Meaning |
+|---|---|
+| **ISSUED by CWFIS** | Values CWFIS published: the archived grids, and the codes it computed at stations (`fwi_obs`). Shown in amber in figures. |
+| **Reconstructed (ours)** | R0 to R4, and FWI from ERA5-Land. Every CFFDRS number in P2–P7 is reconstructed unless a line says otherwise. |
+| **Operational input products** | Inputs operations also use (the CWFIS fuel layer, green-up product, station weather), fed into our reconstruction. Not issued outputs. |
+
+"Operational" alone is not used for issued values.

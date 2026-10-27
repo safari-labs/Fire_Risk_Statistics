@@ -675,24 +675,25 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
-        "P7b", "The operational CFFDRS reference (E-55)", "2026-10-26",
+        "P7b", "Against what CWFIS actually issued (E-55)", "2026-10-26",
         "p7b_operational", "README.md",
-        "Fetched the FWI and fire danger grids CWFIS issued for each development "
-        "patch's D-1 (GeoServer WCS, archived from 2018, 2 km) and set them against "
+        "Fetched the FWI and fire danger grids CWFIS actually ISSUED for each "
+        "development patch's D-1 (GeoServer WCS, archived from 2018, 2 km) and set them against "
         "our reconstruction and against every rung of the slots_v2 sweep. E-55 was "
         "registered before any grid value was scored. Between patches only: a 2 km "
         "grid cannot rank pixels inside a patch. The test split was not requested.",
         (
             Entry("E-55", "experiment", "MIXED",
-                  result="181 patches (83 fires). AUC: operational 0.860, ERA5 0.851, "
-                         "difference -0.009 [-0.073, +0.057]. Spearman rho, ERA5 vs "
-                         "operational: 0.76 [0.63, 0.85]; ERA5 runs a median 3.6 FWI "
-                         "lower. Station vs operational: rho 0.84, median 0.0.",
-                  conclusion="R0's weather ranks patches as operational CFFDRS does, so "
+                  result="181 patches (83 fires). AUC: ISSUED by CWFIS 0.860, reconstructed "
+                         "(ours, ERA5) 0.851, difference -0.009 [-0.073, +0.057]. "
+                         "Spearman rho, ours vs issued: 0.76 [0.63, 0.85]; ours runs a "
+                         "median 3.6 FWI lower. Issued station FWI vs issued grid: rho "
+                         "0.84, median 0.0.",
+                  conclusion="Our reconstruction ranks patches as the issued FWI does, so "
                              "imagery deltas are not inflated by a weak baseline. But the "
                              "values do not track the issued FWI closely enough (rho < "
-                             "0.8): where agreement matters, the operational grid or the "
-                             "station is the closer reference."),
+                             "0.8): where values matter, the issued grid or station is the "
+                             "closer reference."),
             Entry("P7b-C1", "control", "MEASURED",
                   title="Where the reconstruction departs from the issued FWI",
                   question="Why does ERA5 FWI fall near 0 on patches where CWFIS "
@@ -708,16 +709,16 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="Added after registration. The weakness is ERA5-Land's "
                              "light rain and a late snow start-up, not the FWI port."),
             Entry("P7b-M1", "measurement", "MEASURED",
-                  title="Every rung against operational CFFDRS",
+                  title="Every rung (ours) against the FWI CWFIS issued",
                   question="Between patches, does any rung beat the FWI CWFIS issued?",
-                  independent="R0, R1, R2, R4 and ERA5 FWI vs the operational FWI, same "
-                              "folds, paired by group",
-                  dependent="per-fold between-patch AUC minus the operational FWI's",
-                  result="Operational 0.857. ERA5 -0.007, R0 HFI +0.016, R1 +0.042 "
+                  independent="our R0, R1, R2, R4 and ERA5 FWI vs the FWI ISSUED by "
+                              "CWFIS, same folds, paired by group",
+                  dependent="per-fold between-patch AUC minus the issued FWI's",
+                  result="Issued by CWFIS 0.857. Ours: ERA5 -0.007, R0 HFI +0.016, R1 +0.042 "
                          "[-0.020, +0.104], R2 +0.035, R4 +0.035; every CI spans 0. "
-                         "Same-year pairs: operational 0.744, ERA5 0.799, fire danger "
-                         "class 0.806, station 0.718.",
-                  conclusion="No rung is separable from operational CFFDRS between "
+                         "Same-year pairs: issued grid 0.744, ours 0.799, issued danger "
+                         "class 0.806, issued station 0.718.",
+                  conclusion="No rung of ours separates from what CWFIS issued between "
                              "patches at 83 fires. Within years the issued FWI ranks "
                              "worse than ours; much of its all-pairs AUC is the fire "
                              "year."),

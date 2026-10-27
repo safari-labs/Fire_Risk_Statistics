@@ -2,7 +2,7 @@
  "auc": [
   {
    "source": "op",
-   "label": "CWFIS operational FWI grid (patch mean)",
+   "label": "ISSUED by CWFIS: FWI grid (patch mean)",
    "n": 181,
    "n_fire": 83,
    "auc": 0.8596016719940989,
@@ -19,7 +19,7 @@
   },
   {
    "source": "op_c",
-   "label": "CWFIS operational FWI grid (patch centre)",
+   "label": "ISSUED by CWFIS: FWI grid (patch centre)",
    "n": 180,
    "n_fire": 82,
    "auc": 0.8600049776007964,
@@ -36,7 +36,7 @@
   },
   {
    "source": "era5",
-   "label": "ERA5-Land FWI, 13:00 LDT (ours, R0's weather)",
+   "label": "Reconstructed (ours): ERA5-Land FWI, R0's weather",
    "n": 181,
    "n_fire": 83,
    "auc": 0.8505040570445046,
@@ -53,7 +53,7 @@
   },
   {
    "source": "station",
-   "label": "Nearest CWFIS station FWI",
+   "label": "ISSUED by CWFIS: FWI at the nearest station",
    "n": 181,
    "n_fire": 83,
    "auc": 0.8474305384804525,
@@ -70,7 +70,7 @@
   },
   {
    "source": "fdr",
-   "label": "CWFIS fire danger class (majority)",
+   "label": "ISSUED by CWFIS: fire danger class (majority)",
    "n": 181,
    "n_fire": 83,
    "auc": 0.8509958200147529,
@@ -89,7 +89,7 @@
  "auc_not_issued_as_0": [
   {
    "source": "op",
-   "label": "CWFIS operational FWI grid (patch mean)",
+   "label": "ISSUED by CWFIS: FWI grid (patch mean)",
    "n": 187,
    "n_fire": 83,
    "auc": 0.8677015755329008,
@@ -106,7 +106,7 @@
   },
   {
    "source": "op_c",
-   "label": "CWFIS operational FWI grid (patch centre)",
+   "label": "ISSUED by CWFIS: FWI grid (patch centre)",
    "n": 186,
    "n_fire": 82,
    "auc": 0.8680816135084428,
@@ -123,7 +123,7 @@
   },
   {
    "source": "era5",
-   "label": "ERA5-Land FWI, 13:00 LDT (ours, R0's weather)",
+   "label": "Reconstructed (ours): ERA5-Land FWI, R0's weather",
    "n": 187,
    "n_fire": 83,
    "auc": 0.8532205746061168,
@@ -140,7 +140,7 @@
   },
   {
    "source": "station",
-   "label": "Nearest CWFIS station FWI",
+   "label": "ISSUED by CWFIS: FWI at the nearest station",
    "n": 187,
    "n_fire": 83,
    "auc": 0.8509036144578314,
@@ -157,7 +157,7 @@
   },
   {
    "source": "fdr",
-   "label": "CWFIS fire danger class (majority)",
+   "label": "ISSUED by CWFIS: fire danger class (majority)",
    "n": 181,
    "n_fire": 83,
    "auc": 0.8509958200147529,
@@ -208,7 +208,7 @@
  "ladder": [
   {
    "config": "op",
-   "label": "CWFIS operational FWI (issued)",
+   "label": "ISSUED by CWFIS: FWI",
    "between": 0.8565932472022626,
    "d_vs_op": 0.0,
    "d_vs_op_ci": [
@@ -218,7 +218,7 @@
   },
   {
    "config": "era5",
-   "label": "ERA5 FWI (ours)",
+   "label": "Reconstructed (ours): ERA5 FWI",
    "between": 0.8494001102856601,
    "d_vs_op": -0.007193136916602505,
    "d_vs_op_ci": [
@@ -228,7 +228,7 @@
   },
   {
    "config": "r0_scanfi",
-   "label": "R0  physics only (HFI)",
+   "label": "Reconstructed (ours): R0",
    "between": 0.8728414161558344,
    "d_vs_op": 0.01624816895357184,
    "d_vs_op_ci": [
@@ -238,7 +238,7 @@
   },
   {
    "config": "r1",
-   "label": "R1  learned on CFFDRS inputs",
+   "label": "Reconstructed (ours): R1",
    "between": 0.8987505751092707,
    "d_vs_op": 0.0421573279070081,
    "d_vs_op_ci": [
@@ -248,7 +248,7 @@
   },
   {
    "config": "r2",
-   "label": "R2  physics + learned residual",
+   "label": "Reconstructed (ours): R2",
    "between": 0.8918760741011379,
    "d_vs_op": 0.0352828268988753,
    "d_vs_op_ci": [
@@ -258,7 +258,7 @@
   },
   {
    "config": "r4",
-   "label": "R4  R2 + free imagery branch",
+   "label": "Reconstructed (ours): R4",
    "between": 0.8911634671984736,
    "d_vs_op": 0.034570219996211016,
    "d_vs_op_ci": [

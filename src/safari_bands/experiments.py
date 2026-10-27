@@ -1366,7 +1366,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "inside a 5 km patch. Whether the archive is as issued or "
              "reprocessed is not documented (Q30). P7b "
              "(docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: "
-             "AUC operational 0.860 vs ERA5 0.851 (-0.009 [-0.073, +0.057], "
+             "AUC ISSUED by CWFIS 0.860 vs ours (ERA5) 0.851 (-0.009 [-0.073, +0.057], "
              "within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI "
              "lower (median); 10 of 19 large misses are ERA5 light rain the "
              "station did not see, 4 a later snow start-up. Same-year pairs: "

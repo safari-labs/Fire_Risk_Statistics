@@ -300,7 +300,7 @@ How far the reanalysis we use stands from operational CFFDRS input, and whether 
 
 Whether R0 can stand in for operational CFFDRS when imagery deltas are reported, and how far it is from it where it cannot.
 
-*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30). P7b (docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: AUC operational 0.860 vs ERA5 0.851 (-0.009 [-0.073, +0.057], within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI lower (median); 10 of 19 large misses are ERA5 light rain the station did not see, 4 a later snow start-up. Same-year pairs: operational 0.744, ERA5 0.799.
+*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30). P7b (docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: AUC ISSUED by CWFIS 0.860 vs ours (ERA5) 0.851 (-0.009 [-0.073, +0.057], within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI lower (median); 10 of 19 large misses are ERA5 light rain the station did not see, 4 a later snow start-up. Same-year pairs: operational 0.744, ERA5 0.799.
 
 **E-56 — Operational FBP outputs on a 2024-2025 cohort**
 
