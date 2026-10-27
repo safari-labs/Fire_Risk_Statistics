@@ -127,6 +127,87 @@ indices:
     formula: "(NIR - RED_EDGE1) / (NIR + RED_EDGE1)"
     notes: Red-edge stress signal, relevant to T3 mortality and defoliation.
 
+  # ---- P6 extension: candidate model INPUTS (James, 2026-10-27) ---------
+  # Added so the P6 estimators can take indices alongside raw bands (E-59).
+  # As inputs, not labels: the scope warning at the top still holds.
+  # Mirrored in Fire_Risk_FW/src/fire_risk_fw/index_frontend.py. Formula
+  # citations are from background knowledge and need checking before use.
+  - name: GNDVI
+    long_name: Green Normalised Difference Vegetation Index
+    target: T4
+    family: greenness_ext
+    requires_roles: [GREEN, NIR]
+    formula: "(NIR - GREEN) / (NIR + GREEN)"
+    notes: More sensitive than NDVI to chlorophyll at high leaf area (Gitelson 1996).
+
+  - name: SAVI
+    long_name: Soil-Adjusted Vegetation Index
+    target: T4
+    family: greenness_ext
+    requires_roles: [RED, NIR]
+    formula: "1.5 * (NIR - RED) / (NIR + RED + 0.5)"
+    notes: L = 0.5; damps the soil background in open canopies (Huete 1988).
+
+  - name: NDRE2
+    long_name: Normalised Difference Red Edge (740 nm)
+    target: T3
+    family: red_edge
+    requires_roles: [RED_EDGE2, NIR]
+    formula: "(NIR - RED_EDGE2) / (NIR + RED_EDGE2)"
+
+  - name: CIre
+    long_name: Red-edge Chlorophyll Index
+    target: T3
+    family: red_edge
+    requires_roles: [RED_EDGE1, NIR]
+    formula: "NIR / RED_EDGE1 - 1"
+    notes: Canopy chlorophyll content (Gitelson 2003).
+
+  - name: MTCI
+    long_name: MERIS Terrestrial Chlorophyll Index
+    target: T3
+    family: red_edge
+    requires_roles: [RED, RED_EDGE1, RED_EDGE2]
+    formula: "(RED_EDGE2 - RED_EDGE1) / (RED_EDGE1 - RED)"
+    notes: Red-edge position proxy (Dash and Curran 2004).
+
+  - name: IRECI
+    long_name: Inverted Red-Edge Chlorophyll Index
+    target: T3
+    family: red_edge
+    requires_roles: [RED, RED_EDGE1, RED_EDGE2, RED_EDGE3]
+    formula: "(RED_EDGE3 - RED) / (RED_EDGE1 / RED_EDGE2)"
+    notes: Canopy chlorophyll from Sentinel-2's red-edge bands (Frampton 2013).
+
+  - name: PSRI
+    long_name: Plant Senescence Reflectance Index
+    target: T3
+    family: senescence
+    requires_roles: [BLUE, RED, RED_EDGE2]
+    formula: "(RED - BLUE) / RED_EDGE2"
+    notes: >-
+      Carotenoid-to-chlorophyll ratio; rises as foliage senesces (Merzlyak
+      1999). A pigment (VNIR) signal of senescence, so filed under stress
+      (T3), not T2: it cannot see the cellulose/lignin feature that defines NPV
+      fraction (brief H2). A candidate input for the curing estimator, not a
+      curing label.
+
+  - name: NDWI
+    aliases: [NDWI_McFeeters]
+    long_name: Normalised Difference Water Index (open water)
+    target: ancillary
+    family: surface
+    requires_roles: [GREEN, NIR]
+    formula: "(GREEN - NIR) / (GREEN + NIR)"
+    notes: Open water (McFeeters 1996), not canopy water; distinct from NDWI_Gao.
+
+  - name: BSI
+    long_name: Bare Soil Index
+    target: ancillary
+    family: surface
+    requires_roles: [BLUE, RED, NIR, SWIR1]
+    formula: "((SWIR1 + RED) - (NIR + BLUE)) / ((SWIR1 + RED) + (NIR + BLUE))"
+
   # ---- Disturbance and burn history ------------------------------------
   - name: NBR
     long_name: Normalised Burn Ratio

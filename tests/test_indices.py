@@ -101,9 +101,11 @@ def test_negative_control_can_form_nothing(catalogue, band_sets):
 
 
 def test_sentinel2_benchmark_forms_every_multispectral_index(catalogue, band_sets):
-    """The positive benchmark should be limited only by 1240 nm and CAI."""
+    """The positive benchmark should be limited only by 1240 nm, CAI, and --
+    since the P6 index extension -- IRECI, whose 783 nm band (B7) is not among
+    the brief's eight nominal Sentinel-2 centres this set carries."""
     missing = {i.name for i in infeasible_indices(catalogue, band_sets["sentinel2_msi"])}
-    assert missing == {"NDWI_Gao", "CAI"}
+    assert missing == {"NDWI_Gao", "CAI", "IRECI"}
 
 
 def test_cai_is_infeasible_for_every_multispectral_set(catalogue, band_sets):
