@@ -1106,3 +1106,9 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 | **Operational input products** | Inputs operations also use (the CWFIS fuel layer, green-up product, station weather), fed into our reconstruction. Not issued outputs. |
 
 "Operational" alone is not used for issued values.
+
+**Update after slots_v3 (2026-10-27).**
+
+- **Memory.** `--mem` is now 32G: two of fifteen `r2_warm` fits were killed at 16G at the R1→R2 hand-off. `run_slots.py` frees R1 before R2 trains.
+- **Monitor.** `start_monitor` adds `job_mem_MiB`, the job's own cgroup memory. The existing RAM columns are node-wide.
+- **Measured use** (45 tasks): 10 min median and 17 min max per task of 3 fits; GPU 25 % median, 1.5 GB peak; setup 38 s.

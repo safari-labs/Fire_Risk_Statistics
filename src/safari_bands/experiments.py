@@ -940,9 +940,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per "
-                  "task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max "
-                  "per fit; A-35)",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts "
              "as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 "
              "within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 "
@@ -981,9 +981,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         gap="G2 fuel-type layer is a fixed vintage",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_pc,r3_pc_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per "
-                  "task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max "
-                  "per fit; A-35)",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable (pc + 30 tanh(head), "
              "through the physics); the imagery_replace form waits for the "
              "ecology estimator (E-22, P6). P7: AT RISK. Correct form -0.001 "
@@ -1005,9 +1005,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_cbh,r3_cbh_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per "
-                  "task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max "
-                  "per fit; A-35)",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable (CBH x exp(0.7 "
              "tanh(head))); the height-derived replace form waits for P6. P7: "
              "AT RISK. Correct form -0.0005 [-0.003, +0.002], equal to its "
@@ -1028,9 +1028,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         gap="curing",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per "
-                  "task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max "
-                  "per fit; A-35)",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable against the cffdrs "
              "default (80 %); the CWFIS curing product is still not held, so "
              "the operational comparison waits. P7: not tested. The SCANFI fuel "
@@ -1039,7 +1039,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "pixels). Q29.1 (James, 2026-10-26): curing now runs on CWFIS fuel "
              "(O-1b on 4.6 % of pixels), against r2_cwfis, scored on O-1 pixels "
              "(run_slots by_fuel). The comparison is to the 80 % FBP default; "
-             "the CWFIS curing product is not held.",
+             "the CWFIS curing product is not held. P7c: PARTIAL. O-1 pixels "
+             "(60 fires): vs twin +0.021 [+0.007, +0.034], vs R2 on CWFIS fuel "
+             "+0.013 [+0.002, +0.024] -- against the 80 % default; the CWFIS "
+             "curing product comparison has not run (product not held).",
     ),
     Experiment(
         "E-39", "Canopy closure to in-stand moisture", "CFFDRS mirror",
@@ -1426,10 +1429,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task "
-                  "of 3 fits (A-35)",
-        note="The offset is in units of the bound (pc: 30 points), so it can reach the "
-             "-24-point shift P7 found at the base learning rate.",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
+        note="The offset is in units of the bound (pc: 30 points), so it can "
+             "reach the -24-point shift P7 found at the base learning rate. "
+             "P7c: SUPPORTED as registered. M-1/M-2: vs twin +0.0065 [+0.0003, "
+             "+0.0131], imagery-part SD 6.2 vs 0.4; but vs R2 +0.0009 (CI spans "
+             "0), and the offset settled at -6 points while the imagery part "
+             "kept -24.",
     ),
     Experiment(
         "E-58", "Closing R2's within-patch gap to R1", "CFFDRS mirror",
@@ -1452,10 +1460,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "2026-10-26).",
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task "
-                  "of 3 fits; an r2_warm fit trains R1 first, about 6.5 min (A-35)",
-        note="The warm start keeps R2's physics weights at their usual start and copies "
-             "only R1's network into the residual, so R2 begins as physics + R1.",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+                  "GPU 25 %, 1.5 GB peak; A-35)",
+        note="The warm start keeps R2's physics weights at their usual start "
+             "and copies only R1's network into the residual, so R2 begins as "
+             "physics + R1. P7c (docs/results/p7c_slots_v3, 2026-10-27): "
+             "REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x "
+             "-0.056 [-0.075, -0.038]; the gap is the cost of the physics "
+             "anchor. Warm start best between patches (0.892; ISSUED by CWFIS "
+             "0.857).",
     ),
 )
 

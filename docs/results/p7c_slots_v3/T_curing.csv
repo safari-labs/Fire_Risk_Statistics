@@ -1,0 +1,7 @@
+a,b,fam,d,ci,n_fire,label
+r3_curing_cwfis,r3_curing_cwfis_shuffled,O,0.02057214855939822,"[np.float64(0.007249662782359634), np.float64(0.03349314184619573)]",60,O-1 pixels
+r3_curing_cwfis,r2_cwfis,O,0.01290942293817709,"[np.float64(0.001458505526731509), np.float64(0.024394702020585017)]",60,O-1 pixels
+r3_curing_cwfis_shuffled,r2_cwfis,O,-0.0076627256212211305,"[np.float64(-0.01625004387813678), np.float64(-0.00024721886408713193)]",60,O-1 pixels
+r3_curing_cwfis,r3_curing_cwfis_shuffled,all,-0.0002212449045692528,"[np.float64(-0.0043558900358690155), np.float64(0.0036588344536103673)]",83,all pixels
+r3_curing_cwfis,r2_cwfis,all,1.4452870152969229e-05,"[np.float64(-0.0038609034668672295), np.float64(0.0036876063001000745)]",83,all pixels
+r3_curing_cwfis_shuffled,r2_cwfis,all,0.00023569777472222202,"[np.float64(-0.0023442888160689758), np.float64(0.0025538104937778655)]",83,all pixels

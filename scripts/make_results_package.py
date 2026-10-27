@@ -1418,9 +1418,12 @@ class _Sweep:
                 fits.append(r)
                 for row in _read_csv(f.parent / "patches.csv"):
                     d = P.setdefault(row["patch"], {"kind": row["kind"], "fold": r["fold"],
-                                                    "w": [], "s": []})
+                                                    "w": [], "s": [], "wf": {}})
                     d["w"].append(float(row["auc_within"]))
                     d["s"].append(float(row["mean_score"]))
+                    for fam in "CDMO":
+                        if f"auc_within_{fam}" in row:
+                            d["wf"].setdefault(fam, []).append(float(row[f"auc_within_{fam}"]))
             if fits:
                 self.fits[cdir.name], self.patch[cdir.name] = fits, P
         groups = {s: g for g, ss in json.loads(freeze.read_text())["groups"].items() for s in ss}
@@ -1438,6 +1441,28 @@ class _Sweep:
         P = self.patch[c]
         return np.array([np.nanmean(P[p]["w"]) if p in P and P[p]["kind"] == "fire"
                          else np.nan for p in self.pat])
+
+    def within_fuel(self, c, fam) -> np.ndarray:
+        """Within-patch AUC on one fuel family's pixels, per fire patch
+        (NaN where the patch lacks burned or unburned pixels of that family)."""
+        P = self.patch[c]
+        out = np.full(len(self.pat), np.nan)
+        for i, p in enumerate(self.pat):
+            if p in P and P[p]["kind"] == "fire" and P[p]["wf"].get(fam):
+                v = np.array(P[p]["wf"][fam], float)
+                if np.isfinite(v).any():
+                    out[i] = float(np.nanmean(v))
+        return out
+
+    def paired_on(self, a, b, fam=None) -> dict:
+        """Paired within-patch delta, all pixels (fam None) or one family's."""
+        wa = self.within(a) if fam is None else self.within_fuel(a, fam)
+        wb = self.within(b) if fam is None else self.within_fuel(b, fam)
+        d = wa - wb
+        reps = [np.nanmean(d[i]) for i in self.boots]
+        return {"a": a, "b": b, "fam": fam or "all", "d": float(np.nanmean(d)),
+                "ci": list(np.nanpercentile(reps, [2.5, 97.5])),
+                "n_fire": int(np.isfinite(d).sum())}
 
     def _score(self, c):
         P = self.patch[c]
@@ -2156,8 +2181,335 @@ def p7b(run: Path, out: Path):
                                               "freeze": FREEZE.name}, indent=1))
 
 
+# ── P7c: the second slot sweep (slots_v3; Q29 arms) ─────────────────────────
+# E-58 (R2's gap to R1), E-57 (percent conifer with an offset), E-38 (curing
+# on CWFIS fuel). Every number is our reconstruction unless marked ISSUED by
+# CWFIS (A-36).
+
+GAP = [("r1", "R1  learned on CFFDRS inputs"), ("r2", "R2  zero start (rerun)"),
+       ("r2_warm", "R2  residual started from R1"), ("r2_lr10", "R2  residual at 10x rate")]
+
+
+def p7c_gap(W, out):
+    plt = _plt()
+    lv = [W.level(c) for c, _ in GAP]
+    comps = [("r2", "r1"), ("r2_warm", "r1"), ("r2_lr10", "r1"), ("r2_warm", "r2"),
+             ("r2_lr10", "r2")]
+    pr = {(a, b): W.paired(a, b) for a, b in comps}
+    names = dict(GAP)
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.08})
+    for ax, key, title in ((axes[0], "within", "Change in within-patch AUC"),
+                           (axes[1], "between", "Change in between-patch AUC")):
+        _axes(ax, title)
+        ax.axvline(0, color=INK, lw=0.8, zorder=1)
+        for x in (-0.01, 0.01):
+            ax.axvline(x, color=AMBER, lw=1, ls="--", zorder=1)
+        for i, (a, b) in enumerate(comps):
+            y = len(comps) - 1 - i
+            d = pr[(a, b)]
+            lo, hi = d[f"d_{key}_ci"]
+            col = BLUE if b == "r1" else GREEN
+            ax.plot([lo, hi], [y, y], color=col, lw=2, zorder=2, solid_capstyle="round")
+            ax.scatter([d[f"d_{key}"]], [y], s=56, color=col, edgecolor=FIG_BG, lw=1.4,
+                       zorder=3)
+            ax.text(hi + 0.002, y + 0.2, f"{d[f'd_{key}']:+.3f}", color=INK, fontsize=8,
+                    bbox={"facecolor": AX_BG, "edgecolor": "none", "pad": 1})
+        ax.set_yticks(range(len(comps)))
+        ax.set_yticklabels([f"{names[a].split('  ')[1]}  minus  {names[b].split('  ')[0]}"
+                            for a, b in comps][::-1] if ax is axes[0] else [],
+                           color=INK_BRIGHT, fontsize=8.5)
+        ax.set_ylim(-0.6, len(comps) - 0.4)
+    fig.suptitle("E-58  Does R2's within-patch gap to R1 close? (slots_v3, paired by fire, "
+                 "95 % CI)", color=INK_BRIGHT, x=0.01, y=1.03, ha="left", fontsize=12)
+    _caption(fig, "Blue = against R1 (the target); green = against R2 at its usual zero start. "
+             "Dashed = the registered 0.01 margins: an arm closes the gap if it sits within "
+             "0.01 of R1 inside patches and loses no more than 0.01 to R2 between patches. "
+             "All rungs are ours (reconstructed). r2_warm lacks fold 4 seeds 1-2 (killed at "
+             "16G); its fold-4 patches use seed 0.", y=-0.05)
+    _save(fig, out, "gap.png")
+    return lv, pr
+
+
+def _imagery_part(run, c, name="pc"):
+    pts = []
+    for f in sorted((run / c).glob("f*s*/samples.npz")):
+        z = np.load(f)
+        if f"delta_{name}" not in z.files:
+            continue
+        for k in range(len(z["stems"])):
+            ok = z["label"][k, 0] >= 0
+            v = z[f"delta_{name}"][k, 0][ok]
+            if v.size:
+                pts.append((float(v.mean()), float(v.std())))
+    return np.array(pts)
+
+
+def p7c_offset(W, out):
+    plt = _plt()
+    rows = []
+    for fam, lab in ((None, "all pixels"), ("M", "M-1/M-2 pixels")):
+        for a, b in (("r3_pc_offset", "r3_pc_offset_shuffled"), ("r3_pc_offset", "r2"),
+                     ("r3_pc_offset_shuffled", "r2")):
+            d = W.paired_on(a, b, fam)
+            d["label"] = lab
+            rows.append(d)
+    offs = {c: [r["learned"]["offsets"]["pc"] for r in W.fits[c]]
+            for c in ("r3_pc_offset", "r3_pc_offset_shuffled")}
+    fig, axes = plt.subplots(1, 3, figsize=(13, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"wspace": 0.35, "width_ratios": [1.5, 1, 1]})
+    ax = axes[0]
+    _axes(ax, "Paired within-patch change (95 % CI)")
+    ax.axvline(0, color=INK, lw=0.8, zorder=1)
+    lbl = {("r3_pc_offset", "r3_pc_offset_shuffled"): "offset arm minus its twin",
+           ("r3_pc_offset", "r2"): "offset arm minus R2",
+           ("r3_pc_offset_shuffled", "r2"): "twin minus R2"}
+    for i, d in enumerate(rows):
+        y = len(rows) - 1 - i
+        col = ORANGE if d["fam"] == "M" else BLUE
+        lo, hi = d["ci"]
+        ax.plot([lo, hi], [y, y], color=col, lw=2, zorder=2, solid_capstyle="round")
+        ax.scatter([d["d"]], [y], s=50, color=col, edgecolor=FIG_BG, lw=1.3, zorder=3)
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels([f"{lbl[(d['a'], d['b'])]}, {d['label']} (n {d['n_fire']})"
+                        for d in rows][::-1], color=INK_BRIGHT, fontsize=8)
+    ax = axes[1]
+    _axes(ax, "Learned offset (points)", "", "percent-conifer offset")
+    for i, (c, col, face) in enumerate((("r3_pc_offset", BLUE, BLUE),
+                                        ("r3_pc_offset_shuffled", MUTED, FIG_BG))):
+        v = offs[c]
+        ax.scatter(i + np.random.default_rng(i).uniform(-0.12, 0.12, len(v)), v, s=28,
+                   color=face, edgecolor=col, lw=1.2, zorder=3)
+    ax.axhline(0, color=INK, lw=0.8)
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["real imagery", "shuffled twin"], color=INK, fontsize=8.5)
+    ax = axes[2]
+    _axes(ax, "Imagery part on seeded tiles", "tile mean (points)", "SD within tile")
+    stats = {}
+    for c, col, face, tag in (("r3_pc_offset", BLUE, BLUE, "real imagery"),
+                              ("r3_pc_offset_shuffled", MUTED, FIG_BG, "shuffled twin")):
+        q = _imagery_part(W.run, c)
+        ax.scatter(q[:, 0], q[:, 1], s=20, color=face, edgecolor=col, lw=1, alpha=0.85,
+                   label=tag, zorder=3)
+        stats[c] = {"median_mean": float(np.median(q[:, 0])),
+                    "median_sd": float(np.median(q[:, 1])), "tiles": len(q)}
+    for b in (-30, 30):
+        ax.axvline(b, color=AMBER, lw=1, ls="--")
+    ax.set_xlim(-33, 33)
+    ax.legend(loc="lower right", frameon=False, labelcolor=INK, fontsize=8)
+    fig.suptitle("E-57  Percent conifer with an imagery-free offset", color=INK_BRIGHT,
+                 x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Orange = M-1/M-2 pixels (E-57's registered outcome); blue = all pixels. "
+             "The offset is a learned constant per fit; the imagery part is what the head adds "
+             "on top. All values are our reconstruction.", y=-0.05)
+    _save(fig, out, "offset.png")
+    return rows, offs, stats
+
+
+def p7c_curing(W, out):
+    plt = _plt()
+    rows = []
+    for fam, lab in (("O", "O-1 pixels"), (None, "all pixels")):
+        for a, b in (("r3_curing_cwfis", "r3_curing_cwfis_shuffled"),
+                     ("r3_curing_cwfis", "r2_cwfis"), ("r3_curing_cwfis_shuffled", "r2_cwfis")):
+            d = W.paired_on(a, b, fam)
+            d["label"] = lab
+            rows.append(d)
+    pooled = {}
+    for c in ("r2_cwfis", "r3_curing_cwfis", "r3_curing_cwfis_shuffled"):
+        v = [r["metrics"]["score"]["by_fuel"]["O"] for r in W.fits[c]]
+        pooled[c] = {"auc_pooled_O": float(np.nanmean([x["auc_pooled"] for x in v])),
+                     "n_px_O": int(np.median([x["n_px"] for x in v]))}
+    fig, ax = plt.subplots(figsize=(8.5, 3.9), facecolor=FIG_BG)
+    _axes(ax, "Paired within-patch change (95 % CI)")
+    ax.axvline(0, color=INK, lw=0.8)
+    lbl = {("r3_curing_cwfis", "r3_curing_cwfis_shuffled"): "curing arm minus its twin",
+           ("r3_curing_cwfis", "r2_cwfis"): "curing arm minus R2 (CWFIS fuel)",
+           ("r3_curing_cwfis_shuffled", "r2_cwfis"): "twin minus R2 (CWFIS fuel)"}
+    for i, d in enumerate(rows):
+        y = len(rows) - 1 - i
+        col = ORANGE if d["fam"] == "O" else BLUE
+        lo, hi = d["ci"]
+        ax.plot([lo, hi], [y, y], color=col, lw=2, solid_capstyle="round", zorder=2)
+        ax.scatter([d["d"]], [y], s=50, color=col, edgecolor=FIG_BG, lw=1.3, zorder=3)
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels([f"{lbl[(d['a'], d['b'])]}, {d['label']} (n {d['n_fire']})"
+                        for d in rows][::-1], color=INK_BRIGHT, fontsize=8)
+    fig.suptitle("E-38  Curing corrected from imagery, on CWFIS fuel (which has O-1)",
+                 color=INK_BRIGHT, x=0.01, y=1.04, ha="left", fontsize=12)
+    _caption(fig, "Orange = O-1 grass pixels (E-38's registered outcome), within-patch on fire "
+             "patches that have burned and unburned O-1; blue = all pixels. Compared with the "
+             "80 % FBP default, not the CWFIS curing product (not held). Ours throughout.",
+             y=-0.05)
+    _save(fig, out, "curing.png")
+    return rows, pooled
+
+
+def p7c_tiles(W, out):
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap, TwoSlopeNorm
+    plt = _plt()
+    seq = LinearSegmentedColormap.from_list("seq", ["#151b2b", "#1f4f8f", BLUE, "#bcd8fb"])
+    div = LinearSegmentedColormap.from_list("div", [ORANGE, "#5a5f70", BLUE])
+    cols = [("rgb", "Sentinel-2 true colour"), ("label", "NBAC burned on/after D"),
+            ("r1:pred", "R1"), ("r2:pred", "R2 zero start"), ("r2_warm:pred", "R2 from R1"),
+            ("r2_lr10:pred", "R2 10x rate"), ("r3_pc_offset:delta_pc", "PC: imagery part"),
+            ("r3_pc_offset_shuffled:delta_pc", "PC: twin's part")]
+    Z = {c: [np.load(W.run / c / f"f{f}s0" / "samples.npz") for f in range(5)]
+         for c in ("r1", "r2", "r2_warm", "r2_lr10", "r3_pc_offset", "r3_pc_offset_shuffled")}
+    fig, axes = plt.subplots(5, len(cols), figsize=(2.05 * len(cols), 2.2 * 5),
+                             facecolor=FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.16,
+                                                            "top": 0.9, "bottom": 0.12})
+    im_s = im_d = None
+    for f in range(5):
+        base = Z["r2"][f]
+        stem = str(base["stems"][0])
+        for c, (k, lab) in enumerate(cols):
+            ax = axes[f, c]
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            if k == "rgb":
+                ax.imshow(_stretch(base["rgb"][0]), interpolation="nearest")
+            elif k == "label":
+                a = base["label"][0, 0]
+                ax.imshow(np.where(a < 0, 2, a), cmap=ListedColormap([AX_BG, INK_BRIGHT, MUTED]),
+                          vmin=0, vmax=2, interpolation="nearest")
+            else:
+                cfg, key = k.split(":")
+                z = Z[cfg][f]
+                assert str(z["stems"][0]) == stem, (cfg, f)
+                a = z[key][0, 0]
+                if key.startswith("delta_"):
+                    im_d = ax.imshow(np.clip(a, -30, 30), cmap=div,
+                                     norm=TwoSlopeNorm(0, -30, 30), interpolation="nearest")
+                else:
+                    im_s = ax.imshow(_pct(a), cmap=seq, vmin=0, vmax=1, interpolation="nearest")
+            if f == 0:
+                ax.set_title(lab, color=INK, fontsize=8, loc="left")
+            if c == 0:
+                ax.set_ylabel(f"fold {f}\n" + stem.replace("_fire_tile", "\n"), color=INK,
+                              fontsize=6.5)
+    for im, (c0, c1), lab in ((im_s, (2, 5), "score percentile within the tile"),
+                              (im_d, (6, 7), "imagery part of the PC correction (points)")):
+        if im is not None:
+            a, b = axes[-1, c0].get_position(), axes[-1, c1].get_position()
+            cax = fig.add_axes([a.x0 + 0.01, a.y0 - 0.028, b.x1 - a.x0 - 0.02, 0.008])
+            cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+            cb.set_label(lab, color=INK, fontsize=8)
+            cb.ax.tick_params(colors=INK, labelsize=7.5)
+    fig.suptitle("P7c  The same seeded fire tile per fold, every new arm (seed 0)",
+                 color=INK_BRIGHT, x=0.01, y=0.975, ha="left", fontsize=12)
+    _caption(fig, "True colour: the v2 pack's pre-fire composite (S2 SR median, D-45..D-1, "
+             "B4/B3/B2). White = burned on or after D; grey = ignored or invalid. Scores as "
+             "percentiles within the tile. The PC columns show only the imagery part, without "
+             "the learned offset. All maps are our models.", y=0.025)
+    _save(fig, out, "tiles.png")
+
+
+def p7c_resources(run):
+    import re
+    rows = []
+    for f in sorted((run / "tasks").glob("*/resource_usage.csv")):
+        R = _read_csv(f)
+        if not R:
+            continue
+        def num(k, rows=R):
+            return [float(r[k]) for r in rows if (r.get(k) or "").strip()]
+        g, m, c = num("gpu_util_%"), num("gpu_mem_used_MiB"), num("cpu_util_%")
+        log = next(f.parent.glob("job-*.out"), None)
+        setup = None
+        if log is not None:
+            s = re.search(r"setup took (\d+)s", log.read_text(errors="ignore"))
+            setup = int(s.group(1)) if s else None
+        rows.append({"task": f.parent.name, "minutes": len(R) * 0.5,
+                     "gpu_util_median": float(np.median(g)) if g else float("nan"),
+                     "gpu_mem_peak": max(m) if m else float("nan"),
+                     "cpu_util_median": float(np.median(c)) if c else float("nan"),
+                     "setup_s": setup})
+    return rows
+
+
+def p7c_tables(W, out, lv, pr, off, offs, ostats, cur, pooled, res):
+    L = ["# P7c tables: the second slot sweep (slots_v3)\n",
+         f"Run: `{_rel(W.run)}`. {len(W.pat)} development patches, 5 folds x 3 seeds; "
+         "r2_warm lacks fold 4 seeds 1-2 (OOM-killed at 16G). Every number is our "
+         "reconstruction unless marked ISSUED by CWFIS.\n",
+         "## E-58: R2's gap to R1\n",
+         "| rung (ours) | within-patch AUC | 95 % CI | between-patch AUC | 95 % CI |",
+         "|---|---|---|---|---|"]
+    for (_c, lab), d in zip(GAP, lv, strict=True):
+        L.append(f"| {lab} | {d['within']:.3f} | {_ci(d['within_ci'], 3)} | "
+                 f"{d['between']:.3f} | {_ci(d['between_ci'], 3)} |")
+    L += ["", "| a - b | within | 95 % CI | folds won | between | 95 % CI | folds won |",
+          "|---|---|---|---|---|---|---|"]
+    for (a, b), d in pr.items():
+        L.append(f"| {a} - {b} | {d['d_within']:+.4f} | {_ci(d['d_within_ci'], 4)} | "
+                 f"{d['folds_won_within']}/5 | {d['d_between']:+.4f} | "
+                 f"{_ci(d['d_between_ci'], 4)} | {d['folds_won_between']}/5 |")
+    if (PATCHES / f"{W.pat[0]}_cwfis_grid.json").exists():
+        L.append(f"\nBetween-patch reference, FWI ISSUED by CWFIS for D-1 (per fold, 188 "
+                 f"covered patches): {_op_between(W):.3f}.")
+    _csv(out / "T_gap.csv", [dict(d, a=a, b=b) for (a, b), d in pr.items()])
+    L += ["", "## E-57: percent conifer with an imagery-free offset\n",
+          "| comparison | pixels | n fires | within-patch change | 95 % CI |",
+          "|---|---|---|---|---|"]
+    for d in off:
+        L.append(f"| {d['a']} - {d['b']} | {d['label']} | {d['n_fire']} | {d['d']:+.4f} | "
+                 f"{_ci(d['ci'], 4)} |")
+    for c, v in offs.items():
+        L.append(f"\n{c}: learned offset median {np.median(v):+.1f} points "
+                 f"[{min(v):+.1f}, {max(v):+.1f}]; imagery part on seeded tiles: median tile "
+                 f"mean {ostats[c]['median_mean']:+.2f}, median within-tile SD "
+                 f"{ostats[c]['median_sd']:.2f} ({ostats[c]['tiles']} tiles).")
+    _csv(out / "T_offset.csv", off)
+    L += ["", "## E-38: curing on CWFIS fuel\n",
+          "| comparison | pixels | n fires | within-patch change | 95 % CI |",
+          "|---|---|---|---|---|"]
+    for d in cur:
+        L.append(f"| {d['a']} - {d['b']} | {d['label']} | {d['n_fire']} | {d['d']:+.4f} | "
+                 f"{_ci(d['ci'], 4)} |")
+    L += ["", "Pooled AUC on O-1 pixels (mean over fits): " + "; ".join(
+        f"{c} {v['auc_pooled_O']:.3f} (median {v['n_px_O']:,} O-1 px per fold)"
+        for c, v in pooled.items()) + "."]
+    _csv(out / "T_curing.csv", cur)
+    L += ["", "## Resources (A100; per task of up to 3 fits)\n",
+          "| measure | median | max |", "|---|---|---|"]
+    for k, lab in (("minutes", "task length (min)"), ("gpu_util_median", "GPU utilisation (%)"),
+                   ("gpu_mem_peak", "peak GPU memory (MiB)"),
+                   ("cpu_util_median", "node CPU utilisation (%)"), ("setup_s", "setup (s)")):
+        v = [r[k] for r in res if r[k] is not None and np.isfinite(r[k])]
+        L.append(f"| {lab} | {np.median(v):.0f} | {max(v):.0f} |")
+    L += ["", "| configuration | fits | median wall (s) | max wall (s) |", "|---|---|---|---|"]
+    for c in sorted(W.fits):
+        ws = [r["wall_s"] for r in W.fits[c]]
+        L.append(f"| {c} | {len(ws)} | {np.median(ws):.0f} | {max(ws):.0f} |")
+    _csv(out / "T_resources.csv", res)
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p7c(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    lv, pr = p7c_gap(W, out)
+    off, offs, ostats = p7c_offset(W, out)
+    cur, pooled = p7c_curing(W, out)
+    p7c_tiles(W, out)
+    res = p7c_resources(run)
+    p7c_tables(W, out, lv, pr, off, offs, ostats, cur, pooled, res)
+    (out / "summary.json").write_text(json.dumps(
+        {"gap_levels": lv, "gap": {f"{a}-{b}": d for (a, b), d in pr.items()},
+         "offset": off, "offsets": offs, "offset_tiles": ostats, "curing": cur,
+         "curing_pooled": pooled, "resources": res,
+         "issued_fwi_between": _op_between(W) if (PATCHES / f"{W.pat[0]}_cwfis_grid.json")
+         .exists() else None}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots"), "P7b": (p7b, "p7b_operational")}
+          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots"), "P7b": (p7b, "p7b_operational"),
+          "P7c": (p7c, "p7c_slots_v3")}
 
 
 def main(argv=None) -> int:

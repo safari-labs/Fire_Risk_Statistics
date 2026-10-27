@@ -736,6 +736,67 @@ PHASES: tuple[Phase, ...] = (
                              "scored as FWI 0 in a sensitivity check (AUC 0.868)."),
         ),
     ),
+    Phase(
+        "P7c", "Second slot sweep: the Q29 arms (slots_v3)", "2026-10-27",
+        "p7c_slots_v3", "README.md",
+        "The arms James approved after P7 (Q29), trained on Narval: R2's residual "
+        "warm-started from R1 or at 10x the rate (E-58), percent conifer with an "
+        "imagery-free offset (E-57), curing on CWFIS fuel, which has O-1 (E-38). 9 "
+        "configurations x 5 folds x 3 seeds; 133 of 135 fits (two r2_warm fits "
+        "OOM-killed at 16G). All three were registered before the sweep. Every number "
+        "is our reconstruction; the FWI ISSUED by CWFIS is the between-patch reference.",
+        (
+            Entry("E-58", "experiment", "REFUTED",
+                  result="Within patches against R1: warm start -0.033 [-0.048, "
+                         "-0.019], 10x rate -0.056 [-0.075, -0.038], zero start (rerun) "
+                         "-0.025; 0/5 folds each. Between patches: warm start 0.892 "
+                         "(+0.012 vs R2, CI spans 0), the best of any rung; ISSUED by "
+                         "CWFIS 0.857.",
+                  conclusion="Neither arm closes the gap, so as registered it is the cost "
+                             "of anchoring the score to the physics, about 0.025-0.03 "
+                             "inside patches. P12 weighs it against R2's interpretability. "
+                             "The warm start helps only between patches."),
+            Entry("E-57", "experiment", "SUPPORTED",
+                  result="M-1/M-2 pixels: offset arm minus its twin +0.0065 [+0.0003, "
+                         "+0.0131]; imagery part SD within tiles 6.2 vs the twin's 0.4. "
+                         "But offset arm minus R2 on M-1/M-2: +0.0009 [-0.008, +0.009]; "
+                         "the twin is below R2 (-0.0056). The offset settled at -6 "
+                         "points; the imagery part still carries -24.",
+                  conclusion="As registered, the imagery carries information the twin "
+                             "does not on mixedwood pixels. It does not beat R2, and the "
+                             "offset did not absorb the shift as designed. Real, but too "
+                             "small to matter at this n."),
+            Entry("E-38", "experiment", "PARTIAL",
+                  result="O-1 pixels (60 fires with burned and unburned O-1): curing "
+                         "arm minus its twin +0.021 [+0.007, +0.034]; minus R2 on CWFIS "
+                         "fuel +0.013 [+0.002, +0.024]. Pooled O-1 AUC 0.782 -> 0.797. "
+                         "All pixels: 0.000.",
+                  conclusion="Imagery curing beats the 80 % FBP default and its twin on "
+                             "grass pixels: the first imagery slot with a gain that clears "
+                             "both. The registered comparison is with the CWFIS curing "
+                             "product, not held, so the operational half has not run."),
+            Entry("P7c-C1", "check", "PASS",
+                  title="The sweep reproduces",
+                  question="R1 and R2, rerun in slots_v3 with the same folds and seeds, "
+                           "give the slots_v2 numbers.",
+                  independent="slots_v2 vs slots_v3 fits of r1 and r2",
+                  dependent="within- and between-patch AUC",
+                  result="Identical: R1 0.719 / 0.886, R2 0.695 / 0.880, R2 - R1 -0.0246 "
+                         "within in both sweeps.",
+                  conclusion="Contrasts across sweeps are paired as if run together."),
+            Entry("P7c-M1", "measurement", "MEASURED",
+                  title="What the sweep used",
+                  question="How much of the request did the tasks use?",
+                  independent="45 tasks of up to 3 fits, A100, resource monitor on",
+                  dependent="task length, GPU use and memory, setup; failures",
+                  result="Tasks 10 min median, 17 max (limit 30). GPU 25 % median, peak "
+                         "1.5 GB of 40 GB. Setup 38 s. Two r2_warm fits killed at the "
+                         "R1-to-R2 hand-off at 16G.",
+                  conclusion="--mem raised to 32G, R1 freed before R2, and the monitor now "
+                             "records the job's own memory. A MIG slice would fit the GPU "
+                             "use; worth one test sub-array."),
+        ),
+    ),
 )
 
 

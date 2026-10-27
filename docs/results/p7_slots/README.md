@@ -28,6 +28,12 @@ The P5 ladder ran on Narval as sweep `slots_v2` (job 7289478): 20 configurations
 - **Against what CWFIS actually issued.** The amber line is the FWI **ISSUED by CWFIS** for D−1 (0.857, P7b, E-55). Every other number in this note is our reconstruction. Between patches, none of our rungs separates from the issued FWI: R1 +0.042, R2 +0.035, R4 +0.035, every CI spanning 0. Within patches there is no issued counterpart, because CWFIS grids are 2 km.
 - **Year and between-patch scores.** Between-patch numbers sit near what the fire year alone gives (0.87, E-43). Restricted to same-year pairs, every rung drops by 0.03–0.05, but the order holds.
 
+> **Follow-ups (P7c, [slots_v3](../p7c_slots_v3/README.md)).** Run after this note:
+>
+> - **E-38:** curing on CWFIS fuel beats its twin and R2 on O-1 grass pixels.
+> - **E-57:** the offset arm beats its twin on M-1/M-2 pixels, but not R2.
+> - **E-58:** R2's gap to R1 does not close (REFUTED).
+
 ## Slots and inputs against R2
 
 ![forest](slots_forest.png)

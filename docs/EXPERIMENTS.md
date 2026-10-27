@@ -204,7 +204,7 @@ Whether stand height from orbit belongs in FBP's crown fire initiation.
 
 The FWI2025 curing input, tested where grass exists.
 
-*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits. P7: not tested. The SCANFI fuel tree has no O-1 pixel, so the correction never acts (delta exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of pixels). Q29.1 (James, 2026-10-26): curing now runs on CWFIS fuel (O-1b on 4.6 % of pixels), against r2_cwfis, scored on O-1 pixels (run_slots by_fuel). The comparison is to the 80 % FBP default; the CWFIS curing product is not held.
+*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits. P7: not tested. The SCANFI fuel tree has no O-1 pixel, so the correction never acts (delta exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of pixels). Q29.1 (James, 2026-10-26): curing now runs on CWFIS fuel (O-1b on 4.6 % of pixels), against r2_cwfis, scored on O-1 pixels (run_slots by_fuel). The comparison is to the 80 % FBP default; the CWFIS curing product is not held. P7c: PARTIAL. O-1 pixels (60 fires): vs twin +0.021 [+0.007, +0.034], vs R2 on CWFIS fuel +0.013 [+0.002, +0.024] -- against the 80 % default; the CWFIS curing product comparison has not run (product not held).
 
 *CFFDRS gap:* curing
 
@@ -320,7 +320,7 @@ The first comparison against what operational FBP actually reported. The cohort 
 
 Whether the correct form can carry spatial imagery information at all, before the replace form (E-22) exists. Q29.2 (James, 2026-10-26): added alongside E-36's arms, not replacing them.
 
-*Note:* The offset is in units of the bound (pc: 30 points), so it can reach the -24-point shift P7 found at the base learning rate.
+*Note:* The offset is in units of the bound (pc: 30 points), so it can reach the -24-point shift P7 found at the base learning rate. P7c: SUPPORTED as registered. M-1/M-2: vs twin +0.0065 [+0.0003, +0.0131], imagery-part SD 6.2 vs 0.4; but vs R2 +0.0009 (CI spans 0), and the offset settled at -6 points while the imagery part kept -24.
 
 **E-58 — Closing R2's within-patch gap to R1**
 
@@ -328,7 +328,7 @@ Whether the correct form can carry spatial imagery information at all, before th
 
 Whether the physics-anchored model (R2-R4) carries a real accuracy cost, which the P12 architecture rule weighs. Q29.3 (James, 2026-10-26).
 
-*Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1.
+*Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1. P7c (docs/results/p7c_slots_v3, 2026-10-27): REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x -0.056 [-0.075, -0.038]; the gap is the cost of the physics anchor. Warm start best between patches (0.892; ISSUED by CWFIS 0.857).
 
 ### Band selection
 
@@ -712,10 +712,10 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
-| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
-| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
-| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
+| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
@@ -724,8 +724,8 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-53** | Weather staleness under R0 | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-54** | Legacy composite leakage | `Fire_Risk_Model/scripts/python/build_prefire.py` | -- |
 | **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
-| **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (A-35) |
-| **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits; an r2_warm fit trains R1 first, about 6.5 min (A-35) |
+| **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 
