@@ -688,3 +688,11 @@ Two things the documentation does not say:
 2. Does CWFIS or the CFS hold FBP grids before 2024 that are not served? If so, E-56 could run on the existing 2019–2023 cohort instead of a new one.
 
 Both are questions for CWFIS (cwfisitnotify-scifvtinotification@nrcan-rncan.gc.ca, from their data-services guide).
+
+**Answer (James, 2026-10-26):**
+1. **Curing:** add the CWFIS-fuel curing configurations. Done: `r3_curing_cwfis` and its twin, against `r2_cwfis`, scored on O-1 pixels (E-38's runner).
+2. **Offset:** add `r3_pc_offset` alongside the existing arms. Registered as E-57, with its shuffled twin. The offset is a learned imagery-free constant in units of the bound.
+3. **R2 gap:** register a variant that starts R2's residual from a trained R1, or gives it a higher learning rate. Registered as E-58, with both arms:
+   - `r2_warm`: R1 is trained first within the same fit;
+   - `r2_lr10`: the residual trains at 10× the learning rate.
+   R1 and R2 rerun in the same sweep for pairing.

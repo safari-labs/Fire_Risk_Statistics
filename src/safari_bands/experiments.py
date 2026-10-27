@@ -948,7 +948,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 "
              "[-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI "
              "CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between "
-             "patches, every CI spanning 0.",
+             "patches, every CI spanning 0. Q29.3: whether R2's within-patch "
+             "gap to R1 closes is E-58.",
     ),
     Experiment(
         "E-35", "Fuel-type slot", "CFFDRS mirror",
@@ -988,7 +989,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "ecology estimator (E-22, P6). P7: AT RISK. Correct form -0.001 "
              "[-0.004, +0.001] within, equal to its twin; the head learned a "
              "near-uniform -24-point shift. M-1/M-2-restricted scoring added to "
-             "run_slots after this sweep.",
+             "run_slots after this sweep. Q29.2: the offset arm (imagery-free "
+             "constant + imagery deviation) is E-57, alongside these arms.",
     ),
     Experiment(
         "E-37", "Crown-base-height slot", "CFFDRS mirror",
@@ -1025,7 +1027,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="",
         gap="curing",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
-               "CONFIGS=r3_curing,r3_curing_shuffled",
+               "CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled",
         resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per "
                   "task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max "
                   "per fit; A-35)",
@@ -1034,7 +1036,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "the operational comparison waits. P7: not tested. The SCANFI fuel "
              "tree has no O-1 pixel, so the correction never acts (delta "
              "exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of "
-             "pixels).",
+             "pixels). Q29.1 (James, 2026-10-26): curing now runs on CWFIS fuel "
+             "(O-1b on 4.6 % of pixels), against r2_cwfis, scored on O-1 pixels "
+             "(run_slots by_fuel). The comparison is to the 80 % FBP default; "
+             "the CWFIS curing product is not held.",
     ),
     Experiment(
         "E-39", "Canopy closure to in-stand moisture", "CFFDRS mirror",
@@ -1395,6 +1400,62 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="NBAC 2024-2025 are held; patches, pre-fire composites, dated "
                 "weather and the v2 sidecars for a 2024-2025 cohort are not built",
         note="Registered with E-55, before any grid value was scored.",
+    ),
+    # E-57 and E-58 were registered on 2026-10-26, after the first sweep
+    # (slots_v2) and before any fit of these arms ran on Narval. The only
+    # runs were 3-batch local smoke tests on fold 0, not scored for this.
+    Experiment(
+        "E-57", "Percent-conifer correction with an imagery-free offset",
+        "CFFDRS mirror",
+        hypothesis="Once a learned imagery-free offset absorbs the tile-wide shift "
+                   "(P7-C1), the imagery percent-conifer correction carries information "
+                   "its shuffled twin does not: within-patch AUC on M-1/M-2 pixels beats "
+                   "the twin's (paired group-bootstrap CI above 0), and the imagery part "
+                   "varies more within tiles than the twin's. WRONG IF the real-imagery "
+                   "arm and its twin stay within noise on M-1/M-2 pixels (CI spanning 0): "
+                   "then, at this n, imagery percent conifer adds nothing through the "
+                   "physics even freed of the shift.",
+        independent="imagery percent-conifer correction with an offset (r3_pc_offset) "
+                    "vs the same with imagery shuffled across tiles "
+                    "(r3_pc_offset_shuffled); R2 as the floor",
+        dependent="paired within-patch AUC on M-1/M-2 pixels and on all pixels; the "
+                  "learned offset (points); within-tile SD of the imagery part",
+        conclusion="Whether the correct form can carry spatial imagery information at "
+                   "all, before the replace form (E-22) exists. Q29.2 (James, "
+                   "2026-10-26): added alongside E-36's arms, not replacing them.",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
+               "CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task "
+                  "of 3 fits (A-35)",
+        note="The offset is in units of the bound (pc: 30 points), so it can reach the "
+             "-24-point shift P7 found at the base learning rate.",
+    ),
+    Experiment(
+        "E-58", "Closing R2's within-patch gap to R1", "CFFDRS mirror",
+        hypothesis="R2's within-patch deficit to R1 (-0.025 [-0.034, -0.015], P7) is an "
+                   "optimisation artefact of starting the residual at zero beside the "
+                   "physics. Either starting the residual from the R1 trained on the same "
+                   "fold and seed (r2_warm) or training it at 10x the learning rate "
+                   "(r2_lr10) brings R2 within 0.01 of R1 within patches, without losing "
+                   "more than 0.01 between patches against R2. WRONG IF both arms stay "
+                   "more than 0.01 below R1 within patches with a CI excluding 0: the gap "
+                   "is then the cost of anchoring the score to the physics, and is "
+                   "reported as such in the P12 architecture choice.",
+        independent="R2's residual: zero start at the base rate (r2) vs started from the "
+                    "trained R1 (r2_warm) vs 10x the learning rate (r2_lr10); R1 as the "
+                    "target, rerun in the same sweep",
+        dependent="paired within- and between-patch AUC against R1 and R2, per fire "
+                  "patch, fire/block-group bootstrap",
+        conclusion="Whether the physics-anchored model (R2-R4) carries a real accuracy "
+                   "cost, which the P12 architecture rule weighs. Q29.3 (James, "
+                   "2026-10-26).",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task "
+                  "of 3 fits; an r2_warm fit trains R1 first, about 6.5 min (A-35)",
+        note="The warm start keeps R2's physics weights at their usual start and copies "
+             "only R1's network into the residual, so R2 begins as physics + R1.",
     ),
 )
 

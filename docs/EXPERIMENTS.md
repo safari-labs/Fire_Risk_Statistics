@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-56 experiments. **32 can run today** on data already packed and staged.
+58 experiments. **34 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,7 +16,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 16 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55 |
+| **Runnable now** | 18 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
 | **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
 | **Needs a pack** | 9 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48, E-56 |
@@ -37,7 +37,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-35** | Fuel-type slot | Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut. | the fuel-type slot's source: pre-fire inventory vs imagery_replace (ecology model) vs imagery_correct | paired delta in within-patch AUC per process | Needs a pack | *none yet* |
 | **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` |
 | **E-37** | Crown-base-height slot | Imagery-informed CBH changes crown fraction burned enough to move intensity skill. WRONG IF the CFB term never engages at our fire weather. | CBH source: ST-X-3 default vs height-derived | paired delta in the intensity branch | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` |
-| **E-38** | Curing slot | Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'. | curing source: CWFIS percent curing (2020-2025) or the time-of-year default vs S2 curing | ignition and spread on O-1 pixels | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` |
+| **E-38** | Curing slot | Imagery curing beats the CWFIS curing product on O-1 pixels. WRONG IF it does not -- but O-1 is about 3 % of burned pixels, so a null is likely to be 'n insufficient'. | curing source: CWFIS percent curing (2020-2025) or the time-of-year default vs S2 curing | ignition and spread on O-1 pixels | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` |
 | **E-39** | Canopy closure to in-stand moisture | Imagery stand density sharpens ignition receptivity through the stand-specific FFMC adjustment. WRONG IF the adjusted in-stand FFMC ranks ignitions no better than open FFMC. | closure source for the in-stand FFMC adjustment | Stage C ignition AUC and calibration | Needs code | *none yet* |
 | **E-40** | Green-up slot | An S2 green-up date beats the CWFIS green-up product for the D-1/M-1/M-2 leafless-to-green switch. WRONG IF the two agree to within a few days, leaving nothing to gain. | green-up source: CWFIS product (2020-2025, held) vs S2 phenology | spread and ignition on deciduous and mixedwood pixels | Needs code | *none yet* |
 | **E-41** | Spread R0 (CFSDS) | FBP ROS correlates with observed daily spread (Spearman rho > 0). WRONG IF it does not, which would bound everything the spread branch can claim. | none learned: FBP ROS on each fire-day | Spearman rho and log-ratio error against CFSDS spread | Needs code | *none yet* |
@@ -50,6 +50,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-55** | Operational FWI grid vs the reconstruction | The FWI grid CWFIS issued for D-1 ranks fire above non-fire development patches as well as our ERA5-Land FWI does: the two between-patch AUCs are within 0.03 of each other, and the two FWI values agree across patches (Spearman rho >= 0.8). WRONG IF they differ by more than 0.03 with a CI excluding 0, or rho < 0.8: then R0 does not stand in for operational CFFDRS, and every imagery delta measured against R0 or R2 is measured against a different baseline from the one operations use. | FWI source on D-1 for the same patches: CWFIS operational grid (GeoServer public:fwi, 2 km, archived from 2018-01-01) vs ERA5-Land at 13:00 LDT (fwi.py, variant c2) vs the nearest CWFIS station's reported FWI | between-patch AUC per source (all pairs and same-year pairs), paired by patch with a fire/block-group bootstrap; Spearman rho and median difference, operational vs ERA5 and vs station | Runnable now | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` |
 | **E-56** | Operational FBP outputs on a 2024-2025 cohort | On fires that started in 2024-2025, the HFI CWFIS issued for D-1 ranks fire above non-fire patches within 0.03 of our R0 HFI for the same patches and day (between-patch AUC), and the two agree across patches (Spearman rho >= 0.7). WRONG IF they differ by more than 0.03 with a CI excluding 0: the operational inputs our reconstruction replaces (interpolated station weather, the CWFIS fuel grid, its FMC, green-up and curing) then carry, or lose, skill R0 does not. | HFI (and ROS, CFB, FMC, fuel type) source on D-1: CWFIS operational grids (public:hfi etc., 2 km, from 2024-01-01) vs our R0 on the same patches | between-patch AUC per source, paired by patch; Spearman rho per output; fuel-type agreement (share of area) | Needs a pack | *none yet* |
+| **E-57** | Percent-conifer correction with an imagery-free offset | Once a learned imagery-free offset absorbs the tile-wide shift (P7-C1), the imagery percent-conifer correction carries information its shuffled twin does not: within-patch AUC on M-1/M-2 pixels beats the twin's (paired group-bootstrap CI above 0), and the imagery part varies more within tiles than the twin's. WRONG IF the real-imagery arm and its twin stay within noise on M-1/M-2 pixels (CI spanning 0): then, at this n, imagery percent conifer adds nothing through the physics even freed of the shift. | imagery percent-conifer correction with an offset (r3_pc_offset) vs the same with imagery shuffled across tiles (r3_pc_offset_shuffled); R2 as the floor | paired within-patch AUC on M-1/M-2 pixels and on all pixels; the learned offset (points); within-tile SD of the imagery part | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` |
+| **E-58** | Closing R2's within-patch gap to R1 | R2's within-patch deficit to R1 (-0.025 [-0.034, -0.015], P7) is an optimisation artefact of starting the residual at zero beside the physics. Either starting the residual from the R1 trained on the same fold and seed (r2_warm) or training it at 10x the learning rate (r2_lr10) brings R2 within 0.01 of R1 within patches, without losing more than 0.01 between patches against R2. WRONG IF both arms stay more than 0.01 below R1 within patches with a CI excluding 0: the gap is then the cost of anchoring the score to the physics, and is reported as such in the P12 architecture choice. | R2's residual: zero start at the base rate (r2) vs started from the trained R1 (r2_warm) vs 10x the learning rate (r2_lr10); R1 as the target, rerun in the same sweep | paired within- and between-patch AUC against R1 and R2, per fire patch, fire/block-group bootstrap | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` |
 
 ### Band selection
 
@@ -164,7 +166,7 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
 
-*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between patches, every CI spanning 0.
+*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between patches, every CI spanning 0. Q29.3: whether R2's within-patch gap to R1 closes is E-58.
 
 **E-35 — Fuel-type slot**
 
@@ -184,7 +186,7 @@ Whether the imager should refresh FBP fuel type.
 
 Brief target T4 as a CFFDRS input rather than a map.
 
-*Note:* P5: the imagery_correct form is runnable (pc + 30 tanh(head), through the physics); the imagery_replace form waits for the ecology estimator (E-22, P6). P7: AT RISK. Correct form -0.001 [-0.004, +0.001] within, equal to its twin; the head learned a near-uniform -24-point shift. M-1/M-2-restricted scoring added to run_slots after this sweep.
+*Note:* P5: the imagery_correct form is runnable (pc + 30 tanh(head), through the physics); the imagery_replace form waits for the ecology estimator (E-22, P6). P7: AT RISK. Correct form -0.001 [-0.004, +0.001] within, equal to its twin; the head learned a near-uniform -24-point shift. M-1/M-2-restricted scoring added to run_slots after this sweep. Q29.2: the offset arm (imagery-free constant + imagery deviation) is E-57, alongside these arms.
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -202,7 +204,7 @@ Whether stand height from orbit belongs in FBP's crown fire initiation.
 
 The FWI2025 curing input, tested where grass exists.
 
-*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits. P7: not tested. The SCANFI fuel tree has no O-1 pixel, so the correction never acts (delta exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of pixels).
+*Note:* P5: the imagery_correct form is runnable against the cffdrs default (80 %); the CWFIS curing product is still not held, so the operational comparison waits. P7: not tested. The SCANFI fuel tree has no O-1 pixel, so the correction never acts (delta exactly 0). Needs the curing run on CWFIS fuel (O-1b 4.6 % of pixels). Q29.1 (James, 2026-10-26): curing now runs on CWFIS fuel (O-1b on 4.6 % of pixels), against r2_cwfis, scored on O-1 pixels (run_slots by_fuel). The comparison is to the 80 % FBP default; the CWFIS curing product is not held.
 
 *CFFDRS gap:* curing
 
@@ -311,6 +313,22 @@ The first comparison against what operational FBP actually reported. The cohort 
 *Note:* Registered with E-55, before any grid value was scored.
 
 *Blocked on:* NBAC 2024-2025 are held; patches, pre-fire composites, dated weather and the v2 sidecars for a 2024-2025 cohort are not built
+
+**E-57 — Percent-conifer correction with an imagery-free offset**
+
+*Hypothesis:* Once a learned imagery-free offset absorbs the tile-wide shift (P7-C1), the imagery percent-conifer correction carries information its shuffled twin does not: within-patch AUC on M-1/M-2 pixels beats the twin's (paired group-bootstrap CI above 0), and the imagery part varies more within tiles than the twin's. WRONG IF the real-imagery arm and its twin stay within noise on M-1/M-2 pixels (CI spanning 0): then, at this n, imagery percent conifer adds nothing through the physics even freed of the shift.
+
+Whether the correct form can carry spatial imagery information at all, before the replace form (E-22) exists. Q29.2 (James, 2026-10-26): added alongside E-36's arms, not replacing them.
+
+*Note:* The offset is in units of the bound (pc: 30 points), so it can reach the -24-point shift P7 found at the base learning rate.
+
+**E-58 — Closing R2's within-patch gap to R1**
+
+*Hypothesis:* R2's within-patch deficit to R1 (-0.025 [-0.034, -0.015], P7) is an optimisation artefact of starting the residual at zero beside the physics. Either starting the residual from the R1 trained on the same fold and seed (r2_warm) or training it at 10x the learning rate (r2_lr10) brings R2 within 0.01 of R1 within patches, without losing more than 0.01 between patches against R2. WRONG IF both arms stay more than 0.01 below R1 within patches with a CI excluding 0: the gap is then the cost of anchoring the score to the physics, and is reported as such in the P12 architecture choice.
+
+Whether the physics-anchored model (R2-R4) carries a real accuracy cost, which the P12 architecture rule weighs. Q29.3 (James, 2026-10-26).
+
+*Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1.
 
 ### Band selection
 
@@ -697,7 +715,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
 | **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
 | **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
-| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_curing,r3_curing_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
+| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (measured on slots_v2: 3.4 min median, 4.1 min max per fit; A-35) |
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
@@ -706,6 +724,8 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-53** | Weather staleness under R0 | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-54** | Legacy composite leakage | `Fire_Risk_Model/scripts/python/build_prefire.py` | -- |
 | **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
+| **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits (A-35) |
+| **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=16G per task of 3 fits; an r2_warm fit trains R1 first, about 6.5 min (A-35) |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 
