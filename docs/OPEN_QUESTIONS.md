@@ -731,3 +731,26 @@ Options:
 ERA5-Land snow is a model, so it's another candidate source, not truth. MODIS snow products are NDSI-based too, so they don't escape rule 3.
 
 **Answer (James, 2026-10-27): option 1, station snow on ground.** E-60 is amended before any data. NDSI is now one candidate among the snow indices, not the truth.
+
+---
+
+### Q33 — CWFIS "snow on ground" is mostly a gridded analysis, not a measurement
+
+**Status:** OPEN (raised 2026-10-27, after Q32's answer and before any P6c result)
+**Blocks:** P6c and E-60.
+
+Q32 chose the CWFIS stations' snow on ground (`sog` in `fwi_obs`) as E-60's truth. Checked before use, it isn't a measurement for most stations:
+
+- **Fractional values.** Values come in fractional centimetres (0.15, 9.49, 10.72). Of ~1,400 stations reporting snow, only 4–6 report whole centimetres throughout. ~900 report mostly fractional values, every year 2010–2026.
+- **Neighbours track each other.** Neighbouring stations track each other day by day (Discovery Island and Esquimalt Harbour, Victoria: 9.49 and 8.91 cm on 2 April 2024).
+- **Implausible values.** It reports ~9–10 cm of snow at sea level in Victoria through April 2024.
+
+That is the signature of a gridded snow analysis sampled at station points, a model product like ERA5, which Q32 already ruled out as truth.
+
+Options:
+
+1. **ECCC climate-station observations** *(recommended)*. Environment and Climate Change Canada's historical daily climate data report "Snow on Grnd (cm)" observed at climate stations, in whole centimetres. It's free, through the bulk climate-data download, and is a genuine measurement. Station counts and coverage for 2018–2024 still need checking.
+2. **Downstream skill only (E-18).** No date truth.
+3. **Use the CWFIS analysis anyway,** labelled as an analysis, not truth. Not recommended: it repeats the rule-3 problem in another form.
+
+The Sentinel-2 extraction at stations (`build_snow_obs.py`) works with any station truth; only the truth module changes.
