@@ -1126,3 +1126,34 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Not subtracted: the source data's own noise.** The P6 inputs are medians of 5–20 Sentinel-2 observations, or 4 × 4 block means of AVIRIS-NG pixels, so their noise is well below one CubeSat acquisition's. The full CubeSat noise is added on top, which slightly overstates the total and errs toward penalising a band.
 - **Not modelled yet (Phase 5):** saturation (reported, not clipped; with the placeholder silicon full well, the blue band fills at reflectance 0.24), quantisation, PRNU, stray light, and residual atmospheric-correction error.
 - **Every result is reported twice,** noisy and noise-free (rule 6), and labelled as using a placeholder instrument until Q2–Q4 are answered.
+
+---
+
+## A-38: The P6a ecology estimator searches (E-22, E-59, E-62's Sentinel-2 half)
+
+**Assumption.** The ecology band searches are built as follows (James approved the P6 plan, 2026-10-27).
+
+- **Imagery.**
+  - The 279 ecology patches are rebuilt as **12-band** Sentinel-2 composites: the 11-band registry plus B12. James approved adding B12.
+  - All bands come from one recipe, P4's compositing over June–August 2020 (A-33), on each patch's own grid (`build_ecology_b12.py`). On a test patch the rebuild matched the original 11 bands at r = 0.996.
+- **Labels: SCANFI v2 2020,** the imagery's own year (`pack_ecology_v2.py`).
+  - **Percent conifer:** needleleaf ÷ all species cover, P0's fix. Tamarack counts as broadleaf, as in the CFS tree.
+  - **Closure (%), height (m), biomass, age and land cover.**
+  - **FBP fuel family:** from the CFS decision tree on SCANFI. It's an inventory classification, not a CFFDRS output (rule 3).
+  - Patches whose SCANFI layers fail to stream after 5 attempts have no labels and are left out.
+- **Splits.**
+  - 1° blocks, and a seeded 15 % of blocks frozen as the ecology test set (`splits/ecology_test_v1.json`). Any ecology patch inside a fire test cell is forced to the test side; there are none today.
+  - Only `dev.h5` reaches Narval.
+  - Each task holds out one of 5 outer folds of whole blocks. Band selection runs on an inner block split of the remaining training blocks (rule 5).
+- **Model.** The on-chip-sized `TinyEcologyUNet` (base 8, depth 2), with four heads: percent conifer, closure, height and a 7-way fuel family. It trains for a fixed 30 epochs on 128 px crops with no early stopping, so no evaluation fold chooses an epoch.
+- **Scores are skills against the training mean** (higher is better):
+  - **Regression targets:** 1 − RMSE/RMSE_mean.
+  - **Fuel family:** balanced accuracy rescaled so chance = 0, over classes with ≥ 200 pixels.
+  - **Combined:** the mean of the four.
+  - RMSE in % and m is reported alongside.
+- **Searches.**
+  - Greedy nested sets up to k = 8, in the raw + indices mode with noise, for the combined skill and for each target.
+  - A no-red-edge path excludes B5, B6 and B7 (E-62's Sentinel-2 half).
+  - **Evaluation:** every nested set on the outer fold. The combined and no-red-edge paths and the all-bands reference are scored in raw / indices / raw + indices (E-59); every row is scored noisy and noise-free (rule 6).
+- **Noise.** The placeholder instrument (A-37), exported as `Fire_Risk_FW/configs/noise/s2_p6_12band_placeholder.json`. It's added to the bands before any index is formed.
+- **Indices.** Every index the selected bands can form (the `formable` mode, A-36's catalogue). ECVs are not inputs.
