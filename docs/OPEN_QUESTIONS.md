@@ -696,3 +696,18 @@ Both are questions for CWFIS (cwfisitnotify-scifvtinotification@nrcan-rncan.gc.c
    - `r2_warm`: R1 is trained first within the same fit;
    - `r2_lr10`: the residual trains at 10× the learning rate.
    R1 and R2 rerun in the same sweep for pairing.
+
+---
+
+### Q31 — P7d: standard and foundation models as fire danger rating
+
+**Status:** OPEN (raised 2026-10-27). Deferred by James: "make sure the model experiments are written somewhere so we can address them later, please focus on P6".
+**Blocks:** nothing now.
+
+James asked whether standard models could take the CFFDRS inputs and give a more accurate fire danger rating, naming TESSERA, AlphaEarth Foundations and Prithvi. The proposal is in [`docs/P7D_FOUNDATION_MODELS.md`](P7D_FOUNDATION_MODELS.md): seven models (adding Galileo, Presto, DOFA and gradient-boosted trees), leakage rules, arms, metrics and draft predictions. To decide when P6 allows:
+
+1. Approve or amend the model list.
+2. Run it alongside or after P6.
+3. Accept ~35 GB of embedding sidecars and a B12 fire repack.
+
+Predictions are registered only after approval and before any data is fetched.
