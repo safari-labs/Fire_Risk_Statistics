@@ -91,3 +91,13 @@ def test_snr_reports_every_band_and_the_placeholder_label(capsys):
 
 def test_snr_rejects_an_unknown_band_set(capsys):
     assert main(["snr", "no_such_set"]) == 2
+
+
+def test_snr_json_export_carries_every_band_and_the_placeholder_flag(tmp_path, capsys):
+    import json
+    out = tmp_path / "noise.json"
+    assert main(["snr", "sentinel2_p6_12band", "--json", str(out)]) == 0
+    t = json.loads(out.read_text())
+    assert t["placeholder"] is True
+    assert list(t["bands"])[-1] == "B12" and len(t["bands"]) == 12
+    assert all(b["gain_e_per_rho"] > 0 for b in t["bands"].values())

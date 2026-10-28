@@ -1,0 +1,90 @@
+# Sentinel-2 L2A, the twelve bands in the P6 ecology pack (pack_ecology_v2.py),
+# in the pack's own order: the 11-band candidate set plus B12 (SWIR2), which
+# James approved adding for P6 (2026-10-27). Centres and widths are the same
+# nominal values as sentinel2_11band_candidates.yaml. Used to export the
+# sensor noise table the P6 band searches apply (A-37).
+
+name: sentinel2_p6_12band
+description: >-
+  Sentinel-2 L2A bands of the P6 ecology pack: the 11-band candidate pool plus
+  B12 (SWIR2, extended InGaAs), in pack order.
+role_in_study: candidate
+
+bands:
+  # ── Historical channels 0-4, order preserved exactly ──────────────────
+  - name: B4
+    role: RED
+    centre_nm: 665.0
+    fwhm_nm: 30.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B8
+    role: NIR
+    centre_nm: 842.0
+    fwhm_nm: 115.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B5
+    role: RED_EDGE1
+    centre_nm: 705.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B3
+    role: GREEN
+    centre_nm: 560.0
+    fwhm_nm: 35.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B2
+    role: BLUE
+    centre_nm: 490.0
+    fwhm_nm: 65.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  # ── Appended for the 400-1750 nm study ────────────────────────────────
+  - name: B6
+    role: RED_EDGE2
+    centre_nm: 740.0
+    fwhm_nm: 15.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B7
+    role: RED_EDGE3
+    centre_nm: 783.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B8A
+    role: NIR_NARROW
+    centre_nm: 865.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  - name: B11
+    role: SWIR1
+    centre_nm: 1610.0
+    fwhm_nm: 90.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+  # ── Atmospheric: carried, not default input ───────────────────────────
+  - name: B1
+    role: COASTAL
+    centre_nm: 443.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    purpose: atmospheric
+  - name: B9
+    role: WATER_VAPOUR
+    centre_nm: 945.0
+    fwhm_nm: 20.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01
+    purpose: atmospheric
+  - name: B12
+    role: SWIR2
+    centre_nm: 2190.0
+    fwhm_nm: 180.0
+    srf_shape: gaussian
+    out_of_band_leakage: 0.01

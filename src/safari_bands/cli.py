@@ -176,6 +176,26 @@ def _cmd_snr(args: argparse.Namespace) -> int:
               f"{float(bn.snr(0.2)):>8.1f}  {float(bn.sigma(0.2)):>10.4f}")
     for n in nm.notes:
         print(f"  note: {n}")
+    if args.json:
+        import json
+        import subprocess
+        from pathlib import Path
+        try:
+            commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+                                    text=True, check=True).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            commit = "unknown"
+        table = {"band_set": band_set.name, "sza_deg": nm.sza_deg, "t_atm": nm.t_atm,
+                 "placeholder": nm.placeholder, "statistics_commit": commit,
+                 "model": "sigma(rho) = sqrt(rho / gain + var0 / gain^2) (A-37)",
+                 "bands": {b.name: {"centre_nm": b.centre_nm, "fwhm_nm": b.fwhm_nm,
+                                    "gain_e_per_rho": nm.bands[b.name].gain_e_per_rho,
+                                    "var0_e2": nm.bands[b.name].var0_e2,
+                                    "saturates_at_rho": nm.bands[b.name].saturates_at_rho}
+                           for b in band_set.bands},
+                 "notes": nm.notes}
+        Path(args.json).write_text(json.dumps(table, indent=1), encoding="utf-8")
+        print(f"wrote {args.json}")
     return 0
 
 
@@ -210,6 +230,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_snr = sub.add_parser("snr", help="per-band noise from the sensor model (rule 6)")
     p_snr.add_argument("band_set", help="band set name, e.g. sentinel2_msi")
     p_snr.add_argument("--sza", type=float, default=55.0, help="solar zenith angle, degrees")
+    p_snr.add_argument("--json", help="also write the noise table to this JSON file")
     p_snr.set_defaults(func=_cmd_snr)
 
     return parser
