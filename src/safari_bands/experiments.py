@@ -1499,18 +1499,27 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-60", "Snow-off without SWIR", "CFFDRS gaps",
-        hypothesis="A per-pixel snow-off date from visible and NIR bands alone is "
-                   "within 7 days of the NDSI-based date (green + SWIR1), median "
-                   "absolute difference over development fire patches. WRONG IF the "
-                   "median difference exceeds 7 days: snow-off then needs the SWIR "
-                   "chain, which counts toward its cost in P12.",
-        independent="snow index for the per-pixel snow-off date: NDSI (B3, B11) vs the "
-                    "best visible/NIR-only index found inside training folds",
-        dependent="median and 90th-percentile |difference| in snow-off date (days); "
-                  "the downstream FWI start-up change (E-18)",
+        hypothesis="Judged against the snow-off date measured at CWFIS stations (snow "
+                   "on ground, fwi_obs), a per-station snow-off date from visible and "
+                   "NIR Sentinel-2 bands alone has a median absolute error of at most 7 "
+                   "days and is no more than 3 days worse than the best set that may use "
+                   "SWIR1 (the NDSI family). WRONG IF the VNIR-only error exceeds 7 days "
+                   "or is more than 3 days worse: snow-off then needs the SWIR chain, "
+                   "which counts toward its cost in P12.",
+        independent="bands available to the per-observation snow classifier: VNIR only vs "
+                    "VNIR + SWIR1 (+ SWIR2), each searched as nested sets inside training "
+                    "folds of station blocks",
+        dependent="median and 90th-percentile |S2 snow-off - station snow-off| (days) per "
+                  "station-year; per-observation snow accuracy against the station's "
+                  "snow on ground that day; downstream, the FWI start-up change (E-18)",
         conclusion="Whether a VNIR-only camera can supply the start-up date.",
         state="NEEDS_CODE",
-        blocker="the Sentinel-2 spring time-series reduction (P6c)",
+        blocker="the station snow-off dates and the Sentinel-2 observations at stations "
+                "(P6c)",
+        note="AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): "
+             "the reference was the NDSI-based date, an index threshold used as truth, "
+             "which rule 3 forbids. It is now the station-measured snow on ground; NDSI "
+             "is a candidate like any other.",
     ),
     Experiment(
         "E-61", "Best SWIR bands, searched broadly", "Hyperspectral",

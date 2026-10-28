@@ -729,3 +729,5 @@ Options:
 3. **Both 1 and 2.**
 
 ERA5-Land snow is a model, so it's another candidate source, not truth. MODIS snow products are NDSI-based too, so they don't escape rule 3.
+
+**Answer (James, 2026-10-27): option 1, station snow on ground.** E-60 is amended before any data. NDSI is now one candidate among the snow indices, not the truth.
