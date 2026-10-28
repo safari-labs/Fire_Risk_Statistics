@@ -754,3 +754,5 @@ Options:
 3. **Use the CWFIS analysis anyway,** labelled as an analysis, not truth. Not recommended: it repeats the rule-3 problem in another form.
 
 The Sentinel-2 extraction at stations (`build_snow_obs.py`) works with any station truth; only the truth module changes.
+
+**Answer (James, 2026-10-27): option 1, ECCC climate stations.** `Fire_Risk_Model/scripts/python/fetch_eccc_snow.py` reads daily snow on ground from the MSC GeoMet API. A 60-station check found observed whole centimetres, with flags T (trace) and E (estimated); 50 of 60 stations report it. Flag E is dropped and T counts as no measurable snow.

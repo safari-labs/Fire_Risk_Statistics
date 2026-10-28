@@ -1499,8 +1499,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
     ),
     Experiment(
         "E-60", "Snow-off without SWIR", "CFFDRS gaps",
-        hypothesis="Judged against the snow-off date measured at CWFIS stations (snow "
-                   "on ground, fwi_obs), a per-station snow-off date from visible and "
+        hypothesis="Judged against the snow-off date measured at ECCC climate stations "
+                   "(observed snow on ground), a per-station snow-off date from visible and "
                    "NIR Sentinel-2 bands alone has a median absolute error of at most 7 "
                    "days and is no more than 3 days worse than the best set that may use "
                    "SWIR1 (the NDSI family). WRONG IF the VNIR-only error exceeds 7 days "
@@ -1519,7 +1519,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): "
              "the reference was the NDSI-based date, an index threshold used as truth, "
              "which rule 3 forbids. It is now the station-measured snow on ground; NDSI "
-             "is a candidate like any other.",
+             "is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS "
+             "fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is "
+             "ECCC climate-station observed snow on ground.",
     ),
     Experiment(
         "E-61", "Best SWIR bands, searched broadly", "Hyperspectral",
