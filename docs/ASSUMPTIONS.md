@@ -1157,3 +1157,31 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **Evaluation:** every nested set on the outer fold. The combined and no-red-edge paths and the all-bands reference are scored in raw / indices / raw + indices (E-59); every row is scored noisy and noise-free (rule 6).
 - **Noise.** The placeholder instrument (A-37), exported as `Fire_Risk_FW/configs/noise/s2_p6_12band_placeholder.json`. It's added to the bands before any index is formed.
 - **Indices.** Every index the selected bands can form (the `formable` mode, A-36's catalogue). ECVs are not inputs.
+
+---
+
+## A-39: The P6c snow-off estimator (E-60)
+
+**Assumption.** The snow-off searches are built as follows.
+
+- **Truth (Q33).** Observed snow on ground at ECCC climate stations, from the MSC GeoMet API: 708,181 station-days from 880 stations, 2018–2024.
+  - Flag E (estimated) is dropped; T (trace) counts as no measurable snow.
+  - The CWFIS `sog` column is not used: for most stations it is a gridded analysis.
+- **Snow-off date.** The day after the last day on or before 30 June with snow on the ground, kept if the next 3 days are reported snow-free.
+- **Which station-years count.**
+  - Snow on ≥ 10 days in January–April.
+  - ≥ 80 % of March–June reported.
+  - A snow-off date on or after 10 March.
+- **Sentinel-2 at stations.** S2 SR from 1 March to 15 July, a 30 m-radius window mean of 12 bands.
+  - Nothing is masked on s2cloudless, which calls snow cloud. Observations whose window is ≥ 50 % SCL cloud or shadow are dropped.
+  - Result: 1,037 station-years and 25,434 observations.
+- **Splits.** 1° station blocks, with a frozen 15 % (22 of 146 blocks) as the snow test set (`splits/snow_test_v1.json`). Searches run inside folds of whole blocks (rule 5).
+- **Estimator and score.**
+  - A per-observation MLP (2 × 32) classifies snow vs no snow, trained on the station's same-day snow on ground, with balanced classes.
+  - A station-year's date is the midpoint between its last snow-classified observation (on or before 30 June) and the next clear one.
+  - The score is the median absolute error in days against the station date; per-observation balanced accuracy is reported beside it.
+- **Searches.** Greedy nested sets to k = 6, with sensor noise added before indices (A-37):
+  - **all:** any band;
+  - **vnir:** no B11 or B12 (E-60).
+
+  Every nested set is then scored in raw / indices / raw + indices, noisy and noise-free.
