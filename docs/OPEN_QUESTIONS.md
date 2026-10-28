@@ -711,3 +711,21 @@ James asked whether standard models could take the CFFDRS inputs and give a more
 3. Accept ~35 GB of embedding sidecars and a B12 fire repack.
 
 Predictions are registered only after approval and before any data is fetched.
+
+---
+
+### Q32 — E-60's reference conflicts with rule 3: what should snow-off dates be judged against?
+
+**Status:** OPEN (raised 2026-10-27, before any P6c code or data)
+**Blocks:** P6c (snow-off estimator) and E-60.
+
+As registered, E-60 judges a visible/NIR-only snow-off date against the **NDSI-based** date. That makes an index threshold the reference truth, which rule 3 forbids: NDSI is one of the candidates under test, not ground truth.
+
+Options:
+
+1. **Station snow on ground** *(recommended)*. The CWFIS `fwi_obs` exports we hold carry `sog` (snow on ground) per station-day: a measurement, independent of any index. Both Sentinel-2 dates (NDSI and VNIR-only) would be judged against the station's snow-off date, for patches within a set distance of a reporting station.
+   - E-60 would be amended before any data: "within 7 days of the station snow-off date, as close as NDSI".
+2. **Downstream skill only (E-18).** No date truth. Compare the fire-skill change from each date source through the FWI start-up. Clean under rule 3, but it says nothing directly about date accuracy.
+3. **Both 1 and 2.**
+
+ERA5-Land snow is a model, so it's another candidate source, not truth. MODIS snow products are NDSI-based too, so they don't escape rule 3.
