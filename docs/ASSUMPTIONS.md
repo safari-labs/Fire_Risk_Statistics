@@ -900,6 +900,34 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
    decision adds one, the data rate and these budgets are re-derived from the
    sheet with that camera selected.
 
+   **Addendum (2026-10-29, James: placeholder budgets accepted; noise stays
+   placeholder).** P6 points to a SWIR chain (E-60: SWIR1 is worth ~4 days of
+   snow-off; E-22: SWIR first for structure), so the sheet's two SWIR cameras
+   were added to the Mantis MS with the sheet's own formulas (built-in optics
+   scaled from 500 km, push broom, square scenes, 2,000 km imaged per orbit):
+
+   | added camera (sheet library) | GSD / swath at 500 km | raw per orbit (both cameras) | data rate while imaging | imaging power, mass, volume (both) | co-registered strip |
+   |---|---|---|---|---|---|
+   | Mantis SWIR, 4 bands, 1000-1750 nm (roadmap, TRL 8) | 14.8 m / 18.0 km | 2.08 GB | 7.3 MB/s | 12 W, 1.0 kg, 2 U | 18 of 32 km |
+   | Chameleon SWIR, 4 bands, 1000-1750 nm (TRL 8) | 8.7 m / 11.2 km | 3.13 GB | 11.0 MB/s | 13 W, 2.1 kg, 3.5 U | 11 of 32 km |
+
+   - **Latency budget unchanged:** a joint scene is processed on the MS grid
+     (SWIR resampled to 32 m), 63 scenes per orbit, so **<= 91 s per scene**
+     still binds; the input grows to 10 channels on 1000 x 562 px (Mantis
+     SWIR) or 1000 x 350 px (Chameleon SWIR), since only the co-registered
+     strip has both. Real-time stays reported only (<= 4.5 s per scene).
+   - **Storage:** the buffered case now needs 2.1-3.1 GB per orbit.
+   - **SWIR2 is not in either camera.** Both stop at 1750 nm (standard
+     InGaAs); P6a chose B12 (2190 nm) first in 60 % of searches. Whether the
+     structure targets need it is E-61's question; if they do, no camera in the
+     sheet supplies it (only the placeholder extended-InGaAs and hyperspectral
+     rows reach 2.5 um).
+   - **Swath:** VNIR+SWIR estimates exist only on the narrower SWIR swath
+     (56 % or 35 % of the VNIR swath). Revisit falls by the same factor for any
+     product that needs both chains.
+   At 620 km every count scales as in the main budget (51 scenes per orbit,
+   114 s per scene).
+
 
 ---
 

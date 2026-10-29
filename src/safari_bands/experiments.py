@@ -545,23 +545,35 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "south. Our flat 90-day spinup starts around 1 April into "
                    "frozen, snow-covered ground, so the spurious drying should "
                    "scale with latitude.",
-        independent="FWI start date: per-pixel NDSI snow-off vs our flat "
-                    "90-day spinup",
-        dependent="change in the FWI codes, and " + _M,
+        independent="FWI start date: the Appendix C-2 start-up keyed to a "
+                    "Sentinel-2 snow-off date per patch (the E-60 classifier, "
+                    "SWIR allowed and VNIR only) vs keyed to ERA5-Land snow "
+                    "(E-51's operational rule) vs our flat 90-day spinup",
+        dependent="change in the FWI codes by latitude band, and between-patch "
+                  "AUC of DC, DMC, BUI and FWI (paired by patch, block bootstrap)",
         conclusion="Fixes our own defect first: the spinup starts ~1 April, "
                    "which at 55-67 N is frozen and snow-covered, so the "
                    "recursion accumulates weeks of spurious drying and the "
-                   "error scales with latitude. Then it tests whether a "
-                   "per-pixel snow-off date beats the regional rule.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="the S2 snow-off estimator (E-60, P6c) is built and queued on "
-                "Narval; applying its chosen band set to the fire patches is "
-                "not written. The operational-rule half is E-51 (P3)",
+                   "error scales with latitude. Then it tests whether an "
+                   "imagery snow-off date beats the regional rule.",
+        state="NEEDS_PACK",
+        runner="Fire_Risk_Model/scripts/python/build_s2_startup.py",
+        blocker="Sentinel-2 at the fire patches is being extracted "
+                "(build_patch_snow_obs.py, 2026-10-29); then the classifiers are "
+                "fitted and applied on the cluster (Fire_Risk_FW run_snow_off.sh) "
+                "and the variants added and scored here",
         gap="G4 snow-off keyed by regional rule",
         note="P3 (E-51): the operational start-up moves DC by +38 at >=60 N and "
              "lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is "
-             "the error an S2 snow-off date could fix.",
+             "the error an S2 snow-off date could fix. AMENDED 2026-10-29, before "
+             "any patch snow-off date existed: the imagery date comes from the "
+             "E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), "
+             "not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 "
+             "rule as well as the flat spinup. Falsifier added at the same time: "
+             "WRONG IF, above 55 N, the imagery start-up neither moves the median "
+             "lag-1 DC by 10 % or more against the ERA5 rule nor raises the "
+             "between-patch AUC of DC or FWI with a CI above 0. E-60 found the "
+             "imagery date 16 d off the station on median, both ways.",
     ),
     Experiment(
         "E-19", "Latitude-banded weather", "CFFDRS gaps",
@@ -1061,7 +1073,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "the CWFIS curing product is not held. P7c: PARTIAL. O-1 pixels "
              "(60 fires): vs twin +0.021 [+0.007, +0.034], vs R2 on CWFIS fuel "
              "+0.013 [+0.002, +0.024] -- against the 80 % default; the CWFIS "
-             "curing product comparison has not run (product not held).",
+             "curing product comparison has not run (product not held). P6b "
+             "(2026-10-29): CWFIS grass curing (public:grasscuring, 1 km, NDVI-based) "
+             "is archived only from 2024-01-01, so no fire in 2019-2023 has an "
+             "issued curing value; the operational comparison needs the 2024-2025 "
+             "cohort (E-56) or a reconstruction (Q36).",
     ),
     Experiment(
         "E-39", "Canopy closure to in-stand moisture", "CFFDRS mirror",

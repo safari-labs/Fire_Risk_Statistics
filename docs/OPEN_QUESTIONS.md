@@ -651,6 +651,11 @@ Derived: <= 91 s per 1000 x 1000 x 6-band scene (buffered, 500 km),
 real-time 4.6 s reported as a bonus, no processor power cap. Process weights
 stay equal (Q1). Recorded in A-29.
 
+**Follow-up (James, 2026-10-29):** the placeholder budgets are accepted, and the
+sensor noise stays the placeholder. The SWIR-camera case is added to A-29 from the
+same sheet: the latency budget is unchanged (<= 91 s per joint scene); storage
+grows to 2.1-3.1 GB per orbit; neither SWIR camera in the sheet reaches SWIR2.
+
 
 ---
 
@@ -797,3 +802,20 @@ Options for the next ecology run:
 3. **Keep as is,** with the caveat stated wherever family skill is quoted.
 
 For point 1: weigh the P6a rankings against the AVIRIS-NG search (same labels, but bands not tied to Landsat's) and, when available, against plot-measured structure.
+
+---
+
+### Q36 — The issued CWFIS grass curing starts in 2024: how should E-38 meet it?
+
+**Status:** OPEN (raised 2026-10-29, at the start of P6b)
+**Blocks:** E-38's comparison with the operational curing source. P7c's comparison with the 80 % FBP default stands.
+
+CWFIS publishes grass curing as a time-enabled WCS layer (`public:grasscuring`): 1 km, NDVI-based, 0 = green and 100 = fully cured, the FWI2025 remote-sensing option. Its archive starts on **2024-01-01** (DescribeCoverage, 2026-10-29), as the issued FFMC to FBP outputs do (E-56). Every fire in our cohort burned in 2019–2023, so none has an issued curing value.
+
+Options:
+
+1. **The 2024–2025 cohort** *(recommended)*. Build the patches, composites and dated weather for 2024–2025 fires (E-56, already registered). That unlocks issued curing for E-38 and the issued FBP outputs for E-56 at once, and gives an out-of-time test for the 2019–2023 models.
+2. **Reconstruct the CWFIS curing for 2019–2023** from NDVI as CWFIS describes it, labelled "reconstructed (ours)" (A-36). Quicker, but it is not what was issued, and the published method details need checking first.
+3. **Leave E-38 against the FBP default only.** The P7c result (+0.013 against R2 on O-1 pixels) stays the comparison.
+
+Grass is scarce in the current cohort (O-1b on 4.6 % of pixels on the CWFIS fuel layer, none in SCANFI), so any curing result there is small-n; the 2024–2025 fires may not have more.
