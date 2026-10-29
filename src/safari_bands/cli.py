@@ -199,6 +199,35 @@ def _cmd_snr(args: argparse.Namespace) -> int:
     return 0
 
 
+def _git_commit() -> str:
+    import subprocess
+    try:
+        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+                              text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def _cmd_hs_grid(args: argparse.Namespace) -> int:
+    from safari_bands.hs_grid import build_table, load_grid, write_table
+
+    config = load_study_config()
+    table = build_table(load_grid(args.grid), config.detectors, config.optics, config.orbit,
+                        config.windows)
+    label = "PLACEHOLDER instrument (Q2-Q4)" if table["placeholder"] else "instrument"
+    print(f"{table['grid']}: {len(table['bands'])} bands with noise, {label}; {table['rule7']}")
+    for arm, ids in table["arms"].items():
+        cs = [table["bands"][i]["centre_nm"] for i in ids]
+        print(f"  {arm:<17s} {len(ids):>4d} candidates, centres {min(cs):g}-{max(cs):g} nm, "
+              f"k <= {table['k_max'][arm]}, fixed {len(table['fixed'][arm])}")
+    for ref, ids in table["references"].items():
+        print(f"  reference {ref:<28s} {len(ids)} bands")
+    if args.json:
+        write_table(args.json, table, _git_commit())
+        print(f"wrote {args.json}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="safari-bands",
@@ -232,6 +261,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_snr.add_argument("--sza", type=float, default=55.0, help="solar zenith angle, degrees")
     p_snr.add_argument("--json", help="also write the noise table to this JSON file")
     p_snr.set_defaults(func=_cmd_snr)
+
+    p_grid = sub.add_parser("hs-grid", help="the P6a-HS candidate grid and its noise (A-40)")
+    p_grid.add_argument("--grid", default="p6_hs", help="config/grids/<name>.yaml")
+    p_grid.add_argument("--json", help="write the table (Fire_Risk_FW configs/noise/)")
+    p_grid.set_defaults(func=_cmd_hs_grid)
 
     return parser
 

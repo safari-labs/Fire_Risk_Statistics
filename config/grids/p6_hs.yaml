@@ -1,0 +1,75 @@
+# P6a-HS candidate grid for the AVIRIS-NG band searches (E-61, E-62; E-23-25).
+#
+# James (2026-10-27): search as broadly as possible; vendor filter sets are
+# examples of an option under consideration, not constraints, so they enter
+# only as reference points.
+#
+# A candidate is kept only if its FWHM extent (centre +/- FWHM/2) lies inside
+# its arm's range AND inside its detector's spectral range, and overlaps no
+# forbidden region of atmospheric_windows.yaml at the error multiplier (rule
+# 7, the same test `safari-bands validate` applies to every band set). See
+# docs/ASSUMPTIONS.md A-40 for where this narrows E-61's registered windows.
+#
+# Exported by `safari-bands hs-grid --json`, which adds the A-37 noise for
+# every candidate on its arm's detector.
+
+name: p6_hs
+step_nm: 10.0
+
+arms:
+  # E-62: the VNIR camera alone (no SWIR), nested k = 1-6.
+  vnir:
+    range_nm: [400.0, 1000.0]
+    fwhm_nm: [10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+    detector: silicon_cmos
+    k_max: 6
+    fixed: []
+  # E-62's comparison: the same search with no response in the red edge.
+  vnir_no_red_edge:
+    range_nm: [400.0, 1000.0]
+    fwhm_nm: [10.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+    detector: silicon_cmos
+    exclude_overlap_nm: [700.0, 760.0]
+    k_max: 6
+    fixed: []
+  # E-61: SWIR within standard InGaAs, VNIR fixed, nested k = 1-4.
+  swir_std:
+    range_nm: [1000.0, 1750.0]
+    fwhm_nm: [20.0, 40.0, 60.0, 80.0, 100.0]
+    detector: ingaas_std
+    k_max: 4
+    fixed: [config_c/VNIR]
+  # E-61: SWIR on extended InGaAs, allowed to reach 2000-2400 nm. Every SWIR
+  # band sits on the extended detector (one focal plane, as in config C), so
+  # it pays the extended detector's noise below 1700 nm as well.
+  swir_ext:
+    range_nm: [1000.0, 2400.0]
+    fwhm_nm: [20.0, 40.0, 60.0, 80.0, 100.0]
+    detector: ingaas_ext
+    k_max: 4
+    fixed: [config_c/VNIR]
+
+# Reference band sets scored beside the searches. "<set>/VNIR" or
+# "<set>/SWIR" takes the set's bands on silicon or on InGaAs only.
+references:
+  - config_c/VNIR
+  - config_a
+  - config_b
+  - config_c
+  - sensor_mantis_vnir6
+  - sensor_mantis_ms_plus_swir
+  - sentinel2_p6_12band
+
+# Index roles for arbitrary centres: a selected band takes a role when its
+# centre lies in the role's window (nearest the window middle wins). The
+# windows bracket the catalogue's role centres (config/indices.yaml).
+role_windows_nm:
+  BLUE: [450.0, 520.0]
+  GREEN: [530.0, 590.0]
+  RED: [630.0, 690.0]
+  RED_EDGE1: [695.0, 715.0]
+  RED_EDGE2: [730.0, 750.0]
+  RED_EDGE3: [775.0, 795.0]
+  NIR: [840.0, 885.0]
+  SWIR1: [1550.0, 1700.0]
+  SWIR2: [2080.0, 2350.0]
