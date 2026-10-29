@@ -115,8 +115,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-23** | SWIR band placement | The best four cluster near 1240, 1610 and 1680-1730 nm, with the fourth in the 1500s. From brief hypotheses H1 and H3: resolving a dry-matter change needs two water-sensitive bands with different water-to-dry-matter absorption ratios. | any 4 centres and widths in 1003-1359 and 1414-1749 nm (140 usable channels) | retrieval error per candidate set | Needs new data | `fetch_aviris.py + ingest_aviris.py` |
 | **E-24** | 1209 vs 1240 nm | 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome. | WorldView-3's flown centre against Gao's NDWI band | retrieval error, and O2 absorption margin | Needs new data | `ingest_aviris.py --mode both` |
 | **E-25** | Spectral resolution: HS vs MS | Diminishing returns beyond roughly 10-15 well-placed bands, so the HS mode's 96 channels buy little over a well-chosen MS set. WRONG IF the curve keeps climbing, which would make the HS mode the better instrument and change the payload decision. | 140 SWIR channels at 5 nm vs the best 4-6 broad bands | retrieval error vs channel count | Needs new data | `ingest_aviris.py, then sweep_bands.py` |
-| **E-61** | Best SWIR bands, searched broadly | For the ecology targets, the best 4-band SWIR set within standard InGaAs (1000-1750 nm) recovers at least 90 % of the error reduction of the best 4-band set allowed to reach 2000-2400 nm (extended InGaAs), with the VNIR set fixed. WRONG IF allowing 2000-2400 nm improves any target by more than 10 % of its standard-window gain, with a CI excluding 0: then structure retrieval pays for the extended detector. Reported alongside, not predicted: how much of each optimum a vendor filter set (e.g. the best 4 of DFA's 12) recovers. | SWIR band sets from a broad grid (centres every 10 nm, FWHM 20-100 nm, in 1003-1359, 1414-1749 and 1970-2400 nm, A-22), nested k = 1-4, per detector window; vendor sets as reference points | per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 2020), spatial-block folds by flight line, under the noise model | Needs new data | *none yet* |
-| **E-62** | Best VNIR bands, searched broadly | The best 6-band VNIR set from a broad grid includes at least one band in 700-760 nm (red edge), and the best 6-band set with no band there is at least 5 % worse on percent conifer and canopy closure. WRONG IF the best set has no red-edge band, or the best no-red-edge set is within 5 % on both targets. | VNIR band sets from a broad grid (centres every 10 nm, FWHM 10-100 nm, 400-1000 nm), nested k = 1-6; the same search with 700-760 nm excluded; vendor sets (e.g. DFA's standard 6) and Sentinel-2's bands as reference points | per-target held-out error on AVIRIS-NG and, for Sentinel-2's bands, on the P6 ecology pack; under the noise model | Needs new data | *none yet* |
+| **E-61** | Best SWIR bands, searched broadly | For the ecology targets, the best 4-band SWIR set within standard InGaAs (1000-1750 nm) recovers at least 90 % of the error reduction of the best 4-band set allowed to reach 2000-2400 nm (extended InGaAs), with the VNIR set fixed. WRONG IF allowing 2000-2400 nm improves any target by more than 10 % of its standard-window gain, with a CI excluding 0: then structure retrieval pays for the extended detector. Reported alongside, not predicted: how much of each optimum a vendor filter set (e.g. the best 4 of DFA's 12) recovers. | SWIR band sets from a broad grid (centres every 10 nm, FWHM 20-100 nm, in 1003-1359, 1414-1749 and 1970-2400 nm, A-22), nested k = 1-4, per detector window; vendor sets as reference points | per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 2020), spatial-block folds by flight line, under the noise model | Needs new data | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'` |
+| **E-62** | Best VNIR bands, searched broadly | The best 6-band VNIR set from a broad grid includes at least one band in 700-760 nm (red edge), and the best 6-band set with no band there is at least 5 % worse on percent conifer and canopy closure. WRONG IF the best set has no red-edge band, or the best no-red-edge set is within 5 % on both targets. | VNIR band sets from a broad grid (centres every 10 nm, FWHM 10-100 nm, 400-1000 nm), nested k = 1-6; the same search with 700-760 nm excluded; vendor sets (e.g. DFA's standard 6) and Sentinel-2's bands as reference points | per-target held-out error on AVIRIS-NG and, for Sentinel-2's bands, on the P6 ecology pack; under the noise model | Needs new data | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'` |
 
 ### Hardware
 
@@ -636,7 +636,7 @@ THE SWIR SPECIFICATION. Sentinel-2 has one band in that window and the mode carr
 
 *Note:* Grid measured from AVIRIS-NG's own bad-band list (A-22), which puts the water-vapour gap at 1364-1408 nm -- narrower than assumed, so 1300-1359 and 1414-1500 were being excluded for no reason.
 
-*Blocked on:* 13 of 42 pre-fire lines ingested (2026-10-28); the rest are downloading, about 2 h per line
+*Blocked on:* 18 of 42 pre-fire lines ingested (2026-10-29); the rest are downloading, about 2 h per line. Answered through E-61's search (A-40) once they arrive
 
 **E-24 — 1209 vs 1240 nm**
 
@@ -660,9 +660,9 @@ What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked
 
 Which SWIR placements, and which detector, the structure targets need; feeds E-46 and the SWIR chain choice.
 
-*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22).
+*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm.
 
-*Blocked on:* 29 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest (P6a-HS, 2026-10-28)
+*Blocked on:* 24 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest (2026-10-29); the pack (pack_aviris_v1.py) and runner (run_hs_search.py) are written and smoke-tested (A-40)
 
 **E-62 — Best VNIR bands, searched broadly**
 
@@ -670,7 +670,9 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
 
-*Blocked on:* the AVIRIS-NG ingest (P6a-HS)
+*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40).
+
+*Blocked on:* the AVIRIS-NG ingest: 24 of 42 lines still to fetch (2026-10-29); pack and runner written (A-40)
 
 ### Hardware
 

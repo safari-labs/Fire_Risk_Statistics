@@ -704,8 +704,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "from one. Only a contiguous source can answer it.",
         state="NEEDS_DATA",
         runner="fetch_aviris.py + ingest_aviris.py",
-        blocker="13 of 42 pre-fire lines ingested (2026-10-28); the rest "
-                "are downloading, about 2 h per line",
+        blocker="18 of 42 pre-fire lines ingested (2026-10-29); the rest "
+                "are downloading, about 2 h per line. Answered through E-61's "
+                "search (A-40) once they arrive",
         note="Grid measured from AVIRIS-NG's own bad-band list (A-22), which "
              "puts the water-vapour gap at 1364-1408 nm -- narrower than "
              "assumed, so 1300-1359 and 1414-1500 were being excluded for "
@@ -1568,11 +1569,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Which SWIR placements, and which detector, the structure targets "
                    "need; feeds E-46 and the SWIR chain choice.",
         state="NEEDS_DATA",
-        blocker="29 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest "
-                "(P6a-HS, 2026-10-28)",
+        runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'",
+        blocker="24 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest "
+                "(2026-10-29); the pack (pack_aviris_v1.py) and runner "
+                "(run_hs_search.py) are written and smoke-tested (A-40)",
         note="Broadens E-23 (which stays as registered) beyond 1750 nm and adds "
              "vendor reference points. DFA L5 (1348/64) has ~28 % of its response "
-             "inside the 1364-1408 nm water-vapour gap (A-22).",
+             "inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid "
+             "applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and "
+             "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm.",
     ),
     Experiment(
         "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
@@ -1590,7 +1595,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether a VNIR camera without red edge (as some standard filter "
                    "sets are) gives up structure skill, and which placements win.",
         state="NEEDS_DATA",
-        blocker="the AVIRIS-NG ingest (P6a-HS)",
+        runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'",
+        blocker="the AVIRIS-NG ingest: 24 of 42 lines still to fetch (2026-10-29); "
+                "pack and runner written (A-40)",
+        note="The VNIR arm searches the camera alone (no SWIR band), the question "
+             "E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references "
+             "(A-40).",
     ),
 )
 

@@ -1185,3 +1185,47 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **vnir:** no B11 or B12 (E-60).
 
   Every nested set is then scored in raw / indices / raw + indices, noisy and noise-free.
+
+---
+
+## A-40: The P6a-HS AVIRIS-NG band searches (E-61, E-62; E-23 to E-25)
+
+**Assumption.** The AVIRIS-NG searches are built as follows. James asked for searches as broad as possible; vendor filter sets are only reference points (2026-10-27).
+
+- **Pack** (`Fire_Risk_Model/scripts/python/pack_aviris_v1.py`).
+  - **Inputs:** the 42 pre-fire lines, each ingested at 4 × 4 block means (~20 m, every usable channel).
+  - **Labels:** SCANFI v2 2020, the step E-61 registered. Labels are read at each pixel by nearest neighbour, with the ecology pack's targets: percent conifer, closure, height and FBP fuel family.
+  - **Dropped pixels:**
+    - inside an NBAC perimeter that burned between the flight and 2020 (lines flown 2018) or between 2020 and the flight (lines flown 2022), because there the label describes a different stand;
+    - outside SCANFI's coverage (no land cover);
+    - bright pixels (mean 450–500 nm > 0.25: cloud, snow, glint).
+  - **Sample:** a seeded 30,000 pixels per line.
+  - **Spectra:** resampled to the first line's wavelength grid. The 2018 and 2022 grids differ by at most 0.34 nm.
+- **Splits.**
+  - **Groups:** lines whose footprints overlap, with boxes buffered by 0.05°. That gives 18 groups from the 42-line manifest, so the groups don't change as lines arrive.
+  - **Frozen test set:** a seeded 15 % of groups (3 groups, 5 lines), in `splits/aviris_test_v1.json`.
+  - **Fire test ground:** pixels in a fire-study test cell also go to test.
+  - **Transfer:** only `dev.npz` reaches Narval.
+  - **Search folds:** outer folds are whole groups, and selection runs on an inner group split (rule 5).
+- **Candidate grid** (`config/grids/p6_hs.yaml`, exported by `safari-bands hs-grid`).
+  - **Spacing:** centres every 10 nm.
+  - **Which candidates are kept:** a candidate's FWHM extent must lie inside its arm's range and its detector's range, and miss every forbidden region of `atmospheric_windows.yaml` (rule 7, as `validate` applies it).
+  - **Arms:**
+
+    | Arm | Experiment | Candidates | FWHM (nm) | Max k |
+    |---|---|---|---|---|
+    | VNIR | E-62 | 292, on silicon | 10–100 | 6 |
+    | VNIR, no response in 700–760 nm | E-62 | 261 | 10–100 | 6 |
+    | SWIR on standard InGaAs, config C's VNIR fixed | E-61 | 189 | 20–100 | 4 |
+    | SWIR on extended InGaAs to 2400 nm, config C's VNIR fixed | E-61 | 414 | 20–100 | 4 |
+
+    The extended arm puts every SWIR band on the extended detector, one focal plane as in config C.
+  - **References:** config A, B and C, config C's VNIR alone, Mantis VNIR6, Mantis MS + SWIR, and Sentinel-2 12-band.
+  - **Data coverage:** a candidate with less than 90 % of its response over measured channels is not synthesised.
+- **Where this narrows E-61's registered windows (Q34).** E-61 registered 1003–1359, 1414–1749 and 1970–2400 nm (A-22's AVIRIS bad-band gaps). Rule 7's forbidden regions also remove 1262–1288 nm (O2), 1330–1359 and 1414–1490 nm (water vapour, which includes the 1450 nm leaf-water feature unusable from orbit), and 1970–1980 nm. The standard InGaAs placeholder cuts off at 1700 nm, not 1750. Rule 7 can't be relaxed without James, so the grid applies it.
+- **Estimator.** A per-pixel MLP (2 × 64) with the P6 ecology heads: percent conifer, closure, height, and a 7-way fuel family. The pack is pixels, not tiles.
+  - **Scores:** the ecology skills (A-38), with the combined skill as the search score.
+  - **Search fits:** 400 steps on a seeded 120,000-pixel subsample.
+  - **Evaluation fits:** 3,000 steps on the whole outer-training fold, in raw / indices / raw + indices, noisy and noise-free.
+- **Indices.** A band takes an index role when its centre falls in that role's window: blue 450–520, green 530–590, red 630–690, red edge 695–715 / 730–750 / 775–795, NIR 840–885, SWIR1 1550–1700, SWIR2 2080–2350. Where several bands fall in one window, the one nearest the middle wins. A set then gets every catalogue index its bands can form.
+- **Noise.** The A-37 placeholder instrument, on each candidate's own detector, added before any index is formed.

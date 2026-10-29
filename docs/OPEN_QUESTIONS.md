@@ -756,3 +756,24 @@ Options:
 The Sentinel-2 extraction at stations (`build_snow_obs.py`) works with any station truth; only the truth module changes.
 
 **Answer (James, 2026-10-27): option 1, ECCC climate stations.** `Fire_Risk_Model/scripts/python/fetch_eccc_snow.py` reads daily snow on ground from the MSC GeoMet API. A 60-station check found observed whole centimetres, with flags T (trace) and E (estimated); 50 of 60 stations report it. Flag E is dropped and T counts as no measurable snow.
+
+---
+
+### Q34 — Rule 7 narrows E-61's registered SWIR windows
+
+**Status:** OPEN (raised 2026-10-29, before any AVIRIS search ran)
+**Blocks:** nothing. The grid applies rule 7 by default (A-40).
+
+E-61 registered candidate SWIR centres in 1003–1359, 1414–1749 and 1970–2400 nm. Those are the gaps in AVIRIS-NG's own bad-band list (A-22), which describe an airborne sensor. Rule 7, as `atmospheric_windows.yaml` encodes it, also forbids:
+
+- **1262–1288 nm**, O2. This is why the brief puts the moisture band at 1230–1250.
+- **1330–1359 and 1414–1490 nm**, water vapour. This includes the 1450 nm leaf-water feature, which is unusable from orbit.
+- **1970–1980 nm.**
+
+The standard InGaAs config (a placeholder, Q4) also cuts off at 1700 nm, not E-61's 1750. The exported grid therefore has no standard-arm candidate above 1690 nm and none in the regions above. The forbidden-region edges are themselves placeholders (A-1), awaiting a 6S/libRadtran transmittance run.
+
+Options:
+
+1. **Keep rule 7 as encoded** *(recommended; what runs now)*. The CubeSat flies above the whole water column, so airborne usability is not orbital usability.
+2. **Add a flagged sensitivity arm** with the registered airborne windows, reported beside the rule-7 arm and never used for the specification.
+3. **Move the forbidden-region edges** once a transmittance run exists (A-1). That changes the config, not this experiment.
