@@ -33,7 +33,9 @@ python scripts/make_phase_docs.py --phase P6a
 | `selection.png` | which band each search added at each step, six searches |
 | `indices.png` | E-59: raw + indices vs raw, and indices alone, paired |
 | `red_edge.png` | E-62: no-red-edge path vs combined path, RMSE % |
-| `tiles.png` | true colour and the SCANFI labels on four seeded tiles (data only; no prediction maps are saved) |
+| `tiles.png` | true colour and the SCANFI labels on four seeded tiles (data only) |
+| `maps_pc.png`, `maps_closure.png`, `maps_height.png`, `maps_family.png` | labelled images: SCANFI label against each nested set's prediction (k = 1, 3, 6, no red edge, all 12) on one held-out tile per fold, with tile RMSE and the k = 6 error map. Built once `sweep_eco_maps.sh` has run (`<run>/maps/`) |
+| `scores_alone.png`, `scores_added.png`, `scores.csv` | supplementary: every band's search score alone (step 1), and its gain if added at each later step, per search target |
 | `tables.md`, `T_*.csv`, `summary.json` | the numbers |
 
 ## Resources

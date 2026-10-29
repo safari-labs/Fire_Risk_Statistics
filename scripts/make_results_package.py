@@ -2507,6 +2507,124 @@ def p7c(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── Supplementary: every candidate's search score, every step (P6a, P6c) ───
+
+def _considered(paths: list[dict], sel: str, bands, to_score=lambda v: v, gain_sign=1.0):
+    """Per step and band: the mean, min and max over searches of (step 1) the
+    band's own score and (step >= 2) its gain over that search's previous step,
+    and in how many searches it was still a candidate."""
+    n_steps = max(len(p[sel]) for p in paths)
+    out = {}
+    for k in range(n_steps):
+        for b in bands:
+            vals = []
+            for p in paths:
+                st = p[sel][k]
+                v = st["considered"].get(b)
+                if v is None or not np.isfinite(v):
+                    continue
+                v = to_score(v)
+                if k:
+                    v = gain_sign * (v - to_score(p[sel][k - 1]["score"]))
+                vals.append(v)
+            out[(k + 1, b)] = ((float(np.mean(vals)), float(min(vals)), float(max(vals)),
+                                len(vals)) if vals else None)
+    return out, n_steps
+
+
+def _score_heat(ax, C, n_steps, bands, n_runs, fmt, cmap, vmin, vmax, title, chosen_first=None):
+    m = np.full((n_steps, len(bands)), np.nan)
+    for (k, b), v in C.items():
+        if v and v[3] >= n_runs / 2:
+            m[k - 1, bands.index(b)] = v[0]
+    ax.imshow(np.ma.masked_invalid(m), cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
+    _axes(ax, title, "", "")
+    ax.grid(False)
+    ax.set_xticks(range(len(bands)))
+    ax.set_xticklabels(bands, color=INK, fontsize=7.5)
+    ax.set_yticks(range(n_steps))
+    ax.set_yticklabels([("1: alone" if k == 1 else f"{k}: added") for k in range(1, n_steps + 1)],
+                       color=INK, fontsize=7.5)
+    for i in range(n_steps):
+        for j in range(len(bands)):
+            if np.isfinite(m[i, j]):
+                strong = abs(m[i, j]) > 0.6 * max(abs(vmin), abs(vmax))   # dark at both ends
+                ax.text(j, i, fmt(m[i, j]), ha="center", va="center", fontsize=6,
+                        color="#ffffff" if strong else "#0f1117")
+            else:
+                ax.text(j, i, "·", ha="center", va="center", fontsize=7, color=MUTED)
+
+
+def supp_scores(paths: list[dict], selectors, bands, out: Path, name: str, title: str,
+                unit_single: str, unit_gain: str, to_score=lambda v: v, fmt_single="{:.2f}",
+                fmt_gain="{:+.3f}", single_range=None, gain_sign=1.0, low_is_good=False):
+    """Two figures: every band's score alone (step 1), and every band's gain when added at
+    each later step, per search target; plus the numbers as CSV."""
+    plt = _plt()
+    rows, cs = [], {}
+    for sel, _ in selectors:
+        C, n_steps = _considered(paths, sel, bands, to_score, gain_sign)
+        cs[sel] = (C, n_steps)
+        for (k, b), v in C.items():
+            if v:
+                rows.append({"search": sel, "step": k, "band": b, "mean": v[0], "min": v[1],
+                             "max": v[2], "n_searches": v[3],
+                             "measure": unit_single if k == 1 else unit_gain})
+    _csv(out / f"{name}.csv", rows)
+    # Figure 1: alone.
+    single = np.array([[cs[s][0][(1, b)][0] if cs[s][0].get((1, b)) else np.nan for b in bands]
+                       for s, _ in selectors])
+    lo, hi = single_range or (np.nanmin(single), np.nanmax(single))
+    fig, ax = plt.subplots(figsize=(11, 0.55 * len(selectors) + 1.6), facecolor=FIG_BG)
+    ax.imshow(np.ma.masked_invalid(single), cmap="viridis_r" if low_is_good else "viridis",
+              vmin=lo, vmax=hi, aspect="auto")
+    _axes(ax, f"{title}: each band alone ({unit_single})", "", "")
+    ax.grid(False)
+    ax.set_xticks(range(len(bands)))
+    ax.set_xticklabels(bands, color=INK, fontsize=8.5)
+    ax.set_yticks(range(len(selectors)))
+    ax.set_yticklabels([lab for _, lab in selectors], color=INK, fontsize=8.5)
+    for i, (s, _) in enumerate(selectors):
+        for j, b in enumerate(bands):
+            v = cs[s][0].get((1, b))
+            if v:
+                frac = (v[0] - lo) / (hi - lo) if hi > lo else 0
+                frac = 1 - frac if low_is_good else frac
+                ax.text(j, i, fmt_single.format(v[0]) + f"\n[{fmt_single.format(v[1])}, "
+                        f"{fmt_single.format(v[2])}]", ha="center", va="center", fontsize=6,
+                        color="#0f1117" if frac > 0.55 else INK_BRIGHT)
+    _caption(fig, f"Step 1 of every search trains one model per band, alone, and scores it on the "
+             f"search's inner validation blocks. Cell: mean over {len(paths)} searches, [min, "
+             "max] below. The search keeps the best and moves on; this is the score of every "
+             "band it tried, not only the winner.", y=0.0)
+    _save(fig, out, f"{name}_alone.png")
+    # Figure 2: gain when added, per search target.
+    n = len(selectors)
+    cols = 2 if n > 1 else 1
+    r = -(-n // cols)
+    fig, axes = plt.subplots(r, cols, figsize=(7.2 * cols, 3.3 * r), facecolor=FIG_BG,
+                             squeeze=False)
+    gains = [v[0] for C, _ in cs.values() for (k, _), v in C.items() if v and k > 1]
+    g = max(abs(min(gains)), abs(max(gains))) if gains else 1
+    for ax, (s, lab) in zip(axes.flat, selectors, strict=False):
+        C, n_steps = cs[s]
+        C2 = {kk: v for kk, v in C.items() if kk[0] > 1}
+        _score_heat(ax, {(k - 1, b): v for (k, b), v in C2.items()}, n_steps - 1, bands,
+                    len(paths), lambda x: fmt_gain.format(x), "RdBu", -g, g, lab)
+        ax.set_yticklabels([f"{k}: added" for k in range(2, n_steps + 1)], color=INK,
+                           fontsize=7.5)
+    for ax in list(axes.flat)[n:]:
+        ax.set_visible(False)
+    fig.tight_layout()
+    _caption(fig, f"{title}: the gain ({unit_gain}) each band would have given if added at step "
+             "k, over that search's own best set from step k-1, mean over searches; blue helps, "
+             "red hurts. A band's gain depends on what is already in the set (rule 1), which is "
+             "why the deliverable is the nested set, not a per-band ranking. '·': the band was "
+             "already chosen in at least half the searches by then.")
+    _save(fig, out, f"{name}_added.png")
+    return rows
+
+
 # ── P6a: the ecology estimator band searches (E-22, E-59, E-62 S2 half) ────
 
 ECO_PACK = Path(_ROOT.parent / "Fire_Risk_Model" / "data" / "ecology_v2" / "dev.h5")
@@ -2826,6 +2944,157 @@ def p6a_tiles(out, n=4, seed=0):
     return [m["patch"] for m in meta]
 
 
+ECO_MAP_SETS = (("combined_k1", "k = 1"), ("combined_k3", "k = 3"), ("combined_k6", "k = 6"),
+                ("no_red_edge_k6", "k = 6, no red edge"), ("all_bands", "all 12 bands"))
+ECO_MAP_TARGETS = (("pc", 0, "percent conifer (%)", 100, "%"),
+                   ("closure", 1, "crown closure (%)", 100, "%"),
+                   ("height", 2, "canopy height (m)", 30, "m"))
+
+
+def _load_eco_maps(maps_dir: Path, per_fold: int = 1):
+    """One or more held-out tiles per fold from predict_eco_maps.py outputs."""
+    tiles = []
+    for d in sorted(p for p in maps_dir.glob("f*s*") if (p / "maps.npz").exists()):
+        z = np.load(d / "maps.npz")
+        meta = json.loads((d / "maps.json").read_text())
+        for i in range(min(per_fold, z["label"].shape[0])):
+            t = {"fold": meta["fold"], "patch": meta["tiles"][i]["patch"],
+                 "block": meta["tiles"][i]["block"], "rgb": z["bands_rgb"][i].astype(np.float32),
+                 "label": z["label"][i], "family": z["family"][i], "valid": z["valid"][i],
+                 "families": meta["families"], "sets": {}}
+            for s, info in meta["sets"].items():
+                t["sets"][s] = {"bands": info["bands"], "err": info["tile_errors"][i],
+                                **{k: z[f"{s}__{k}"][i] for k in
+                                   ("pc", "closure", "height", "family", "family_p")}}
+            tiles.append(t)
+    return tiles
+
+
+def _blank(ax):
+    ax.set_facecolor(AX_BG)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for s in ax.spines.values():
+        s.set_color(SPINE)
+
+
+def p6a_maps(maps_dir: Path, out: Path):
+    """Labelled images: SCANFI label against each nested set's prediction on
+    held-out tiles, one figure per target (E-22, E-62)."""
+    plt = _plt()
+    from matplotlib.colors import ListedColormap
+    tiles = _load_eco_maps(maps_dir)
+    if not tiles:
+        return []
+    made = []
+    sets = [s for s in ECO_MAP_SETS if s[0] in tiles[0]["sets"]]
+    for name, j, lab, vmax, unit in ECO_MAP_TARGETS:
+        cols = 3 + len(sets)
+        fig, axes = plt.subplots(len(tiles), cols, figsize=(2.35 * cols, 2.55 * len(tiles)),
+                                 facecolor=FIG_BG, squeeze=False)
+        for r, t in enumerate(tiles):
+            v = t["valid"]
+            y = np.where(v, t["label"][j], np.nan)
+            panels = [("true colour", None), ("SCANFI label", y)] + [
+                (slab, np.where(v, t["sets"][s][name], np.nan)) for s, slab in sets]
+            for c, (title, img) in enumerate(panels):
+                ax = axes[r, c]
+                _blank(ax)
+                if img is None:
+                    ax.imshow(_stretch(t["rgb"]))
+                    ax.set_ylabel(f"fold {t['fold']}\nblock {t['block']}", color=MUTED,
+                                  fontsize=7.5)
+                else:
+                    im = ax.imshow(np.ma.masked_invalid(img), cmap="viridis", vmin=0, vmax=vmax)
+                if c >= 2:
+                    s = sets[c - 2][0]
+                    e = t["sets"][s]["err"].get(f"rmse_{name}")
+                    ax.text(0.02, 0.02, f"RMSE {e:.1f} {unit}" if e is not None else "",
+                            transform=ax.transAxes, color=INK_BRIGHT, fontsize=7,
+                            bbox={"facecolor": FIG_BG, "alpha": 0.7, "lw": 0, "pad": 1.5})
+                    if len(t["sets"][s]["bands"]) <= 6:
+                        ax.text(0.02, 0.98, " ".join(t["sets"][s]["bands"]),
+                                transform=ax.transAxes, color=INK_BRIGHT, fontsize=6, va="top",
+                                bbox={"facecolor": FIG_BG, "alpha": 0.7, "lw": 0, "pad": 1.5})
+                if r == 0:
+                    ax.set_title(title, color=INK_BRIGHT, fontsize=8.5, loc="left")
+            # error of the k = 6 set (or the last set present)
+            ref = "combined_k6" if "combined_k6" in t["sets"] else sets[-1][0]
+            d = np.where(v, t["sets"][ref][name] - t["label"][j], np.nan)
+            ax = axes[r, cols - 1]
+            _blank(ax)
+            em = ax.imshow(np.ma.masked_invalid(d), cmap="RdBu_r", vmin=-vmax / 2, vmax=vmax / 2)
+            if r == 0:
+                ax.set_title(f"error, {dict(sets).get(ref, ref)}", color=INK_BRIGHT, fontsize=8.5,
+                             loc="left")
+        cb = fig.colorbar(im, ax=axes[:, 1:cols - 1], orientation="horizontal", fraction=0.025,
+                          pad=0.02, aspect=60)
+        cb.set_label(lab, color=INK, fontsize=8)
+        cb.ax.tick_params(colors=INK, labelsize=7)
+        cb2 = fig.colorbar(em, ax=axes[:, cols - 1], orientation="horizontal", fraction=0.025,
+                           pad=0.02)
+        cb2.set_label(f"prediction - label ({unit})", color=INK, fontsize=8)
+        cb2.ax.tick_params(colors=INK, labelsize=7)
+        fig.suptitle(f"P6a, {lab}: SCANFI label and each nested set's prediction on HELD-OUT "
+                     "tiles", color=INK_BRIGHT, fontsize=11, x=0.01, ha="left", y=1.0)
+        _caption(fig, "One held-out tile per outer fold (never seen in training or band "
+                 "selection). Each set refitted on its fold's training tiles as the sweep did "
+                 "(raw + indices, with sensor noise); bands top-left, tile RMSE bottom-left. "
+                 "Last column: the k = 6 set's error, red over-predicted, blue under.",
+                 y=0.0)
+        _save(fig, out, f"maps_{name}.png")
+        made.append(f"maps_{name}.png")
+    # fuel family
+    fams = tiles[0]["families"]
+    fcmap = ListedColormap([ECO_FAMILY_COL[x] for x in fams])
+    cols = 3 + len(sets)
+    fig, axes = plt.subplots(len(tiles), cols, figsize=(2.35 * cols, 2.55 * len(tiles)),
+                             facecolor=FIG_BG, squeeze=False)
+    for r, t in enumerate(tiles):
+        v = t["valid"]
+        lab_f = np.where(v & (t["family"] >= 0), t["family"], -1).astype(float)
+        panels = [("true colour", None), ("SCANFI fuel family", lab_f)] + [
+            (slab, np.where(v, t["sets"][s]["family"], -1).astype(float)) for s, slab in sets]
+        for c, (title, img) in enumerate(panels):
+            ax = axes[r, c]
+            _blank(ax)
+            if img is None:
+                ax.imshow(_stretch(t["rgb"]))
+                ax.set_ylabel(f"fold {t['fold']}\nblock {t['block']}", color=MUTED, fontsize=7.5)
+            else:
+                ax.imshow(np.ma.masked_less(img, 0), cmap=fcmap, vmin=-0.5,
+                          vmax=len(fams) - 0.5, interpolation="nearest")
+            if c >= 2:
+                acc = t["sets"][sets[c - 2][0]]["err"].get("family_acc")
+                ax.text(0.02, 0.02, f"agreement {acc:.0%}" if acc is not None else "",
+                        transform=ax.transAxes, color=INK_BRIGHT, fontsize=7,
+                        bbox={"facecolor": FIG_BG, "alpha": 0.7, "lw": 0, "pad": 1.5})
+            if r == 0:
+                ax.set_title(title, color=INK_BRIGHT, fontsize=8.5, loc="left")
+        ref = "combined_k6" if "combined_k6" in t["sets"] else sets[-1][0]
+        ok = v & (t["family"] >= 0)
+        agree = np.where(ok, (t["sets"][ref]["family"] == t["family"]).astype(float), np.nan)
+        ax = axes[r, cols - 1]
+        _blank(ax)
+        ax.imshow(np.ma.masked_invalid(agree), cmap=ListedColormap(["#ffffff", "#2b2f3a"]),
+                  vmin=0, vmax=1, interpolation="nearest")
+        if r == 0:
+            ax.set_title("disagreement, k = 6", color=INK_BRIGHT, fontsize=8.5, loc="left")
+    handles = [plt.Rectangle((0, 0), 1, 1, color=ECO_FAMILY_COL[x]) for x in fams]
+    handles.append(plt.Rectangle((0, 0), 1, 1, color="#ffffff"))
+    fig.legend(handles, [*fams, "k = 6 disagrees"], loc="lower right", ncol=len(fams) + 1,
+               fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+               bbox_to_anchor=(0.99, -0.01))
+    fig.suptitle("P6a, fuel family: SCANFI (CFS tree) and each nested set's prediction on "
+                 "HELD-OUT tiles", color=INK_BRIGHT, fontsize=11, x=0.01, ha="left", y=1.0)
+    _caption(fig, "As the regression maps. D includes all open ground under 10 % closure "
+             "(P6a-M1). Pixel agreement bottom-left; last column marks where the k = 6 set "
+             "disagrees with SCANFI.", y=-0.02)
+    _save(fig, out, "maps_family.png")
+    made.append("maps_family.png")
+    return made
+
+
 def p6a_resources(E):
     rows = []
     for t in E.tasks:
@@ -2923,8 +3192,11 @@ def p6a_tables(E, out, summ, trows, freq, idx, red, res):
             "job_mem_peak": jm}
 
 
-def p6a(run: Path, out: Path):
+def p6a(run: Path, out: Path, maps: Path | None = None):
     out.mkdir(parents=True, exist_ok=True)
+    maps = maps or run / "maps"
+    if maps.exists():
+        p6a_maps(maps, out)
     E = _EcoRun(run)
     summ = p6a_curves(E, out)
     trows = p6a_targets(E, out)
@@ -2932,6 +3204,11 @@ def p6a(run: Path, out: Path):
     idx = p6a_indices(E, out)
     red = p6a_red_edge(E, out)
     tiles = p6a_tiles(out) if ECO_PACK.exists() else []
+    supp_scores(list(E.paths.values()),
+                (("combined", "combined skill"), ("no_red_edge", "no red edge"),
+                 ("pc", "percent conifer"), ("closure", "closure"), ("height", "height"),
+                 ("family", "fuel family")),
+                ECO_BANDS, out, "scores", "Ecology searches", "skill", "skill")
     res = p6a_resources(E)
     usage = p6a_tables(E, out, summ, trows, freq, idx, red, res)
     (out / "summary.json").write_text(json.dumps(
@@ -3255,6 +3532,99 @@ def p6c_direction(Rs, oracle, out):
     return rows, ref
 
 
+SNOW_SERIES_SETS = (("all_k6", "SWIR allowed, k = 6", BLUE), ("vnir_k6", "VNIR only, k = 6",
+                                                                 ORANGE))
+
+
+def _load_snow_series(maps_dir: Path):
+    import csv
+    obs, sy = [], []
+    for d in sorted(p for p in maps_dir.glob("f*s*") if (p / "obs.csv").exists()):
+        fold = json.loads((d / "series.json").read_text())["fold"]
+        obs += [dict(r, fold=fold) for r in csv.DictReader(open(d / "obs.csv", encoding="utf-8"))]
+        sy += [dict(r, fold=fold) for r in
+               csv.DictReader(open(d / "station_years.csv", encoding="utf-8"))]
+    pos = {(r["aes"], r["year"]): (float(r["lon"]), float(r["lat"])) for r in
+           csv.DictReader(open(SNOW / "snow_v1" / "dev_station_years.csv", encoding="utf-8"))}
+    return obs, sy, pos
+
+
+def p6c_series(maps_dir: Path, out: Path, n: int = 8, seed: int = 0):
+    """Labelled time series and station maps from predict_snow_series.py."""
+    plt = _plt()
+    obs, sy, pos = _load_snow_series(maps_dir)
+    if not sy:
+        return []
+    sets = [s for s in SNOW_SERIES_SETS if f"est_{s[0]}" in sy[0]]
+    # Station maps: signed error per held-out station-year, per set.
+    fig, axes = plt.subplots(1, len(sets), figsize=(6.6 * len(sets), 4.6), facecolor=FIG_BG,
+                             squeeze=False)
+    for ax, (s, lab, _) in zip(axes[0], sets, strict=True):
+        _axes(ax, f"{lab}: estimate - station (days)", "longitude", "latitude")
+        xy = np.array([pos[(r["aes"], r["year"])] for r in sy])
+        e = np.array([float(r[f"est_{s}"]) - float(r["truth_doy"]) for r in sy])
+        sc = ax.scatter(xy[:, 0], xy[:, 1], c=np.clip(e, -30, 30), cmap="RdBu_r", vmin=-30,
+                        vmax=30, s=12, edgecolors="none")
+        ax.text(0.01, 0.02, f"median |error| {np.median(np.abs(e)):.1f} d; early "
+                f"{np.mean(e < 0):.0%}, late {np.mean(e > 0):.0%}; n = {len(e)}",
+                transform=ax.transAxes,
+                color=INK_BRIGHT, fontsize=8)
+    cb = fig.colorbar(sc, ax=list(axes[0]), fraction=0.03, pad=0.02)
+    cb.set_label("days (blue early, red late; clipped at 30)", color=INK, fontsize=8)
+    cb.ax.tick_params(colors=INK, labelsize=7.5)
+    nf = len({r["fold"] for r in sy})
+    _caption(fig, f"Every development station-year in the {nf} outer fold(s) mapped, each scored "
+             "by the model from the fold that held it out (seed 0; raw + indices, with sensor "
+             "noise).", y=-0.02)
+    _save(fig, out, "series_map.png")
+    # Time series: seeded held-out station-years.
+    keys = sorted({(r["aes"], r["year"]) for r in sy})
+    rng = np.random.default_rng(seed)
+    pick = [keys[i] for i in sorted(rng.choice(len(keys), min(n, len(keys)), replace=False))]
+    rows = -(-len(pick) // 2)
+    fig, axes = plt.subplots(rows, 2, figsize=(13, 2.9 * rows), facecolor=FIG_BG, squeeze=False)
+    for ax, k in zip(axes.flat, pick, strict=False):
+        o = sorted((r for r in obs if (r["aes"], r["year"]) == k), key=lambda r: int(r["doy"]))
+        t = next(r for r in sy if (r["aes"], r["year"]) == k)
+        doy = np.array([int(r["doy"]) for r in o])
+        st = np.array([int(r["station_snow"]) for r in o])
+        g = np.array([float(r["green"]) for r in o])
+        errs = ", ".join(f"{lab.split(',')[0]} "
+                         f"{float(t['est_' + s]) - float(t['truth_doy']):+.0f} d"
+                         for s, lab, _ in sets)
+        _axes(ax, f"station {k[0]}, {k[1]} ({pos[k][1]:.1f} N): {errs}", "day of year",
+              "green (B3)")
+        for val, col, lab in ((1, INK_BRIGHT, "station: snow"), (0, MUTED, "station: none"),
+                              (-1, SPINE, "no station reading")):
+            m = st == val
+            ax.scatter(doy[m], g[m], color=col, s=16, zorder=3, label=lab, edgecolors="none")
+        a2 = ax.twinx()
+        a2.set_ylim(-0.05, 1.05)
+        a2.tick_params(colors=INK, labelsize=7.5)
+        a2.set_ylabel("P(snow)", color=INK, fontsize=8)
+        for s, lab, col in sets:
+            a2.plot(doy, [float(r[f"p_{s}"]) for r in o], "-", color=col, lw=1.6, label=lab)
+            ax.axvline(float(t[f"est_{s}"]), color=col, lw=1.2, ls="--")
+        ax.axvline(float(t["truth_doy"]), color=GREEN, lw=1.6)
+        a2.axhline(0.5, color=SPINE, lw=0.8, ls=":")
+    for ax in list(axes.flat)[len(pick):]:
+        ax.set_visible(False)
+    h1, l1 = axes.flat[0].get_legend_handles_labels()
+    h1.append(plt.Line2D([0], [0], color=GREEN, lw=1.6))
+    l1.append("station snow-off")
+    hs = [plt.Line2D([0], [0], color=c, lw=1.6) for _, _, c in sets]
+    fig.legend(h1 + hs, l1 + [f"P(snow), {lab} (dashed: its date)" for _, lab, _ in sets],
+               loc="lower center", ncol=3, fontsize=8, facecolor=AX_BG, edgecolor=SPINE,
+               labelcolor=INK, bbox_to_anchor=(0.5, -0.04))
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    _caption(fig, "Seeded held-out station-years. Points: each clear Sentinel-2 observation's "
+             "green reflectance, shaded by the station's own report that day. Lines: each "
+             "model's snow probability; a model's date is just after its last observation above "
+             "0.5 (dashed). Green line: the station's snow-off date.", y=-0.06)
+    _save(fig, out, "series.png")
+    return ["series_map.png", "series.png"]
+
+
 def p6c_tables(R, out, summ, floor, oracle, paired, freq, direction=None):
     L = ["# P6c tables: the snow-off estimator (E-60)\n",
          f"Run: `{_rel(R.run)}`. {len(R.tasks)} tasks (5 outer folds of 1-degree station "
@@ -3310,14 +3680,22 @@ def p6c_tables(R, out, summ, floor, oracle, paired, freq, direction=None):
     print(f"  wrote {_rel(out / 'tables.md')}")
 
 
-def p6c(run: Path, out: Path, signed: Path | None = None):
+def p6c(run: Path, out: Path, signed: Path | None = None, maps: Path | None = None):
     out.mkdir(parents=True, exist_ok=True)
+    maps = maps or run / "maps"
+    if maps.exists():
+        p6c_series(maps, out)
     R = _SnowRun(run)
     oracle = snow_oracle()
     summ, floor = p6c_curves(R, oracle, out)
     paired = p6c_paired(R, out)
     freq = p6c_selection(R, out)
     pick = p6c_stations(oracle, out)
+    supp_scores(list(R.paths.values()), (("all", "any band (SWIR allowed)"),
+                                         ("vnir", "VNIR only (no B11, B12)")),
+                SNOW_BANDS, out, "scores", "Snow-off searches", "median error, days",
+                "days of median error removed", to_score=lambda v: -v, gain_sign=-1.0,
+                fmt_single="{:.1f}", fmt_gain="{:+.1f}", low_is_good=True)
     direction = p6c_direction(_SnowRun(signed), oracle, out) if signed else None
     p6c_tables(R, out, summ, floor, oracle, paired, freq, direction)
     (out / "summary.json").write_text(json.dumps(
@@ -3345,6 +3723,8 @@ def main(argv=None) -> int:
     ap.add_argument("--legacy-run", type=Path, default=None, help="P3: the P2 legacy run")
     ap.add_argument("--station-run", type=Path, default=None, help="P3: the station-weather run")
     ap.add_argument("--p3-run", type=Path, default=None, help="P5: the dated R0 run")
+    ap.add_argument("--maps", type=Path, default=None,
+                    help="P6a/P6c: prediction maps (default <run>/maps)")
     ap.add_argument("--signed-run", type=Path, default=None,
                     help="P6c: a snow run that records the signed error")
     args = ap.parse_args(argv)
@@ -3358,7 +3738,9 @@ def main(argv=None) -> int:
     elif args.phase == "P5":
         extra = {"p3": resolve(args.p3_run)}
     elif args.phase == "P6c":
-        extra = {"signed": resolve(args.signed_run)}
+        extra = {"signed": resolve(args.signed_run), "maps": resolve(args.maps)}
+    elif args.phase == "P6a":
+        extra = {"maps": resolve(args.maps)}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 

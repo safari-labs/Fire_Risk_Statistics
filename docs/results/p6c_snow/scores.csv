@@ -1,0 +1,133 @@
+search,step,band,mean,min,max,n_searches,measure
+all,1,B1,24.633333333333333,17.5,32.0,15,"median error, days"
+all,1,B2,23.65,18.25,31.0,15,"median error, days"
+all,1,B3,23.733333333333334,17.0,31.0,15,"median error, days"
+all,1,B4,23.333333333333332,17.25,29.5,15,"median error, days"
+all,1,B5,24.516666666666666,18.25,30.0,15,"median error, days"
+all,1,B6,32.516666666666666,23.0,39.0,15,"median error, days"
+all,1,B7,33.46666666666667,25.5,39.0,15,"median error, days"
+all,1,B8,33.666666666666664,25.5,39.0,15,"median error, days"
+all,1,B8A,35.31666666666667,30.0,40.0,15,"median error, days"
+all,1,B9,34.4,30.0,39.0,15,"median error, days"
+all,1,B11,33.85,25.0,39.5,15,"median error, days"
+all,1,B12,64.45,61.0,67.0,15,"median error, days"
+all,2,B1,-4.3,-9.25,-0.75,15,days of median error removed
+all,2,B2,-2.3461538461538463,-4.5,-0.5,13,days of median error removed
+all,2,B3,-1.625,-5.0,2.0,10,days of median error removed
+all,2,B4,-0.8214285714285714,-2.25,2.25,7,days of median error removed
+all,2,B5,-0.21666666666666667,-3.0,1.5,15,days of median error removed
+all,2,B6,-1.1666666666666667,-3.25,1.0,15,days of median error removed
+all,2,B7,-0.35,-3.5,1.75,15,days of median error removed
+all,2,B8,-0.38333333333333336,-2.5,1.5,15,days of median error removed
+all,2,B8A,1.7,-2.5,5.0,15,days of median error removed
+all,2,B9,-0.2833333333333333,-3.5,1.5,15,days of median error removed
+all,2,B11,3.1,-6.0,11.5,15,days of median error removed
+all,2,B12,1.7333333333333334,-6.5,6.5,15,days of median error removed
+all,3,B1,-1.5,-5.5,2.0,15,days of median error removed
+all,3,B2,-0.9230769230769231,-6.5,1.75,13,days of median error removed
+all,3,B3,0.0,-3.0,2.5,10,days of median error removed
+all,3,B4,0.8214285714285714,-1.0,3.5,7,days of median error removed
+all,3,B5,-0.5535714285714286,-2.5,2.0,14,days of median error removed
+all,3,B6,-1.2166666666666666,-9.5,2.0,15,days of median error removed
+all,3,B7,-1.6833333333333333,-9.5,3.0,15,days of median error removed
+all,3,B8,-1.6666666666666667,-9.0,2.0,15,days of median error removed
+all,3,B8A,-0.6964285714285714,-4.5,1.5,14,days of median error removed
+all,3,B9,-1.1964285714285714,-9.0,1.75,14,days of median error removed
+all,3,B11,-1.2083333333333333,-7.0,2.25,6,days of median error removed
+all,3,B12,-1.6041666666666667,-6.5,1.75,12,days of median error removed
+all,4,B1,-0.8166666666666667,-7.0,0.75,15,days of median error removed
+all,4,B2,-0.9230769230769231,-3.0,0.25,13,days of median error removed
+all,4,B3,-0.4,-1.5,0.5,5,days of median error removed
+all,4,B4,0.4,-0.25,1.5,5,days of median error removed
+all,4,B5,-0.2857142857142857,-4.0,1.0,14,days of median error removed
+all,4,B6,-1.1964285714285714,-5.0,1.25,14,days of median error removed
+all,4,B7,-1.2166666666666666,-8.5,2.5,15,days of median error removed
+all,4,B8,-0.9230769230769231,-3.5,2.0,13,days of median error removed
+all,4,B8A,-0.7954545454545454,-5.0,2.5,11,days of median error removed
+all,4,B9,-0.5769230769230769,-4.0,2.5,13,days of median error removed
+all,4,B11,-0.25,-2.5,1.5,6,days of median error removed
+all,4,B12,-0.36363636363636365,-4.0,2.5,11,days of median error removed
+all,5,B1,-0.5892857142857143,-2.25,0.5,14,days of median error removed
+all,5,B2,-0.46153846153846156,-2.0,2.0,13,days of median error removed
+all,5,B3,-0.08333333333333333,-0.25,-0.0,3,days of median error removed
+all,5,B4,-0.5625,-1.25,-0.0,4,days of median error removed
+all,5,B5,-0.275,-1.25,1.0,10,days of median error removed
+all,5,B6,-0.5961538461538461,-2.5,0.5,13,days of median error removed
+all,5,B7,-0.6833333333333333,-3.0,0.5,15,days of median error removed
+all,5,B8,-0.4230769230769231,-2.0,0.75,13,days of median error removed
+all,5,B8A,-1.3125,-4.0,1.0,8,days of median error removed
+all,5,B9,-0.9166666666666666,-3.0,0.5,12,days of median error removed
+all,5,B11,-0.16666666666666666,-1.5,2.0,6,days of median error removed
+all,5,B12,-0.9444444444444444,-6.0,2.0,9,days of median error removed
+all,6,B1,-0.375,-2.5,1.5,14,days of median error removed
+all,6,B2,-0.4375,-2.5,1.75,8,days of median error removed
+all,6,B3,-0.3333333333333333,-0.5,-0.25,3,days of median error removed
+all,6,B4,-0.25,-0.25,-0.25,2,days of median error removed
+all,6,B5,-0.15625,-1.25,0.5,8,days of median error removed
+all,6,B6,-0.9038461538461539,-4.5,0.75,13,days of median error removed
+all,6,B7,-0.8166666666666667,-4.5,1.0,15,days of median error removed
+all,6,B8,-1.1363636363636365,-5.5,1.0,11,days of median error removed
+all,6,B8A,-2.0714285714285716,-4.5,-0.5,7,days of median error removed
+all,6,B9,-1.1818181818181819,-6.5,1.75,11,days of median error removed
+all,6,B11,-0.08333333333333333,-1.5,0.75,6,days of median error removed
+all,6,B12,-1.0357142857142858,-3.5,1.25,7,days of median error removed
+vnir,1,B1,24.633333333333333,17.5,32.0,15,"median error, days"
+vnir,1,B2,23.65,18.25,31.0,15,"median error, days"
+vnir,1,B3,23.733333333333334,17.0,31.0,15,"median error, days"
+vnir,1,B4,23.333333333333332,17.25,29.5,15,"median error, days"
+vnir,1,B5,24.516666666666666,18.25,30.0,15,"median error, days"
+vnir,1,B6,32.516666666666666,23.0,39.0,15,"median error, days"
+vnir,1,B7,33.46666666666667,25.5,39.0,15,"median error, days"
+vnir,1,B8,33.666666666666664,25.5,39.0,15,"median error, days"
+vnir,1,B8A,35.31666666666667,30.0,40.0,15,"median error, days"
+vnir,1,B9,34.4,30.0,39.0,15,"median error, days"
+vnir,2,B1,-4.3,-9.25,-0.75,15,days of median error removed
+vnir,2,B2,-2.3461538461538463,-4.5,-0.5,13,days of median error removed
+vnir,2,B3,-1.625,-5.0,2.0,10,days of median error removed
+vnir,2,B4,-0.8214285714285714,-2.25,2.25,7,days of median error removed
+vnir,2,B5,-0.21666666666666667,-3.0,1.5,15,days of median error removed
+vnir,2,B6,-1.1666666666666667,-3.25,1.0,15,days of median error removed
+vnir,2,B7,-0.35,-3.5,1.75,15,days of median error removed
+vnir,2,B8,-0.38333333333333336,-2.5,1.5,15,days of median error removed
+vnir,2,B8A,1.7,-2.5,5.0,15,days of median error removed
+vnir,2,B9,-0.2833333333333333,-3.5,1.5,15,days of median error removed
+vnir,3,B1,-2.4,-7.0,3.75,15,days of median error removed
+vnir,3,B2,-2.75,-7.5,3.75,13,days of median error removed
+vnir,3,B3,-1.925,-7.0,4.25,10,days of median error removed
+vnir,3,B4,-2.2083333333333335,-6.5,0.25,6,days of median error removed
+vnir,3,B5,-1.5535714285714286,-3.25,0.5,14,days of median error removed
+vnir,3,B6,-1.0166666666666666,-5.5,5.5,15,days of median error removed
+vnir,3,B7,-1.95,-7.0,2.25,15,days of median error removed
+vnir,3,B8,-0.8392857142857143,-3.0,3.5,14,days of median error removed
+vnir,3,B8A,-2.25,-3.75,-0.0,4,days of median error removed
+vnir,3,B9,-1.3928571428571428,-4.5,-0.0,14,days of median error removed
+vnir,4,B1,-1.7692307692307692,-7.0,1.75,13,days of median error removed
+vnir,4,B2,-1.4038461538461537,-4.5,1.5,13,days of median error removed
+vnir,4,B3,-1.925,-6.5,2.5,10,days of median error removed
+vnir,4,B4,-0.5,-1.5,-0.0,6,days of median error removed
+vnir,4,B5,-1.1730769230769231,-4.5,3.0,13,days of median error removed
+vnir,4,B6,-0.4318181818181818,-5.0,3.5,11,days of median error removed
+vnir,4,B7,-1.3571428571428572,-8.5,3.0,14,days of median error removed
+vnir,4,B8,-1.3,-4.5,0.5,10,days of median error removed
+vnir,4,B8A,-0.9166666666666666,-1.5,-0.5,3,days of median error removed
+vnir,4,B9,-0.25,-2.5,2.5,12,days of median error removed
+vnir,5,B1,-1.025,-5.5,0.75,10,days of median error removed
+vnir,5,B2,-0.8269230769230769,-2.5,0.5,13,days of median error removed
+vnir,5,B3,-0.4722222222222222,-3.5,1.0,9,days of median error removed
+vnir,5,B4,-0.08333333333333333,-1.25,1.0,6,days of median error removed
+vnir,5,B5,-0.7291666666666666,-3.5,0.5,12,days of median error removed
+vnir,5,B6,-0.4444444444444444,-2.0,1.0,9,days of median error removed
+vnir,5,B7,-0.5454545454545454,-4.0,2.0,11,days of median error removed
+vnir,5,B8,0.3055555555555556,-1.25,2.75,9,days of median error removed
+vnir,5,B8A,-1.6666666666666667,-2.0,-1.5,3,days of median error removed
+vnir,5,B9,-0.46875,-3.5,0.75,8,days of median error removed
+vnir,6,B1,-1.09375,-5.0,1.5,8,days of median error removed
+vnir,6,B2,-0.4807692307692308,-2.5,1.0,13,days of median error removed
+vnir,6,B3,-0.125,-2.0,1.0,8,days of median error removed
+vnir,6,B4,-1.05,-3.75,1.0,5,days of median error removed
+vnir,6,B5,-0.875,-4.25,2.25,12,days of median error removed
+vnir,6,B6,-0.7083333333333334,-2.5,0.5,6,days of median error removed
+vnir,6,B7,-0.6666666666666666,-2.5,1.0,9,days of median error removed
+vnir,6,B8,0.75,-0.5,2.0,3,days of median error removed
+vnir,6,B8A,0.5,-0.5,2.0,3,days of median error removed
+vnir,6,B9,-1.15625,-4.5,0.5,8,days of median error removed

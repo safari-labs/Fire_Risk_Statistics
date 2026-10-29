@@ -29,6 +29,8 @@ python scripts/make_phase_docs.py --phase P6c
 | `paired.png` | VNIR-only minus SWIR-allowed, paired by fold and seed |
 | `selection.png` | which band each search added at each step |
 | `direction.png` | early or late: signed error and the shares off by more than a week |
+| `series.png`, `series_map.png` | labelled time series of held-out station-years (station reports, Sentinel-2 green, each model's snow probability and date) and a map of every station-year's signed error, SWIR allowed vs VNIR only. Built once `sweep_snow_maps.sh` has run (`<run>/maps/`) |
+| `scores_alone.png`, `scores_added.png`, `scores.csv` | supplementary: every band's search score alone (median error, step 1), and the days of error it removes if added at each later step |
 | `stations.png` | the stations, their sampling floor, and four station-years over the season (data only) |
 | `tables.md`, `T_paired.csv`, `summary.json` | the numbers |
 
