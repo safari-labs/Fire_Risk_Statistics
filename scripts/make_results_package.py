@@ -2749,7 +2749,76 @@ def p6c_stations(oracle, out):
     return pick
 
 
-def p6c_tables(R, out, summ, floor, oracle, paired, freq):
+def p6c_direction(Rs, oracle, out):
+    """Early or late? Signed error (estimate - station; < 0 is early), raw + indices
+    with noise, from a run that records it (snow_search after FW 9b82903)."""
+    plt = _plt()
+    sgn = np.array([v["est"] - v["truth"] for v in oracle.values()])
+    ref = {"median": float(np.median(sgn)), "early_gt7": float(np.mean(sgn < -7)),
+           "late_gt7": float(np.mean(sgn > 7)), "early": float(np.mean(sgn < 0)),
+           "late": float(np.mean(sgn > 0))}
+    rows = []
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(12.5, 4.4), facecolor=FIG_BG)
+    _axes(a1, "Median signed error (below 0: earlier than the station)",
+          "bands in the nested set (k)", "estimate - station (days)")
+    _axes(a2, "Share of station-years off by more than 7 days",
+          "bands in the nested set (k)", "share of station-years")
+    for arm, lab, col in SNOW_ARMS:
+        ks, med, lo, hi, e7, l7 = [], [], [], [], [], []
+        for k in range(1, 7):
+            d = Rs.err(arm, k, "raw+indices", True, "median_signed_err_days")
+            if not d:
+                continue
+            mu, ci, _ = _fold_boot(d)
+            e = float(np.mean(list(Rs.err(arm, k, "raw+indices", True,
+                                          "share_early_gt7").values())))
+            late = float(np.mean(list(Rs.err(arm, k, "raw+indices", True,
+                                             "share_late_gt7").values())))
+            ea = float(np.mean(list(Rs.err(arm, k, "raw+indices", True,
+                                           "share_early").values())))
+            la = float(np.mean(list(Rs.err(arm, k, "raw+indices", True,
+                                           "share_late").values())))
+            ab = float(np.mean(list(Rs.err(arm, k, "raw+indices", True).values())))
+            ks.append(k)
+            med.append(mu)
+            lo.append(ci[0])
+            hi.append(ci[1])
+            e7.append(e)
+            l7.append(late)
+            rows.append({"arm": arm, "k": k, "abs": ab, "signed": mu, "signed_ci": ci,
+                         "early": ea, "late": la, "early_gt7": e, "late_gt7": late,
+                         "runs": len(d)})
+        a1.plot(ks, med, "-o", color=col, lw=2, ms=5, label=lab)
+        a1.fill_between(ks, lo, hi, color=col, alpha=0.18, lw=0)
+        a2.plot(ks, e7, "-o", color=col, lw=2, ms=5, label=f"{lab}: early > 7 d")
+        a2.plot(ks, l7, "--s", color=col, lw=2, ms=5, label=f"{lab}: late > 7 d")
+    a1.axhline(0, color=SPINE, lw=1)
+    a1.axhline(ref["median"], color=GREEN, lw=1.2)
+    a1.text(6.1, ref["median"], f"perfect classifier {ref['median']:+.1f} d", color=GREEN,
+            fontsize=7.5, va="top", ha="right")
+    for y, txt in ((ref["early_gt7"], "early"), (ref["late_gt7"], "late")):
+        a2.axhline(y, color=GREEN, lw=1.1, ls="-" if txt == "early" else "--")
+        a2.text(6.1, y, f"perfect classifier, {txt} > 7 d: {y:.0%}", color=GREEN,
+                fontsize=7.5, va="bottom", ha="right")
+    a2.set_ylim(0, 0.6)
+    for a in (a1, a2):
+        a.set_xticks(range(1, 7))
+    a1.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower right")
+    a2.legend(fontsize=7, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper left",
+              ncol=2)
+    n = len(Rs.tasks)
+    _caption(fig, f"Raw + indices, with sensor noise; mean over {n} runs ({_rel(Rs.run)}; "
+             f"{15 - n} task(s) still to rerun), band = 95 % CI resampling whole folds. The "
+             "green lines are the perfect classifier (the station's own same-day snow): "
+             "Sentinel-2 alone runs early because the season's last snowfalls fall between "
+             "clear scenes. The models are early about as often, but are also late by more "
+             "than a week far more often: the classifier calling snow the station no longer "
+             "reports.")
+    _save(fig, out, "direction.png")
+    return rows, ref
+
+
+def p6c_tables(R, out, summ, floor, oracle, paired, freq, direction=None):
     L = ["# P6c tables: the snow-off estimator (E-60)\n",
          f"Run: `{_rel(R.run)}`. {len(R.tasks)} tasks (5 outer folds of 1-degree station "
          "blocks x 3 seeds), ECCC climate-station snow on ground as truth (Q33). Errors are "
@@ -2782,6 +2851,21 @@ def p6c_tables(R, out, summ, floor, oracle, paired, freq):
             s = sorted(((v[j], b) for b, v in freq[arm].items()), reverse=True)
             return ", ".join(f"{b} {p:.0%}" for p, b in s if p > 0)
         L.append(f"| {lab} | {top(0)} | {top(1)} |")
+    if direction:
+        rows, ref = direction
+        L += ["", "## Early or late (raw + indices, with noise; estimate - station)\n",
+              "| arm | k | median signed (d) | 95 % CI | early | late | early > 7 d | "
+              "late > 7 d |", "|---|---|---|---|---|---|---|---|"]
+        for r in rows:
+            lab = dict((a, b) for a, b, _ in SNOW_ARMS)[r["arm"]]
+            L.append(f"| {lab} | {r['k']} | {r['signed']:+.1f} | {_ci(r['signed_ci'], 1)} | "
+                     f"{r['early']:.0%} | {r['late']:.0%} | {r['early_gt7']:.0%} | "
+                     f"{r['late_gt7']:.0%} |")
+        L.append(f"| perfect classifier | - | {ref['median']:+.1f} | | {ref['early']:.0%} | "
+                 f"{ref['late']:.0%} | {ref['early_gt7']:.0%} | {ref['late_gt7']:.0%} |")
+        L.append(f"\nFrom {rows[0]['runs']} runs of the signed-error rerun; the absolute "
+                 "errors in that run match the first run exactly on every task both finished.")
+        _csv(out / "T_direction.csv", rows)
     walls = [r["wall_s"] for r in R.results.values()]
     L += ["", f"Resources: CPU tasks, {np.median(walls) / 60:.1f} min median, "
           f"{max(walls) / 60:.1f} min max (2 h requested)."]
@@ -2789,7 +2873,7 @@ def p6c_tables(R, out, summ, floor, oracle, paired, freq):
     print(f"  wrote {_rel(out / 'tables.md')}")
 
 
-def p6c(run: Path, out: Path):
+def p6c(run: Path, out: Path, signed: Path | None = None):
     out.mkdir(parents=True, exist_ok=True)
     R = _SnowRun(run)
     oracle = snow_oracle()
@@ -2797,13 +2881,17 @@ def p6c(run: Path, out: Path):
     paired = p6c_paired(R, out)
     freq = p6c_selection(R, out)
     pick = p6c_stations(oracle, out)
-    p6c_tables(R, out, summ, floor, oracle, paired, freq)
+    direction = p6c_direction(_SnowRun(signed), oracle, out) if signed else None
+    p6c_tables(R, out, summ, floor, oracle, paired, freq, direction)
     (out / "summary.json").write_text(json.dumps(
         {"curves": {f"{a}|{k}|{m}|{'noisy' if n else 'clean'}": v
                     for (a, k, m, n), v in summ.items()},
          "sampling_floor_median_days": floor, "paired": paired, "selection": freq,
+         "direction": direction[0] if direction else None,
+         "direction_perfect_classifier": direction[1] if direction else None,
          "station_years_shown": [list(k) for k in pick]}, indent=1, default=float))
-    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+    (out / "run.json").write_text(json.dumps(
+        {"run": str(_rel(run)), "signed_run": str(_rel(signed)) if signed else None}, indent=1))
 
 
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
@@ -2819,6 +2907,8 @@ def main(argv=None) -> int:
     ap.add_argument("--legacy-run", type=Path, default=None, help="P3: the P2 legacy run")
     ap.add_argument("--station-run", type=Path, default=None, help="P3: the station-weather run")
     ap.add_argument("--p3-run", type=Path, default=None, help="P5: the dated R0 run")
+    ap.add_argument("--signed-run", type=Path, default=None,
+                    help="P6c: a snow run that records the signed error")
     args = ap.parse_args(argv)
     fn, sub = PHASES[args.phase]
 
@@ -2829,6 +2919,8 @@ def main(argv=None) -> int:
         extra = {"legacy": resolve(args.legacy_run), "station": resolve(args.station_run)}
     elif args.phase == "P5":
         extra = {"p3": resolve(args.p3_run)}
+    elif args.phase == "P6c":
+        extra = {"signed": resolve(args.signed_run)}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 

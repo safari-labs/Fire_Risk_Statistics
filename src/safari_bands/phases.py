@@ -848,6 +848,23 @@ PHASES: tuple[Phase, ...] = (
                   result="4.4 min median, 5.6 min max; 110-149 fits per task.",
                   conclusion="The request drops to 0:30:00, which keeps the <= 3 h bin "
                              "with room for a larger grid."),
+            Entry("P6c-M3", "measurement", "MEASURED",
+                  title="Early or late?",
+                  question="Do the band-set estimates miss the station date early or late?",
+                  independent="the signed-error rerun (20261029-1426, 14 of 15 tasks; absolute "
+                              "errors identical to the first run); raw + indices, with noise",
+                  dependent="estimate - station per station-year: median, and the shares "
+                            "early and late, overall and by more than 7 days",
+                  result="Both ways. SWIR allowed, k = 6: median -1.8 d [-4.6, +1.3]; early "
+                         "52 %, late 46 %; more than 7 d early 39 %, late 30 %. VNIR-only "
+                         "drifts late with more bands (+2.1 d at k = 6; 39 % late by more "
+                         "than 7 d). The perfect classifier is early 70 % and late by more "
+                         "than 7 d only 7 %.",
+                  conclusion="The early misses are the sampling floor: last snowfalls between "
+                             "clear scenes. The late misses are the classifier, calling snow "
+                             "the station no longer reports, and VNIR-only does it more. A "
+                             "better snow classifier attacks the late tail; more frequent "
+                             "clear scenes attack the early one."),
         ),
     ),
 )

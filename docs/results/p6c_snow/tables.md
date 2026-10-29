@@ -40,4 +40,24 @@ Sampling floor, a perfect per-observation classifier: median 7.5 d, p90 33.9 d, 
 | any band (SWIR allowed) | B4 53%, B3 33%, B2 13% | B11 60%, B12 20%, B9 7%, B8A 7%, B5 7% |
 | VNIR only (no B11, B12) | B4 53%, B3 33%, B2 13% | B8A 73%, B9 7%, B8 7%, B5 7%, B4 7% |
 
+## Early or late (raw + indices, with noise; estimate - station)
+
+| arm | k | median signed (d) | 95 % CI | early | late | early > 7 d | late > 7 d |
+|---|---|---|---|---|---|---|---|
+| any band (SWIR allowed) | 1 | -6.8 | [-9.2, -4.6] | 59% | 39% | 49% | 30% |
+| any band (SWIR allowed) | 2 | -2.8 | [-5.6, 0.1] | 55% | 44% | 42% | 33% |
+| any band (SWIR allowed) | 3 | -2.6 | [-5.4, 0.7] | 54% | 45% | 41% | 30% |
+| any band (SWIR allowed) | 4 | -1.5 | [-4.7, 1.4] | 52% | 46% | 39% | 30% |
+| any band (SWIR allowed) | 5 | -1.9 | [-4.9, 1.3] | 52% | 46% | 39% | 30% |
+| any band (SWIR allowed) | 6 | -1.8 | [-4.6, 1.3] | 52% | 46% | 39% | 30% |
+| VNIR only (no B11, B12) | 1 | -6.8 | [-9.2, -4.6] | 59% | 39% | 49% | 30% |
+| VNIR only (no B11, B12) | 2 | -5.3 | [-7.0, -3.9] | 57% | 41% | 47% | 31% |
+| VNIR only (no B11, B12) | 3 | -1.4 | [-4.0, 0.9] | 52% | 47% | 42% | 36% |
+| VNIR only (no B11, B12) | 4 | -0.7 | [-2.4, 1.0] | 51% | 48% | 40% | 37% |
+| VNIR only (no B11, B12) | 5 | +1.8 | [-1.9, 4.9] | 47% | 52% | 37% | 40% |
+| VNIR only (no B11, B12) | 6 | +2.1 | [-1.2, 5.4] | 46% | 52% | 35% | 39% |
+| perfect classifier | - | -5.0 | | 70% | 27% | 44% | 7% |
+
+From 14 runs of the signed-error rerun; the absolute errors in that run match the first run exactly on every task both finished.
+
 Resources: CPU tasks, 4.4 min median, 5.6 min max (2 h requested).
