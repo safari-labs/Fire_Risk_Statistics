@@ -18,6 +18,8 @@ python scripts/make_phase_docs.py --phase P6a
 - **E-62 (Sentinel-2 half) is AT RISK.** The red edge is in 13 of 15 best 6-band sets, but dropping B5–B7 costs under 1 % on percent conifer and closure at k = 6, because SWIR bands substitute. The registered refutation (within 5 % on both) fired. Both paths here may use SWIR, so whether a VNIR-only camera needs the red edge is still open: the AVIRIS-NG search answers it.
 - **Sensor noise barely matters** for structure at these SNRs: noisy and noise-free skill differ by under 0.005.
 
+- **What the held-out maps show** (`maps_*.png`, one tile per fold). The k = 6 models reproduce the large structure: stand edges, cut-blocks, conifer patches (folds 3-4). They smooth over SCANFI's pixel-scale texture, and on one dense mixedwood tile (fold 2) closure comes out nearly flat. Percent conifer is predicted even where SCANFI leaves it undefined (glacier, fold 0); only labelled pixels are scored. Going from 1 to 3 bands visibly sharpens every target; 3 to 6 changes less.
+
 ## Two caveats (Q35)
 
 - **SCANFI is mapped from Landsat, SWIR included,** so the labels may favour Landsat-like bands. The SWIR-first ranking is not independent of that.
