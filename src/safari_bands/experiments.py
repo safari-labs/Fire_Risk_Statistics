@@ -555,9 +555,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "per-pixel snow-off date beats the regional rule.",
         state="NEEDS_CODE",
         runner="--",
-        blocker="an Earth Engine NDSI reduction over the S2 collection; no "
-                "new imagery. Moved to P6 with the other imagery estimators "
-                "(James, 2026-10-24); the operational-rule half is E-51 (P3)",
+        blocker="the S2 snow-off estimator (E-60, P6c) is built and queued on "
+                "Narval; applying its chosen band set to the fire patches is "
+                "not written. The operational-rule half is E-51 (P3)",
         gap="G4 snow-off keyed by regional rule",
         note="P3 (E-51): the operational start-up moves DC by +38 at >=60 N and "
              "lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is "
@@ -640,8 +640,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "on noise alone.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the refreshed-estimate half needs E-22; the 2005 SCANFI step "
-                "and 2010 for half the fires are still being fetched",
+        blocker="the refreshed-estimate half needs E-22; SCANFI 2005 and "
+                "2010 are now held for all 292 patches, and the R0 re-score "
+                "with them is deferred until after P6",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/p2_r0): inventory half done under R0. "
              "Within-patch HFI AUC moves -0.005 per decade of SCANFI age "
@@ -659,7 +660,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "and biomass retrieval leans on SWIR more than a burn outcome "
                    "does, because the outcome is diluted by ignition and weather. "
                    "If the two rankings agree, that is a strong convergent result "
-                   "for whichever bands win.",
+                   "for whichever bands win. WRONG IF the first SWIR band (B11 "
+                   "or B12) enters the combined-skill nested set no earlier "
+                   "than B11 entered the fire-outcome search (median rung 3.5 "
+                   "over E-2's folds), taking the median over E-22's outer "
+                   "folds and seeds.",
         independent="the same band searches, against SCANFI structure "
                     "instead of a burn outcome",
         dependent="per-pixel error on cover, closure, height, biomass, "
@@ -669,10 +674,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "magnitude more signal per scene than the fire arm and "
                    "measures what the bands actually retrieve rather than "
                    "what correlates with ignition.",
-        state="NEEDS_PACK",
-        runner="train_ecology.sh",
-        blocker="279 patches on disk, never tiled or packed; needs a pack "
-                "and a second transfer",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
+        blocker="",
+        resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
+                  "fold x seed; 5 x 3 tasks); a first guess, not yet measured",
+        note="P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 "
+             "tiles; frozen test 45 patches, splits/ecology_test_v1.json), "
+             "12 bands with B12, SCANFI v2 2020 labels. Submitted 2026-10-28; "
+             "pending behind Narval maintenance. The WRONG IF clause was "
+             "added 2026-10-28, after submission and before any E-22 "
+             "result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were "
+             "already known.",
         tags=("primary",),
     ),
 
@@ -691,7 +704,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "from one. Only a contiguous source can answer it.",
         state="NEEDS_DATA",
         runner="fetch_aviris.py + ingest_aviris.py",
-        blocker="3 of 42 pre-fire lines on disk, 0 ingested",
+        blocker="13 of 42 pre-fire lines ingested (2026-10-28); the rest "
+                "are downloading, about 2 h per line",
         note="Grid measured from AVIRIS-NG's own bad-band list (A-22), which "
              "puts the water-vapour gap at 1364-1408 nm -- narrower than "
              "assumed, so 1300-1359 and 1414-1500 were being excluded for "
@@ -915,7 +929,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "and how much a post-fire inventory would flatter a result.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the SCANFI v1 adapter is not written; SCANFI 2005 pending",
+        blocker="the SCANFI v1 adapter is not written; SCANFI 2005 is held "
+                "(292/292), its R0 re-score deferred until after P6",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire "
              "inventories are not equal: SCANFI through the CFS tree beats "
@@ -1492,10 +1507,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the on-board model should compute indices before the "
                    "network, which changes both the band value (a band is worth the "
                    "indices it unlocks) and the compute budget (P12).",
-        state="NEEDS_PACK",
-        blocker="the P6 ecology pack (S2 with B12) and the extended index front end",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
+        blocker="",
+        resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
+                  "fold x seed; 5 x 3 tasks); a first guess, not yet measured",
         note="Indices are inputs only, never labels (rule 3). ECVs are not inputs "
-             "unless one is shown worthwhile.",
+             "unless one is shown worthwhile. Runs inside E-22's sweep (A-38): "
+             "every evaluated set in raw / indices / raw + indices, noisy and "
+             "noise-free. Submitted 2026-10-28, pending behind Narval maintenance.",
     ),
     Experiment(
         "E-60", "Snow-off without SWIR", "CFFDRS gaps",
@@ -1513,15 +1533,21 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "station-year; per-observation snow accuracy against the station's "
                   "snow on ground that day; downstream, the FWI start-up change (E-18)",
         conclusion="Whether a VNIR-only camera can supply the start-up date.",
-        state="NEEDS_CODE",
-        blocker="the station snow-off dates and the Sentinel-2 observations at stations "
-                "(P6c)",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_snow.sh",
+        blocker="",
+        resources="--time=2:00:00 --cpus-per-task=8 --mem=8G per task, CPU only "
+                  "(one outer fold x seed; 5 x 3 tasks); a first guess",
         note="AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): "
              "the reference was the NDSI-based date, an index threshold used as truth, "
              "which rule 3 forbids. It is now the station-measured snow on ground; NDSI "
-             "is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS "
-             "fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is "
-             "ECCC climate-station observed snow on ground.",
+             "is a candidate like any other. Q33 (James, same day, still before any "
+             "snow-off data): the CWFIS fwi_obs snow on ground proved to be mostly a "
+             "gridded analysis, so the station truth is ECCC climate-station observed "
+             "snow on ground. P6c (A-39): packed as "
+             "data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test "
+             "122 station-years). Submitted 2026-10-28, pending behind Narval "
+             "maintenance.",
     ),
     Experiment(
         "E-61", "Best SWIR bands, searched broadly", "Hyperspectral",
@@ -1542,7 +1568,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Which SWIR placements, and which detector, the structure targets "
                    "need; feeds E-46 and the SWIR chain choice.",
         state="NEEDS_DATA",
-        blocker="39 of 42 pre-fire AVIRIS-NG lines to fetch and ingest (P6a-HS)",
+        blocker="29 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest "
+                "(P6a-HS, 2026-10-28)",
         note="Broadens E-23 (which stays as registered) beyond 1750 nm and adds "
              "vendor reference points. DFA L5 (1348/64) has ~28 % of its response "
              "inside the 1364-1408 nm water-vapour gap (A-22).",

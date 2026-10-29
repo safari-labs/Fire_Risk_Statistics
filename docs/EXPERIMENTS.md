@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-62 experiments. **34 can run today** on data already packed and staged.
+62 experiments. **37 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,10 +16,10 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 18 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58 |
+| **Runnable now** | 21 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-22, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
-| **Needs code** | 7 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41, E-60 |
-| **Needs a pack** | 10 | data held but not tiled, packed or transferred | E-8, E-20, E-22, E-35, E-42, E-46, E-47, E-48, E-56, E-59 |
+| **Needs code** | 6 | no new data; a runner or a flag has to be written | E-17, E-18, E-29, E-39, E-40, E-41 |
+| **Needs a pack** | 8 | data held but not tiled, packed or transferred | E-8, E-20, E-35, E-42, E-46, E-47, E-48, E-56 |
 | **Needs new data** | 8 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45, E-61, E-62 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
@@ -82,7 +82,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-11** | Greenness vs moisture indices ★ | `both` beats `greenness` by a small but fold-consistent margin, because direct water absorption at 1610 nm carries information a greenness proxy cannot; and `moisture` (2 bands) draws with `greenness` (5 bands). WRONG IF `both` does not beat `greenness`, which would say the 1610 nm moisture signal adds nothing this label can see -- a publishable null, and one that would weaken the case for the SWIR chain considerably. | the index family given to the model: greenness (NDVI, EVI, VARI, NDRE) / moisture (NDMI, MSI) / both / raw bands | the paired difference in auc_px, scenario-held-out folds, against greenness | Runnable now | `sweep_indices.sh` |
 | **E-12** | Index baseline vs learned bands | The learned model on raw bands beats every index family, because an index is a fixed projection that discards information a model could use. WRONG IF indices match it, which would be a strong argument for shipping indices -- cheap on an FPGA and interpretable to an operational user. | hand-built indices vs the learned model on raw bands | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_indices.sh ARMS=raw,both` |
-| **E-59** | Indices as model inputs | For the P6 ecology estimators, giving the model every index its bands can form, alongside the raw bands, lowers error at matched band count, most at small k (k <= 4), under the sensor noise model; indices alone do worse than raw + indices. WRONG IF raw + indices beats raw at no k (spatial-block paired CI spanning 0 at every k, every target). | input mode at each nested band set: raw bands / indices only / raw + indices (an index enters only when its bands are in the set); same bands, folds and seeds | per-target held-out error (RMSE for percent conifer, closure, height; balanced accuracy for fuel family), noisy and noise-free | Needs a pack | *none yet* |
+| **E-59** | Indices as model inputs | For the P6 ecology estimators, giving the model every index its bands can form, alongside the raw bands, lowers error at matched band count, most at small k (k <= 4), under the sensor noise model; indices alone do worse than raw + indices. WRONG IF raw + indices beats raw at no k (spatial-block paired CI spanning 0 at every k, every target). | input mode at each nested band set: raw bands / indices only / raw + indices (an index enters only when its bands are in the set); same bands, folds and seeds | per-target held-out error (RMSE for percent conifer, closure, height; balanced accuracy for fuel family), noisy and noise-free | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` |
 
 ### Covariates
 
@@ -102,11 +102,11 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `sweep_covariates.sh SETS=weather` |
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
 | **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
-| **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Needs a pack | `train_ecology.sh` |
+| **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. WRONG IF the first SWIR band (B11 or B12) enters the combined-skill nested set no earlier than B11 entered the fire-outcome search (median rung 3.5 over E-2's folds), taking the median over E-22's outer folds and seeds. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` |
 | **E-50** | Latitude-correct day length (R0) | Scaling the DMC day-length factors from 46 N to each patch's latitude raises DMC more at >=60 N than at <55 N (longer summer days), and raises R0's between-patch AUC of DMC and BUI more in the north. WRONG IF the DMC shift is uniform across bands. The AUC half rests on 19 northern fire patches and is read only beside the shift. | DMC day-length factors: Van Wagner's 46 N table vs the same table scaled by astronomical day length at the patch latitude over that at 46 N (our construction) | DMC and BUI shift by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-51** | Operational start-up (R0) | The GLC-X-42 Appendix C-2 start-up (codes begin 3 days after ERA5-Land snow cover is gone, or after 3 days at or above 12 C at 13:00 where snow is absent) with an overwintered DC moves DC and DMC at D-1 more at >=60 N than at <55 N, compared with a flat 90-day spin-up from the default start values, and its effect on R0's between-patch AUC is larger in the north. WRONG IF the code shift does not grow with latitude. This is E-18's mechanism under the operational rule; E-18's imagery arm is P6. | start-up: flat 90-day spin-up from FFMC 85 / DMC 6 / DC 15 vs Appendix C-2 start-up with overwintered DC (cffdrs coefficients a = b = 0.75) | DC and DMC shift at D-1 by latitude band; between-patch AUC per band | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-53** | Weather staleness under R0 | R0's between-patch AUC decays with the age of the weather (D-1, D-2, D-3, D-7), fastest for FFMC and ISI and slowest for DC and BUI. WRONG IF the fast codes do not lose more than the slow ones by D-7. This is E-20's mechanism without learning: the curve E-20's learned arms are compared with. | weather age at scoring: 1, 2, 3, 7 days before D | between-patch AUC per code against weather age | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
-| **E-60** | Snow-off without SWIR | Judged against the snow-off date measured at ECCC climate stations (observed snow on ground), a per-station snow-off date from visible and NIR Sentinel-2 bands alone has a median absolute error of at most 7 days and is no more than 3 days worse than the best set that may use SWIR1 (the NDSI family). WRONG IF the VNIR-only error exceeds 7 days or is more than 3 days worse: snow-off then needs the SWIR chain, which counts toward its cost in P12. | bands available to the per-observation snow classifier: VNIR only vs VNIR + SWIR1 (+ SWIR2), each searched as nested sets inside training folds of station blocks | median and 90th-percentile \|S2 snow-off - station snow-off\| (days) per station-year; per-observation snow accuracy against the station's snow on ground that day; downstream, the FWI start-up change (E-18) | Needs code | *none yet* |
+| **E-60** | Snow-off without SWIR | Judged against the snow-off date measured at ECCC climate stations (observed snow on ground), a per-station snow-off date from visible and NIR Sentinel-2 bands alone has a median absolute error of at most 7 days and is no more than 3 days worse than the best set that may use SWIR1 (the NDSI family). WRONG IF the VNIR-only error exceeds 7 days or is more than 3 days worse: snow-off then needs the SWIR chain, which counts toward its cost in P12. | bands available to the per-observation snow classifier: VNIR only vs VNIR + SWIR1 (+ SWIR2), each searched as nested sets inside training folds of station blocks | median and 90th-percentile \|S2 snow-off - station snow-off\| (days) per station-year; per-observation snow accuracy against the station's snow on ground that day; downstream, the FWI start-up change (E-18) | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_snow.sh` |
 
 ### Hyperspectral
 
@@ -160,7 +160,7 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 *Note:* P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land.
 
-*Blocked on:* the SCANFI v1 adapter is not written; SCANFI 2005 pending
+*Blocked on:* the SCANFI v1 adapter is not written; SCANFI 2005 is held (292/292), its R0 re-score deferred until after P6
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -474,9 +474,7 @@ If the learned model beats every index family by a wide margin, the recommendati
 
 Whether the on-board model should compute indices before the network, which changes both the band value (a band is worth the indices it unlocks) and the compute budget (P12).
 
-*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile.
-
-*Blocked on:* the P6 ecology pack (S2 with B12) and the extended index front end
+*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile. Runs inside E-22's sweep (A-38): every evaluated set in raw / indices / raw + indices, noisy and noise-free. Submitted 2026-10-28, pending behind Narval maintenance.
 
 ### Covariates
 
@@ -538,7 +536,7 @@ Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is froz
 
 *Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix.
 
-*Blocked on:* an Earth Engine NDSI reduction over the S2 collection; no new imagery. Moved to P6 with the other imagery estimators (James, 2026-10-24); the operational-rule half is E-51 (P3)
+*Blocked on:* the S2 snow-off estimator (E-60, P6c) is built and queued on Narval; applying its chosen band set to the fire patches is not written. The operational-rule half is E-51 (P3)
 
 *CFFDRS gap:* G4 snow-off keyed by regional rule
 
@@ -572,17 +570,17 @@ FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, ins
 
 *Note:* P2 (docs/results/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade.
 
-*Blocked on:* the refreshed-estimate half needs E-22; the 2005 SCANFI step and 2010 for half the fires are still being fetched
+*Blocked on:* the refreshed-estimate half needs E-22; SCANFI 2005 and 2010 are now held for all 292 patches, and the R0 re-score with them is deferred until after P6
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
 **E-22 — Ecology arm**
 
-*Hypothesis:* The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win.
+*Hypothesis:* The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. WRONG IF the first SWIR band (B11 or B12) enters the combined-skill nested set no earlier than B11 entered the fire-outcome search (median rung 3.5 over E-2's folds), taking the median over E-22's outer folds and seeds.
 
 THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome per patch, so it has orders of magnitude more signal per scene than the fire arm and measures what the bands actually retrieve rather than what correlates with ignition.
 
-*Blocked on:* 279 patches on disk, never tiled or packed; needs a pack and a second transfer
+*Note:* P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 tiles; frozen test 45 patches, splits/ecology_test_v1.json), 12 bands with B12, SCANFI v2 2020 labels. Submitted 2026-10-28; pending behind Narval maintenance. The WRONG IF clause was added 2026-10-28, after submission and before any E-22 result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were already known.
 
 **E-50 — Latitude-correct day length (R0)**
 
@@ -626,9 +624,7 @@ How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard
 
 Whether a VNIR-only camera can supply the start-up date.
 
-*Note:* AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): the reference was the NDSI-based date, an index threshold used as truth, which rule 3 forbids. It is now the station-measured snow on ground; NDSI is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is ECCC climate-station observed snow on ground.
-
-*Blocked on:* the station snow-off dates and the Sentinel-2 observations at stations (P6c)
+*Note:* AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): the reference was the NDSI-based date, an index threshold used as truth, which rule 3 forbids. It is now the station-measured snow on ground; NDSI is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is ECCC climate-station observed snow on ground. P6c (A-39): packed as data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test 122 station-years). Submitted 2026-10-28, pending behind Narval maintenance.
 
 ### Hyperspectral
 
@@ -640,7 +636,7 @@ THE SWIR SPECIFICATION. Sentinel-2 has one band in that window and the mode carr
 
 *Note:* Grid measured from AVIRIS-NG's own bad-band list (A-22), which puts the water-vapour gap at 1364-1408 nm -- narrower than assumed, so 1300-1359 and 1414-1500 were being excluded for no reason.
 
-*Blocked on:* 3 of 42 pre-fire lines on disk, 0 ingested
+*Blocked on:* 13 of 42 pre-fire lines ingested (2026-10-28); the rest are downloading, about 2 h per line
 
 **E-24 — 1209 vs 1240 nm**
 
@@ -666,7 +662,7 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 *Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22).
 
-*Blocked on:* 39 of 42 pre-fire AVIRIS-NG lines to fetch and ingest (P6a-HS)
+*Blocked on:* 29 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest (P6a-HS, 2026-10-28)
 
 **E-62 — Best VNIR bands, searched broadly**
 
@@ -749,6 +745,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-15** | Imagery vs the FBP formula | `sweep_covariates.sh SETS=g1` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-19** | Latitude-banded weather | `sweep_covariates.sh SETS=weather` | shares E-13's runs; latitude scoring adds seconds |
 | **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-22** | Ecology arm | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks); a first guess, not yet measured |
 | **E-26** | Within-fire burn pattern | `sweep_axes.sh SETS=cond` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
@@ -768,6 +765,8 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
 | **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-59** | Indices as model inputs | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks); a first guess, not yet measured |
+| **E-60** | Snow-off without SWIR | `Fire_Risk_FW/scripts/shell/sweep_snow.sh` | --time=2:00:00 --cpus-per-task=8 --mem=8G per task, CPU only (one outer fold x seed; 5 x 3 tasks); a first guess |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 
