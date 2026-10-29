@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-62 experiments. **37 can run today** on data already packed and staged.
+63 experiments. **37 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -19,7 +19,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 | **Runnable now** | 21 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-22, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
 | **Needs code** | 5 | no new data; a runner or a flag has to be written | E-17, E-29, E-39, E-40, E-41 |
-| **Needs a pack** | 9 | data held but not tiled, packed or transferred | E-8, E-18, E-20, E-35, E-42, E-46, E-47, E-48, E-56 |
+| **Needs a pack** | 10 | data held but not tiled, packed or transferred | E-8, E-18, E-20, E-35, E-42, E-46, E-47, E-48, E-56, E-63 |
 | **Needs new data** | 8 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45, E-61, E-62 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
@@ -52,6 +52,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-56** | Operational FBP outputs on a 2024-2025 cohort | On fires that started in 2024-2025, the HFI CWFIS issued for D-1 ranks fire above non-fire patches within 0.03 of our R0 HFI for the same patches and day (between-patch AUC), and the two agree across patches (Spearman rho >= 0.7). WRONG IF they differ by more than 0.03 with a CI excluding 0: the operational inputs our reconstruction replaces (interpolated station weather, the CWFIS fuel grid, its FMC, green-up and curing) then carry, or lose, skill R0 does not. | HFI (and ROS, CFB, FMC, fuel type) source on D-1: CWFIS operational grids (public:hfi etc., 2 km, from 2024-01-01) vs our R0 on the same patches | between-patch AUC per source, paired by patch; Spearman rho per output; fuel-type agreement (share of area) | Needs a pack | *none yet* |
 | **E-57** | Percent-conifer correction with an imagery-free offset | Once a learned imagery-free offset absorbs the tile-wide shift (P7-C1), the imagery percent-conifer correction carries information its shuffled twin does not: within-patch AUC on M-1/M-2 pixels beats the twin's (paired group-bootstrap CI above 0), and the imagery part varies more within tiles than the twin's. WRONG IF the real-imagery arm and its twin stay within noise on M-1/M-2 pixels (CI spanning 0): then, at this n, imagery percent conifer adds nothing through the physics even freed of the shift. | imagery percent-conifer correction with an offset (r3_pc_offset) vs the same with imagery shuffled across tiles (r3_pc_offset_shuffled); R2 as the floor | paired within-patch AUC on M-1/M-2 pixels and on all pixels; the learned offset (points); within-tile SD of the imagery part | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` |
 | **E-58** | Closing R2's within-patch gap to R1 | R2's within-patch deficit to R1 (-0.025 [-0.034, -0.015], P7) is an optimisation artefact of starting the residual at zero beside the physics. Either starting the residual from the R1 trained on the same fold and seed (r2_warm) or training it at 10x the learning rate (r2_lr10) brings R2 within 0.01 of R1 within patches, without losing more than 0.01 between patches against R2. WRONG IF both arms stay more than 0.01 below R1 within patches with a CI excluding 0: the gap is then the cost of anchoring the score to the physics, and is reported as such in the P12 architecture choice. | R2's residual: zero start at the base rate (r2) vs started from the trained R1 (r2_warm) vs 10x the learning rate (r2_lr10); R1 as the target, rerun in the same sweep | paired within- and between-patch AUC against R1 and R2, per fire patch, fire/block-group bootstrap | Runnable now | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` |
+| **E-63** | Out-of-time generalisation, two training regimes | (a) Regime B -- trained and selected on 2019-2023 only -- keeps its skill on 2024 and 2025: R1's and R2's between- and within-patch AUC there are within 0.05 of their 2019-2023 cross-validated AUC, and R1 still beats R0 (paired CI above 0). (b) Regime A -- 2024 added to training and selection -- beats regime B on 2025 within patches (paired CI above 0). WRONG IF (a) either rung drops by more than 0.05 with a CI excluding it, or R1 - R0 on 2024-2025 has a CI reaching 0; or (b) regime A minus regime B on 2025 has a CI reaching 0. | training and selection years: regime A, 2019-2024 (tested once on 2025); regime B, 2019-2023 (tested once on 2024 and 2025). Same ladder, configurations, folds and seeds; each regime makes its own selections | between- and within-patch AUC on the held-out years, paired by fire with a fire/block-group bootstrap; the drop from cross-validated AUC | Needs a pack | *none yet* |
 
 ### Band selection
 
@@ -314,9 +315,9 @@ Whether R0 can stand in for operational CFFDRS when imagery deltas are reported,
 
 The first comparison against what operational FBP actually reported. The cohort is also an out-of-time test for every model trained on 2019-2023.
 
-*Note:* Registered with E-55, before any grid value was scored.
+*Note:* Registered with E-55, before any grid value was scored. Runs on both 2024 and 2025 under either training regime (E-63): no learning is involved in the comparison.
 
-*Blocked on:* NBAC 2024-2025 are held; patches, pre-fire composites, dated weather and the v2 sidecars for a 2024-2025 cohort are not built
+*Blocked on:* the 2024-2025 cohort is being built (P6b, James 2026-10-29: 60 fires and 60 negatives per year); no patch exists yet
 
 **E-57 — Percent-conifer correction with an imagery-free offset**
 
@@ -333,6 +334,16 @@ Whether the correct form can carry spatial imagery information at all, before th
 Whether the physics-anchored model (R2-R4) carries a real accuracy cost, which the P12 architecture rule weighs. Q29.3 (James, 2026-10-26).
 
 *Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1. P7c (docs/results/p7c_slots_v3, 2026-10-27): REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x -0.056 [-0.075, -0.038]; the gap is the cost of the physics anchor. Warm start best between patches (0.892; ISSUED by CWFIS 0.857).
+
+**E-63 — Out-of-time generalisation, two training regimes**
+
+*Hypothesis:* (a) Regime B -- trained and selected on 2019-2023 only -- keeps its skill on 2024 and 2025: R1's and R2's between- and within-patch AUC there are within 0.05 of their 2019-2023 cross-validated AUC, and R1 still beats R0 (paired CI above 0). (b) Regime A -- 2024 added to training and selection -- beats regime B on 2025 within patches (paired CI above 0). WRONG IF (a) either rung drops by more than 0.05 with a CI excluding it, or R1 - R0 on 2024-2025 has a CI reaching 0; or (b) regime A minus regime B on 2025 has a CI reaching 0.
+
+Whether the models hold up in a year they never saw -- the condition an operational satellite always predicts in -- and what one more training year buys. 2025 is frozen in both regimes and read once, in P10.
+
+*Note:* James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as the out-of-time test; regime B excludes both. Regime B makes no use of any choice regime A made with 2024 in view, and its 2024 test is scored before regime A's 2024 training results are looked at.
+
+*Blocked on:* the 2024-2025 cohort (E-56's build)
 
 ### Band selection
 

@@ -1436,9 +1436,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "trained on 2019-2023.",
         state="NEEDS_PACK",
         runner="--",
-        blocker="NBAC 2024-2025 are held; patches, pre-fire composites, dated "
-                "weather and the v2 sidecars for a 2024-2025 cohort are not built",
-        note="Registered with E-55, before any grid value was scored.",
+        blocker="the 2024-2025 cohort is being built (P6b, James 2026-10-29: 60 fires "
+                "and 60 negatives per year); no patch exists yet",
+        note="Registered with E-55, before any grid value was scored. Runs on both "
+             "2024 and 2025 under either training regime (E-63): no learning is "
+             "involved in the comparison.",
     ),
     # E-57 and E-58 were registered on 2026-10-26, after the first sweep
     # (slots_v2) and before any fit of these arms ran on Narval. The only
@@ -1632,6 +1634,36 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "but without B5-B7 the k = 6 error is within 5 % on percent conifer "
              "(+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only "
              "camera question waits for the AVIRIS-NG search.",
+    ),
+    # E-63 was registered on 2026-10-29, when James chose the 2024-2025 cohort's
+    # role, before any 2024-2025 patch, composite or score existed.
+    Experiment(
+        "E-63", "Out-of-time generalisation, two training regimes", "CFFDRS mirror",
+        hypothesis="(a) Regime B -- trained and selected on 2019-2023 only -- keeps its "
+                   "skill on 2024 and 2025: R1's and R2's between- and within-patch AUC "
+                   "there are within 0.05 of their 2019-2023 cross-validated AUC, and R1 "
+                   "still beats R0 (paired CI above 0). (b) Regime A -- 2024 added to "
+                   "training and selection -- beats regime B on 2025 within patches "
+                   "(paired CI above 0). WRONG IF (a) either rung drops by more than 0.05 "
+                   "with a CI excluding it, or R1 - R0 on 2024-2025 has a CI reaching 0; "
+                   "or (b) regime A minus regime B on 2025 has a CI reaching 0.",
+        independent="training and selection years: regime A, 2019-2024 (tested once on "
+                    "2025); regime B, 2019-2023 (tested once on 2024 and 2025). Same "
+                    "ladder, configurations, folds and seeds; each regime makes its own "
+                    "selections",
+        dependent="between- and within-patch AUC on the held-out years, paired by fire "
+                  "with a fire/block-group bootstrap; the drop from cross-validated AUC",
+        conclusion="Whether the models hold up in a year they never saw -- the "
+                   "condition an operational satellite always predicts in -- and what "
+                   "one more training year buys. 2025 is frozen in both regimes and "
+                   "read once, in P10.",
+        state="NEEDS_PACK",
+        runner="--",
+        blocker="the 2024-2025 cohort (E-56's build)",
+        note="James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as "
+             "the out-of-time test; regime B excludes both. Regime B makes no use of any "
+             "choice regime A made with 2024 in view, and its 2024 test is scored before "
+             "regime A's 2024 training results are looked at.",
     ),
 )
 
