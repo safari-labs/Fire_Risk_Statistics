@@ -1537,8 +1537,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_snow.sh",
         blocker="",
-        resources="--time=2:00:00 --cpus-per-task=8 --mem=8G per task, CPU only "
-                  "(one outer fold x seed; 5 x 3 tasks); a first guess",
+        resources="--time=0:30:00 --cpus-per-task=8 --mem=8G per task, CPU only "
+                  "(one outer fold x seed; 5 x 3 tasks; Nibi measured 4.4 min median)",
         note="AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): "
              "the reference was the NDSI-based date, an index threshold used as truth, "
              "which rule 3 forbids. It is now the station-measured snow on ground; NDSI "
@@ -1547,8 +1547,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "gridded analysis, so the station truth is ECCC climate-station observed "
              "snow on ground. P6c (A-39): packed as "
              "data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test "
-             "122 station-years). Submitted 2026-10-28, pending behind Narval "
-             "maintenance.",
+             "122 station-years). Run on Nibi 2026-10-29 (docs/results/p6c_snow): "
+             "REFUTED. VNIR-only best 19.5 d (with noise); +3.8 d [+2.0, +5.6] worse "
+             "than SWIR allowed (15.7 d), 5/5 folds. The 7 d clause sat below the "
+             "sampling floor (a perfect classifier: 7.5 d), unattainable for any camera; "
+             "SWIR1 is worth about 4 days here.",
     ),
     Experiment(
         "E-61", "Best SWIR bands, searched broadly", "Hyperspectral",

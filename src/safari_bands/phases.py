@@ -797,6 +797,59 @@ PHASES: tuple[Phase, ...] = (
                              "use; worth one test sub-array."),
         ),
     ),
+    Phase(
+        "P6c", "Snow-off without SWIR (E-60)", "2026-10-29",
+        "p6c_snow", "README.md",
+        "Nested band searches for a per-observation snow classifier whose last snow date "
+        "gives the snow-off date, judged against ECCC climate-station snow on ground (Q33): "
+        "915 development station-years, 5 outer folds of 1-degree station blocks x 3 seeds, "
+        "run on Nibi. Two arms, SWIR allowed and VNIR only; every nested set in three input "
+        "modes, with and without the placeholder sensor noise. Registered before any "
+        "snow-off data existed; the frozen 122-station-year test set was not opened.",
+        (
+            Entry("E-60", "experiment", "REFUTED",
+                  result="VNIR only, best set (k = 6, raw + indices, with noise): median "
+                         "error 19.5 d, above the registered 7 d. Against the SWIR-allowed "
+                         "search at each arm's best k: +3.8 d [+2.0, +5.6], VNIR worse in "
+                         "5/5 folds; +5.5 to +6.1 d at k = 3-5 (raw + indices), CIs above "
+                         "3 d. SWIR allowed "
+                         "reaches 15.7 d. With SWIR, a visible band enters first and B11 "
+                         "(60 %) or B12 (20 %) second; VNIR-only takes B8A second (73 %). "
+                         "Noise moves no number by more than 1.5 d.",
+                  conclusion="As registered, a VNIR-only camera does not supply the start-up "
+                             "date: both clauses fail. The 7 d clause could not have held for "
+                             "any camera (sampling floor 7.5 d, P6c-M1), so the informative "
+                             "result is the relative one: SWIR1 buys about 4 days of snow-off "
+                             "accuracy at this estimator, which counts toward the SWIR chain "
+                             "in P12. Half the remaining error is the classifier, not the "
+                             "bands."),
+            Entry("P6c-M1", "measurement", "MEASURED",
+                  title="The sampling floor",
+                  question="How close can any Sentinel-2 snow-off date get to the station's, "
+                           "given when clear observations exist?",
+                  independent="a perfect per-observation classifier: the station's own "
+                              "same-day snow on ground at each clear Sentinel-2 date",
+                  dependent="|estimated - station| snow-off date per development station-year",
+                  result="Median 7.5 d, p90 33.9 d, within 7 d for 49 % of 913 "
+                         "station-years. Clear observations are 5 days apart (median 19 per "
+                         "season). Large errors come from spring snowfalls between clear "
+                         "dates and stations that report bare ground while the 30 m window "
+                         "is still white.",
+                  conclusion="E-60's 7 d threshold sat below the floor: it was unattainable "
+                             "by construction, which was not checked at registration. The "
+                             "best band set (15.7 d) leaves about 8 d to the classifier and "
+                             "the point-versus-window mismatch, the target for E-18's version "
+                             "of the estimator."),
+            Entry("P6c-M2", "measurement", "MEASURED",
+                  title="What the sweep used",
+                  question="How much of the request did the tasks use?",
+                  independent="15 CPU tasks on Nibi, 8 cores, 8G, 2 h requested",
+                  dependent="wall time per task",
+                  result="4.4 min median, 5.6 min max; 110-149 fits per task.",
+                  conclusion="The request drops to 0:30:00, which keeps the <= 3 h bin "
+                             "with room for a larger grid."),
+        ),
+    ),
 )
 
 

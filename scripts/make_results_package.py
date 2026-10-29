@@ -2507,9 +2507,308 @@ def p7c(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── P6c: the snow-off estimator (E-60) ──────────────────────────────────────
+
+SNOW = Path(_ROOT.parent / "Fire_Risk_Model" / "data")
+SNOW_ARMS = (("all", "any band (SWIR allowed)", BLUE), ("vnir", "VNIR only (no B11, B12)", ORANGE))
+SNOW_MODES = (("raw", "raw bands"), ("indices", "indices only"), ("raw+indices", "raw + indices"))
+SNOW_BANDS = ("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12")
+
+
+class _SnowRun:
+    """One snow sweep: eval rows and search paths per (fold, seed) task."""
+
+    def __init__(self, run: Path):
+        self.run = run
+        self.tasks = sorted(p for p in run.glob("f*s*") if (p / "eval.jsonl").exists())
+        self.rows, self.paths, self.results = [], {}, {}
+        for t in self.tasks:
+            fold, seed = (int(v) for v in t.name[1:].split("s"))
+            for line in (t / "eval.jsonl").read_text().splitlines():
+                r = json.loads(line)
+                r["fold"], r["seed"] = fold, seed
+                self.rows.append(r)
+            self.paths[(fold, seed)] = json.loads((t / "search.json").read_text())
+            self.results[(fold, seed)] = json.loads((t / "result.json").read_text())
+        self.folds = sorted({f for f, _ in self.paths})
+
+    def err(self, arm, k, mode, noisy, key="median_abs_err_days"):
+        """{(fold, seed): value} for one nested set."""
+        return {(r["fold"], r["seed"]): r["metrics"][key] for r in self.rows
+                if r["arm"] == arm and r["k"] == k and r["mode"] == mode
+                and r["noisy"] == noisy and r["metrics"]}
+
+
+def _fold_boot(d: dict, n=4000, seed=0):
+    """Mean over runs, and a CI from resampling whole folds (seeds averaged in a fold)."""
+    folds = sorted({f for f, _ in d})
+    per = np.array([np.mean([v for (f, _), v in d.items() if f == fo]) for fo in folds])
+    rng = np.random.default_rng(seed)
+    boots = per[rng.integers(0, len(per), (n, len(per)))].mean(axis=1)
+    return float(np.mean(list(d.values()))), (float(np.percentile(boots, 2.5)),
+                                              float(np.percentile(boots, 97.5))), per
+
+
+def snow_oracle() -> dict:
+    """The sampling floor: the snow-off estimate a PERFECT per-observation classifier
+    (the station's own same-day snow on ground) gets, per dev station-year."""
+    import csv
+    import datetime as dt
+
+    def doy(s):
+        return dt.date.fromisoformat(s[:10]).timetuple().tm_yday
+    sy = {(r["aes"], int(r["year"])): r for r in
+          csv.DictReader(open(SNOW / "snow_v1" / "dev_station_years.csv", encoding="utf-8"))}
+    obs: dict = {}
+    for r in csv.DictReader(open(SNOW / "snow_v1" / "dev_obs.csv", encoding="utf-8")):
+        k = (r["aes"], int(r["year"]))
+        if k in sy and r["sog"] not in ("", "nan"):
+            obs.setdefault(k, []).append((doy(r["date"]), float(r["sog"]) > 0, float(r["B3"])))
+    out = {}
+    for k, o in obs.items():
+        o.sort()
+        d = np.array([x[0] for x in o])
+        s = np.array([x[1] for x in o])
+        end = dt.date(k[1], 6, 30).timetuple().tm_yday
+        snowy = np.where(s & (d <= end))[0]
+        if not len(snowy):
+            est = float(d[0])
+        else:
+            i = snowy[-1]
+            est = float(d[i]) if i == len(d) - 1 else (d[i] + d[i + 1]) / 2.0
+        out[k] = {"err": abs(est - doy(sy[k]["snow_off"])), "est": est,
+                  "truth": doy(sy[k]["snow_off"]), "doy": d, "snow": s,
+                  "green": np.array([x[2] for x in o]), "lon": float(sy[k]["lon"]),
+                  "lat": float(sy[k]["lat"])}
+    return out
+
+
+def p6c_curves(R, oracle, out):
+    plt = _plt()
+    floor = float(np.median([v["err"] for v in oracle.values()]))
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.3), facecolor=FIG_BG, sharey=True)
+    summ = {}
+    for ax, (mode, mlab) in zip(axes, SNOW_MODES, strict=True):
+        _axes(ax, mlab, "bands in the nested set (k)",
+              "median |S2 - station| snow-off (days)" if mode == "raw" else "")
+        for arm, lab, col in SNOW_ARMS:
+            for noisy, ls in ((True, "-"), (False, ":")):
+                ks, m, lo, hi = [], [], [], []
+                for k in range(1, 7):
+                    d = R.err(arm, k, mode, noisy)
+                    if len(d) < len(R.tasks):            # a set with no formable index
+                        continue
+                    mu, ci, _ = _fold_boot(d)
+                    ks.append(k)
+                    m.append(mu)
+                    lo.append(ci[0])
+                    hi.append(ci[1])
+                    summ[(arm, k, mode, noisy)] = (mu, ci)
+                if not ks:
+                    continue
+                ax.plot(ks, m, ls, color=col, lw=2, marker="o" if noisy else None, ms=5,
+                        label=f"{lab}{'' if noisy else ', noise-free'}")
+                if noisy:
+                    ax.fill_between(ks, lo, hi, color=col, alpha=0.18, lw=0)
+        ax.axhline(7, color=MUTED, lw=1, ls="--")
+        ax.axhline(floor, color=GREEN, lw=1.2)
+        ax.text(6.05, floor, f"sampling floor {floor:.1f} d", color=GREEN, fontsize=7.5,
+                va="bottom", ha="right")
+        ax.text(6.05, 7, "E-60 threshold 7 d", color=MUTED, fontsize=7.5, va="top", ha="right")
+        ax.set_xticks(range(1, 7))
+        ax.set_ylim(0, 32)
+    axes[0].legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                   loc="upper right")
+    fig.suptitle("E-60: snow-off error against ECCC station snow on ground, by nested band set",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.03)
+    _caption(fig, f"Mean over {len(R.tasks)} runs (5 outer folds of station blocks x 3 seeds) of "
+             "each fold's median |error| over station-years; band = 95 % CI from resampling "
+             "whole folds. Solid: with sensor noise (rule 6, placeholder instrument, A-37); "
+             "dotted: noise-free. Missing points: sets that form no index. The green line is "
+             "the error a PERFECT per-observation classifier gets (the station's own same-day "
+             "snow on ground), so no band set can beat it.")
+    _save(fig, out, "curves.png")
+    return summ, floor
+
+
+def p6c_paired(R, out):
+    plt = _plt()
+    rows = []
+    for mode, _ in SNOW_MODES:
+        for k in range(1, 7):
+            a, v = R.err("all", k, mode, True), R.err("vnir", k, mode, True)
+            keys = sorted(set(a) & set(v))
+            if len(keys) < len(R.tasks):
+                continue
+            d = {kk: v[kk] - a[kk] for kk in keys}
+            mu, ci, per = _fold_boot(d)
+            rows.append({"mode": mode, "k": k, "d": mu, "ci": ci,
+                         "folds_vnir_worse": int((per > 0).sum()), "n_folds": len(per)})
+    # Each arm at its own best k (noisy, raw + indices), paired by run.
+    best = {}
+    for arm, _, _ in SNOW_ARMS:
+        best[arm] = {kk: min(R.err(arm, k, "raw+indices", True).get(kk, np.inf)
+                             for k in range(1, 7)) for kk in R.paths}
+    d = {kk: best["vnir"][kk] - best["all"][kk] for kk in R.paths}
+    mu, ci, per = _fold_boot(d)
+    best_row = {"mode": "raw+indices", "k": "best", "d": mu, "ci": ci,
+                "folds_vnir_worse": int((per > 0).sum()), "n_folds": len(per)}
+    fig, ax = plt.subplots(figsize=(8.5, 4.2), facecolor=FIG_BG)
+    _axes(ax, "VNIR-only minus SWIR-allowed, paired by fold and seed (with noise)",
+          "bands in the nested set (k)", "difference in median |error| (days)")
+    for (mode, lab), col, off in zip(SNOW_MODES, (MUTED, AMBER, BLUE), (-0.15, 0, 0.15),
+                                     strict=True):
+        rr = [r for r in rows if r["mode"] == mode]
+        if not rr:                                  # indices alone: no set formed one in every run
+            continue
+        ax.errorbar([r["k"] + off for r in rr], [r["d"] for r in rr],
+                    yerr=[[r["d"] - r["ci"][0] for r in rr], [r["ci"][1] - r["d"] for r in rr]],
+                    fmt="o", color=col, ms=5, capsize=3, lw=1.4, label=lab)
+    ax.axhline(3, color=MUTED, lw=1, ls="--")
+    ax.axhline(0, color=SPINE, lw=1)
+    ax.text(0.65, 3.08, "E-60: no more than 3 d worse", color=MUTED, fontsize=7.5, ha="left",
+            va="bottom")
+    ax.set_xticks(range(1, 7))
+    ax.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper right")
+    _caption(fig, f"Above 0: the VNIR-only camera's date is worse. Each arm at its own best k "
+             f"(raw + indices): {mu:+.1f} d [{ci[0]:+.1f}, {ci[1]:+.1f}], VNIR worse in "
+             f"{best_row['folds_vnir_worse']}/{best_row['n_folds']} folds. 95 % CIs resample "
+             "whole folds.", y=-0.03)
+    _save(fig, out, "paired.png")
+    return rows + [best_row]
+
+
+def p6c_selection(R, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6), facecolor=FIG_BG)
+    freq = {}
+    for ax, (arm, lab, _) in zip(axes, SNOW_ARMS, strict=True):
+        bands = [b for b in SNOW_BANDS if arm == "all" or b not in ("B11", "B12")]
+        m = np.zeros((len(bands), 6))
+        for p in R.paths.values():
+            for s in p[arm]:
+                m[bands.index(s["added"]), s["k"] - 1] += 1
+        m /= len(R.paths)
+        freq[arm] = {b: m[i].tolist() for i, b in enumerate(bands)}
+        ax.imshow(m, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+        _axes(ax, f"{lab}: band added at step k", "step k", "")
+        ax.grid(False)
+        ax.set_yticks(range(len(bands)))
+        ax.set_yticklabels(bands, color=INK, fontsize=8)
+        ax.set_xticks(range(6))
+        ax.set_xticklabels(range(1, 7))
+        for i in range(len(bands)):
+            for j in range(6):
+                if m[i, j] >= 0.2:
+                    ax.text(j, i, f"{m[i, j]:.0%}", ha="center", va="center", fontsize=7,
+                            color="#0f1117" if m[i, j] < 0.6 else "#ffffff")
+    _caption(fig, f"Share of the {len(R.paths)} searches (inner block split of each outer "
+             "fold's training stations, raw + indices, with noise) that added each band at "
+             "each step. With SWIR allowed, a visible band comes first and SWIR (B11 or B12) "
+             "second: the NDSI contrast, found rather than given.")
+    _save(fig, out, "selection.png")
+    return freq
+
+
+def p6c_stations(oracle, out):
+    """Qualitative: where the stations are, and four station-years over the season."""
+    plt = _plt()
+    fig = plt.figure(figsize=(13, 7.4), facecolor=FIG_BG)
+    ax = fig.add_axes([0.0, 0.42, 0.42, 0.55])
+    _axes(ax, "Development station-years: sampling floor per station", "longitude", "latitude")
+    v = list(oracle.values())
+    e = np.array([x["err"] for x in v])
+    sc = ax.scatter([x["lon"] for x in v], [x["lat"] for x in v], c=np.minimum(e, 30),
+                    cmap="viridis", s=10, vmin=0, vmax=30)
+    cb = fig.colorbar(sc, ax=ax, fraction=0.04, pad=0.02)
+    cb.set_label("perfect-classifier |error| (days, capped 30)", color=INK, fontsize=8)
+    cb.ax.tick_params(colors=INK, labelsize=7.5)
+    keys = sorted(oracle)
+    rng = np.random.default_rng(0)
+    pick = [keys[i] for i in rng.choice(len(keys), 4, replace=False)]
+    for j, k in enumerate(pick):
+        o = oracle[k]
+        a = fig.add_axes([0.5 + 0.25 * (j % 2), 0.55 - 0.47 * (j // 2), 0.22, 0.36])
+        _axes(a, f"station {k[0]}, {k[1]} ({o['lat']:.1f} N)", "day of year",
+              "green (B3) reflectance" if j % 2 == 0 else "")
+        a.scatter(o["doy"][o["snow"]], o["green"][o["snow"]], color=BLUE, s=14,
+                  label="station: snow")
+        a.scatter(o["doy"][~o["snow"]], o["green"][~o["snow"]], color=AMBER, s=14,
+                  label="station: none")
+        a.axvline(o["truth"], color=INK_BRIGHT, lw=1.2, label="station snow-off")
+        a.axvline(o["est"], color=GREEN, lw=1.2, ls="--", label="perfect-classifier estimate")
+        if j == 0:
+            a.legend(fontsize=6.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                     loc="upper right")
+    _caption(fig, "Left: every development station-year at its station, coloured by the error a "
+             "perfect classifier would still make (gaps between clear Sentinel-2 dates, late "
+             "spring snowfalls the station reports). Right: four seeded station-years; each "
+             "point is a clear Sentinel-2 observation of the 30 m window, coloured by the "
+             "station's snow on ground that day. Data only, no model.", y=0.02)
+    _save(fig, out, "stations.png")
+    return pick
+
+
+def p6c_tables(R, out, summ, floor, oracle, paired, freq):
+    L = ["# P6c tables: the snow-off estimator (E-60)\n",
+         f"Run: `{_rel(R.run)}`. {len(R.tasks)} tasks (5 outer folds of 1-degree station "
+         "blocks x 3 seeds), ECCC climate-station snow on ground as truth (Q33). Errors are "
+         "each fold's median |S2 - station| snow-off date over station-years, then the mean "
+         "over runs; 95 % CIs resample whole folds.\n",
+         "## Nested sets (with sensor noise; noise-free in brackets)\n",
+         "| arm | input | " + " | ".join(f"k={k}" for k in range(1, 7)) + " |",
+         "|---|---|" + "---|" * 6]
+    for arm, lab, _ in SNOW_ARMS:
+        for mode, mlab in SNOW_MODES:
+            cells = []
+            for k in range(1, 7):
+                n, c = summ.get((arm, k, mode, True)), summ.get((arm, k, mode, False))
+                cells.append("" if n is None else f"{n[0]:.1f} ({c[0]:.1f})")
+            L.append(f"| {lab} | {mlab} | " + " | ".join(cells) + " |")
+    e = np.array([v["err"] for v in oracle.values()])
+    L += ["", f"Sampling floor, a perfect per-observation classifier: median {floor:.1f} d, "
+          f"p90 {np.percentile(e, 90):.1f} d, within 7 d {np.mean(e <= 7):.0%} "
+          f"({len(e)} development station-years).", "",
+          "## VNIR-only minus SWIR-allowed (with noise)\n",
+          "| input | k | difference (d) | 95 % CI | folds VNIR worse |", "|---|---|---|---|---|"]
+    for r in paired:
+        L.append(f"| {r['mode']} | {r['k']} | {r['d']:+.2f} | {_ci(r['ci'])} | "
+                 f"{r['folds_vnir_worse']}/{r['n_folds']} |")
+    _csv(out / "T_paired.csv", paired)
+    L += ["", "## First two bands chosen (share of searches)\n", "| arm | step 1 | step 2 |",
+          "|---|---|---|"]
+    for arm, lab, _ in SNOW_ARMS:
+        def top(j, arm=arm):
+            s = sorted(((v[j], b) for b, v in freq[arm].items()), reverse=True)
+            return ", ".join(f"{b} {p:.0%}" for p, b in s if p > 0)
+        L.append(f"| {lab} | {top(0)} | {top(1)} |")
+    walls = [r["wall_s"] for r in R.results.values()]
+    L += ["", f"Resources: CPU tasks, {np.median(walls) / 60:.1f} min median, "
+          f"{max(walls) / 60:.1f} min max (2 h requested)."]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p6c(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    R = _SnowRun(run)
+    oracle = snow_oracle()
+    summ, floor = p6c_curves(R, oracle, out)
+    paired = p6c_paired(R, out)
+    freq = p6c_selection(R, out)
+    pick = p6c_stations(oracle, out)
+    p6c_tables(R, out, summ, floor, oracle, paired, freq)
+    (out / "summary.json").write_text(json.dumps(
+        {"curves": {f"{a}|{k}|{m}|{'noisy' if n else 'clean'}": v
+                    for (a, k, m, n), v in summ.items()},
+         "sampling_floor_median_days": floor, "paired": paired, "selection": freq,
+         "station_years_shown": [list(k) for k in pick]}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet"), "P7": (p7, "p7_slots"), "P7b": (p7b, "p7b_operational"),
-          "P7c": (p7c, "p7c_slots_v3")}
+          "P5": (p5, "p5_slotnet"), "P6c": (p6c, "p6c_snow"), "P7": (p7, "p7_slots"),
+          "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
 
 
 def main(argv=None) -> int:
