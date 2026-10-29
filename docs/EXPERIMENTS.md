@@ -696,7 +696,7 @@ A number for the requirements table. The dichroic makes misregistration small, n
 
 The onboard hardware.
 
-*Blocked on:* E-47 (budgets set in A-29: <= 91 s per scene, then lowest power)
+*Blocked on:* E-47 (budgets set in A-29: <= 44 s per scene, revised 2026-10-29 from 91 s; then lowest power)
 
 ### Out of reach
 

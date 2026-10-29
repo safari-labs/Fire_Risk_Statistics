@@ -928,6 +928,27 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
    At 620 km every count scales as in the main budget (51 scenes per orbit,
    114 s per scene).
 
+   **Revision (2026-10-29, James asked for the latency to be rechecked; before
+   any P12 result).** The 91 s rested on two optimistic inputs: the sheet's
+   2,000 km imaged per orbit (a placeholder) and processing spread over the
+   whole orbit. A pass over the boreal and mixedwood belt (45-68 N) images
+   ~2,560 km, and at 500 km up to 35.7 min of the 94.5 min orbit is in eclipse,
+   so processing confined to sunlight (no battery draw) has >= 58.8 min.
+
+   | 500 km (620 km) | scenes per orbit | whole orbit | sunlit part only |
+   |---|---|---|---|
+   | sheet, 2,000 km | 63 (51) | 90 s (114 s) | 56 s (72 s) |
+   | **boreal + mixedwood, 45-68 N** | **80 (65)** | 71 s (89 s) | **44 s (57 s)** |
+   | all Canada, 42-83 N | 143 (115) | 40 s (51 s) | 25 s (32 s) |
+   | real-time, keeping up while imaging | -- | 4.5 s (5.8 s) | -- |
+
+   - **Required: <= 44 s per 1000 x 1000 px scene** (500 km, boreal pass,
+     processing in sunlight only), replacing 91 s. Reported beside it: the
+     all-Canada 25 s and real-time 4.5 s.
+   - **Camera (James):** the budgets keep the sheet's camera geometry (Mantis
+     MS-like push broom, 32 m, 1000 px across) and assume the flown camera
+     carries whichever bands P12 selects; a scene is 1000 x 1000 px x k bands.
+
 
 ---
 

@@ -656,6 +656,11 @@ sensor noise stays the placeholder. The SWIR-camera case is added to A-29 from t
 same sheet: the latency budget is unchanged (<= 91 s per joint scene); storage
 grows to 2.1-3.1 GB per orbit; neither SWIR camera in the sheet reaches SWIR2.
 
+**Latency rechecked (James, 2026-10-29):** the required budget is now <= 44 s per
+1000 x 1000 px scene (a 2,560 km boreal pass, processing in sunlight only), not 91 s;
+the camera keeps the sheet's geometry and is assumed to carry the bands P12 selects.
+Table in A-29.
+
 
 ---
 

@@ -1203,7 +1203,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="BRAM / DSP / LUT, latency, power (A-29)",
         conclusion="The onboard hardware.",
         state="NEEDS_PACK",
-        blocker="E-47 (budgets set in A-29: <= 91 s per scene, then lowest power)",
+        blocker="E-47 (budgets set in A-29: <= 44 s per scene, revised 2026-10-29 from 91 s; then lowest power)",
     ),
     # P3 predictions, registered 2026-10-24 before any P3 number existed.
     # Each is scored under R0 (no learning); the latitude bands hold 30 / 34
