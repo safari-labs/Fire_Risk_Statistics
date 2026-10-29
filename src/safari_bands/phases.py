@@ -798,6 +798,73 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P6a", "Ecology estimator band searches on Sentinel-2", "2026-10-29",
+        "p6a_ecology", "README.md",
+        "Nested Sentinel-2 band searches for the on-chip ecology estimator (percent conifer, "
+        "closure, height, fuel family; SCANFI v2 2020 labels): 226 development patches, 5 "
+        "outer folds of 1-degree blocks x 3 seeds, searched inside training folds and scored "
+        "on the outer fold in three input modes, with and without the placeholder sensor "
+        "noise. Run on Nibi (H100). The frozen 45-patch test set was not opened. The AVIRIS-NG "
+        "half (E-61, E-62's camera question) waits for the download.",
+        (
+            Entry("E-22", "experiment", "SUPPORTED",
+                  result="The first SWIR band enters the combined path at step 1 in 13/15 "
+                         "runs (B12 60 %, B11 27 %), at 3 and 4 in the other two: median 1, "
+                         "against B11's median 3.5-4 in E-2's fire-outcome search. Closure "
+                         "and fuel family open with SWIR in every run (B12, B11). Combined "
+                         "skill 0.30 at k = 1, 0.43 at k = 3, 0.455 at k = 6; all 12 bands "
+                         "0.463 (raw + indices, with noise).",
+                  conclusion="SWIR ranks first for structure, as predicted. Two caveats limit "
+                             "what this says about the camera: SCANFI is itself mapped from "
+                             "Landsat including SWIR, so labels may favour Landsat-like bands "
+                             "(Q35); and the family target's D class is mostly open ground "
+                             "(P6a-M1). Three bands reach 93 % of all-band skill."),
+            Entry("E-59", "experiment", "MIXED",
+                  result="Raw + indices minus raw, same bands, combined skill: no "
+                         "difference at k = 1-4 (CIs span 0); +0.006 to +0.007 at k = 5-7 and "
+                         "+0.006 at k = 8, CIs above 0. Indices alone are worse than raw + "
+                         "indices at every k they form (-0.13 at k = 2-3, -0.03 at k = 8).",
+                  conclusion="The falsifier did not fire: indices help at some k. But the "
+                             "registered shape failed: the gain is at large k, not small, and "
+                             "it is about 1 % of skill. Indices alone never pay. For P12, "
+                             "computing indices on board buys almost nothing for structure."),
+            Entry("E-62", "experiment", "AT RISK",
+                  result="Sentinel-2 half. The best 6-band set has a red-edge band (B5 or "
+                         "B6) in 13/15 runs. Without B5-B7, error at k = 6: percent conifer "
+                         "+0.9 % [-0.3, +1.9], closure -0.2 % [-0.7, +0.4], height +1.3 % "
+                         "[+0.4, +2.3]; it reaches +2.9 % and +4.3 % only at k = 8. Searched "
+                         "for percent conifer alone, B7 then B5 come first (60 %, 73 %); for "
+                         "height, B5 (47 %).",
+                  conclusion="The red edge is chosen, but dropping it costs under 5 % on "
+                             "both targets, the registered refutation, because SWIR "
+                             "substitutes. Both paths here may use SWIR, so the question E-62 "
+                             "asks for a VNIR-only camera is still open: the AVIRIS-NG half "
+                             "decides it."),
+            Entry("P6a-M1", "measurement", "MEASURED",
+                  title="What the fuel family target means",
+                  question="Which ground does each fuel family class cover in the pack?",
+                  independent="the CFS decision tree on SCANFI v2 2020, development tiles",
+                  dependent="class shares, and the closure under the D class",
+                  result="D 55 % of labelled pixels, C 21 %, water 13 %, M 11 %, O and S "
+                         "none. 82 % of D pixels have closure under 10 %: the tree gives open "
+                         "ground the D-1/2 code (A-11), so glacier, rock and tundra are D.",
+                  conclusion="The family head mostly separates forest, open ground and water, "
+                             "and its skill should be read that way. A separate open class for "
+                             "the estimator is proposed in Q35."),
+            Entry("P6a-M2", "measurement", "MEASURED",
+                  title="What the sweep used",
+                  question="How much of the request did the tasks use?",
+                  independent="15 GPU tasks on Nibi H100 (80 GB), 12 cores, 32G, 3 h",
+                  dependent="wall time, GPU use and memory, job memory",
+                  result="47 min median, 52 max; 343-460 fits per task; GPU 92 % median, "
+                         "12.6 GB peak; job memory 5.8 GB peak. The first submission failed "
+                         "on A100 nodes ('Illegal instruction': the login node's software "
+                         "architecture), fixed in make_env.",
+                  conclusion="The 3 h request holds with room; the GPU is busy, so a MIG "
+                             "slice would slow it. Keep a whole H100 (or A100 with the fix)."),
+        ),
+    ),
+    Phase(
         "P6c", "Snow-off without SWIR (E-60)", "2026-10-29",
         "p6c_snow", "README.md",
         "Nested band searches for a per-observation snow classifier whose last snow date "
@@ -851,13 +918,14 @@ PHASES: tuple[Phase, ...] = (
             Entry("P6c-M3", "measurement", "MEASURED",
                   title="Early or late?",
                   question="Do the band-set estimates miss the station date early or late?",
-                  independent="the signed-error rerun (20261029-1426, 14 of 15 tasks; absolute "
-                              "errors identical to the first run); raw + indices, with noise",
+                  independent="the signed-error rerun (20261029-1426, all 15 tasks; band paths "
+                              "and absolute errors identical to the first run); raw + "
+                              "indices, with noise",
                   dependent="estimate - station per station-year: median, and the shares "
                             "early and late, overall and by more than 7 days",
-                  result="Both ways. SWIR allowed, k = 6: median -1.8 d [-4.6, +1.3]; early "
-                         "52 %, late 46 %; more than 7 d early 39 %, late 30 %. VNIR-only "
-                         "drifts late with more bands (+2.1 d at k = 6; 39 % late by more "
+                  result="Both ways. SWIR allowed, k = 6: median -1.8 d [-4.5, +1.3]; early "
+                         "52 %, late 47 %; more than 7 d early 39 %, late 30 %. VNIR-only "
+                         "drifts late with more bands (+1.8 d at k = 6; 39 % late by more "
                          "than 7 d). The perfect classifier is early 70 % and late by more "
                          "than 7 d only 7 %.",
                   conclusion="The early misses are the sampling floor: last snowfalls between "

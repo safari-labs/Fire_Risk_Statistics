@@ -678,14 +678,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
         blocker="",
         resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
-                  "fold x seed; 5 x 3 tasks); a first guess, not yet measured",
+                  "fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, "
+                  "GPU 92 %, 12.6 GB)",
         note="P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 "
              "tiles; frozen test 45 patches, splits/ecology_test_v1.json), "
-             "12 bands with B12, SCANFI v2 2020 labels. Submitted 2026-10-28; "
-             "pending behind Narval maintenance. The WRONG IF clause was "
+             "12 bands with B12, SCANFI v2 2020 labels. The WRONG IF clause was "
              "added 2026-10-28, after submission and before any E-22 "
              "result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were "
-             "already known.",
+             "already known. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): "
+             "SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 "
+             "27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included "
+             "(Q35); the family target's D class is 82 % open ground (P6a-M1).",
         tags=("primary",),
     ),
 
@@ -1512,11 +1515,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
         blocker="",
         resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
-                  "fold x seed; 5 x 3 tasks); a first guess, not yet measured",
+                  "fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, "
+                  "GPU 92 %, 12.6 GB)",
         note="Indices are inputs only, never labels (rule 3). ECVs are not inputs "
              "unless one is shown worthwhile. Runs inside E-22's sweep (A-38): "
              "every evaluated set in raw / indices / raw + indices, noisy and "
-             "noise-free. Submitted 2026-10-28, pending behind Narval maintenance.",
+             "noise-free. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): MIXED. "
+             "Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined "
+             "skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small "
+             "k'. Indices alone are worse at every k they form.",
     ),
     Experiment(
         "E-60", "Snow-off without SWIR", "CFFDRS gaps",
@@ -1603,7 +1610,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "pack and runner written (A-40)",
         note="The VNIR arm searches the camera alone (no SWIR band), the question "
              "E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references "
-             "(A-40).",
+             "(A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/"
+             "p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, "
+             "but without B5-B7 the k = 6 error is within 5 % on percent conifer "
+             "(+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only "
+             "camera question waits for the AVIRIS-NG search.",
     ),
 )
 

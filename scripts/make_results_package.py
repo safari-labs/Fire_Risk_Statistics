@@ -2507,6 +2507,442 @@ def p7c(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── P6a: the ecology estimator band searches (E-22, E-59, E-62 S2 half) ────
+
+ECO_PACK = Path(_ROOT.parent / "Fire_Risk_Model" / "data" / "ecology_v2" / "dev.h5")
+ECO_BANDS = ("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12")
+ECO_PATHS = (("combined", "combined skill", BLUE), ("no_red_edge", "no red edge (B5-B7 out)",
+                                                     ORANGE))
+ECO_TARGETS = (("pc", "percent conifer", "rmse_pc", "RMSE (%)"),
+               ("closure", "crown closure", "rmse_closure", "RMSE (%)"),
+               ("height", "canopy height", "rmse_height", "RMSE (m)"),
+               ("family", "fuel family", "balanced_acc_family", "balanced accuracy"))
+ECO_FAMILY_COL = {"C": GREEN, "D": ORANGE, "M": BLUE, "O": AMBER, "S": PINK, "NF": "#b9b9c6",
+                  "WA": "#3a3d4a"}
+#: E-2's fire-outcome search: the rung at which B11 entered, per fold ("never" = 99).
+E2_B11_RUNGS = (99, 3, 2, 5, 2, 7)
+
+
+class _EcoRun:
+    def __init__(self, run: Path):
+        self.run = run
+        self.tasks = sorted(p for p in run.glob("f*s*") if (p / "eval.jsonl").exists())
+        self.rows, self.paths, self.results = [], {}, {}
+        for t in self.tasks:
+            fold, seed = (int(v) for v in t.name[1:].split("s"))
+            for line in (t / "eval.jsonl").read_text().splitlines():
+                r = json.loads(line)
+                r["fold"], r["seed"] = fold, seed
+                self.rows.append(r)
+            self.paths[(fold, seed)] = json.loads((t / "search.json").read_text())
+            self.results[(fold, seed)] = json.loads((t / "result.json").read_text())
+        self.fits = [json.loads(x) for x in (run / "fits.jsonl").read_text().splitlines()]
+
+    def get(self, sel, k, mode, noisy, key="skill_combined"):
+        return {(r["fold"], r["seed"]): r["metrics"][key] for r in self.rows
+                if r["selector"] == sel and r["k"] == k and r["mode"] == mode
+                and r["noisy"] == noisy and r["metrics"]
+                and r["metrics"].get(key) is not None and np.isfinite(r["metrics"][key])}
+
+    def first_swir(self, sel="combined"):
+        out = {}
+        for kk, p in self.paths.items():
+            r = [s["k"] for s in p[sel] if s["added"] in ("B11", "B12")]
+            out[kk] = min(r) if r else 99
+        return out
+
+
+def p6a_curves(E, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.3), facecolor=FIG_BG, sharey=True)
+    summ = {}
+    n = len(E.tasks)
+    for ax, (mode, mlab) in zip(axes, SNOW_MODES, strict=True):
+        _axes(ax, mlab, "bands in the nested set (k)",
+              "combined skill (0 = training mean, 1 = perfect)" if mode == "raw" else "")
+        for sel, lab, col in ECO_PATHS:
+            for noisy, ls in ((True, "-"), (False, ":")):
+                ks, m, lo, hi = [], [], [], []
+                for k in range(1, 9):
+                    d = E.get(sel, k, mode, noisy)
+                    if len(d) < n:
+                        continue
+                    mu, ci, _ = _fold_boot(d)
+                    ks.append(k)
+                    m.append(mu)
+                    lo.append(ci[0])
+                    hi.append(ci[1])
+                    summ[(sel, k, mode, noisy)] = (mu, ci)
+                if ks:
+                    ax.plot(ks, m, ls, color=col, lw=2, marker="o" if noisy else None, ms=5,
+                            label=f"{lab}{'' if noisy else ', noise-free'}")
+                    if noisy:
+                        ax.fill_between(ks, lo, hi, color=col, alpha=0.18, lw=0)
+        a = E.get("all_bands", 12, mode, True)
+        if a:
+            mu, ci, _ = _fold_boot(a)
+            summ[("all_bands", 12, mode, True)] = (mu, ci)
+            ax.axhline(mu, color=MUTED, lw=1.2, ls="--")
+            ax.text(8.1, mu, f"all 12 bands {mu:.3f}", color=MUTED, fontsize=7.5, ha="right",
+                    va="bottom")
+        ax.set_xticks(range(1, 9))
+        ax.set_ylim(0.2, 0.52)
+    axes[0].legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                   loc="lower right")
+    fig.suptitle("E-22 / E-59: ecology skill (SCANFI v2 2020 labels) by nested Sentinel-2 band set",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.03)
+    _caption(fig, f"Mean over {n} runs (5 outer folds of 1-degree blocks x 3 seeds); band = 95 % "
+             "CI resampling whole folds. Combined skill = mean of the skills for percent "
+             "conifer, closure, height (1 - RMSE / RMSE of the training mean) and fuel family "
+             "(balanced accuracy, chance = 0). Solid: with the placeholder sensor noise (rule 6); "
+             "dotted: noise-free. 'Indices only' starts where every run's set forms an index.")
+    _save(fig, out, "curves.png")
+    return summ
+
+
+def p6a_targets(E, out):
+    plt = _plt()
+    fig, axes = plt.subplots(2, 2, figsize=(12, 7.6), facecolor=FIG_BG)
+    rows = []
+    n = len(E.tasks)
+    for ax, (t, tlab, key, ylab) in zip(axes.flat, ECO_TARGETS, strict=True):
+        _axes(ax, tlab, "bands in the nested set (k)", ylab)
+        for sel, lab, col in (*ECO_PATHS, (t, f"searched for {tlab}", GREEN)):
+            ks, m, lo, hi = [], [], [], []
+            for k in range(1, 9):
+                d = E.get(sel, k, "raw+indices", True, key)
+                if len(d) < n:
+                    continue
+                mu, ci, _ = _fold_boot(d)
+                ks.append(k)
+                m.append(mu)
+                lo.append(ci[0])
+                hi.append(ci[1])
+                rows.append({"target": t, "path": sel, "k": k, "value": mu, "ci": ci})
+            ax.plot(ks, m, "-o", color=col, lw=2, ms=4, label=lab)
+            ax.fill_between(ks, lo, hi, color=col, alpha=0.15, lw=0)
+        a = E.get("all_bands", 12, "raw+indices", True, key)
+        if a:
+            mu, ci, _ = _fold_boot(a)
+            rows.append({"target": t, "path": "all_bands", "k": 12, "value": mu, "ci": ci})
+            ax.axhline(mu, color=MUTED, lw=1.2, ls="--")
+            ax.text(8.1, mu, "all 12 bands", color=MUTED, fontsize=7.5, ha="right", va="bottom")
+        ax.set_xticks(range(1, 9))
+        ax.legend(fontsize=7, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                  loc="lower right" if t == "family" else "upper right")
+    fig.tight_layout()
+    _caption(fig, "Raw + indices, with sensor noise; mean over runs, 95 % CI resampling whole "
+             "folds. Green: the nested path searched for that target alone. Lower RMSE is "
+             "better; higher balanced accuracy is better. Fuel family is scored over the "
+             "classes with at least 200 pixels in the outer fold (chance = 1 / classes).")
+    _save(fig, out, "targets.png")
+    return rows
+
+
+def p6a_selection(E, out):
+    plt = _plt()
+    sels = [("combined", "combined skill"), ("no_red_edge", "no red edge"),
+            ("pc", "percent conifer"), ("closure", "closure"), ("height", "height"),
+            ("family", "fuel family")]
+    fig, axes = plt.subplots(2, 3, figsize=(13.5, 8.2), facecolor=FIG_BG)
+    freq = {}
+    for ax, (sel, lab) in zip(axes.flat, sels, strict=True):
+        m = np.zeros((len(ECO_BANDS), 8))
+        for p in E.paths.values():
+            for s in p[sel]:
+                m[ECO_BANDS.index(s["added"]), s["k"] - 1] += 1
+        m /= len(E.paths)
+        freq[sel] = {b: m[i].tolist() for i, b in enumerate(ECO_BANDS)}
+        ax.imshow(m, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+        _axes(ax, f"{lab}: band added at step k", "step k", "")
+        ax.grid(False)
+        ax.set_yticks(range(len(ECO_BANDS)))
+        ax.set_yticklabels(ECO_BANDS, color=INK, fontsize=8)
+        ax.set_xticks(range(8))
+        ax.set_xticklabels(range(1, 9))
+        for i in range(len(ECO_BANDS)):
+            for j in range(8):
+                if m[i, j] >= 0.2:
+                    ax.text(j, i, f"{m[i, j]:.0%}", ha="center", va="center", fontsize=6.5,
+                            color="#0f1117" if m[i, j] < 0.6 else "#ffffff")
+    fig.tight_layout()
+    _caption(fig, f"Share of the {len(E.paths)} searches (inner block split of each outer fold's "
+             "training blocks; raw + indices, with noise) that added each band at each step. "
+             "Bands in wavelength order, B11 = 1610 nm, B12 = 2190 nm.")
+    _save(fig, out, "selection.png")
+    return freq
+
+
+def _paired(E, sel_a, mode_a, sel_b, mode_b, key, k_b=None, n=None):
+    """Paired a - b per k over the runs both have."""
+    rows = []
+    for k in range(1, 9):
+        a = E.get(sel_a, k, mode_a, True, key)
+        b = E.get(sel_b, k if k_b is None else k_b, mode_b, True, key)
+        keys = sorted(set(a) & set(b))
+        if n and len(keys) < n:
+            continue
+        if len(keys) < 3:
+            continue
+        mu, ci, per = _fold_boot({kk: a[kk] - b[kk] for kk in keys})
+        rows.append({"k": k, "d": mu, "ci": ci, "folds_positive": int((per > 0).sum()),
+                     "n_folds": len(per), "runs": len(keys)})
+    return rows
+
+
+def p6a_indices(E, out):
+    """E-59: raw + indices against raw at the same bands (the combined path)."""
+    plt = _plt()
+    keys = [("skill_combined", "combined"), ("skill_pc", "percent conifer"),
+            ("skill_closure", "closure"), ("skill_height", "height"),
+            ("skill_family", "fuel family")]
+    cols = (INK_BRIGHT, GREEN, BLUE, AMBER, PINK)
+    res = {}
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.4), facecolor=FIG_BG)
+    _axes(a1, "raw + indices minus raw (same bands)", "bands in the nested set (k)",
+          "difference in skill")
+    _axes(a2, "indices only minus raw + indices (same bands)", "bands in the nested set (k)", "")
+    for i, ((key, lab), col) in enumerate(zip(keys, cols, strict=True)):
+        off = (i - 2) * 0.09
+        r1 = _paired(E, "combined", "raw+indices", "combined", "raw", key, n=len(E.tasks))
+        r2 = _paired(E, "combined", "indices", "combined", "raw+indices", key)
+        res[key] = {"rawind_minus_raw": r1, "ind_minus_rawind": r2}
+        for ax, rr in ((a1, r1), (a2, r2)):
+            if not rr:
+                continue
+            ax.errorbar([r["k"] + off for r in rr], [r["d"] for r in rr],
+                        yerr=[[r["d"] - r["ci"][0] for r in rr], [r["ci"][1] - r["d"] for r in rr]],
+                        fmt="o", color=col, ms=4, capsize=2, lw=1.2, label=lab)
+    for ax in (a1, a2):
+        ax.axhline(0, color=SPINE, lw=1)
+        ax.set_xticks(range(1, 9))
+    a1.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper left")
+    _caption(fig, "Paired by fold and seed on the combined path's nested sets, with sensor "
+             "noise; 95 % CI resampling whole folds. Left: does adding every formable index "
+             "help the network at matched bands (E-59)? Right: indices alone, against raw + "
+             "indices; only sets that form an index in at least 3 runs. Above 0 favours the "
+             "first named.")
+    _save(fig, out, "indices.png")
+    return res
+
+
+def p6a_red_edge(E, out):
+    """E-62, Sentinel-2 half: the no-red-edge path against the combined path, in RMSE."""
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(9, 4.3), facecolor=FIG_BG)
+    _axes(ax, "No red edge (B5, B6, B7 excluded) minus combined path, at matched k",
+          "bands in the nested set (k)", "RMSE difference (% of the combined path's)")
+    res = {}
+    for i, ((t, lab, key, _), col) in enumerate(zip(ECO_TARGETS[:3], (GREEN, BLUE, AMBER),
+                                                    strict=True)):
+        rows = []
+        for k in range(1, 9):
+            a, b = E.get("no_red_edge", k, "raw+indices", True, key), \
+                E.get("combined", k, "raw+indices", True, key)
+            keys = sorted(set(a) & set(b))
+            if len(keys) < len(E.tasks):
+                continue
+            mu, ci, per = _fold_boot({kk: 100 * (a[kk] - b[kk]) / b[kk] for kk in keys})
+            rows.append({"k": k, "d_pct": mu, "ci": ci, "folds_worse": int((per > 0).sum()),
+                         "n_folds": len(per)})
+        res[t] = rows
+        off = (i - 1) * 0.12
+        ax.errorbar([r["k"] + off for r in rows], [r["d_pct"] for r in rows],
+                    yerr=[[r["d_pct"] - r["ci"][0] for r in rows],
+                          [r["ci"][1] - r["d_pct"] for r in rows]],
+                    fmt="o", color=col, ms=5, capsize=3, lw=1.3, label=lab)
+    ax.axhline(5, color=MUTED, lw=1, ls="--")
+    ax.axhline(0, color=SPINE, lw=1)
+    ax.text(0.7, 5.15, "E-62: at least 5 % worse without red edge", color=MUTED, fontsize=7.5,
+            va="bottom")
+    ax.set_xticks(range(1, 9))
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper right")
+    _caption(fig, "Raw + indices, with sensor noise; paired by fold and seed, 95 % CI resampling "
+             "whole folds. Above 0: the set without red edge has the larger error. Both paths may "
+             "use SWIR, so this is E-62's Sentinel-2 half only; the VNIR-camera question (no "
+             "SWIR) waits for the AVIRIS-NG search.", y=-0.03)
+    _save(fig, out, "red_edge.png")
+    return res
+
+
+def p6a_tiles(out, n=4, seed=0):
+    """Qualitative: true colour and the SCANFI labels the estimators learn, on seeded
+    development tiles. The runner saves no predictions, so there is no model map."""
+    import h5py
+    plt = _plt()
+    from matplotlib.colors import ListedColormap
+    with h5py.File(ECO_PACK, "r") as f:
+        order = [str(b) for b in f.attrs["band_order"]]
+        fams = [str(x) for x in f.attrs["families"]]
+        valid_share = f["valid"][:, ::16, ::16].reshape(len(f["valid"]), -1).mean(axis=1)
+        cand = np.flatnonzero(valid_share > 0.8)
+        pick = np.sort(np.random.default_rng(seed).choice(cand, n, replace=False))
+        bands = f["bands"][pick].astype(np.float32)
+        tg = f["targets"][pick]
+        fam = f["fuel_family"][pick]
+        meta = [json.loads(m) for m in f["meta"][pick]]
+    cols = [("true colour (B4, B3, B2)", None), ("percent conifer (%)", 0),
+            ("crown closure (%)", 1), ("canopy height (m)", 2), ("fuel family", "fam")]
+    fig, axes = plt.subplots(n, len(cols), figsize=(15, 3.1 * n), facecolor=FIG_BG)
+    fcmap = ListedColormap([ECO_FAMILY_COL[x] for x in fams])
+    for i in range(n):
+        for j, (lab, c) in enumerate(cols):
+            ax = axes[i, j]
+            ax.set_facecolor(AX_BG)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_color(SPINE)
+            if c is None:
+                ax.imshow(_stretch(np.stack([bands[i, order.index(b)]
+                                             for b in ("B4", "B3", "B2")])))
+            elif c == "fam":
+                fm = np.ma.masked_less(fam[i].astype(float), 0)
+                ax.imshow(fm, cmap=fcmap, vmin=-0.5, vmax=len(fams) - 0.5, interpolation="nearest")
+            else:
+                vmax = {0: 100, 1: 100, 2: 30}[c]
+                im = ax.imshow(np.ma.masked_invalid(tg[i, c]), cmap="viridis", vmin=0, vmax=vmax)
+                if i == n - 1:
+                    cb = fig.colorbar(im, ax=ax, orientation="horizontal", fraction=0.05,
+                                      pad=0.04)
+                    cb.ax.tick_params(colors=INK, labelsize=7)
+            if i == 0:
+                ax.set_title(lab, color=INK_BRIGHT, fontsize=9.5, loc="left")
+            if j == 0:
+                kind = meta[i]["patch"].split("_ecology_")[-1].replace("_", " ")
+                ax.set_ylabel(f"{kind}\nblock {meta[i]['block']}", color=MUTED, fontsize=8)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=ECO_FAMILY_COL[x]) for x in fams]
+    fig.legend(handles, fams, loc="lower right", ncol=len(fams), fontsize=8, facecolor=AX_BG,
+               edgecolor=SPINE, labelcolor=INK, bbox_to_anchor=(0.99, -0.005))
+    _caption(fig, "Four seeded development tiles (256 x 256 px at 20 m), Sentinel-2 June-August "
+              "2020 composite and the SCANFI v2 2020 labels the estimators were trained on (fuel "
+              "family from the CFS decision tree; C conifer, D deciduous, M mixedwood, O open, S "
+              "slash, NF non-fuel, WA water). The tree gives every open pixel (closure < 10 %) "
+              "the D-1/2 code, so glacier, rock and tundra read as D (rows 2 and 4): 82 % of D "
+              "pixels in the pack. Row labels are the patch's sampling stratum, not its SCANFI "
+              "class. Data only: the sweep saves no prediction maps.",
+             y=-0.01)
+    _save(fig, out, "tiles.png")
+    return [m["patch"] for m in meta]
+
+
+def p6a_resources(E):
+    rows = []
+    for t in E.tasks:
+        R = _read_csv(t / "resource_usage.csv")
+
+        def num(k, rows=R):
+            return [float(r[k]) for r in rows if (r.get(k) or "").strip() not in ("", "N/A")]
+        g, m = num("gpu_util_%"), num("gpu_mem_used_MiB")
+        rows.append({"task": t.name, "gpu_util_median": float(np.median(g)) if g else float("nan"),
+                     "gpu_mem_peak": max(m) if m else float("nan"),
+                     "job_mem_peak": max(num("job_mem_MiB") or [float("nan")])})
+    return rows
+
+
+def p6a_tables(E, out, summ, trows, freq, idx, red, res):
+    L = ["# P6a tables: the ecology estimator band searches (E-22, E-59, E-62 S2 half)\n",
+         f"Run: `{_rel(E.run)}` (Nibi, H100). {len(E.tasks)} tasks: 5 outer folds of 1-degree "
+         "blocks x 3 seeds, 226 development patches (904 tiles), SCANFI v2 2020 labels, "
+         "placeholder sensor noise. The frozen test set (45 patches) was not opened.\n",
+         "## Combined skill by nested set (with noise; noise-free in brackets)\n",
+         "| path | input | " + " | ".join(f"k={k}" for k in range(1, 9)) + " |",
+         "|---|---|" + "---|" * 8]
+    for sel, lab, _ in ECO_PATHS:
+        for mode, mlab in SNOW_MODES:
+            cells = []
+            for k in range(1, 9):
+                a, b = summ.get((sel, k, mode, True)), summ.get((sel, k, mode, False))
+                cells.append("" if a is None else f"{a[0]:.3f} ({b[0]:.3f})" if b else
+                             f"{a[0]:.3f}")
+            L.append(f"| {lab} | {mlab} | " + " | ".join(cells) + " |")
+    L.append("\nAll 12 bands, with noise: " + "; ".join(
+        f"{mlab} {summ[('all_bands', 12, m, True)][0]:.3f}" for m, mlab in SNOW_MODES
+        if ("all_bands", 12, m, True) in summ) + ".")
+    fs = E.first_swir()
+    v = sorted(fs.values())
+    L += ["", "## E-22: where SWIR enters the combined path\n",
+          f"First SWIR band (B11 or B12) at step: {', '.join(str(x) for x in v)} (median "
+          f"{np.median(v):g}); step 1 in {sum(x == 1 for x in v)}/{len(v)} runs. E-2's "
+          "fire-outcome search had B11 at "
+          f"{', '.join('never' if x == 99 else str(x) for x in E2_B11_RUNGS)} "
+          f"(median {np.median(E2_B11_RUNGS):g} counting 'never' as last; E-22's clause quotes "
+          "3.5).", "",
+          "## Per target, combined path (raw + indices, with noise)\n",
+          "| target | metric | k=1 | k=2 | k=4 | k=6 | k=8 | all 12 |",
+          "|---|---|---|---|---|---|---|---|"]
+    for t, tlab, _, ylab in ECO_TARGETS:
+        g = {r["k"]: r["value"] for r in trows if r["target"] == t and r["path"] == "combined"}
+        a = next((r["value"] for r in trows if r["target"] == t and r["path"] == "all_bands"),
+                 float("nan"))
+        L.append(f"| {tlab} | {ylab} | " + " | ".join(_f(g.get(k), 2) for k in (1, 2, 4, 6, 8))
+                 + f" | {_f(a, 2)} |")
+    _csv(out / "T_targets.csv", trows)
+    L += ["", "## E-59: raw + indices minus raw, same bands (skill, with noise)\n",
+          "| k | combined | percent conifer | closure | height | fuel family |",
+          "|---|---|---|---|---|---|"]
+    keys = ("skill_combined", "skill_pc", "skill_closure", "skill_height", "skill_family")
+    for k in range(1, 9):
+        cells = []
+        for key in keys:
+            r = next((x for x in idx[key]["rawind_minus_raw"] if x["k"] == k), None)
+            cells.append("" if r is None else f"{r['d']:+.4f} {_ci(r['ci'], 4)}")
+        L.append(f"| {k} | " + " | ".join(cells) + " |")
+    _csv(out / "T_indices.csv", [dict(r, metric=key) for key in keys
+                                 for r in idx[key]["rawind_minus_raw"]])
+    L += ["", "## E-62, Sentinel-2 half: no red edge minus combined (RMSE, % of combined)\n",
+          "| k | percent conifer | closure | height |", "|---|---|---|---|"]
+    for k in range(1, 9):
+        cells = []
+        for t in ("pc", "closure", "height"):
+            r = next((x for x in red[t] if x["k"] == k), None)
+            cells.append("" if r is None else f"{r['d_pct']:+.1f} % {_ci(r['ci'], 1)}")
+        L.append(f"| {k} | " + " | ".join(cells) + " |")
+    _csv(out / "T_red_edge.csv", [dict(r, target=t) for t, rr in red.items() for r in rr])
+    L += ["", "## First three bands chosen (most common, share of searches)\n",
+          "| path | step 1 | step 2 | step 3 |", "|---|---|---|---|"]
+    for sel, v in freq.items():
+        def top(j, v=v):
+            s = sorted(((p[j], b) for b, p in v.items()), reverse=True)[:3]
+            return ", ".join(f"{b} {p:.0%}" for p, b in s if p > 0)
+        L.append(f"| {sel} | {top(0)} | {top(1)} | {top(2)} |")
+    walls = [f["wall_s"] / 60 for f in E.fits]
+    nf = [f["fits"]["search"] + f["fits"]["eval"] for f in E.fits]
+    gpu = [r["gpu_util_median"] for r in res if np.isfinite(r["gpu_util_median"])]
+    gm = [r["gpu_mem_peak"] for r in res if np.isfinite(r["gpu_mem_peak"])]
+    jm = [r["job_mem_peak"] for r in res if np.isfinite(r["job_mem_peak"])]
+    L += ["", "## Resources\n",
+          f"Tasks {np.median(walls):.0f} min median, {max(walls):.0f} max (3 h requested); "
+          f"{min(nf)}-{max(nf)} fits each. GPU utilisation median {np.median(gpu):.0f} %, peak "
+          f"GPU memory {max(gm) / 1024:.1f} GB of 80; peak job memory "
+          f"{max(jm) / 1024:.1f} GB of 32."]
+    _csv(out / "T_resources.csv", res)
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+    return {"walls_min": walls, "fits": nf, "gpu_median": gpu, "gpu_mem_peak": gm,
+            "job_mem_peak": jm}
+
+
+def p6a(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    E = _EcoRun(run)
+    summ = p6a_curves(E, out)
+    trows = p6a_targets(E, out)
+    freq = p6a_selection(E, out)
+    idx = p6a_indices(E, out)
+    red = p6a_red_edge(E, out)
+    tiles = p6a_tiles(out) if ECO_PACK.exists() else []
+    res = p6a_resources(E)
+    usage = p6a_tables(E, out, summ, trows, freq, idx, red, res)
+    (out / "summary.json").write_text(json.dumps(
+        {"curves": {f"{a}|{k}|{m}|{'noisy' if n else 'clean'}": v
+                    for (a, k, m, n), v in summ.items()},
+         "targets": trows, "selection": freq, "indices": idx, "red_edge": red,
+         "first_swir": {f"f{f}s{s}": v for (f, s), v in E.first_swir().items()},
+         "tiles": tiles, "resources": usage}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 # ── P6c: the snow-off estimator (E-60) ──────────────────────────────────────
 
 SNOW = Path(_ROOT.parent / "Fire_Risk_Model" / "data")
@@ -2807,8 +3243,9 @@ def p6c_direction(Rs, oracle, out):
     a2.legend(fontsize=7, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper left",
               ncol=2)
     n = len(Rs.tasks)
-    _caption(fig, f"Raw + indices, with sensor noise; mean over {n} runs ({_rel(Rs.run)}; "
-             f"{15 - n} task(s) still to rerun), band = 95 % CI resampling whole folds. The "
+    todo = f"; {15 - n} task(s) still to rerun" if n < 15 else ""
+    _caption(fig, f"Raw + indices, with sensor noise; mean over {n} runs ({_rel(Rs.run)}"
+             f"{todo}), band = 95 % CI resampling whole folds. The "
              "green lines are the perfect classifier (the station's own same-day snow): "
              "Sentinel-2 alone runs early because the season's last snowfalls fall between "
              "clear scenes. The models are early about as often, but are also late by more "
@@ -2895,7 +3332,8 @@ def p6c(run: Path, out: Path, signed: Path | None = None):
 
 
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet"), "P6c": (p6c, "p6c_snow"), "P7": (p7, "p7_slots"),
+          "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
+          "P7": (p7, "p7_slots"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
 
 

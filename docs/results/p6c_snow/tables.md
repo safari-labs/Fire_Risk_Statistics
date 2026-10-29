@@ -1,6 +1,6 @@
 # P6c tables: the snow-off estimator (E-60)
 
-Run: `narval_results\snow_v1\20261029-1200`. 15 tasks (5 outer folds of 1-degree station blocks x 3 seeds), ECCC climate-station snow on ground as truth (Q33). Errors are each fold's median |S2 - station| snow-off date over station-years, then the mean over runs; 95 % CIs resample whole folds.
+Run: `narval_results\snow_v1\20261029-1426`. 15 tasks (5 outer folds of 1-degree station blocks x 3 seeds), ECCC climate-station snow on ground as truth (Q33). Errors are each fold's median |S2 - station| snow-off date over station-years, then the mean over runs; 95 % CIs resample whole folds.
 
 ## Nested sets (with sensor noise; noise-free in brackets)
 
@@ -44,20 +44,20 @@ Sampling floor, a perfect per-observation classifier: median 7.5 d, p90 33.9 d, 
 
 | arm | k | median signed (d) | 95 % CI | early | late | early > 7 d | late > 7 d |
 |---|---|---|---|---|---|---|---|
-| any band (SWIR allowed) | 1 | -6.8 | [-9.2, -4.6] | 59% | 39% | 49% | 30% |
-| any band (SWIR allowed) | 2 | -2.8 | [-5.6, 0.1] | 55% | 44% | 42% | 33% |
-| any band (SWIR allowed) | 3 | -2.6 | [-5.4, 0.7] | 54% | 45% | 41% | 30% |
-| any band (SWIR allowed) | 4 | -1.5 | [-4.7, 1.4] | 52% | 46% | 39% | 30% |
-| any band (SWIR allowed) | 5 | -1.9 | [-4.9, 1.3] | 52% | 46% | 39% | 30% |
-| any band (SWIR allowed) | 6 | -1.8 | [-4.6, 1.3] | 52% | 46% | 39% | 30% |
-| VNIR only (no B11, B12) | 1 | -6.8 | [-9.2, -4.6] | 59% | 39% | 49% | 30% |
-| VNIR only (no B11, B12) | 2 | -5.3 | [-7.0, -3.9] | 57% | 41% | 47% | 31% |
-| VNIR only (no B11, B12) | 3 | -1.4 | [-4.0, 0.9] | 52% | 47% | 42% | 36% |
-| VNIR only (no B11, B12) | 4 | -0.7 | [-2.4, 1.0] | 51% | 48% | 40% | 37% |
-| VNIR only (no B11, B12) | 5 | +1.8 | [-1.9, 4.9] | 47% | 52% | 37% | 40% |
-| VNIR only (no B11, B12) | 6 | +2.1 | [-1.2, 5.4] | 46% | 52% | 35% | 39% |
+| any band (SWIR allowed) | 1 | -7.2 | [-9.6, -4.6] | 60% | 39% | 49% | 29% |
+| any band (SWIR allowed) | 2 | -2.8 | [-5.6, 0.1] | 55% | 44% | 42% | 32% |
+| any band (SWIR allowed) | 3 | -2.5 | [-5.4, 0.7] | 54% | 45% | 41% | 30% |
+| any band (SWIR allowed) | 4 | -1.6 | [-4.7, 1.5] | 53% | 46% | 40% | 30% |
+| any band (SWIR allowed) | 5 | -2.0 | [-4.9, 1.3] | 53% | 46% | 40% | 30% |
+| any band (SWIR allowed) | 6 | -1.8 | [-4.5, 1.3] | 52% | 47% | 39% | 30% |
+| VNIR only (no B11, B12) | 1 | -7.2 | [-9.6, -4.6] | 60% | 39% | 49% | 29% |
+| VNIR only (no B11, B12) | 2 | -5.4 | [-6.8, -3.9] | 58% | 41% | 47% | 31% |
+| VNIR only (no B11, B12) | 3 | -1.4 | [-3.9, 1.0] | 52% | 46% | 42% | 36% |
+| VNIR only (no B11, B12) | 4 | -0.8 | [-2.5, 1.0] | 51% | 47% | 40% | 37% |
+| VNIR only (no B11, B12) | 5 | +1.5 | [-2.0, 4.9] | 47% | 51% | 37% | 39% |
+| VNIR only (no B11, B12) | 6 | +1.8 | [-1.3, 5.4] | 47% | 52% | 36% | 39% |
 | perfect classifier | - | -5.0 | | 70% | 27% | 44% | 7% |
 
-From 14 runs of the signed-error rerun; the absolute errors in that run match the first run exactly on every task both finished.
+From 15 runs of the signed-error rerun; the absolute errors in that run match the first run exactly on every task both finished.
 
-Resources: CPU tasks, 4.4 min median, 5.6 min max (2 h requested).
+Resources: CPU tasks, 4.6 min median, 6.1 min max (2 h requested).

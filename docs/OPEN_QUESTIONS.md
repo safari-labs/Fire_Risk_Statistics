@@ -777,3 +777,23 @@ Options:
 1. **Keep rule 7 as encoded** *(recommended; what runs now)*. The CubeSat flies above the whole water column, so airborne usability is not orbital usability.
 2. **Add a flagged sensitivity arm** with the registered airborne windows, reported beside the rule-7 arm and never used for the specification.
 3. **Move the forbidden-region edges** once a transmittance run exists (A-1). That changes the config, not this experiment.
+
+---
+
+### Q35 — What the ecology labels can and cannot say about bands
+
+**Status:** OPEN (raised 2026-10-29, after the first P6a results)
+**Blocks:** nothing now. It shapes how P12 weighs the P6a rankings, and the next ecology run.
+
+Two things about the SCANFI labels limit what the P6a band rankings mean (`docs/results/p6a_ecology`).
+
+1. **SCANFI is mapped from Landsat, SWIR included.** E-22 found SWIR first in 13 of 15 searches. Some of that may be the labels favouring the bands they were mapped from, the circularity the brief warns about (section 8). It is not rule 3's case (no CFFDRS output or index threshold), but the SWIR ranking is not independent evidence either. The ground check is NFI plot data or the Globe-LFMC sites, where structure and species are measured, not mapped.
+2. **The fuel family target's D class is mostly open ground.** The CFS tree gives every pixel under 10 % closure the D-1/2 code (A-11), so 82 % of D pixels are tundra, rock or glacier. The family head mostly separates forest, open ground and water.
+
+Options for the next ecology run:
+
+1. **Add an open class** *(recommended)*. Closure under 10 % becomes "open" in the estimator's family target only. The fire-side fuel slot keeps the CFS tree. The class comes from SCANFI closure, so no new label source is needed.
+2. **Score family on forest pixels only** (closure ≥ 10 %), and report open ground separately.
+3. **Keep as is,** with the caveat stated wherever family skill is quoted.
+
+For point 1: weigh the P6a rankings against the AVIRIS-NG search (same labels, but bands not tied to Landsat's) and, when available, against plot-measured structure.

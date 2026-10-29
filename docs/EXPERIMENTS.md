@@ -474,7 +474,7 @@ If the learned model beats every index family by a wide margin, the recommendati
 
 Whether the on-board model should compute indices before the network, which changes both the band value (a band is worth the indices it unlocks) and the compute budget (P12).
 
-*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile. Runs inside E-22's sweep (A-38): every evaluated set in raw / indices / raw + indices, noisy and noise-free. Submitted 2026-10-28, pending behind Narval maintenance.
+*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile. Runs inside E-22's sweep (A-38): every evaluated set in raw / indices / raw + indices, noisy and noise-free. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): MIXED. Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small k'. Indices alone are worse at every k they form.
 
 ### Covariates
 
@@ -580,7 +580,7 @@ FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, ins
 
 THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome per patch, so it has orders of magnitude more signal per scene than the fire arm and measures what the bands actually retrieve rather than what correlates with ignition.
 
-*Note:* P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 tiles; frozen test 45 patches, splits/ecology_test_v1.json), 12 bands with B12, SCANFI v2 2020 labels. Submitted 2026-10-28; pending behind Narval maintenance. The WRONG IF clause was added 2026-10-28, after submission and before any E-22 result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were already known.
+*Note:* P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 tiles; frozen test 45 patches, splits/ecology_test_v1.json), 12 bands with B12, SCANFI v2 2020 labels. The WRONG IF clause was added 2026-10-28, after submission and before any E-22 result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were already known. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included (Q35); the family target's D class is 82 % open ground (P6a-M1).
 
 **E-50 — Latitude-correct day length (R0)**
 
@@ -670,7 +670,7 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
 
-*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40).
+*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search.
 
 *Blocked on:* the AVIRIS-NG ingest: 24 of 42 lines still to fetch (2026-10-29); pack and runner written (A-40)
 
@@ -747,7 +747,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-15** | Imagery vs the FBP formula | `sweep_covariates.sh SETS=g1` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-19** | Latitude-banded weather | `sweep_covariates.sh SETS=weather` | shares E-13's runs; latitude scoring adds seconds |
 | **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-22** | Ecology arm | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks); a first guess, not yet measured |
+| **E-22** | Ecology arm | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, GPU 92 %, 12.6 GB) |
 | **E-26** | Within-fire burn pattern | `sweep_axes.sh SETS=cond` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
@@ -767,7 +767,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
 | **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
-| **E-59** | Indices as model inputs | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks); a first guess, not yet measured |
+| **E-59** | Indices as model inputs | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, GPU 92 %, 12.6 GB) |
 | **E-60** | Snow-off without SWIR | `Fire_Risk_FW/scripts/shell/sweep_snow.sh` | --time=0:30:00 --cpus-per-task=8 --mem=8G per task, CPU only (one outer fold x seed; 5 x 3 tasks; Nibi measured 4.4 min median) |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
