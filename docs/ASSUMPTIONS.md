@@ -877,6 +877,11 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
    one SE of the best combined score, with every chosen band selected in at
    least 4 of 6 folds; ties go to the cheaper chain (VNIR before SWIR). Keep an
    index onboard only if the index front end matches raw bands at matched k.
+   Amended 2026-10-30 (James, A-41), replacing the band-count and cheaper-chain
+   clauses above: the combined score uses the slots SAFARI will produce, the best
+   score wins, the fast slots break ties, and cost plays no part. This came after
+   the P6a, E-60, E-18 and P7 results, but before any P12 band decision and
+   before a valid AVIRIS band search.
 2. **Architecture.** At the chosen bands, the smallest preset within one SE of
    the best. A weather-dependent process runs onboard only if its skill at the
    expected uplink age is within one SE of fresh weather; otherwise ground.
@@ -1338,5 +1343,6 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Revisit.** One camera sees every point of the forest belt once in about 1.5–6 months, cloud-free (Q37 table). Some altitudes in the range, 500 km among them, fall on a short ground-track repeat and never cover the belt.
 - **What SAFARI delivers.** Maps of slowly changing fuel structure: fuel type, percent conifer, closure and height (the P6a estimators).
 - **What SAFARI does not deliver.** Dates and fast moisture variables come from Sentinel-2/HLS or the issued CWFIS products: snow-off/start-up (E-18, E-60), green-up (E-40), curing (E-38) and LFMC. SAFARI's imagery of them calibrates and validates.
-- **P12 band decision (proposed, not yet confirmed by James).** Per-slot band evidence is weighted by the slots SAFARI will produce. Evidence from the fast slots (e.g. E-60: SWIR1 worth about 4 days of snow-off error) is still reported, but on its own it does not argue for a SAFARI band.
+- **P12 band decision (James, 2026-10-30): performance decides, disregarding cost.** The combined band score uses only the slots SAFARI will produce: fuel type, percent conifer, closure and height. The best score wins, and sets within one SE of it count as tied. A tie goes to the set with the best evidence from the fast slots (LFMC, curing, snow-off, green-up), which never lift a set that loses on structure. Cost plays no part, and neither does the number of bands. This replaces the brief's ranking by value per marginal cost (section 5).
+- **Every band sweep's report lists the options (James, 2026-10-30).** A report gives as many useful options as possible, not one winner: each with its bands, score, per-target error, detector chain, cost, pros and cons (`src/safari_bands/band_options.py`, `T_options.csv`). Only options beaten at no higher cost and no more bands leave the table. Cost is qualitative (`config/cost/chains.yaml`) until Q6 gives figures.
 - **Sizing uses the worst case in the altitude range.** The processing budget binds at 500 km (≤ 43 s per scene, A-29). Contacts with ÉTS are fewest at 500 km (minimum 2 per day). Revisit is the full range in the Q37 table.

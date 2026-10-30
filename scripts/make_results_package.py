@@ -32,6 +32,7 @@ from pathlib import Path
 import numpy as np
 
 _ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT / "src"))
 
 # House surfaces and ink (make_result_figures.py); categorical slots are the
 # reference palette's dark steps, validated against this surface for the P1
@@ -3915,7 +3916,7 @@ class _HSRun:
         self.run = run
         self.rows, self.paths, self.results = [], {}, {}
         self.tasks = {}
-        for arm, _, _ in HS_ARMS:
+        for arm in (*(a[0] for a in HS_ARMS), "references"):
             ts = sorted(p for p in (run / arm).glob("f*s*") if (p / "eval.jsonl").exists())
             self.tasks[arm] = ts
             for t in ts:
@@ -3924,7 +3925,9 @@ class _HSRun:
                     r = json.loads(line)
                     r["fold"], r["seed"] = fold, seed
                     self.rows.append(r)
-                self.paths[(arm, fold, seed)] = json.loads((t / "search.json").read_text())[arm]
+                paths = json.loads((t / "search.json").read_text())
+                if arm in paths:
+                    self.paths[(arm, fold, seed)] = paths[arm]
                 self.results[(arm, fold, seed)] = json.loads((t / "result.json").read_text())
 
     def get(self, arm, name, mode="raw+indices", noisy=True, key="skill_combined"):
@@ -4120,6 +4123,54 @@ def p6hs_agreement(D, out):
     return rows
 
 
+def _hs_stability(H, arm, k):
+    """The nested set the searches agree on: top k 50 nm regions, and how far they agree."""
+    paths = [p for kk, p in H.paths.items() if kk[0] == arm]
+    regions = {}
+    for p in paths:
+        for s in p["steps"][:k]:
+            regions.setdefault(round(_hs_band(s["added"])[0] / 50) * 50, []).append(s["added"])
+    top = sorted(regions.items(), key=lambda x: -len(x[1]))[:k]
+    picks = [max(set(v), key=v.count) for _, v in top]
+    shares = [len(v) / len(paths) for _, v in top]
+    worst = min(shares)
+    text = (f"stable: every region chosen in at least {worst:.0%} of searches" if worst >= 4 / 6
+            else f"unstable: the searches disagree (least-chosen region in {worst:.0%})")
+    return picks, text
+
+
+def p6hs_options(H):
+    """Every set scored in the sweep, as options for James (A-41)."""
+    from safari_bands.band_options import Option, assess
+
+    def stats(arm, name):
+        d = H.get(arm, name)
+        if not d:
+            return None
+        mu, _, per = _fold_boot(d)
+        return mu, float(np.std(per, ddof=1) / np.sqrt(len(per)))
+
+    opts = []
+    for arm, lab, _ in (*HS_ARMS, ("references", "reference", None)):
+        names = [r for r in dict.fromkeys(x["set"] for x in H.rows if x["arm"] == arm)]
+        for name in names:
+            s = stats(arm, name)
+            if s is None:
+                continue
+            row = next(x for x in H.rows if x["arm"] == arm and x["set"] == name)
+            bands, stable = row["bands"], ""
+            if name.startswith("k"):
+                fixed = H.paths[next(kk for kk in H.paths if kk[0] == arm)]["fixed"]
+                picks, stable = _hs_stability(H, arm, int(name[1:]))
+                bands = [*fixed, *picks]
+            rmse = {t: float(np.mean(list(H.get(arm, name, key=f"rmse_{t}").values())))
+                    for t, _, _ in HS_TARGETS}
+            clean = H.get(arm, name, noisy=False)
+            opts.append(Option(f"{lab}: {name}", list(bands), s[0], s[1], rmse,
+                               float(np.mean(list(clean.values()))) if clean else None, stable))
+    return assess(opts)
+
+
 def p6hs_resources(H):
     rows = []
     for arm, _, _ in HS_ARMS:
@@ -4132,7 +4183,7 @@ def p6hs_resources(H):
     return rows
 
 
-def p6hs_tables(H, out, summ, e61, e62, res, D, void):
+def p6hs_tables(H, out, summ, e61, e62, res, D, void, options=None):
     L = ["# P6a-HS tables: the AVIRIS-NG band searches (E-61, E-62)\n"]
     if void:
         L += [f"**VOID FOR BANDS.** {void}\n"]
@@ -4202,6 +4253,10 @@ def p6hs_tables(H, out, summ, e61, e62, res, D, void):
                 f"{min(ins):.1f}-{max(ins):.1f} "
               f"%, placed {min(placed):.1f}-{max(placed):.1f} %. Rotation sources: "
               + ", ".join(f"{k} {v}" for k, v in sorted(src.items())) + "."]
+    if options:
+        from safari_bands.band_options import markdown
+        L += ["", "## The options\n", *markdown(options)]
+        _csv(out / "T_options.csv", options)
     L += ["", "## Resources\n", "| arm | tasks | minutes, median | minutes, max | fits per task |",
           "|---|---|---|---|---|"]
     L += [f"| {r['arm']} | {r['tasks']} | {r['min_median']:.0f} | {r['min_max']:.0f} | "
@@ -4228,7 +4283,8 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
         agree = p6hs_agreement(D, out)
         _csv(out / "T_label_agreement.csv", agree)
     res = p6hs_resources(H)
-    p6hs_tables(H, out, summ, e61, e62, res, D, void)
+    options = None if void else p6hs_options(H)
+    p6hs_tables(H, out, summ, e61, e62, res, D, void, options)
     (out / "summary.json").write_text(json.dumps(
         {"void": void, "curves": {f"{a}|{n}|{'noisy' if z else 'clean'}": v
                                   for (a, n, z), v in summ.items()},

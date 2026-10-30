@@ -1,0 +1,24 @@
+# Qualitative cost of each detector chain, for the options table in every band
+# sweep's report (src/safari_bands/band_options.py). James (2026-10-30, A-41):
+# cost is REPORTED, never used to choose bands.
+#
+# PLACEHOLDER: classes only, from section 5 of the brief. Q6 (cost/SWaP proxies)
+# is open, so there are no numbers here, and none should be invented.
+placeholder: true
+chains:
+  vnir:
+    label: silicon only
+    cost: low
+    note: an extra band costs filter area and pixels, little else
+  std:
+    label: silicon + standard InGaAs
+    cost: moderate
+    note: adds a SWIR chain on a COTS detector that cuts off near 1.7 um
+  ext:
+    label: silicon + extended InGaAs
+    cost: high
+    note: main cost/SWaP driver; much higher dark current and deeper TEC cooling
+  std+ext:
+    label: silicon + standard and extended InGaAs
+    cost: high
+    note: extended InGaAs plus a further SWIR focal plane

@@ -84,6 +84,8 @@ plane with SWIR1 adds no new cross-chain registration problem.
 
 ### Q6 — Cost/SWaP proxies for configurations A, B and C
 
+**Update (James, 2026-10-30; A-41):** bands are chosen on performance, disregarding cost, so this no longer blocks the choice. Cost is still reported with every band option, and rough relative numbers would replace the classes in those tables.
+
 **Status:** OPEN
 **Blocks:** ranking bands by marginal retrieval value *per marginal cost*,
 which the brief asks for explicitly. Without this the study can only report
