@@ -3709,9 +3709,538 @@ def p6c(run: Path, out: Path, signed: Path | None = None, maps: Path | None = No
         {"run": str(_rel(run)), "signed_run": str(_rel(signed)) if signed else None}, indent=1))
 
 
+# ── P6d: the FWI start-up from Sentinel-2 snow-off (E-18) ───────────────────
+
+E18_STARTUPS = (("flat", "flat spinup (ours, the defect)", "#b9b9c6"),
+                ("c2", "C-2 from ERA5-Land snow", BLUE),
+                ("c2_s2_all", "C-2 from S2 snow-off, SWIR allowed", GREEN),
+                ("c2_s2_vnir", "C-2 from S2 snow-off, VNIR only", ORANGE))
+E18_ARMS = (("c2_s2_all", "SWIR allowed", GREEN), ("c2_s2_vnir", "VNIR only", ORANGE))
+E18_CODES = (("dc", "DC"), ("dmc", "DMC"), ("bui", "BUI"), ("fwi", "FWI"))
+E18_BANDS = ("all", "<55 N", "55-60 N", ">=60 N")
+
+
+def _e18_patches(stems) -> list[dict]:
+    """Per patch: latitude and each start-up's season start and lag-1 DC."""
+    rows = []
+    for s in stems:
+        p = PATCHES / f"{s}_fwi_v2.json"
+        if not p.exists():
+            continue
+        v = json.loads(p.read_text())["variants"]
+        if not all(a in v for a, _, _ in E18_ARMS):
+            continue
+        rec = {"stem": s, "lat": float(s.split("_")[1])}
+        for a in ("c2", *(x for x, _, _ in E18_ARMS)):
+            rec[f"{a}_start"] = v[a]["meta"].get("season_start")
+            rec[f"{a}_dc"] = float(v[a]["lags"]["1"]["dc"])
+        rows.append(rec)
+    return rows
+
+
+def p6d_auc(E, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 4, figsize=(15, 4.2), facecolor=FIG_BG, sharey=True)
+    for ax, (k, lab) in zip(axes, E18_CODES, strict=True):
+        _axes(ax, lab, "", "between-patch AUC (fire vs non-fire)" if k == "dc" else "")
+        for i, (a, name, col) in enumerate(E18_STARTUPS):
+            off = (i - 1.5) * 0.18
+            ys = [E["auc"][f"{a}:{k}"][b] for b in E18_BANDS]
+            ax.errorbar([j + off for j in range(4)], [y["auc"] for y in ys],
+                        yerr=[[y["auc"] - y["ci"][0] for y in ys],
+                              [y["ci"][1] - y["auc"] for y in ys]],
+                        fmt="o", color=col, ms=4, capsize=2, lw=1.1, label=name)
+        ax.set_xticks(range(4))
+        ax.set_xticklabels(E18_BANDS, fontsize=8, color=INK)
+        ax.axhline(0.5, color=SPINE, lw=1)
+    axes[0].legend(fontsize=7, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower left")
+    fig.suptitle("E-18: fire danger codes under four start-ups, all Reconstructed (ours)",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.03)
+    _caption(fig, f"{E['n_patches']} development patches ({E['n_fire']} fire) that have "
+            "both imagery "
+             "dates; lag-1 codes at 13:00 LDT; 95 % CI resampling fires and location blocks. Each "
+             "bar's CI is its own: the comparison that decides E-18 is the paired one "
+             "(paired.png).")
+    _save(fig, out, "auc.png")
+
+
+def p6d_paired(E, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 3.8), facecolor=FIG_BG, sharey=True, sharex=True)
+    for ax, (reg, lab) in zip(axes, (("north", "at or above 55 N"), ("south", "below 55 N")),
+                              strict=True):
+        F = E["falsifier"][reg]
+        _axes(ax, f"{lab} (n = {F['c2_s2_all']['dc_move']['n']})",
+              "AUC minus the ERA5 C-2 rule's, same patches", "")
+        for i, (a, name, col) in enumerate(E18_ARMS):
+            rows = [F[a]["auc_minus_c2"][k] for k, _ in E18_CODES]
+            y = [j + (i - 0.5) * 0.3 for j in range(4)]
+            ax.errorbar([r["d"] for r in rows], y,
+                        xerr=[[r["d"] - r["ci"][0] for r in rows],
+                              [r["ci"][1] - r["d"] for r in rows]],
+                        fmt="o", color=col, ms=5, capsize=3, lw=1.3, label=name)
+        ax.axvline(0, color=INK, lw=1)
+        ax.set_yticks(range(4))
+        ax.set_yticklabels([lab for _, lab in E18_CODES], color=INK)
+        ax.invert_yaxis()
+    axes[1].legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower left")
+    _caption(fig, "Paired on the same patches; 95 % CI resampling fires and location "
+            "blocks. E-18's "
+             "falsifier reads DC and FWI above 55 N: right of 0 with a CI clear of it would be a "
+             "gain. The VNIR-only date loses skill; the SWIR-allowed date neither gains nor loses.")
+    _save(fig, out, "paired.png")
+
+
+def p6d_dates(P, E, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 3, figsize=(14.5, 4.4), facecolor=FIG_BG)
+
+    def doy(s):
+        d = s.split("-")
+        return (int(d[1]) - 1) * 30.44 + int(d[2])
+
+    bands = ((lambda la: la < 55, "<55 N", BLUE), (lambda la: 55 <= la < 60, "55-60 N", AMBER),
+             (lambda la: la >= 60, ">=60 N", PINK))
+    for ax, (a, name, _) in zip(axes[:2], E18_ARMS, strict=True):
+        _axes(ax, f"Season start: {name} vs ERA5 snow", "ERA5 C-2 start (day of year)",
+              "Sentinel-2 C-2 start (day of year)")
+        for test, lab, col in bands:
+            r = [x for x in P if test(x["lat"]) and x[f"{a}_start"] and x["c2_start"]]
+            ax.scatter([doy(x["c2_start"]) for x in r], [doy(x[f"{a}_start"]) for x in r], s=14,
+                       color=col, alpha=0.8, lw=0, label=lab)
+        ax.plot([60, 200], [60, 200], color=INK, lw=1)
+        ax.set_xlim(60, 200)
+        ax.set_ylim(60, 200)
+        ax.set_aspect("equal")
+        g = E["falsifier"]["all"][a]["start_gap"]
+        ax.text(0.03, 0.97, f"median {g['median_days']:+.0f} d, 10-90 % {g['p10']:+.0f} to "
+                f"{g['p90']:+.0f} d, n = {g['n']}", transform=ax.transAxes, color=INK, fontsize=8,
+                va="top")
+    axes[0].legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                   loc="lower right")
+    ax = axes[2]
+    _axes(ax, "Lag-1 DC moved by the imagery date", "latitude (degrees N)",
+          "DC, % of the ERA5 rule's")
+    for a, name, col in E18_ARMS:
+        r = [x for x in P if x["c2_dc"] > 0]
+        ax.scatter([x["lat"] for x in r], [100 * (x[f"{a}_dc"] / x["c2_dc"] - 1) for x in r], s=12,
+                   color=col, alpha=0.7, lw=0, label=name)
+    ax.axhline(0, color=INK, lw=1)
+    for y in (-10, 10):
+        ax.axhline(y, color=MUTED, lw=1, ls="--")
+    ax.set_ylim(-100, 100)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower right")
+    fig.tight_layout()
+    _caption(fig, "Left and centre: each patch's season start; points above the line start later "
+             "than ERA5. Right: dashed lines mark the 10 % move E-18 registered, read on the "
+             "median; values beyond the axis are clipped from view.", y=0.0)
+    _save(fig, out, "dates.png")
+
+
+def p6d_tables(E, S, out, run, snow):
+    L = ["# P6d tables: the FWI start-up from Sentinel-2 snow-off (E-18)\n",
+         f"Run: `{_rel(run)}`, with snow-off dates from `{_rel(snow)}`. {E['n_patches']} "
+         "development "
+         f"patches ({E['n_fire']} fire; "
+         + ", ".join(f"{k}: {v}" for k, v in E["n_by_band"].items())
+         + "). Every code here is Reconstructed (ours), none ISSUED by CWFIS. The frozen test "
+         "patches were not opened.\n",
+         "## The classifiers, chosen inside the snow training folds\n",
+         "| arm | bands | inner median error (d) |", "|---|---|---|"]
+    for a, name in (("all", "SWIR allowed"), ("vnir", "VNIR only")):
+        r = S["arms"][a]
+        L.append(f"| {name} | {', '.join(r['bands'])} | {r['inner_err'][str(r['k'])]:.1f} |")
+    L += ["", f"{sum(1 for p in S['patches'].values() if p['all'].get('date'))} of "
+          f"{len(S['patches'])} patches have a date.\n",
+          "## E-18's registered test: the imagery date against ERA5's C-2 rule\n",
+          "| region | start-up | median lag-1 DC (ERA5 rule) | move | patches moved 10 %+ | "
+          "season start, median gap (d) | DC AUC change | FWI AUC change |",
+          "|---|---|---|---|---|---|---|---|"]
+    rows = []
+    for reg, lab in (("north", ">= 55 N"), ("south", "< 55 N"), ("all", "all")):
+        for a, name, _ in E18_ARMS:
+            F = E["falsifier"][reg][a]
+            m, g = F["dc_move"], F["start_gap"]
+            d, w = F["auc_minus_c2"]["dc"], F["auc_minus_c2"]["fwi"]
+            L.append(f"| {lab} | {name} | {m['median']:.0f} ({m['median_c2']:.0f}) | "
+                     f"{m['move_pct']:+.1f} % | {m['share_patches_moved_10pct']:.0%} | "
+                     f"{g['median_days']:+.0f} | {d['d']:+.3f} {_ci(d['ci'], 3)} | "
+                     f"{w['d']:+.3f} {_ci(w['ci'], 3)} |")
+            rows.append({"region": reg, "startup": a, **m, **{f"gap_{k}": v for k, v in g.items()},
+                         **{f"auc_{k}": v["d"] for k, v in F["auc_minus_c2"].items()},
+                         **{f"auc_{k}_ci": v["ci"] for k, v in F["auc_minus_c2"].items()}})
+    _csv(out / "T_falsifier.csv", rows)
+    L += ["", "## Between-patch AUC by start-up\n",
+          "| code | start-up | all | <55 N | 55-60 N | >=60 N |", "|---|---|---|---|---|---|"]
+    for k, lab in E18_CODES:
+        for a, name, _ in E18_STARTUPS:
+            L.append(f"| {lab} | {name} | " + " | ".join(
+                f"{E['auc'][f'{a}:{k}'][b]['auc']:.3f}" for b in E18_BANDS) + " |")
+    L += ["", "Patches whose season had not started at D-1: " + ", ".join(
+        f"{a} {E['season_not_started'][a]}" for a, _, _ in E18_STARTUPS) + "."]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p6d(run: Path, out: Path, snowoff: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    E = json.loads((run / "summary.json").read_text())["dated_weather"]["E18_s2_startup"]
+    S = json.loads(snowoff.read_text())
+    P = _e18_patches(sorted(S["patches"]))
+    p6d_auc(E, out)
+    p6d_paired(E, out)
+    p6d_dates(P, E, out)
+    p6d_tables(E, S, out, run, snowoff)
+    (out / "summary.json").write_text(json.dumps(
+        {k: E[k] for k in ("n_patches", "n_fire", "n_by_band", "falsifier", "season_not_started")},
+        indent=1, default=float))
+    (out / "run.json").write_text(json.dumps(
+        {"run": str(_rel(run)), "snowoff": str(_rel(snowoff))}, indent=1))
+
+
+# ── P6a-HS: the AVIRIS-NG band searches (E-61, E-62) ───────────────────────
+
+HS_ARMS = (("vnir", "VNIR camera alone", BLUE),
+           ("vnir_no_red_edge", "VNIR, nothing in 700-760 nm", ORANGE),
+           ("swir_std", "SWIR on standard InGaAs, VNIR fixed", GREEN),
+           ("swir_ext", "SWIR on extended InGaAs, VNIR fixed", PINK))
+HS_TARGETS = (("pc", "percent conifer", "%"), ("closure", "crown closure", "%"),
+              ("height", "canopy height", "m"))
+
+
+class _HSRun:
+    """One AVIRIS sweep: eval rows and search paths per (arm, fold, seed)."""
+
+    def __init__(self, run: Path):
+        self.run = run
+        self.rows, self.paths, self.results = [], {}, {}
+        self.tasks = {}
+        for arm, _, _ in HS_ARMS:
+            ts = sorted(p for p in (run / arm).glob("f*s*") if (p / "eval.jsonl").exists())
+            self.tasks[arm] = ts
+            for t in ts:
+                fold, seed = (int(v) for v in t.name[1:].split("s"))
+                for line in (t / "eval.jsonl").read_text().splitlines():
+                    r = json.loads(line)
+                    r["fold"], r["seed"] = fold, seed
+                    self.rows.append(r)
+                self.paths[(arm, fold, seed)] = json.loads((t / "search.json").read_text())[arm]
+                self.results[(arm, fold, seed)] = json.loads((t / "result.json").read_text())
+
+    def get(self, arm, name, mode="raw+indices", noisy=True, key="skill_combined"):
+        return {(r["fold"], r["seed"]): r["metrics"][key] for r in self.rows
+                if r["arm"] == arm and r["set"] == name and r["mode"] == mode
+                and r["noisy"] == noisy and r["metrics"]
+                and r["metrics"].get(key) is not None and np.isfinite(r["metrics"][key])}
+
+    def sets(self, arm):
+        return list(dict.fromkeys(r["set"] for r in self.rows if r["arm"] == arm))
+
+
+def _hs_x(name):
+    """Bands searched: 0 for the fixed VNIR alone."""
+    return 0 if name == "fixed_only" else int(name[1:])
+
+
+def p6hs_curves(H, out, reference=None, void=""):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 4, figsize=(15, 4.2), facecolor=FIG_BG, sharey=True)
+    summ = {}
+    for ax, (arm, lab, col) in zip(axes, HS_ARMS, strict=True):
+        n = len(H.tasks[arm])
+        _axes(ax, f"{lab}\n({n} tasks)", "bands searched (k)",
+              "combined skill (0 = training mean)" if arm == "vnir" else "")
+        for noisy, ls in ((True, "-"), (False, ":")):
+            xs, m, lo, hi = [], [], [], []
+            for name in H.sets(arm):
+                d = H.get(arm, name, noisy=noisy)
+                if not d:
+                    continue
+                mu, ci, per = _fold_boot(d)
+                xs.append(_hs_x(name))
+                m.append(mu)
+                lo.append(ci[0])
+                hi.append(ci[1])
+                summ[(arm, name, noisy)] = (mu, ci, per.tolist())
+            ax.plot(xs, m, ls, color=col, lw=2, marker="o" if noisy else None, ms=5,
+                    label="with noise" if noisy else "noise-free")
+            if noisy:
+                ax.fill_between(xs, lo, hi, color=col, alpha=0.18, lw=0)
+        ax.axhline(0, color=INK, lw=1)
+        if reference is not None:
+            ax.axhline(reference, color=MUTED, lw=1.2, ls="--")
+            ax.text(0.02, reference, f" Sentinel-2 search, k = 6: {reference:.2f}", color=MUTED,
+                    fontsize=7.5, va="bottom", transform=ax.get_yaxis_transform())
+        ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                  loc="center right")
+    fig.suptitle(("VOID, labels from the wrong ground. " if void else "")
+                 + "E-61 / E-62: skill on held-out AVIRIS-NG groups, by nested band set",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.06)
+    _caption(fig, "Raw + indices. Mean over runs; band = 95 % CI resampling whole folds (groups of "
+             "overlapping lines). Combined skill = mean of percent conifer, closure, height and "
+             "fuel family skills; 0 is the training mean. k = 0 is the fixed VNIR alone. The "
+             "dashed line is the P6a Sentinel-2 search on other ground, for scale only.")
+    _save(fig, out, "curves.png")
+    return summ
+
+
+def _hs_band(name):
+    c, f = name.split("@")[0].split("/")
+    return int(c), int(f)
+
+
+def p6hs_selection(H, out, void=""):
+    plt = _plt()
+    fig, axes = plt.subplots(2, 2, figsize=(13, 6.6), facecolor=FIG_BG)
+    picks = {}
+    for ax, (arm, lab, col) in zip(axes.flat, HS_ARMS, strict=True):
+        _axes(ax, lab, "band centre (nm)", "step")
+        rows = [(s["k"], *_hs_band(s["added"])) for kk, p in H.paths.items() if kk[0] == arm
+                for s in p["steps"]]
+        cnt = {}
+        for k, c, _ in rows:
+            cnt[(k, c)] = cnt.get((k, c), 0) + 1
+        ax.scatter([c for _, c in cnt], [k for k, _ in cnt], s=[18 * v for v in cnt.values()],
+                   color=col, alpha=0.8, lw=0)
+        ax.invert_yaxis()
+        picks[arm] = [{"step": k, "centre_nm": c, "searches": v}
+                      for (k, c), v in sorted(cnt.items())]
+    fig.tight_layout()
+    if void:
+        fig.suptitle("VOID, labels from the wrong ground: these picks are noise, not band evidence",
+                     color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.03)
+    _caption(fig, "Each dot: a band centre added at that step; its area counts the searches "
+            "(one per "
+             "fold and seed) that chose it. Agreement across folds shows as one large dot.")
+    _save(fig, out, "selection.png")
+    return picks
+
+
+def p6hs_criteria(H):
+    """E-61 and E-62 as registered, paired by fold and seed."""
+    e61, e62 = {}, {}
+    for t, _, _ in HS_TARGETS:
+        key = f"rmse_{t}"
+        f, s, x = (H.get("swir_std", "fixed_only", key=key), H.get("swir_std", "k4", key=key),
+                   H.get("swir_ext", "k4", key=key))
+        fx = H.get("swir_ext", "fixed_only", key=key)
+        kk = sorted(set(f) & set(s) & set(x) & set(fx))
+        if len(kk) >= 3:
+            gain_std = {i: f[i] - s[i] for i in kk}
+            gain_ext = {i: fx[i] - x[i] for i in kk}
+            mu, ci, _ = _fold_boot({i: gain_ext[i] - gain_std[i] for i in kk})
+            e61[t] = {"gain_std": float(np.mean(list(gain_std.values()))),
+                      "gain_ext": float(np.mean(list(gain_ext.values()))),
+                      "extra": mu, "ci": ci, "runs": len(kk)}
+        a, b = H.get("vnir_no_red_edge", "k6", key=key), H.get("vnir", "k6", key=key)
+        kk = sorted(set(a) & set(b))
+        if len(kk) >= 3:
+            mu, ci, per = _fold_boot({i: 100 * (a[i] - b[i]) / b[i] for i in kk})
+            e62[t] = {"d_pct": mu, "ci": ci, "folds_worse": int((per > 0).sum()),
+                      "n_folds": len(per)}
+    e62["red_edge_in_k6"] = {
+        "runs": sum(kk[0] == "vnir" for kk in H.paths),
+        "with": sum(any(700 <= _hs_band(s["added"])[0] <= 760 for s in p["steps"])
+                    for kk, p in H.paths.items() if kk[0] == "vnir")}
+    return e61, e62
+
+
+def p6hs_placement(D, out):
+    """Why the first pack failed: each line's footprint, north-up and placed."""
+    plt = _plt()
+    L = D["lines"]
+    show = [k for k in ("ang20180721t192935", "ang20180811t204110", "ang20220810t202434")
+            if k in L]
+    fig = plt.figure(figsize=(14, 6.4), facecolor=FIG_BG)
+    gs = fig.add_gridspec(2, 3, height_ratios=(1.5, 1), hspace=0.42, wspace=0.26)
+    for j, k in enumerate(show):
+        ax = fig.add_subplot(gs[0, j])
+        _axes(ax, f"{k}  (rotation {L[k]['rotation_deg']:+.0f} deg)", "longitude", "latitude")
+        o, n, p = (np.array(L[k][s]) for s in ("outline", "north_up", "placed"))
+        ax.fill(n[:, 0], n[:, 1], color=ORANGE, alpha=0.35, lw=0, label="as first ingested "
+                "(north-up)")
+        ax.plot(n[:, 0], n[:, 1], color=ORANGE, lw=1)
+        ax.fill(p[:, 0], p[:, 1], color=BLUE, alpha=0.45, lw=0, label="placed with its rotation")
+        ax.plot(o[:, 0], o[:, 1], color=INK_BRIGHT, lw=0.9, label="ABoVE flight-line outline")
+        ax.set_aspect(1 / np.cos(np.radians(float(np.mean(o[:, 1])))), adjustable="datalim")
+        if j == 0:
+            ax.legend(fontsize=7, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                      loc="lower right")
+    ax = fig.add_subplot(gs[1, :])
+    ids = sorted(L)
+    x = np.arange(len(ids))
+    before = [100 * (D["inside_north_up"].get(k) or 0) for k in ids]
+    after = [100 * (L[k]["inside"] or 0) for k in ids]
+    _axes(ax, "Share of each line's pixels inside its flight-line outline", "",
+          "% of pixels")
+    ax.bar(x - 0.2, before, 0.38, color=ORANGE, label="north-up")
+    ax.bar(x + 0.2, after, 0.38, color=BLUE, label="placed")
+    ax.set_xticks(x)
+    ax.set_xticklabels([k[5:11] + "\n" + k[12:16] for k in ids], fontsize=5.5, color=INK)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="center right")
+    _caption(fig, "ENVI map info ends in rotation=<deg>; the first ingest ignored it. Each line's "
+             "rotation comes from its own header, recovered from the tail of the archive. The "
+             "outlines are the ABoVE flight-line boundaries, an independent check.", y=0.02)
+    _save(fig, out, "placement.png")
+
+
+def p6hs_agreement(D, out):
+    """Do the labels describe the pixels? NDVI against SCANFI, within each line."""
+    plt = _plt()
+    a, b = D["packs"]["north_up"], D["packs"]["rotated"]
+    ids = sorted(set(a["lines"]) | set(b["lines"]), key=lambda k: k[3:])
+    fig, axes = plt.subplots(1, 2, figsize=(13, 0.2 * len(ids) + 2.2), facecolor=FIG_BG,
+                             sharey=True)
+    rows = []
+    for ax, (t, lab) in zip(axes, (("closure", "crown closure"), ("height", "canopy height")),
+                            strict=True):
+        _axes(ax, f"NDVI vs SCANFI {lab}, within each line", "Spearman rho", "")
+        for i, k in enumerate(ids):
+            u, v = a["lines"].get(k, {}).get(t), b["lines"].get(k, {}).get(t)
+            if u is not None and v is not None:
+                ax.plot([u, v], [i, i], color=SPINE, lw=1)
+            if u is not None:
+                ax.plot(u, i, "o", color=ORANGE, ms=5)
+            if v is not None:
+                ax.plot(v, i, "o", color=BLUE, ms=5)
+            rows.append({"line": k, "target": t, "north_up": u, "placed": v})
+        ax.axvline(0, color=INK, lw=1)
+        ax.set_yticks(range(len(ids)))
+        ax.set_yticklabels([k[3:] for k in ids], fontsize=6.5, color=INK)
+    h = [plt.Line2D([], [], marker="o", ls="", color=ORANGE, label="first pack (north-up)"),
+         plt.Line2D([], [], marker="o", ls="", color=BLUE, label="rotated pack")]
+    axes[1].legend(handles=h, fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+                   loc="lower right")
+    fig.tight_layout()
+    _caption(fig, "Development pixels only; a data check, no fitting. NDVI is 865 vs 665 nm "
+            "from the "
+             "measured channels. A label sampled from the right ground should rise with NDVI "
+             "within a line, across forest and open ground.", y=0.0)
+    _save(fig, out, "label_agreement.png")
+    return rows
+
+
+def p6hs_resources(H):
+    rows = []
+    for arm, _, _ in HS_ARMS:
+        walls = [H.results[k]["wall_s"] / 60 for k in H.results if k[0] == arm]
+        fits = [H.results[k]["fits"]["search"] + H.results[k]["fits"]["eval"]
+                for k in H.results if k[0] == arm]
+        if walls:
+            rows.append({"arm": arm, "tasks": len(walls), "min_median": float(np.median(walls)),
+                         "min_max": max(walls), "fits": max(fits)})
+    return rows
+
+
+def p6hs_tables(H, out, summ, e61, e62, res, D, void):
+    L = ["# P6a-HS tables: the AVIRIS-NG band searches (E-61, E-62)\n"]
+    if void:
+        L += [f"**VOID FOR BANDS.** {void}\n"]
+    n = sorted({r["pixels"]["outer_train"] + r["pixels"]["outer"] for r in H.results.values()})
+    L += [f"Run: `{_rel(H.run)}`. Tasks: " + ", ".join(
+        f"{a} {len(t)}" for a, t in H.tasks.items()) + f"; {n[0]:,} development pixels. The AVIRIS "
+        "test set was not transferred.\n",
+        "## Combined skill by nested set (raw + indices, with noise; noise-free in brackets)\n",
+        "| arm | k = 0 (fixed VNIR) | k = 1 | k = 2 | k = 3 | k = 4 | k = 5 | k = 6 |",
+        "|---|---|---|---|---|---|---|---|"]
+    for arm, lab, _ in HS_ARMS:
+        cells = []
+        for name in ("fixed_only", "k1", "k2", "k3", "k4", "k5", "k6"):
+            a, b = summ.get((arm, name, True)), summ.get((arm, name, False))
+            cells.append("" if a is None else f"{a[0]:+.3f} ({b[0]:+.3f})" if b else f"{a[0]:+.3f}")
+        L.append(f"| {lab} | " + " | ".join(cells) + " |")
+    L += ["", "## Final nested set, per target (raw + indices, with noise)\n",
+          "| arm | set | RMSE percent conifer (%) | RMSE closure (%) | RMSE height (m) | "
+          "fuel family skill |", "|---|---|---|---|---|---|"]
+    rows = []
+    for arm, lab, _ in HS_ARMS:
+        name = [s for s in H.sets(arm) if s != "fixed_only"][-1]
+        vals = {t: np.mean(list(H.get(arm, name, key=f"rmse_{t}").values()))
+                for t, _, _ in HS_TARGETS}
+        fam = np.mean(list(H.get(arm, name, key="skill_family").values()))
+        rows.append({"arm": arm, "set": name, **vals, "skill_family": fam})
+        L.append(f"| {lab} | {name} | {vals['pc']:.1f} | {vals['closure']:.1f} | "
+                 f"{vals['height']:.2f} | {fam:+.3f} |")
+    _csv(out / "T_targets.csv", rows)
+    L += ["", "## E-61 as registered: extended InGaAs against standard, k = 4 (RMSE removed from "
+          "the fixed VNIR)\n",
+          "| target | standard | extended | extra from extended [95 % CI] | runs |",
+          "|---|---|---|---|---|"]
+    for t, lab, unit in HS_TARGETS:
+        r = e61.get(t)
+        if r:
+            L.append(f"| {lab} ({unit}) | {r['gain_std']:+.2f} | {r['gain_ext']:+.2f} | "
+                     f"{r['extra']:+.2f} {_ci(r['ci'])} | {r['runs']} |")
+    L += ["", "## E-62 as registered: no red edge minus VNIR, k = 6 (RMSE, % of VNIR)\n",
+          "| target | difference [95 % CI] | folds worse |", "|---|---|---|"]
+    for t, lab, _ in HS_TARGETS:
+        r = e62.get(t)
+        if r:
+            L.append(f"| {lab} | {r['d_pct']:+.1f} % {_ci(r['ci'], 1)} | "
+                     f"{r['folds_worse']}/{r['n_folds']} |")
+    rr = e62["red_edge_in_k6"]
+    L += ["", f"A band centred in 700-760 nm is in {rr['with']}/{rr['runs']} best 6-band "
+            "VNIR sets."]
+    if D:
+        a, b = D["packs"]["north_up"], D["packs"]["rotated"]
+        L += ["", "## Do the labels describe the pixels? NDVI against SCANFI (Spearman rho)\n",
+              "| | first pack (north-up) | rotated pack |", "|---|---|---|",
+              f"| development pixels | {a['n']:,} | {b['n']:,} |",
+              f"| lines | {len(a['lines'])} | {len(b['lines'])} |"]
+        for t, lab in (("closure", "crown closure"), ("height", "canopy height"),
+                       ("pc", "percent conifer")):
+            med = [np.median([v[t] for v in p["lines"].values() if v[t] is not None])
+                   for p in (a, b)]
+            L.append(f"| {lab}: pooled | {a['pooled'][t]:+.3f} | {b['pooled'][t]:+.3f} |")
+            L.append(f"| {lab}: median within a line | {med[0]:+.3f} | {med[1]:+.3f} |")
+        ins = [100 * v for v in D["inside_north_up"].values() if v is not None]
+        placed = [100 * v["inside"] for v in D["lines"].values() if v["inside"] is not None]
+        src = {}
+        for v in D["lines"].values():
+            src[v["rotation_source"]] = src.get(v["rotation_source"], 0) + 1
+        L += ["", f"Pixels inside their flight-line outline: north-up "
+                f"{min(ins):.1f}-{max(ins):.1f} "
+              f"%, placed {min(placed):.1f}-{max(placed):.1f} %. Rotation sources: "
+              + ", ".join(f"{k} {v}" for k, v in sorted(src.items())) + "."]
+    L += ["", "## Resources\n", "| arm | tasks | minutes, median | minutes, max | fits per task |",
+          "|---|---|---|---|---|"]
+    L += [f"| {r['arm']} | {r['tasks']} | {r['min_median']:.0f} | {r['min_max']:.0f} | "
+            f"{r['fits']} |"
+          for r in res]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
+    out.mkdir(parents=True, exist_ok=True)
+    H = _HSRun(run)
+    ref = None
+    s2 = _ROOT / "docs" / "results" / "p6a_ecology" / "summary.json"
+    if s2.exists():
+        ref = json.loads(s2.read_text())["curves"]["combined|6|raw+indices|noisy"][0]
+    summ = p6hs_curves(H, out, ref, void)
+    picks = p6hs_selection(H, out, void)
+    e61, e62 = p6hs_criteria(H)
+    D = json.loads(diag.read_text()) if diag else None
+    agree = None
+    if D:
+        p6hs_placement(D, out)
+        agree = p6hs_agreement(D, out)
+        _csv(out / "T_label_agreement.csv", agree)
+    res = p6hs_resources(H)
+    p6hs_tables(H, out, summ, e61, e62, res, D, void)
+    (out / "summary.json").write_text(json.dumps(
+        {"void": void, "curves": {f"{a}|{n}|{'noisy' if z else 'clean'}": v
+                                  for (a, n, z), v in summ.items()},
+         "selection": picks, "e61": e61, "e62": e62, "resources": res,
+         "s2_reference": ref}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps(
+        {"run": str(_rel(run)), "diag": str(diag.name) if diag else None}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
-          "P7": (p7, "p7_slots"),
+          "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"), "P7": (p7, "p7_slots"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
 
 
@@ -3727,6 +4256,10 @@ def main(argv=None) -> int:
                     help="P6a/P6c: prediction maps (default <run>/maps)")
     ap.add_argument("--signed-run", type=Path, default=None,
                     help="P6c: a snow run that records the signed error")
+    ap.add_argument("--snowoff", type=Path, default=None, help="P6d: patch_snowoff.json")
+    ap.add_argument("--diag", type=Path, default=None,
+                    help="P6hs: georef_diag.json from aviris_georef_diag.py")
+    ap.add_argument("--void", default="", help="P6hs: why this run says nothing about bands")
     args = ap.parse_args(argv)
     fn, sub = PHASES[args.phase]
 
@@ -3741,6 +4274,10 @@ def main(argv=None) -> int:
         extra = {"signed": resolve(args.signed_run), "maps": resolve(args.maps)}
     elif args.phase == "P6a":
         extra = {"maps": resolve(args.maps)}
+    elif args.phase == "P6d":
+        extra = {"snowoff": resolve(args.snowoff)}
+    elif args.phase == "P6hs":
+        extra = {"diag": resolve(args.diag), "void": args.void}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 

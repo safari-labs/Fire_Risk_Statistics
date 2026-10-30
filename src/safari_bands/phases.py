@@ -935,6 +935,83 @@ PHASES: tuple[Phase, ...] = (
                              "clear scenes attack the early one."),
         ),
     ),
+    Phase(
+        "P6a-HS-prov", "AVIRIS-NG band searches, provisional run (void)", "2026-10-30",
+        "p6a_hs_provisional", "README.md",
+        "Nested band searches on 21 of 42 AVIRIS-NG lines: VNIR, VNIR without red edge, and "
+        "SWIR on standard and extended InGaAs, 5 folds of line groups x 3 seeds, on Nibi. "
+        "No band set beat the training mean, which led to a fault in our ingest: every label "
+        "came from the wrong ground. The run says nothing about bands. Fixed and repacked; "
+        "the sweep has to be rerun.",
+        (
+            Entry("E-61", "experiment", "PENDING",
+                  result="Not tested. Combined skill -0.05 to -0.02 in both SWIR arms at every "
+                         "k, against labels sampled from the wrong ground.",
+                  conclusion="Rerun on aviris_v2 with all five arms and all folds."),
+            Entry("E-62", "experiment", "PENDING",
+                  result="Not tested. Combined skill -0.02 to -0.01 in both VNIR arms at every "
+                         "k, for the same reason.",
+                  conclusion="Rerun on aviris_v2. E-62's Sentinel-2 half (P6a) stands."),
+            Entry("P6hs-C1", "check", "FIXED",
+                  title="Do the labels describe the pixels?",
+                  question="Each line's pixels fall inside its ABoVE flight outline, and NDVI "
+                           "ranks with SCANFI closure within a line.",
+                  independent="pack v1 (north-up positions) vs pack v2 (each line's map-info "
+                              "rotation)",
+                  dependent="share of pixels inside the outline; Spearman rho of NDVI with "
+                            "closure, height and percent conifer within each line",
+                  result="Failed on v1: 0.1-38 % inside, median rho -0.03 with closure. The "
+                         "ingest ignored the map info's rotation. Pack v2: 95-100 % inside, "
+                         "median rho +0.44 closure, +0.35 height, -0.38 percent conifer.",
+                  conclusion="Rotation is now read at ingest, and 30 of 31 headers were "
+                             "recovered from the archives without downloading the images. The "
+                             "packer stops if a line leaves its outline. No check compared "
+                             "labels with spectra before this sweep, which cost a sweep."),
+            Entry("P6hs-M1", "measurement", "MEASURED",
+                  title="What the sweep used",
+                  question="How much of the request did the tasks use?",
+                  independent="57 GPU tasks on Nibi, 3 h requested",
+                  dependent="wall time per task",
+                  result="VNIR 46 min median, no red edge 42, standard InGaAs 35, extended "
+                         "InGaAs 69 (72 max); 780-1,773 fits per task.",
+                  conclusion="The 3 h request holds for the rerun: evaluation fits are a fixed "
+                             "3,000 steps, so the larger pack should not lengthen them."),
+        ),
+    ),
+    Phase(
+        "P6d", "The FWI start-up from Sentinel-2 snow-off (E-18)", "2026-10-30",
+        "p6d_startup", "README.md",
+        "The E-60 snow classifiers, fitted on station truth and applied on Nibi to Sentinel-2 "
+        "at the fire patches, date the snow-off per patch (median of 25 points, to D-1). "
+        "The codes are recomputed with the Appendix C-2 start-up from that date and scored "
+        "against the same rule from ERA5-Land snow and our flat spinup, on 189 development "
+        "patches (83 fire). All codes Reconstructed (ours). The frozen test patches were not "
+        "opened.",
+        (
+            Entry("E-18", "experiment", "REFUTED",
+                  result="At or above 55 N, against the ERA5 rule. SWIR allowed: median lag-1 "
+                         "DC +7.0 %, DC AUC +0.015 [-0.008, +0.040], FWI AUC +0.002 [-0.009, "
+                         "+0.013]. VNIR only: DC -20.2 %, FWI AUC -0.042 [-0.086, -0.007], "
+                         "DMC -0.126 [-0.221, -0.055], BUI -0.108 [-0.194, -0.045]. Below "
+                         "55 N the SWIR-allowed date moves DC +9.6 %, more than above.",
+                  conclusion="The falsifier fires for the SWIR-allowed date. The VNIR-only "
+                             "date moves DC, so that clause does not fire, but it loses skill, "
+                             "the reverse of the prediction. An imagery snow-off date does not "
+                             "beat the ERA5 rule, so the operational start-up stays, and SAFARI "
+                             "loses nothing by not supplying it (A-41). The gain from fixing "
+                             "our flat spinup (DC AUC 0.788 to 0.840) belongs to the rule."),
+            Entry("P6d-M1", "measurement", "MEASURED",
+                  title="Do the date sources agree?",
+                  question="How far is the Sentinel-2 season start from ERA5's?",
+                  independent="season start per patch: C-2 from each classifier vs from ERA5 snow",
+                  dependent="days between them, where both seasons started",
+                  result="SWIR allowed: median -2 d, 10-90 % -11 to +12 d (166 patches). VNIR "
+                         "only: median -1 d, 10-90 % -14 to +33 d (161 patches).",
+                  conclusion="ERA5's late melt is small here, which is why a better date has "
+                             "little to fix. VNIR-only's late tail is E-60's late misses, and "
+                             "it costs skill by starting the season weeks late."),
+        ),
+    ),
 )
 
 

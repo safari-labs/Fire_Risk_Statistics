@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-63 experiments. **37 can run today** on data already packed and staged.
+63 experiments. **38 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,10 +16,10 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 21 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-22, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60 |
+| **Runnable now** | 22 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-34, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60 |
 | **Partial result** | 16 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-43, E-49, E-50, E-51, E-52, E-53, E-54 |
 | **Needs code** | 5 | no new data; a runner or a flag has to be written | E-17, E-29, E-39, E-40, E-41 |
-| **Needs a pack** | 10 | data held but not tiled, packed or transferred | E-8, E-18, E-20, E-35, E-42, E-46, E-47, E-48, E-56, E-63 |
+| **Needs a pack** | 9 | data held but not tiled, packed or transferred | E-8, E-20, E-35, E-42, E-46, E-47, E-48, E-56, E-63 |
 | **Needs new data** | 8 | free to obtain, not yet held | E-9, E-23, E-24, E-25, E-44, E-45, E-61, E-62 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
@@ -99,7 +99,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
 | **E-17** | Station-density stratification | The imagery increment grows with distance to the nearest station. Fuel moisture is the integral of weather, so a satellite estimate should be worth most where the weather grid is interpolated from furthest away -- the north, which is also where most area burns. | distance from each patch to the nearest fire-weather station | the imagery increment in auc_px, scenario-held-out folds, stratified by that distance | Needs code | *none yet* |
-| **E-18** | Snow-off startup | Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. | FWI start date: the Appendix C-2 start-up keyed to a Sentinel-2 snow-off date per patch (the E-60 classifier, SWIR allowed and VNIR only) vs keyed to ERA5-Land snow (E-51's operational rule) vs our flat 90-day spinup | change in the FWI codes by latitude band, and between-patch AUC of DC, DMC, BUI and FWI (paired by patch, block bootstrap) | Needs a pack | `Fire_Risk_Model/scripts/python/build_s2_startup.py` |
+| **E-18** | Snow-off startup | Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. WRONG IF, above 55 N, the imagery start-up neither moves the median lag-1 DC by 10 % or more against the ERA5 rule nor raises the between-patch AUC of DC or FWI with a CI above 0. | FWI start date: the Appendix C-2 start-up keyed to a Sentinel-2 snow-off date per patch (the E-60 classifier, SWIR allowed and VNIR only) vs keyed to ERA5-Land snow (E-51's operational rule) vs our flat 90-day spinup | change in the FWI codes by latitude band, and between-patch AUC of DC, DMC, BUI and FWI (paired by patch, block bootstrap) | Runnable now | `Fire_Risk_Model/scripts/python/build_s2_startup.py` |
 | **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `sweep_covariates.sh SETS=weather` |
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Needs a pack | *none yet* |
 | **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
@@ -541,13 +541,11 @@ CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel
 
 **E-18 — Snow-off startup**
 
-*Hypothesis:* Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude.
+*Hypothesis:* Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. WRONG IF, above 55 N, the imagery start-up neither moves the median lag-1 DC by 10 % or more against the ERA5 rule nor raises the between-patch AUC of DC or FWI with a CI above 0.
 
 Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is frozen and snow-covered, so the recursion accumulates weeks of spurious drying and the error scales with latitude. Then it tests whether an imagery snow-off date beats the regional rule.
 
-*Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix. AMENDED 2026-10-29, before any patch snow-off date existed: the imagery date comes from the E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 rule as well as the flat spinup. Falsifier added at the same time: WRONG IF, above 55 N, the imagery start-up neither moves the median lag-1 DC by 10 % or more against the ERA5 rule nor raises the between-patch AUC of DC or FWI with a CI above 0. E-60 found the imagery date 16 d off the station on median, both ways.
-
-*Blocked on:* Sentinel-2 at the fire patches is being extracted (build_patch_snow_obs.py, 2026-10-29); then the classifiers are fitted and applied on the cluster (Fire_Risk_FW run_snow_off.sh) and the variants added and scored here
+*Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix. AMENDED 2026-10-29, before any patch snow-off date existed: the imagery date comes from the E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 rule as well as the flat spinup. The falsifier in the hypothesis was added at the same time, before any date existed. E-60 found the imagery date 16 d off the station on median, both ways. Run 2026-10-30 (docs/results/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves median DC +7.0 %, AUC DC +0.015 [-0.008, +0.040], FWI +0.002 [-0.009, +0.013]: the falsifier fires. VNIR only moves DC -20.2 % and loses skill (FWI -0.042 [-0.086, -0.007], DMC -0.126). The ERA5 rule stays; SAFARI is not asked for this date (A-41).
 
 *CFFDRS gap:* G4 snow-off keyed by regional rule
 
@@ -671,9 +669,9 @@ What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked
 
 Which SWIR placements, and which detector, the structure targets need; feeds E-46 and the SWIR chain choice.
 
-*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm.
+*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional).
 
-*Blocked on:* 24 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest (2026-10-29); the pack (pack_aviris_v1.py) and runner (run_hs_search.py) are written and smoke-tested (A-40)
+*Blocked on:* the corrected pack aviris_v2 goes to the cluster; 11 of 42 pre-fire AVIRIS-NG lines still downloading (2026-10-30). The first sweep (hs_v1_provisional) is void: rotated lines were placed north-up, so its labels came from the wrong ground (A-40 amendment)
 
 **E-62 — Best VNIR bands, searched broadly**
 
@@ -681,9 +679,9 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
 
-*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search.
+*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search; the provisional sweep of 2026-10-29 is VOID (docs/results/p6a_hs_provisional).
 
-*Blocked on:* the AVIRIS-NG ingest: 24 of 42 lines still to fetch (2026-10-29); pack and runner written (A-40)
+*Blocked on:* as E-61: rerun on aviris_v2; the first sweep is void (A-40 amendment)
 
 ### Hardware
 
@@ -756,6 +754,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-13** | Weather representation | `sweep_covariates.sh SETS=weather` | 1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-14** | Fusion architecture | `sweep_covariates.sh SETS=fusion` | 1 fit/task x 12 tasks (+ wx_both from E-13); est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-15** | Imagery vs the FBP formula | `sweep_covariates.sh SETS=g1` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-18** | Snow-off startup | `Fire_Risk_Model/scripts/python/build_s2_startup.py` | -- |
 | **E-19** | Latitude-banded weather | `sweep_covariates.sh SETS=weather` | shares E-13's runs; latitude scoring adds seconds |
 | **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-22** | Ecology arm | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, GPU 92 %, 12.6 GB) |

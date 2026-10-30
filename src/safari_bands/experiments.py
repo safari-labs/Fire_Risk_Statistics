@@ -544,7 +544,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "55 N and improves skill there, with little effect in the "
                    "south. Our flat 90-day spinup starts around 1 April into "
                    "frozen, snow-covered ground, so the spurious drying should "
-                   "scale with latitude.",
+                   "scale with latitude. WRONG IF, above 55 N, the imagery start-up "
+                   "neither moves the median lag-1 DC by 10 % or more against the ERA5 "
+                   "rule nor raises the between-patch AUC of DC or FWI with a CI above 0.",
         independent="FWI start date: the Appendix C-2 start-up keyed to a "
                     "Sentinel-2 snow-off date per patch (the E-60 classifier, "
                     "SWIR allowed and VNIR only) vs keyed to ERA5-Land snow "
@@ -556,12 +558,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "recursion accumulates weeks of spurious drying and the "
                    "error scales with latitude. Then it tests whether an "
                    "imagery snow-off date beats the regional rule.",
-        state="NEEDS_PACK",
+        state="RUNNABLE",
         runner="Fire_Risk_Model/scripts/python/build_s2_startup.py",
-        blocker="Sentinel-2 at the fire patches is being extracted "
-                "(build_patch_snow_obs.py, 2026-10-29); then the classifiers are "
-                "fitted and applied on the cluster (Fire_Risk_FW run_snow_off.sh) "
-                "and the variants added and scored here",
+        blocker="",
         gap="G4 snow-off keyed by regional rule",
         note="P3 (E-51): the operational start-up moves DC by +38 at >=60 N and "
              "lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is "
@@ -569,11 +568,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "any patch snow-off date existed: the imagery date comes from the "
              "E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), "
              "not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 "
-             "rule as well as the flat spinup. Falsifier added at the same time: "
-             "WRONG IF, above 55 N, the imagery start-up neither moves the median "
-             "lag-1 DC by 10 % or more against the ERA5 rule nor raises the "
-             "between-patch AUC of DC or FWI with a CI above 0. E-60 found the "
-             "imagery date 16 d off the station on median, both ways.",
+             "rule as well as the flat spinup. The falsifier in the hypothesis was added "
+             "at the same time, before any date existed. E-60 found the "
+             "imagery date 16 d off the station on median, both ways. Run 2026-10-30 "
+             "(docs/results/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves "
+             "median DC +7.0 %, AUC DC +0.015 [-0.008, +0.040], FWI +0.002 [-0.009, "
+             "+0.013]: the falsifier fires. VNIR only moves DC -20.2 % and loses skill "
+             "(FWI -0.042 [-0.086, -0.007], DMC -0.126). The ERA5 rule stays; SAFARI is "
+             "not asked for this date (A-41).",
     ),
     Experiment(
         "E-19", "Latitude-banded weather", "CFFDRS gaps",
@@ -1599,14 +1601,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "need; feeds E-46 and the SWIR chain choice.",
         state="NEEDS_DATA",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'",
-        blocker="24 of 42 pre-fire AVIRIS-NG lines still to fetch and ingest "
-                "(2026-10-29); the pack (pack_aviris_v1.py) and runner "
-                "(run_hs_search.py) are written and smoke-tested (A-40)",
+        blocker="the corrected pack aviris_v2 goes to the cluster; 11 of 42 pre-fire "
+                "AVIRIS-NG lines still downloading (2026-10-30). The first sweep "
+                "(hs_v1_provisional) is void: rotated lines were placed north-up, so "
+                "its labels came from the wrong ground (A-40 amendment)",
         note="Broadens E-23 (which stays as registered) beyond 1750 nm and adds "
              "vendor reference points. DFA L5 (1348/64) has ~28 % of its response "
              "inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid "
              "applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and "
-             "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm.",
+             "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. "
+             "Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional).",
     ),
     Experiment(
         "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
@@ -1625,15 +1629,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "sets are) gives up structure skill, and which placements win.",
         state="NEEDS_DATA",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'",
-        blocker="the AVIRIS-NG ingest: 24 of 42 lines still to fetch (2026-10-29); "
-                "pack and runner written (A-40)",
+        blocker="as E-61: rerun on aviris_v2; the first sweep is void (A-40 amendment)",
         note="The VNIR arm searches the camera alone (no SWIR band), the question "
              "E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references "
              "(A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/"
              "p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, "
              "but without B5-B7 the k = 6 error is within 5 % on percent conifer "
              "(+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only "
-             "camera question waits for the AVIRIS-NG search.",
+             "camera question waits for the AVIRIS-NG search; the provisional sweep "
+             "of 2026-10-29 is VOID (docs/results/p6a_hs_provisional).",
     ),
     # E-63 was registered on 2026-10-29, when James chose the 2024-2025 cohort's
     # role, before any 2024-2025 patch, composite or score existed.

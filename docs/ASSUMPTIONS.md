@@ -1318,3 +1318,25 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **Evaluation fits:** 3,000 steps on the whole outer-training fold, in raw / indices / raw + indices, noisy and noise-free.
 - **Indices.** A band takes an index role when its centre falls in that role's window: blue 450–520, green 530–590, red 630–690, red edge 695–715 / 730–750 / 775–795, NIR 840–885, SWIR1 1550–1700, SWIR2 2080–2350. Where several bands fall in one window, the one nearest the middle wins. A set then gets every catalogue index its bands can form.
 - **Noise.** The A-37 placeholder instrument, on each candidate's own detector, added before any index is formed.
+
+**Amendment (2026-10-30): every line is placed with its map-info rotation; pack v1 is void.** AVIRIS-NG orthocorrected products are rotated rasters: the ENVI map info ends in `rotation=<deg>`, the flight heading in whole degrees (−78 to +86 on our lines). The first ingest ignored it and stored north-up positions, up to tens of kilometres off along a line. So every label in `data/aviris_v1` came from the wrong ground, and the sweep `hs_v1_provisional/20261029-1705` says nothing about bands (`docs/results/p6a_hs_provisional`). Its groups and frozen split are unaffected, because they come from the manifest's boxes.
+
+- **Ingest.** `ingest_aviris.py` reads the rotation and reference pixel, places blocks with GDAL's reading of the field (`line_affine`), and stores `rotation_deg` and `origin_ul` in the table.
+- **Tables already ingested** (`georef_aviris_tables.py`; the archives are gone).
+  - The rotation comes from the line's own header. Most archives keep it behind a 7–25 GB image in a gzip stream, so the script reads only the last 256 KB by HTTP range and inflates from a deflate block boundary; archives with the header in front need the first 20 MB.
+  - A recovered header must reproduce the table's stored origin to 1 m.
+  - One 2018 line resisted (`ang20180811t205747`). It takes a fit to its ABoVE outline, snapped to the whole degree (+9), allowed only where the outline hugs the data (edges within 20 m) and the fit is within 0.05° of a whole degree.
+  - Without a header the 2022 outlines are not good enough: they sit 60–1,560 m from the data and the fit misses by up to 2.5°. Such a line would stay unplaced.
+- **Pack.** `pack_aviris_v1.py` labels each line on its rotated grid and writes `data/aviris_v2`, so a stale copy can't pass for it. It leaves out any table without a rotation, and stops if under 90 % of a line's pixels fall inside its outline (ABoVE boundaries, independent of the header). The check would have stopped pack v1: 0.1–38 % inside.
+- **Pixel size varies by line.** Lines are 4.6–7.0 m, so 4 × 4 blocks are 18.4–28 m, not the nominal 20.4 m. Labels are sampled at each block's centre, as before.
+- **Fire test ground.** Pixels now go to test by their true position. Pack v1's fire test cells were tested at wrong positions, which is one more reason nothing from it carries forward.
+
+## A-41: Mission cadence: nadir mapping, altitude unknown in 500–650 km (Q37)
+
+**Assumption (James, 2026-10-30).** SAFARI images nadir only, with no pointing and no constellation. Its altitude is not chosen by the project: anywhere from 500 to 650 km, sun-synchronous.
+
+- **Revisit.** One camera sees every point of the forest belt once in about 1.5–6 months, cloud-free (Q37 table). Some altitudes in the range, 500 km among them, fall on a short ground-track repeat and never cover the belt.
+- **What SAFARI delivers.** Maps of slowly changing fuel structure: fuel type, percent conifer, closure and height (the P6a estimators).
+- **What SAFARI does not deliver.** Dates and fast moisture variables come from Sentinel-2/HLS or the issued CWFIS products: snow-off/start-up (E-18, E-60), green-up (E-40), curing (E-38) and LFMC. SAFARI's imagery of them calibrates and validates.
+- **P12 band decision (proposed, not yet confirmed by James).** Per-slot band evidence is weighted by the slots SAFARI will produce. Evidence from the fast slots (e.g. E-60: SWIR1 worth about 4 days of snow-off error) is still reported, but on its own it does not argue for a SAFARI band.
+- **Sizing uses the worst case in the altitude range.** The processing budget binds at 500 km (≤ 43 s per scene, A-29). Contacts with ÉTS are fewest at 500 km (minimum 2 per day). Revisit is the full range in the Q37 table.

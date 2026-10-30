@@ -827,7 +827,22 @@ Grass is scarce in the current cohort (O-1b on 4.6 % of pixels on the CWFIS fuel
 
 ### Q37 — One nadir CubeSat revisits a point every 1.5–3 months: is that the mission, or does it point, fly lower/higher, or fly more than one?
 
-**Status:** OPEN (raised 2026-10-29, from the EO simulation; A-29 simulated check)
+**Status:** ANSWERED (2026-10-30; A-41)
+**Answer (James, 2026-10-30):** Map slowly and accept it (option 4). The satellite looks straight down every time, with no pointing. The altitude is not ours to control: assume anywhere from 500 to 650 km.
+
+**What follows (A-41).**
+- **Revisit across that range** (`EO_Simulation/results/tables/repeat_sweep.csv`; nadir, no clouds; days until every point at a latitude is seen once):
+
+  | Camera | 45 N, median (10–90 %) | 65 N, median (10–90 %) | Altitudes that never cover 45 N within a year |
+  |---|---|---|---|
+  | VNIR (32 km) | 91 d (63–202) | 56 d (40–122) | 6 of 76, 500 km among them |
+  | SWIR (18 km) | 161 d (106–252) | 102 d (63–202) | 11 of 76 |
+
+  Clouds lengthen all of these.
+- **SAFARI's products are the slow fuel-structure slots:** fuel type, percent conifer, closure and height (the P6a estimators).
+- **Fast variables come from elsewhere:** snow-off/start-up (E-18, E-60), green-up (E-40), curing (E-38) and LFMC come from Sentinel-2/HLS or the issued CWFIS products. SAFARI imagery of them serves only to calibrate and validate.
+- **Budgets use the worst altitude in the range:** the onboard processing budget binds at 500 km (≤ 43 s per scene, A-29), and so do the fewest ground contacts (minimum 2 per day).
+
 **Blocks:** the product cadence in the proposal. Whether imagery estimators that need dense time series are viable from SAFARI alone (snow-off E-18/E-60, green-up E-40). The altitude placeholder (500 km).
 
 **The finding.** The simulation is OrbitPy over a year, with the 32 km VNIR and 18 km SWIR swaths, nadir only and no clouds. To see every point of the forest belt once, the camera needs at least circumference × cos(latitude) ÷ (swath × orbits per day):
