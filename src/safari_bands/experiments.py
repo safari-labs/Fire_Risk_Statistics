@@ -973,8 +973,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts "
              "as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 "
@@ -1014,8 +1014,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         gap="G2 fuel-type layer is a fixed vintage",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_pc,r3_pc_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable (pc + 30 tanh(head), "
              "through the physics); the imagery_replace form waits for the "
@@ -1038,8 +1038,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_cbh,r3_cbh_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable (CBH x exp(0.7 "
              "tanh(head))); the height-derived replace form waits for P6. P7: "
@@ -1061,8 +1061,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         gap="curing",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: the imagery_correct form is runnable against the cffdrs "
              "default (80 %); the CWFIS curing product is still not held, so "
@@ -1472,8 +1472,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="The offset is in units of the bound (pc: 30 points), so it can "
              "reach the -24-point shift P7 found at the base learning rate. "
@@ -1503,8 +1503,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "2026-10-26).",
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="The warm start keeps R2's physics weights at their usual start "
              "and copies only R1's network into the residual, so R2 begins as "
@@ -1568,7 +1568,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_snow.sh",
         blocker="",
-        resources="--time=0:30:00 --cpus-per-task=8 --mem=8G per task, CPU only "
+        resources="--time=1:00:00 --cpus-per-task=8 --mem=16G for all 15 tasks, CPU only "
                   "(one outer fold x seed; 5 x 3 tasks; Nibi measured 4.4 min median)",
         note="AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): "
              "the reference was the NDSI-based date, an index threshold used as truth, "
@@ -1667,8 +1667,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="RUNNABLE",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B",
         blocker="",
-        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
-                  "task of 3 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a "
+        resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 18 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a "
                   "first guess here, since regime A adds 1,080 training tiles and "
                   "regime B a scoring pass",
         note="James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as "

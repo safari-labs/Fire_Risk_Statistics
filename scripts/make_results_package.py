@@ -3098,7 +3098,9 @@ def p6a_maps(maps_dir: Path, out: Path):
 
 def p6a_resources(E):
     rows = []
-    for t in E.tasks:
+    # A packed sweep logs per job, under <run>/_jobs (A-43).
+    for t in [x for x in E.tasks if (x / "resource_usage.csv").exists()] or sorted(
+            (E.run / "_jobs").glob("*")):
         R = _read_csv(t / "resource_usage.csv")
 
         def num(k, rows=R):

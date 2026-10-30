@@ -761,10 +761,10 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
-| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
-| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
-| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-34** | Learned CFFDRS (R1/R2) | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-37** | Crown-base-height slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_cbh,r3_cbh_shuffled` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-38** | Curing slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
@@ -774,11 +774,11 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-54** | Legacy composite leakage | `Fire_Risk_Model/scripts/python/build_prefire.py` | -- |
 | **E-55** | Operational FWI grid vs the reconstruction | `Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py` | -- |
 | **E-56** | Operational FBP outputs on a 2024-2025 cohort | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py --cohort` | -- |
-| **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
-| **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-57** | Percent-conifer correction with an imagery-free offset | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
+| **E-58** | Closing R2's within-patch gap to R1 | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-59** | Indices as model inputs | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` | --time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer fold x seed; 5 x 3 tasks; Nibi H100 measured 47 min median, 52 max, GPU 92 %, 12.6 GB) |
-| **E-60** | Snow-off without SWIR | `Fire_Risk_FW/scripts/shell/sweep_snow.sh` | --time=0:30:00 --cpus-per-task=8 --mem=8G per task, CPU only (one outer fold x seed; 5 x 3 tasks; Nibi measured 4.4 min median) |
-| **E-63** | Out-of-time generalisation, two training regimes | `Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B` | --time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 3 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a first guess here, since regime A adds 1,080 training tiles and regime B a scoring pass |
+| **E-60** | Snow-off without SWIR | `Fire_Risk_FW/scripts/shell/sweep_snow.sh` | --time=1:00:00 --cpus-per-task=8 --mem=16G for all 15 tasks, CPU only (one outer fold x seed; 5 x 3 tasks; Nibi measured 4.4 min median) |
+| **E-63** | Out-of-time generalisation, two training regimes | `Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a first guess here, since regime A adds 1,080 training tiles and regime B a scoring pass |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

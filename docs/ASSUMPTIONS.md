@@ -1357,3 +1357,19 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Bootstrap groups.** Components joining one fire or one 0.1° block: 240 groups over 240 patches, because the selection spreads patches widely.
 - **Regimes (E-63).** The 2019–2023 folds are identical in both regimes, so results pair by fold and seed. Regime A adds all of 2024 to the training side of every fold and never validates on it. Regime B trains as before, then scores 2024.
 - **2025 stays frozen.** `time_test.h5` stays on this machine: `bundle.py` and `open_extra` both refuse it. E-56's note says it runs on both years with no learning involved, but E-63 says 2025 is read once, in P10, so E-56's 2025 half waits for P10 too.
+
+## A-43: Short cluster tasks are packaged into longer jobs
+
+**Assumption (James, 2026-10-30).** The Alliance asks that jobs under an hour be packaged when there are 100 or more of them, so one array element now runs several tasks. `run_pool` in `Fire_Risk_FW/scripts/shell/_common.sh` does this with GNU parallel, which Nibi has, and falls back to a bash pool where it is absent. Each sweep's setting comes from what its tasks measured:
+
+| Sweep | Measured | Packing | Jobs |
+|---|---|---|---|
+| `sweep_hs.sh` | 35–72 min, GPU 30–34 %, 3–4 GB | 6 tasks per job, 3 at once on one GPU | 13, not 75 |
+| `sweep_slots.sh` | 3.4 min a fit, input-bound, GPU 25 % | 18 fits per job, one after another | 1 for each 18 fits, not 6 |
+| `sweep_eco.sh` | 47–52 min, GPU 92 %, 12.6 GB | 3 tasks per job, one after another | 5, not 15 |
+| `sweep_snow.sh` | 4.4 min, CPU | 15 tasks in one job, 4 at once | 1, not 15 |
+
+- **Sharing a GPU is only for tasks that leave it idle.** AVIRIS qualifies. Slots do not gain, because they wait on data loading, and ecology fills the GPU.
+- **A job that runs out of time is resubmitted with the same `RUN_ID`.** Finished tasks are skipped.
+- **Resource logs move to the job.** Packed sweeps write `resource_usage.csv` under `<run>/_jobs/`, not per task.
+- **Left alone.** `sweep_snow_maps.sh` and `sweep_eco_maps.sh` are 5 tasks each. The v1 sweeps (`sweep_bands`, `sweep_arms`, `sweep_axes`, `sweep_covariates`, `sweep_indices`, `sweep_replay`) belong to superseded results and aren't planned to run again; if one is, it should be packed first.
