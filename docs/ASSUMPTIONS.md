@@ -1346,3 +1346,14 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **P12 band decision (James, 2026-10-30): performance decides, disregarding cost.** The combined band score uses only the slots SAFARI will produce: fuel type, percent conifer, closure and height. The best score wins, and sets within one SE of it count as tied. A tie goes to the set with the best evidence from the fast slots (LFMC, curing, snow-off, green-up), which never lift a set that loses on structure. Cost plays no part, and neither does the number of bands. This replaces the brief's ranking by value per marginal cost (section 5).
 - **Every band sweep's report lists the options (James, 2026-10-30).** A report gives as many useful options as possible, not one winner: each with its bands, score, per-target error, detector chain, cost, pros and cons (`src/safari_bands/band_options.py`, `T_options.csv`). Only options beaten at no higher cost and no more bands leave the table. Cost is qualitative (`config/cost/chains.yaml`) until Q6 gives figures.
 - **Sizing uses the worst case in the altitude range.** The processing budget binds at 500 km (≤ 43 s per scene, A-29). Contacts with ÉTS are fewest at 500 km (minimum 2 per day). Revisit is the full range in the Q37 table.
+
+## A-42: The 2024–2025 cohort pack and the two training regimes (P6b, E-56, E-63)
+
+**Assumption (2026-10-30).** The cohort is packed in the v2 layout, one file per year.
+
+- **Fuel.** `/fuel_cwfis` is the CWFIS 2024 layer, not 2019, which is older by more for these fires. Its codes 105, 415 and 675 have no 2019 equivalent, so they become 101, 425 and 665. The true percent conifer (15, 75 %) stays in the pixel slot. `/fuel_scanfi` is the SCANFI v2 2020 step, the latest before 2024.
+- **Leaf state.** From the green-up grid CWFIS issued for D-1 or the nearest earlier issued day. The 2019–2023 patches read the state on D from the yearly archive; the one-day difference is accepted, since green-up changes over weeks.
+- **Weather on sea.** ERA5-Land is land only. Two patches have centres on sea (one in 2024, one frozen 2025), and they use the nearest land point on rings of 0.1–0.3°, recorded as `weather_point`. A frozen patch must not silently drop out.
+- **Bootstrap groups.** Components joining one fire or one 0.1° block: 240 groups over 240 patches, because the selection spreads patches widely.
+- **Regimes (E-63).** The 2019–2023 folds are identical in both regimes, so results pair by fold and seed. Regime A adds all of 2024 to the training side of every fold and never validates on it. Regime B trains as before, then scores 2024.
+- **2025 stays frozen.** `time_test.h5` stays on this machine: `bundle.py` and `open_extra` both refuse it. E-56's note says it runs on both years with no learning involved, but E-63 says 2025 is read once, in P10, so E-56's 2025 half waits for P10 too.

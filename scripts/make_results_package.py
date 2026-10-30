@@ -3710,6 +3710,140 @@ def p6c(run: Path, out: Path, signed: Path | None = None, maps: Path | None = No
         {"run": str(_rel(run)), "signed_run": str(_rel(signed)) if signed else None}, indent=1))
 
 
+# ── P6b: what CWFIS issued against our R0, 2024 half (E-56) ─────────────────
+
+COHORT = _ROOT.parent / "Fire_Risk_Model" / "data" / "cohort_2024_25" / "patches"
+E56_OUT = (("hfi", "HFI (kW/m)"), ("ros", "ROS (m/min)"), ("cfb", "CFB (fraction)"))
+E56_R0 = (("cwfis_2024", "Reconstructed (ours), CWFIS 2024 fuel", BLUE),
+          ("scanfi_tree_prefire", "Reconstructed (ours), SCANFI 2020 fuel", GREEN))
+
+
+def _fuel_family(code) -> str:
+    c = int(code)
+    return ("C" if c <= 7 else "D" if c <= 13 else "O" if c == 31 else
+            "M" if c >= 400 else "non-fuel")
+
+
+def _e56_rows(run: Path) -> list[dict]:
+    """One record per scored patch: ISSUED layers and each R0 variant's means."""
+    by = {}
+    for r in _read_csv(run / "per_patch.csv"):
+        rec = by.setdefault(r["stem"], {"stem": r["stem"], "group": r["group"],
+                                        "fire": r["kind"] == "fire", "lat": float(r["lat"]),
+                                        "R0": {}})
+        rec["R0"][r["variant"]] = {o: float(r[f"mean_{o}"] or "nan") for o, _ in E56_OUT}
+    for rec in by.values():
+        L = json.loads((COHORT / f"{rec['stem']}_cwfis_grid.json").read_text())["layers"]
+        rec["issued"] = {o: float("nan") if (L.get(o) or {}).get("mean") is None
+                         else L[o]["mean"] for o, _ in E56_OUT}
+        rec["issued_days_back"] = max((L.get(o) or {}).get("days_back") or 0 for o, _ in E56_OUT)
+        ft = (L.get("ft") or {}).get("majority")
+        ours = np.load(COHORT / f"{rec['stem']}_fbpfuel.npy")
+        u, n = np.unique(ours, return_counts=True)
+        rec["fuel_issued"] = None if ft is None else _fuel_family(ft)
+        rec["fuel_ours"] = _fuel_family(u[n.argmax()])
+    return sorted(by.values(), key=lambda r: r["stem"])
+
+
+def p6b_compare(rows) -> list[dict]:
+    """E-56 as registered: AUC per source, the paired gap, and Spearman rho."""
+    out = []
+    for o, olab in E56_OUT:
+        for v, vlab, _ in E56_R0:
+            use = [r for r in rows if v in r["R0"] and np.isfinite(r["issued"][o])
+                   and np.isfinite(r["R0"][v][o])]
+
+            def arrays(rs, o=o, v=v):
+                return (np.array([r["issued"][o] for r in rs]),
+                        np.array([r["R0"][v][o] for r in rs]),
+                        np.array([r["fire"] for r in rs]))
+
+            a, b, y = arrays(use)
+
+            def gap(rs):
+                x, z, f = arrays(rs)
+                return _auc(x, f) - _auc(z, f)
+
+            def rho(rs):
+                x, z, _ = arrays(rs)
+                return _spearman(x, z)
+
+            out.append({"output": o, "label": olab, "r0": v, "r0_label": vlab, "n": len(use),
+                        "n_fire": int(y.sum()), "auc_issued": _auc(a, y), "auc_r0": _auc(b, y),
+                        "gap": _auc(a, y) - _auc(b, y), "gap_ci": _boot_groups(use, gap),
+                        "rho": _spearman(a, b), "rho_ci": _boot_groups(use, rho)})
+    return out
+
+
+def p6b_figures(rows, cmp, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6), facecolor=FIG_BG)
+    ax = axes[0]
+    r0 = E56_R0[0]
+    _axes(ax, "HFI on D-1, 2024 patches", "ISSUED by CWFIS (kW/m, mean over the patch)",
+          f"{r0[1]} (kW/m)")
+    for fire, lab, col in ((True, "fire patch", ORANGE), (False, "unburned patch", BLUE)):
+        use = [r for r in rows if r["fire"] == fire and r0[0] in r["R0"]]
+        x = np.array([r["issued"]["hfi"] for r in use])
+        y = np.array([r["R0"][r0[0]]["hfi"] for r in use])
+        ax.scatter(np.maximum(x, 1), np.maximum(y, 1), s=16, color=col, alpha=0.8, lw=0, label=lab)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.plot([1, 1e5], [1, 1e5], color=INK, lw=1)
+    ax.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower right")
+    ax = axes[1]
+    _axes(ax, "Between-patch AUC, fire vs unburned", "", "AUC")
+    use = [c for c in cmp if c["r0"] == r0[0]]
+    x = np.arange(len(use))
+    ax.bar(x - 0.2, [c["auc_issued"] for c in use], 0.38, color=ORANGE, label="ISSUED by CWFIS")
+    ax.bar(x + 0.2, [c["auc_r0"] for c in use], 0.38, color=BLUE, label=r0[1])
+    ax.set_xticks(x)
+    ax.set_xticklabels([c["label"] for c in use], fontsize=8.5, color=INK)
+    ax.set_ylim(0.5, 1.0)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="upper right")
+    fig.tight_layout()
+    paired = sum(np.isfinite(r["issued"]["hfi"]) for r in rows)
+    _caption(fig, f"E-56, 2024 only: {paired} of {len(rows)} patches have an issued value. 2025 "
+             "is frozen and was not opened. "
+             "Issued values are 2 km grids averaged over the patch; ours are 20 m maps averaged "
+             "the same way. HFI under 1 kW/m is drawn at 1. The line is equality.")
+    _save(fig, out, "issued_vs_r0.png")
+
+
+def p6b_tables(rows, cmp, out, run):
+    L = ["# P6b tables: what CWFIS issued against our R0, 2024 (E-56)\n",
+         f"Run: `{_rel(run)}`. {len(rows)} patches of 2024 ({sum(r['fire'] for r in rows)} fire). "
+         "2025 is frozen (splits/time_test_v1.json) and was not opened.\n",
+         "## E-56 as registered: ISSUED by CWFIS against Reconstructed (ours)\n",
+         "| output | R0 fuel | n (fire) | AUC ISSUED | AUC ours | ISSUED minus ours [95 % CI] | "
+         "Spearman rho [95 % CI] |", "|---|---|---|---|---|---|---|"]
+    for c in cmp:
+        L.append(f"| {c['label']} | {c['r0_label'].split(', ')[1]} | {c['n']} ({c['n_fire']}) | "
+                 f"{c['auc_issued']:.3f} | {c['auc_r0']:.3f} | {c['gap']:+.3f} "
+                 f"{_ci(c['gap_ci'], 3)} | {c['rho']:.2f} {_ci(c['rho_ci'])} |")
+    _csv(out / "T_e56.csv", cmp)
+    fam = [r for r in rows if r["fuel_issued"]]
+    same = sum(r["fuel_issued"] == r["fuel_ours"] for r in fam)
+    L += ["", "## Fuel: majority family per patch\n",
+          f"The 2 km grid CWFIS issued and the 30 m CWFIS 2024 layer agree on the majority family "
+          f"on {same} of {len(fam)} patches ({same / len(fam):.0%}). This compares families by "
+          "majority, not the registered share of area, which needs the issued rasters.",
+          "", f"Patches using an earlier issued day: "
+          f"{sum(r['issued_days_back'] > 0 for r in rows)} of {len(rows)}."]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p6b(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    rows = _e56_rows(run)
+    cmp = p6b_compare(rows)
+    p6b_figures(rows, cmp, out)
+    p6b_tables(rows, cmp, out, run)
+    (out / "summary.json").write_text(json.dumps({"e56_2024": cmp}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 # ── P6d: the FWI start-up from Sentinel-2 snow-off (E-18) ───────────────────
 
 E18_STARTUPS = (("flat", "flat spinup (ours, the defect)", "#b9b9c6"),
@@ -4296,7 +4430,8 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
 
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
-          "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"), "P7": (p7, "p7_slots"),
+          "P6b": (p6b, "p6b_cohort"), "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
+          "P7": (p7, "p7_slots"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
 
 

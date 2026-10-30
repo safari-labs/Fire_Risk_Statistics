@@ -40,6 +40,22 @@ python scripts/make_phase_docs.py --phase P6a-HS-prov
 - **`ang20180811t190237` falls from +0.17 to −0.08.** Its bright filter removes 703,633 of about 711,000 pixels (cloud or snow), leaving 7,281. Those few should not be read as a placement failure, but the line adds little.
 - **This is a check on the data, not a retrieval result.** It shows that labels and spectra now describe the same ground. Whether bands can retrieve the targets is what the rerun tests.
 
+## The check on the corrected pack (`hs_v2_check`)
+
+Run on Nibi, 2026-10-30: `narval_results/hs_v2_check/20261030-1335`. The `references` arm only, 5 folds, 1 seed, on `aviris_v2` (31 lines). This confirms the fix: every set scores above the training mean in every fold (combined skill +0.20 to +0.36 per fold).
+
+| Set (raw + indices, with noise) | Combined skill |
+|---|---|
+| Sentinel-2 12 bands | 0.303 |
+| Config C | 0.300 |
+| Mantis MS + SWIR | 0.292 |
+| Config A | 0.283 |
+| Config B | 0.283 |
+| Config C's VNIR alone | 0.280 |
+| Mantis VNIR6 | 0.278 |
+
+This is a check, not a band result: one seed, no search and 31 of 42 lines. The sets are about 0.03 apart, so it doesn't settle E-61 or E-62.
+
 ## What is needed next
 
 The sweep has to be rerun on `aviris_v2`, with all five arms (including `references`) and all folds. Tasks took 35–72 minutes against the 3 h requested, so the request holds. Evaluation fits are a fixed 3,000 steps, so the larger pack should not lengthen them.

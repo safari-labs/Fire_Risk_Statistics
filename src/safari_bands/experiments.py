@@ -1436,13 +1436,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The first comparison against what operational FBP actually "
                    "reported. The cohort is also an out-of-time test for every model "
                    "trained on 2019-2023.",
-        state="NEEDS_PACK",
-        runner="--",
-        blocker="the 2024-2025 cohort is being built (P6b, James 2026-10-29: 60 fires "
-                "and 60 negatives per year); no patch exists yet",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py --cohort",
+        blocker="2025 half waits for P10 (A-42); share-of-area fuel agreement and FMC "
+                "not yet compared",
         note="Registered with E-55, before any grid value was scored. Runs on both "
              "2024 and 2025 under either training regime (E-63): no learning is "
-             "involved in the comparison.",
+             "involved in the comparison. 2024 half, 2026-10-30 (docs/results/p6b_cohort): "
+             "PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 "
+             "[-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen "
+             "and waits for P10 (A-42).",
     ),
     # E-57 and E-58 were registered on 2026-10-26, after the first sweep
     # (slots_v2) and before any fit of these arms ran on Narval. The only
@@ -1661,13 +1664,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "condition an operational satellite always predicts in -- and what "
                    "one more training year buys. 2025 is frozen in both regimes and "
                    "read once, in P10.",
-        state="NEEDS_PACK",
-        runner="--",
-        blocker="the 2024-2025 cohort (E-56's build)",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B",
+        blocker="",
+        resources="--time=0:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
+                  "task of 3 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a "
+                  "first guess here, since regime A adds 1,080 training tiles and "
+                  "regime B a scoring pass",
         note="James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as "
              "the out-of-time test; regime B excludes both. Regime B makes no use of any "
              "choice regime A made with 2024 in view, and its 2024 test is scored before "
-             "regime A's 2024 training results are looked at.",
+             "regime A's 2024 training results are looked at. Pack and regimes built "
+             "2026-10-30 (A-42).",
     ),
 )
 

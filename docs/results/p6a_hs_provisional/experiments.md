@@ -15,7 +15,7 @@ Nested band searches on 21 of 42 AVIRIS-NG lines: VNIR, VNIR without red edge, a
 | Measured (dependent) | per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 2020), spatial-block folds by flight line, under the noise model |
 | Result | Not tested. Combined skill -0.05 to -0.02 in both SWIR arms at every k, against labels sampled from the wrong ground. |
 | Verdict | **PENDING**: not yet run |
-| Conclusion | Rerun on aviris_v2 with all five arms and all folds. |
+| Conclusion | Rerun on aviris_v2 with all five arms and all folds. hs_v2_check confirms the fix: every reference set scores 0.28-0.30. |
 
 ## E-62: Best VNIR bands, searched broadly (experiment): **PENDING**
 

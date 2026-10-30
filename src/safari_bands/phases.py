@@ -947,7 +947,8 @@ PHASES: tuple[Phase, ...] = (
             Entry("E-61", "experiment", "PENDING",
                   result="Not tested. Combined skill -0.05 to -0.02 in both SWIR arms at every "
                          "k, against labels sampled from the wrong ground.",
-                  conclusion="Rerun on aviris_v2 with all five arms and all folds."),
+                  conclusion="Rerun on aviris_v2 with all five arms and all folds. "
+                             "hs_v2_check confirms the fix: every reference set scores 0.28-0.30."),
             Entry("E-62", "experiment", "PENDING",
                   result="Not tested. Combined skill -0.02 to -0.01 in both VNIR arms at every "
                          "k, for the same reason.",
@@ -976,6 +977,39 @@ PHASES: tuple[Phase, ...] = (
                          "InGaAs 69 (72 max); 780-1,773 fits per task.",
                   conclusion="The 3 h request holds for the rerun: evaluation fits are a fixed "
                              "3,000 steps, so the larger pack should not lengthen them."),
+        ),
+    ),
+    Phase(
+        "P6b", "The 2024-2025 cohort and what CWFIS issued", "2026-10-30",
+        "p6b_cohort", "README.md",
+        "240 patches, 60 fire and 60 unburned per year, with imagery, labels, weather, fuel, "
+        "the CWFIS issued grids and the leaf state from the issued green-up. E-56 compares the "
+        "FBP outputs ISSUED by CWFIS with Reconstructed (ours) on 2024, with no training. 2025 "
+        "is frozen and was not opened. The pack and the two E-63 training regimes are built.",
+        (
+            Entry("E-56", "experiment", "PARTIAL",
+                  result="2024: HFI AUC 0.834 ISSUED, 0.837 ours with CWFIS 2024 fuel, gap "
+                         "-0.003 [-0.060, +0.057], Spearman 0.82 [0.74, 0.88]. SCANFI 2020 "
+                         "fuel: gap +0.005 [-0.055, +0.066], rho 0.84. ROS and CFB alike. "
+                         "111 of 120 patches paired.",
+                  conclusion="On 2024 the falsifier does not fire and rho clears 0.7: our "
+                             "reconstruction ranks as operational FBP does. The CI is wider "
+                             "than 0.03, and R0 shares CWFIS fuel and green-up, so part of the "
+                             "agreement is built in. 2025 waits for P10."),
+            Entry("E-63", "experiment", "PENDING",
+                  result="Pack and regimes built, not yet run.",
+                  conclusion="Run regime B first: its 2024 test is scored before regime A's "
+                             "2024 training results are looked at."),
+            Entry("P6b-C1", "check", "PASS",
+                  title="Is the frozen 2025 set intact and unreachable?",
+                  question="All 120 frozen patches have every sidecar, and no training path "
+                           "can open them.",
+                  independent="the cohort against splits/time_test_v1.json",
+                  dependent="sidecars per patch; refusal by bundle.py and open_extra",
+                  result="All 240 patches complete after two sea-centred patches took the "
+                         "nearest land point. Membership matches the frozen list; both code "
+                         "paths refuse time_test.h5, under test.",
+                  conclusion="The test set did not shrink, and it stays on this machine."),
         ),
     ),
     Phase(
