@@ -824,3 +824,33 @@ Options:
 3. **Leave E-38 against the FBP default only.** The P7c result (+0.013 against R2 on O-1 pixels) stays the comparison.
 
 Grass is scarce in the current cohort (O-1b on 4.6 % of pixels on the CWFIS fuel layer, none in SCANFI), so any curing result there is small-n; the 2024–2025 fires may not have more.
+
+### Q37 — One nadir CubeSat revisits a point every 1.5–3 months: is that the mission, or does it point, fly lower/higher, or fly more than one?
+
+**Status:** OPEN (raised 2026-10-29, from the EO simulation; A-29 simulated check)
+**Blocks:** the product cadence in the proposal. Whether imagery estimators that need dense time series are viable from SAFARI alone (snow-off E-18/E-60, green-up E-40). The altitude placeholder (500 km).
+
+**The finding.** The simulation is OrbitPy over a year, with the 32 km VNIR and 18 km SWIR swaths, nadir only and no clouds. To see every point of the forest belt once, the camera needs at least circumference × cos(latitude) ÷ (swath × orbits per day):
+
+| Camera | 45 N | 65 N |
+|---|---|---|
+| VNIR (32 km) | 58 days | 35 days |
+| SWIR (18 km) | 104 days | 62 days |
+
+That floor assumes the tracks interleave perfectly. At many altitudes they don't, because the ground track repeats first.
+
+- **500 km is one of those altitudes.** It is close to a 5-day repeat (76 orbits). It revisits the same 20 % of the belt every 5 days and never sees the rest.
+- **620 km** is close to a 16-day repeat. It sees 75 % of the belt in 30 days and every point at 45 N in about 91 days.
+
+The camera images about 300 scenes a day, so the data budget is not the limit. Geometry is.
+
+Sentinel-2's 5-day revisit is what the P6 snow-off and green-up estimators were built on; the E-60 sampling floor was 7.5 d at that cadence. At a 2-month revisit, a date estimate from SAFARI alone is impossible. SAFARI could still refine one that Sentinel-2/HLS supplies.
+
+**Options:**
+
+1. **Pointing (tasked imaging)** *(recommended to simulate next)*. Roll the spacecraft to image target areas: high-risk fuels, fire-weather hotspots from CWFIS, validation sites. With ±30° roll at 500 km the reachable strip is about 580 km wide, so a given target can be reached every 1–3 days. Cost: attitude control and slew time, which eats into the 300 scenes per day. OrbitPy models this as a field of regard, so it is a one-line change to the simulation.
+2. **Choose the altitude for drift, not a round number.** Avoid short repeats (e.g. 570–590 km or 650–690 km cover 45 N in 50–70 days, close to the floor). This changes the revisit by a factor of about 1.5, not 10.
+3. **A constellation.** N satellites in the same plane divide the revisit by about N.
+4. **Accept it.** SAFARI maps fuel structure, which changes slowly (fuel type, % conifer, closure, height: the P6a estimators), every 1–3 months. Fast variables (LFMC, curing, snow-off) come from Sentinel-2/HLS, with SAFARI as a calibration and validation source.
+
+Options 1 and 4 combine naturally: a background mapping mode plus tasked targets.

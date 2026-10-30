@@ -949,6 +949,40 @@ written down on 2026-10-23 before any CFFDRS-mirror result exists.
      MS-like push broom, 32 m, 1000 px across) and assume the flown camera
      carries whichever bands P12 selects; a scene is 1000 x 1000 px x k bands.
 
+   **Simulated check (2026-10-29, EO_Simulation repo: OrbitPy J2 propagation over
+   one year from 2027-06-01, LTDN 10:30, a look needs the sun >= 10 deg up).** The
+   hand budget holds, but the binding count is 82 scenes, not 80.
+
+   | | 500 km | 620 km |
+   |---|---|---|
+   | daylight forest-belt track per imaging orbit (median / max) | 2,554 / 2,625 km | 2,629 km |
+   | scenes per imaging orbit (median / max, April to October) | 79 / **82** | 64 / 66 |
+   | sunlit minutes per orbit | 59.3-60.5 | 62.2-63.5 |
+   | **tightest budget, s per scene** (sunlit time / scenes) | **43.4** | **56.5** |
+   | real-time, s per scene | 4.5 | 5.7 |
+   | forest-belt imaging orbits per day; scenes per day (fire season) | 4.3; 300 | 4.2; 239 |
+
+   - **Required budget: <= 43 s per scene** (43.4 rounded down). It binds from
+     late February to late October. In winter the low sun shortens the track
+     and the budget relaxes to about 97 s.
+   - **ETS contacts** (rooftop, 10 deg mask). Every day of the year has at least
+     2 contacts (500 km) or 3 (620 km). Daily means: 3.5 (4.0) contacts of
+     6.5 (7.7) min, 21 (28) min in total. Longest gap: 12.9 (11.6) h. Contacts
+     fall around 11:00-12:30 and 21:00-22:00 local time.
+     From the end of a belt pass to the next contact: median 7.5 h (6.1 h), 90th
+     percentile 9.1 h (9.3 h), never more than 10.6 h. Products land the same day.
+   - **Revisit is the new constraint (Q37).** A nadir camera with a 32 km swath
+     needs at least C cos(lat) / (swath x orbits per day) days to see every
+     point once: 58 days at 45 N and 35 at 65 N (500 km). With the 18 km SWIR
+     swath: 104 and 62 days. Some altitudes never reach full coverage because
+     the ground track repeats first.
+     - **500 km is one of them.** It makes 15.1995 orbits per day, close to
+       76 orbits in 5 days, so it revisits the same strips every 5 days. In 30
+       July days it sees only 20 % of the belt (SWIR 15 %).
+     - **620 km** is close to a 237-orbit, 16-day repeat. It sees 75 % (SWIR
+       47 %) of the belt in 30 days, and every point at 45 N by day 91.
+     - Figures: EO_Simulation `results/figures/`.
+
 
 ---
 
@@ -1030,6 +1064,12 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - Provincial agency stations are not in the export.
   - **Distance cap.** A station more than 300 km away is not one CFFDRS would use for the patch. One 2018 confuser's nearest reporting station was in Nebraska, 1,062 km away. Such patches get no station weather. The median distance is 56 km (90th percentile 132 km).
 - **Imagery estimators move to P6.** Sentinel-2 snow-off and green-up (E-18's and E-40's imagery arms) go to P6, so P3 uses no imagery (James).
+- **Amendment (2026-10-29): start dates outside the polygon's NBAC year are dropped.**
+  - **Where it happens.** The 2024 and 2025 NBAC releases give some polygons an agency start (AG_SDATE) from an earlier fire: 9 polygons in 2024 and 27 in 2025. None do in 2019–2023.
+  - **Example.** 2025 fid 591 has AG_SDATE 2019-05-23 (ending 2019-05-31) but hotspot dates 2025-05-12 to 2025-10-01.
+  - **Effect on the 2024–2025 cohort.** The earliest-start rule gave two frozen 2025 fire patches D in 2019 and 2021. They were re-dated to their in-year hotspot starts (2025-05-12 and 2025-06-04) before anything was scored on them.
+  - **Rebuilt.** Their composites, weather, stations and CWFIS grids were rebuilt. Every cohort label was rebuilt too, since the label rule uses the same starts.
+  - **Holdover fires.** A fire held over from the previous year starts, for this year's area, at its in-year start.
 
 ---
 
