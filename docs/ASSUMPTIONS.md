@@ -1373,3 +1373,23 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **A job that runs out of time is resubmitted with the same `RUN_ID`.** Finished tasks are skipped.
 - **Resource logs move to the job.** Packed sweeps write `resource_usage.csv` under `<run>/_jobs/`, not per task.
 - **Left alone.** `sweep_snow_maps.sh` and `sweep_eco_maps.sh` are 5 tasks each. The v1 sweeps (`sweep_bands`, `sweep_arms`, `sweep_axes`, `sweep_covariates`, `sweep_indices`, `sweep_replay`) belong to superseded results and aren't planned to run again; if one is, it should be packed first.
+
+## A-44: Labels that owe nothing to Landsat (Q35)
+
+**Assumption (James, 2026-10-30).** SCANFI is mapped from Landsat, SWIR included, so band rankings against it may favour SWIR. Two label sources test that, with the same search and pack layout.
+
+- **Lidar height.** ICESat-2 ATL08 v007 `h_canopy_20m`, fetched through NASA's Harmony subsetter over the development AVIRIS lines (`fetch_atl08_subset.py`), then matched to the nearest block within 15 m (`pack_aviris_lidar.py`).
+  - **Summers:** the two nearest each flight, 15 June to 15 September, so the burn filter still holds.
+  - **Kept:** clear (`layer_flag` 0), snow-free (`segment_snowcover` 1), 60 m or lower. Ground with no canopy counts as 0 m.
+  - **Replaces** the ABoVE training subsample tried first: 3,163 pixels and 17 lines with no match was too thin to search.
+- **Ground plots.** MAGPlot v1.2, only sources published with original coordinates: Québec, New Brunswick, Newfoundland, Yukon and NorthForM. BC is fuzzed and left out (`pack_plots_v1.py`).
+  - **Labels:** percent conifer by basal area of live trees, height as the 90th percentile of measured trees (3 or more), family C at 75 % conifer or more, D at 25 % or less, otherwise M. Latest measurement in 2014-2024.
+  - **Left out:** flagged sites, disturbed or treated in or after the measurement year, burned per NBAC from then to 2021, under 2 m2/ha.
+  - **Imagery:** Sentinel-2 median of July-August 2019-2021, mean within 20 m of the centre.
+  - **Result:** 16,869 plots; 14,232 development in 171 blocks, and 2,637 frozen (`splits/plots_test_v1.json`, 15 % of 1-degree blocks plus fire test cells).
+  - **Time gap:** plots measured from 2014 meet a 2019-2021 composite. Reported disturbances and NBAC burns are filtered; unreported ones are not.
+- **What these cover.** Lidar answers height only. Plots add percent conifer and family. Closure has no independent label yet: plots do not measure it, and the fuel family cuts are ours, not the CFS tree.
+- **Agreement with SCANFI, development data, no fitting** (`external_label_check.py`): percent conifer Spearman 0.81, RMSE 21.7; height 0.56, RMSE 5.8 m, SCANFI 3.5 m lower; family 71 %. The height definitions differ, so read that bias with care. Against lidar: height Spearman 0.55, RMSE 4.9 m, bias +0.1 m (98,586 pixels), so the 3.5 m gap shows only against plots.
+- **Lidar coverage, 2026-11-01.** `aviris_lidar_v1` holds 98,586 pixels in 11 groups. Nine of the 37 development lines have no ATL08 yet (Harmony jobs held at 0 %), leaving out groups 15, 16 and 17. Group 1 is out for another reason: its one line, `ang20180811t190237`, keeps 1 % of its blocks after the bright filter, and none lie under a track. `ang20220813t190330` has no track within 19 km.
+- **Open ground (James, 2026-11-01).** Open pixels take the existing FBP families, no new class: shrub goes to grass (O), as an approximation, and slash comes from a harvest layer, pending that source. Applied in a later pack, so `aviris_v2_full` still holds the earlier family labels.
+- **Land-cover names.** SCANFI classes are 1 bryoid, 2 herbs, 3 rock, 4 shrub, 5 broadleaf, 6 conifer, 7 mixed, 8 water, checked against closure, height and WorldCover. `LCC_CLASSES` in `scanfi.py` is wrong but kept, since ecology patch file names embed it; use `LANDCOVER_NAMES`.

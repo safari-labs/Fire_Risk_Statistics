@@ -773,8 +773,8 @@ The Sentinel-2 extraction at stations (`build_snow_obs.py`) works with any stati
 
 ### Q34 — Rule 7 narrows E-61's registered SWIR windows
 
-**Status:** OPEN (raised 2026-10-29, before any AVIRIS search ran)
-**Blocks:** nothing. The grid applies rule 7 by default (A-40).
+**Status:** ANSWERED (2026-10-30)
+**Answer (James, 2026-10-30):** Keep rule 7 as encoded (option 1). The grid in A-40 stands, and no aircraft-window arm is added.
 
 E-61 registered candidate SWIR centres in 1003–1359, 1414–1749 and 1970–2400 nm. Those are the gaps in AVIRIS-NG's own bad-band list (A-22), which describe an airborne sensor. Rule 7, as `atmospheric_windows.yaml` encodes it, also forbids:
 
@@ -794,7 +794,8 @@ Options:
 
 ### Q35 — What the ecology labels can and cannot say about bands
 
-**Status:** OPEN (raised 2026-10-29, after the first P6a results)
+**Status:** PARTLY ANSWERED (2026-10-30; A-44)
+**Answer so far (James, 2026-10-30):** Point 1: use independent labels; the lidar and ground-plot searches are built (A-44), and James is requesting exact NFI coordinates. Point 2: split open ground into the existing grass, slash and non-fuel classes rather than add a new one. James, 2026-11-01: shrub goes to grass (O), and fetch a harvest layer for slash. Still open: which harvest source, and how recent a cut counts as slash.
 **Blocks:** nothing now. It shapes how P12 weighs the P6a rankings, and the next ecology run.
 
 Two things about the SCANFI labels limit what the P6a band rankings mean (`docs/results/p6a_ecology`).
