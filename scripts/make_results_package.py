@@ -4087,7 +4087,8 @@ def p6hs_curves(H, out, reference=None, void=""):
     summ = {}
     for ax, (arm, lab, col) in zip(axes, HS_ARMS, strict=True):
         n = len(H.tasks[arm])
-        _axes(ax, f"{lab}\n({n} tasks)", "bands searched (k)",
+        folds = ",".join(str(f) for f in sorted(p6hs_coverage(H)[arm]))
+        _axes(ax, f"{lab}\n({n} tasks, folds {folds})", "bands searched (k)",
               "combined skill (0 = training mean)" if arm == "vnir" else "")
         for noisy, ls in ((True, "-"), (False, ":")):
             xs, m, lo, hi = [], [], [], []
@@ -4275,12 +4276,77 @@ def _hs_stability(H, arm, k):
     return picks, text
 
 
-def p6hs_options(H):
-    """Every set scored in the sweep, as options for James (A-41)."""
+def p6hs_coverage(H) -> dict:
+    """Arm -> the folds it finished."""
+    return {a: frozenset(int(t.name[1:].split("s")[0]) for t in H.tasks[a])
+            for a in (*(x[0] for x in HS_ARMS), "references") if H.tasks[a]}
+
+
+def p6hs_fold_sets(H) -> list:
+    """The fold sets arms can be compared on. Empty when every arm has the same
+    folds. Folds differ in difficulty, so scores from different sets cannot be
+    read side by side."""
+    cov = p6hs_coverage(H)
+    full = max(cov.values(), key=len)
+    return sorted({f for f in cov.values() if f != full}, key=sorted)
+
+
+def p6hs_same_folds(H, folds) -> list[dict]:
+    """Every arm that has these folds, paired with the fixed VNIR on the same runs."""
+    def within(d):
+        return {k: v for k, v in d.items() if k[0] in folds}
+
+    fixed = within(H.get("swir_std", "fixed_only"))
+    cov = p6hs_coverage(H)
+    picks = [(arm, lab, [s for s in H.sets(arm) if s != "fixed_only"][-1])
+             for arm, lab, _ in HS_ARMS if folds <= cov.get(arm, frozenset())]
+    picks.append(("swir_std", "Fixed VNIR", "fixed_only"))
+    picks += [("references", "reference", s) for s in H.sets("references")]
+    rows = []
+    for arm, lab, name in picks:
+        d = within(H.get(arm, name))
+        kk = sorted(set(d) & set(fixed))
+        if not kk:
+            continue
+        rows.append({"label": lab if arm == "swir_std" and name == "fixed_only"
+                     else f"{lab}: {name}", "score": float(np.mean([d[k] for k in kk])),
+                     "gain": float(np.mean([d[k] - fixed[k] for k in kk])), "runs": len(kk),
+                     "fold_scores": [float(np.mean([d[k] for k in kk if k[0] == f]))
+                                     for f in sorted(folds)]})
+    return sorted(rows, key=lambda r: -r["score"])
+
+
+def p6hs_same_folds_figure(same, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, len(same), figsize=(7.2 * len(same), 5.2), facecolor=FIG_BG)
+    for ax, (folds, rows) in zip(np.atleast_1d(axes), same, strict=True):
+        name = ", ".join(str(f) for f in sorted(folds))
+        _axes(ax, f"Folds {name} only: {rows[0]['runs']} runs per set",
+              "combined skill (0 = training mean)", "")
+        ys = np.arange(len(rows))[::-1]
+        for y, r in zip(ys, rows, strict=True):
+            ax.plot([min(r["fold_scores"]), max(r["fold_scores"])], [y, y], color=BLUE, lw=2,
+                    alpha=0.45, solid_capstyle="round")
+            ax.plot(r["score"], y, "o", color=GREEN if r["label"] == "Fixed VNIR" else BLUE, ms=8)
+        ax.set_yticks(ys, [r["label"] for r in rows], fontsize=8, color=INK_BRIGHT)
+    fig.suptitle("P6a-HS  Sets compared only on folds they share (dot: mean; line: fold range)",
+                 color=INK_BRIGHT, x=0.01, y=1.0, ha="left")
+    fig.tight_layout()
+    fig.savefig(out / "same_folds.png", dpi=160, facecolor=FIG_BG, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  wrote {_rel(out / 'same_folds.png')}")
+
+
+def p6hs_options(H, folds=None):
+    """Every set scored in the sweep, as options for James (A-41). With *folds*,
+    scored on those folds only, so the options compare like with like."""
     from safari_bands.band_options import Option, assess
 
+    def within(d):
+        return d if folds is None else {k: v for k, v in d.items() if k[0] in folds}
+
     def stats(arm, name):
-        d = H.get(arm, name)
+        d = within(H.get(arm, name))
         if not d:
             return None
         mu, _, per = _fold_boot(d)
@@ -4299,9 +4365,9 @@ def p6hs_options(H):
                 fixed = H.paths[next(kk for kk in H.paths if kk[0] == arm)]["fixed"]
                 picks, stable = _hs_stability(H, arm, int(name[1:]))
                 bands = [*fixed, *picks]
-            rmse = {t: float(np.mean(list(H.get(arm, name, key=f"rmse_{t}").values())))
+            rmse = {t: float(np.mean(list(within(H.get(arm, name, key=f"rmse_{t}")).values())))
                     for t, _, _ in HS_TARGETS}
-            clean = H.get(arm, name, noisy=False)
+            clean = within(H.get(arm, name, noisy=False))
             opts.append(Option(f"{lab}: {name}", list(bands), s[0], s[1], rmse,
                                float(np.mean(list(clean.values()))) if clean else None, stable))
     return assess(opts)
@@ -4319,10 +4385,15 @@ def p6hs_resources(H):
     return rows
 
 
-def p6hs_tables(H, out, summ, e61, e62, res, D, void, options=None):
+def p6hs_tables(H, out, summ, e61, e62, res, D, void, options=None, same=()):
     L = ["# P6a-HS tables: the AVIRIS-NG band searches (E-61, E-62)\n"]
     if void:
         L += [f"**VOID FOR BANDS.** {void}\n"]
+    if same:
+        cov = p6hs_coverage(H)
+        L += ["**PARTIAL: arms finished different folds, and folds differ in difficulty.** "
+              + "; ".join(f"{a} {sorted(f)}" for a, f in cov.items()) + ". Do not compare arms "
+              "in the first two tables below; use the same-fold tables.\n"]
     n = sorted({r["pixels"]["outer_train"] + r["pixels"]["outer"] for r in H.results.values()})
     L += [f"Run: `{_rel(H.run)}`. Tasks: " + ", ".join(
         f"{a} {len(t)}" for a, t in H.tasks.items()) + f"; {n[0]:,} development pixels. The AVIRIS "
@@ -4389,6 +4460,17 @@ def p6hs_tables(H, out, summ, e61, e62, res, D, void, options=None):
                 f"{min(ins):.1f}-{max(ins):.1f} "
               f"%, placed {min(placed):.1f}-{max(placed):.1f} %. Rotation sources: "
               + ", ".join(f"{k} {v}" for k, v in sorted(src.items())) + "."]
+    for folds, rows, opts in same:
+        from safari_bands.band_options import markdown
+        name = "_".join(str(f) for f in sorted(folds))
+        L += ["", f"## Same folds: {', '.join(str(f) for f in sorted(folds))}\n",
+              "| set | combined skill | above fixed VNIR, same runs | runs |", "|---|---|---|---|"]
+        L += [f"| {r['label']} | {r['score']:+.3f} | {r['gain']:+.3f} | {r['runs']} |"
+              for r in rows]
+        L += ["", f"### The options on folds {', '.join(str(f) for f in sorted(folds))}\n",
+              *markdown(opts)]
+        _csv(out / f"T_same_folds_{name}.csv", rows)
+        _csv(out / f"T_options_folds_{name}.csv", opts)
     if options:
         from safari_bands.band_options import markdown
         L += ["", "## The options\n", *markdown(options)]
@@ -4419,13 +4501,19 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
         agree = p6hs_agreement(D, out)
         _csv(out / "T_label_agreement.csv", agree)
     res = p6hs_resources(H)
-    options = None if void else p6hs_options(H)
-    p6hs_tables(H, out, summ, e61, e62, res, D, void, options)
+    sets = [] if void else p6hs_fold_sets(H)
+    same = [(f, p6hs_same_folds(H, f), p6hs_options(H, f)) for f in sets]
+    if same:
+        p6hs_same_folds_figure([(f, r) for f, r, _ in same], out)
+    options = None if void or same else p6hs_options(H)
+    p6hs_tables(H, out, summ, e61, e62, res, D, void, options, same)
     (out / "summary.json").write_text(json.dumps(
         {"void": void, "curves": {f"{a}|{n}|{'noisy' if z else 'clean'}": v
                                   for (a, n, z), v in summ.items()},
          "selection": picks, "e61": e61, "e62": e62, "resources": res,
-         "s2_reference": ref}, indent=1, default=float))
+         "s2_reference": ref,
+         "same_folds": [{"folds": sorted(f), "rows": r} for f, r, _ in same]},
+        indent=1, default=float))
     (out / "run.json").write_text(json.dumps(
         {"run": str(_rel(run)), "diag": str(diag.name) if diag else None}, indent=1))
 

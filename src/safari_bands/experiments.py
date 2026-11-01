@@ -1613,7 +1613,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid "
              "applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and "
              "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. "
-             "Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional).",
+             "Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional). "
+             "Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks "
+             "and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional).",
     ),
     Experiment(
         "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
@@ -1640,7 +1642,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "but without B5-B7 the k = 6 error is within 5 % on percent conifer "
              "(+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only "
              "camera question waits for the AVIRIS-NG search; the provisional sweep "
-             "of 2026-10-29 is VOID (docs/results/p6a_hs_provisional).",
+             "of 2026-10-29 is VOID (docs/results/p6a_hs_provisional). Partial sweep on "
+             "the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold "
+             "(docs/results/p6a_hs_v2_provisional).",
     ),
     # E-63 was registered on 2026-10-29, when James chose the 2024-2025 cohort's
     # role, before any 2024-2025 patch, composite or score existed.

@@ -980,6 +980,46 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P6a-HS-v2", "AVIRIS-NG band searches, corrected pack, partial sweep", "2026-11-01",
+        "p6a_hs_v2_provisional", "README.md",
+        "The same search on the rotated pack: 31 of 42 lines, SCANFI labels. 51 of 75 tasks "
+        "finished, and arms finished different folds, so arms are compared only on folds they "
+        "share. A first look, not the final sweep.",
+        (
+            Entry("E-61", "experiment", "PENDING",
+                  result="Not decided. Extended InGaAs removes more RMSE than standard on 6 runs "
+                         "from folds 1 and 3: +0.35 % conifer, +0.53 % closure, +0.28 m height. "
+                         "Extended's search did not finish on folds 0, 2, 4.",
+                  conclusion="Two folds are too few for a verdict. Decide on the 42-line sweep."),
+            Entry("E-62", "experiment", "PENDING",
+                  result="Not tested: the VNIR and no-red-edge arms share no fold. A 700-760 nm "
+                         "band is in 9/9 best 6-band VNIR sets.",
+                  conclusion="Decide on the 42-line sweep."),
+            Entry("P6hsv2-M1", "measurement", "MEASURED",
+                  title="What SWIR adds on shared folds",
+                  question="How far above the fixed VNIR set does each set score on the same runs?",
+                  independent="band set, on folds 0, 2, 4 (9 runs) and folds 1, 3 (6 runs)",
+                  dependent="combined skill with noise, against SCANFI, above the fixed VNIR",
+                  result="Sentinel-2 +0.015 and +0.031; config C +0.006 and +0.034; config A "
+                         "+0.002 and +0.012; config B -0.006 and +0.015; searched VNIR -0.009 "
+                         "(folds 0, 2, 4).",
+                  conclusion="SWIR adds a small, fold-dependent amount and the VNIR search adds "
+                             "nothing here. The labels come from Landsat SWIR, so whether SWIR "
+                             "is favoured waits for hs_plots and hs_lidar."),
+            Entry("P6hsv2-M2", "measurement", "MEASURED",
+                  title="What the sweep used",
+                  question="How much of the request did the tasks use?",
+                  independent="13 GPU jobs on Nibi, 3 h requested, six tasks at three at a time",
+                  dependent="wall time per task; jobs finished",
+                  result="Median minutes: references 28, standard InGaAs 79, no red edge 121, "
+                         "VNIR 132, extended InGaAs 155. 8 of 13 jobs timed out; 51 of 75 tasks "
+                         "finished.",
+                  conclusion="P6hs-M1 was wrong that 3 h would hold. sweep_hs.sh now asks for 6 h. "
+                             "Timeouts also cost whole folds per arm, which is what split the "
+                             "arms; a single unfinished arm would have been easier to read."),
+        ),
+    ),
+    Phase(
         "P6b", "The 2024-2025 cohort and what CWFIS issued", "2026-10-30",
         "p6b_cohort", "README.md",
         "240 patches, 60 fire and 60 unburned per year, with imagery, labels, weather, fuel, "

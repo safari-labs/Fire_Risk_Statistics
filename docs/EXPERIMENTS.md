@@ -667,7 +667,7 @@ What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked
 
 Which SWIR placements, and which detector, the structure targets need; feeds E-46 and the SWIR chain choice.
 
-*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional).
+*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional).
 
 *Blocked on:* the corrected pack aviris_v2 goes to the cluster; 11 of 42 pre-fire AVIRIS-NG lines still downloading (2026-10-30). The first sweep (hs_v1_provisional) is void: rotated lines were placed north-up, so its labels came from the wrong ground (A-40 amendment)
 
@@ -677,7 +677,7 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
 
-*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search; the provisional sweep of 2026-10-29 is VOID (docs/results/p6a_hs_provisional).
+*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search; the provisional sweep of 2026-10-29 is VOID (docs/results/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold (docs/results/p6a_hs_v2_provisional).
 
 *Blocked on:* as E-61: rerun on aviris_v2; the first sweep is void (A-40 amendment)
 
