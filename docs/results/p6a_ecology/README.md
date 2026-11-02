@@ -43,3 +43,11 @@ python scripts/make_phase_docs.py --phase P6a
 ## Resources
 
 Tasks took 47 minutes median (52 max) of the 3 hours requested, with 343–460 fits each. GPU 92 % busy, 12.6 GB peak of 80; job memory 5.8 GB of 32. The first submission failed on A100 nodes ("Illegal instruction": the login node's software architecture), fixed in `make_env`.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-22** Ecology arm (tiles): [maps_pc.png](maps_pc.png), [maps_closure.png](maps_closure.png), [maps_height.png](maps_height.png), [maps_family.png](maps_family.png), [tiles.png](tiles.png)
+- **E-59** Indices as model inputs (none): NEEDS A JOB: the saved maps use one input mode (raw + indices). Maps per mode need cluster refits with predict_eco_maps.py --mode, and sweep_eco_maps.sh does not pass --mode yet.
+- **E-62** Best VNIR bands, searched broadly (tiles): [maps_family.png](maps_family.png)
+<!-- qual:end -->

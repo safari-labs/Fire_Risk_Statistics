@@ -47,3 +47,9 @@ python scripts/make_phase_docs.py --phase P6d
 | `auc.png` | AUC of DC, DMC, BUI and FWI under all four start-ups, by latitude band |
 | `dates.png` | each patch's season start against ERA5's, and the DC move by latitude |
 | `tables.md`, `T_falsifier.csv`, `summary.json` | the numbers |
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-18** Snow-off startup (patch map): [qual_E-18_patch_map.png](qual_E-18_patch_map.png)
+<!-- qual:end -->

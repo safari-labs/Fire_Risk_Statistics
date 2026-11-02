@@ -178,3 +178,15 @@ python scripts/make_phase_docs.py --phase P3
 - **Fire_Risk_Statistics:**
   - `scripts/make_results_package.py --phase P3`.
   - Register entries E-49 to E-53; assumption A-32; this folder.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-21** Fuel-layer refresh (tiles): [qual_E-21_inventory_age.png](qual_E-21_inventory_age.png)
+- **E-49** Dating the weather (R0) (tiles): [qual_E-49_weather_date.png](qual_E-49_weather_date.png)
+- **E-50** Latitude-correct day length (R0) (patch map): [qual_E-50_patch_map.png](qual_E-50_patch_map.png)
+- **E-51** Operational start-up (R0) (patch map): [qual_E-51_patch_map.png](qual_E-51_patch_map.png)
+- **E-52** Weather source: station vs ERA5 (R0) (patch map): [qual_E-52_patch_map.png](qual_E-52_patch_map.png)
+- **E-53** Weather staleness under R0 (patch map): [qual_E-53_patch_map.png](qual_E-53_patch_map.png)
+- **E-43** Date-only control (none): Control on date features alone: it uses no imagery and produces no per-pixel or per-location output to view.
+<!-- qual:end -->

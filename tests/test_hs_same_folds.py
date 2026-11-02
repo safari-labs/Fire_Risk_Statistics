@@ -55,3 +55,12 @@ def test_a_set_is_scored_only_on_the_shared_folds(M):
     assert fixed["score"] == pytest.approx(0.2)                         # not the all-fold 0.25
     assert rows["reference: s2"]["gain"] == pytest.approx(0.15)
     assert fixed["runs"] == 1
+
+
+def test_stability_breaks_a_tie_the_same_way_every_build(M):
+    """Two bands chosen equally often: set order follows the string hash, which
+    Python seeds per process, so the option table changed between builds."""
+    H = SimpleNamespace(paths={("swir_std", 0, 0): {"steps": [{"added": "1690/20@std"}]},
+                               ("swir_std", 0, 1): {"steps": [{"added": "1680/20@std"}]}})
+    picks, _ = M._hs_stability(H, "swir_std", 1)
+    assert picks == ["1680/20@std"]

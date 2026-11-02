@@ -97,3 +97,9 @@ python scripts/make_phase_docs.py --phase P4
 - **Fire_Risk_Statistics:**
   - `make_results_package.py --phase P4`.
   - Register E-54; assumption A-33; this folder.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-54** Legacy composite leakage (tiles): [composite_tiles.png](composite_tiles.png)
+<!-- qual:end -->

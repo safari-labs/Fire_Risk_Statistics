@@ -144,3 +144,10 @@ The run directory is git-ignored. `run.json` here records its config, the qualit
 - **Fire_Risk_Statistics:**
   - `scripts/make_results_package.py --phase P2`.
   - This folder.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-32** CFFDRS as is (R0) (tiles): [qual_E-32_r0.png](qual_E-32_r0.png), [tiles.png](tiles.png)
+- **E-33** Fuel inventory comparison (tiles): [qual_E-33_inventories.png](qual_E-33_inventories.png)
+<!-- qual:end -->

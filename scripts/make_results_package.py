@@ -4268,7 +4268,7 @@ def _hs_stability(H, arm, k):
         for s in p["steps"][:k]:
             regions.setdefault(round(_hs_band(s["added"])[0] / 50) * 50, []).append(s["added"])
     top = sorted(regions.items(), key=lambda x: -len(x[1]))[:k]
-    picks = [max(set(v), key=v.count) for _, v in top]
+    picks = [max(sorted(set(v)), key=v.count) for _, v in top]  # sorted: ties repeat across builds
     shares = [len(v) / len(paths) for _, v in top]
     worst = min(shares)
     text = (f"stable: every region chosen in at least {worst:.0%} of searches" if worst >= 4 / 6

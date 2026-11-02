@@ -70,3 +70,10 @@ The sweep has to be rerun on `aviris_v2`, with all five arms (including `referen
 | `curves.png` | held-out skill by nested set, marked void |
 | `selection.png` | bands chosen, marked void |
 | `tables.md`, `T_label_agreement.csv`, `T_targets.csv`, `summary.json` | the numbers |
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-61** Best SWIR bands, searched broadly (none): Void run: its labels came from the wrong ground (A-40 amendment), so a map would only show that error.
+- **E-62** Best VNIR bands, searched broadly (none): Void run, as E-61 here.
+<!-- qual:end -->

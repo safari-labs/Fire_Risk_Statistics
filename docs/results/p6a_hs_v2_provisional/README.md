@@ -69,3 +69,10 @@ Each same-fold section of `tables.md` lists the options with cost, pros and cons
 Eight of the 13 jobs timed out at 3 h. Three tasks at a time over two rounds needs up to about 5 h, so `sweep_hs.sh` now asks for 6 h. The earlier note that 3 h would hold (`P6hs-M1`) was wrong: tasks took two to three times the first run's.
 
 The package code now finds unequal folds itself, splits the options and adds `same_folds.png`. A complete sweep builds as before.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-61** Best SWIR bands, searched broadly (line strips): [qual_E-61_family.png](qual_E-61_family.png), [qual_E-61_pc.png](qual_E-61_pc.png), [qual_E-61_closure.png](qual_E-61_closure.png), [qual_E-61_height.png](qual_E-61_height.png)
+- **E-62** Best VNIR bands, searched broadly (line strips): [qual_E-62_family.png](qual_E-62_family.png), [qual_E-62_pc.png](qual_E-62_pc.png), [qual_E-62_closure.png](qual_E-62_closure.png), [qual_E-62_height.png](qual_E-62_height.png)
+<!-- qual:end -->

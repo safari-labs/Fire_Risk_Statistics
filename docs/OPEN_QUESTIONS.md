@@ -795,7 +795,7 @@ Options:
 ### Q35 — What the ecology labels can and cannot say about bands
 
 **Status:** PARTLY ANSWERED (2026-10-30; A-44)
-**Answer so far (James, 2026-10-30):** Point 1: use independent labels; the lidar and ground-plot searches are built (A-44), and James is requesting exact NFI coordinates. Point 2: split open ground into the existing grass, slash and non-fuel classes rather than add a new one. James, 2026-11-01: shrub goes to grass (O), and fetch a harvest layer for slash. Still open: which harvest source, and how recent a cut counts as slash.
+**Answer so far (James, 2026-10-30):** Point 1: use independent labels; the lidar and ground-plot searches are built (A-44), and James is requesting exact NFI coordinates. Point 2: split open ground into the existing grass, slash and non-fuel classes rather than add a new one. James, 2026-11-01: shrub goes to grass (O), and fetch a harvest layer for slash; built into `aviris_v3` (A-44). James, 2026-11-01: slash stays at 5 years, bryoids are fuel (O), and the ecology pack takes the same labels. Built into `aviris_v4` and `ecology_v3` (A-44); eco_v2 reruns on Nibi.
 **Blocks:** nothing now. It shapes how P12 weighs the P6a rankings, and the next ecology run.
 
 Two things about the SCANFI labels limit what the P6a band rankings mean (`docs/results/p6a_ecology`).

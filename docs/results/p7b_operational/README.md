@@ -86,3 +86,9 @@ At 83 fires, none of our rungs separates from the FWI CWFIS actually issued, bet
   - an ERA5 rain correction or a minimum-rain threshold;
   - a season start that follows CWFIS's.
 - **E-56** (2024–2025 cohort) is the only route to comparing against FBP outputs CWFIS issued, unless CWFIS holds older grids (Q30).
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-55** Operational FWI grid vs the reconstruction (patch map): [qual_E-55_patch_map.png](qual_E-55_patch_map.png)
+<!-- qual:end -->

@@ -46,3 +46,10 @@ python scripts/make_phase_docs.py --phase P6b
 | `experiments.png`, `experiments.md` | phase sheet: E-56, E-63's status, the cohort checks |
 | `issued_vs_r0.png` | HFI ISSUED against Reconstructed (ours), and AUC per output |
 | `tables.md`, `T_e56.csv`, `summary.json` | the numbers |
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-56** Operational FBP outputs on a 2024-2025 cohort (tiles and patch map): [qual_E-56_cohort_tiles.png](qual_E-56_cohort_tiles.png), [qual_E-56_patch_map.png](qual_E-56_patch_map.png)
+- **E-63** Out-of-time generalisation, two training regimes (none): PENDING: no results yet (e63_regime_a, e63_regime_b running).
+<!-- qual:end -->

@@ -121,3 +121,12 @@ Before the next full sweep, Q29 asks three things:
 - whether to run curing on CWFIS fuel;
 - whether to add an imagery-free offset per slot;
 - what to do about R2's gap to R1.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-34** Learned CFFDRS (R1/R2) (tiles): [tiles.png](tiles.png)
+- **E-36** Percent-conifer slot (tiles): [qual_E-36_pc.png](qual_E-36_pc.png)
+- **E-37** Crown-base-height slot (tiles): [qual_E-37_cbh.png](qual_E-37_cbh.png)
+- **E-20** Weather staleness (tiles): [qual_E-20_staleness.png](qual_E-20_staleness.png)
+<!-- qual:end -->

@@ -83,3 +83,11 @@ SUBMIT=1 EXP_NAME=slots_v3 RUN_ID=20261026-2121 SKIP_DONE=1 CONFIGS=r2_warm bash
 ```
 
 The GPU is mostly idle (25 %, 1.5 GB), so one test sub-array on an A100 MIG slice could cut the request. A MIG slice has its own CPU limit, though, and these jobs are input-bound, so it needs testing first.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-58** Closing R2's within-patch gap to R1 (tiles): [qual_E-58_r2_gap.png](qual_E-58_r2_gap.png)
+- **E-57** Percent-conifer correction with an imagery-free offset (tiles): [qual_E-57_pc_offset.png](qual_E-57_pc_offset.png)
+- **E-38** Curing slot (tiles): [qual_E-38_curing.png](qual_E-38_curing.png)
+<!-- qual:end -->

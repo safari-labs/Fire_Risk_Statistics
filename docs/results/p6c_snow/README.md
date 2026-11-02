@@ -38,3 +38,9 @@ python scripts/make_phase_docs.py --phase P6c
 ## Resources
 
 Tasks took 4.4 minutes median (5.6 max) against the 2 hours requested; `sweep_snow.sh` now asks for 0:30:00.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **E-60** Snow-off without SWIR (station map): [series_map.png](series_map.png), [series.png](series.png)
+<!-- qual:end -->
