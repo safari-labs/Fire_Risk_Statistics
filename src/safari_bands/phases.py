@@ -1037,8 +1037,8 @@ PHASES: tuple[Phase, ...] = (
                              "than 0.03, and R0 shares CWFIS fuel and green-up, so part of the "
                              "agreement is built in. 2025 waits for P10."),
             Entry("E-63", "experiment", "PENDING",
-                  result="Pack and regimes built, not yet run.",
-                  conclusion="Run regime B first: its 2024 test is scored before regime A's "
+                  result="Pack and regimes built here. Run and read in P6e.",
+                  conclusion="Regime B first: its 2024 test is scored before regime A's "
                              "2024 training results are looked at."),
             Entry("P6b-C1", "check", "PASS",
                   title="Is the frozen 2025 set intact and unreachable?",
@@ -1084,6 +1084,139 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="ERA5's late melt is small here, which is why a better date has "
                              "little to fix. VNIR-only's late tail is E-60's late misses, and "
                              "it costs skill by starting the season weeks late."),
+        ),
+    ),
+    Phase(
+        "P6e", "Out-of-time generalisation on 2024 (E-63)", "2026-11-02",
+        "p6e_out_of_time", "README.md",
+        "Regime B trains and selects on 2019-2023 and scores 2024, 60 fires and 60 unburned "
+        "patches it never saw. Regime A adds 2024 to training. 60 fits, none truncated. All "
+        "values Reconstructed (ours). 2025 is frozen and was not opened, so hypothesis (b) and "
+        "the 2024-2025 reading wait for P10.",
+        (
+            Entry("E-63", "experiment", "AT RISK",
+                  result="2024, CV then 2024. Within: R1 0.719, 0.642; R2 0.695, 0.632. Between: "
+                         "R1 0.886, 0.779; R2 0.880, 0.795. Every drop is above 0.05 and every CI "
+                         "includes it. R1 - R0: within +0.025 [+0.009, +0.041], between -0.035 "
+                         "[-0.095, +0.021].",
+                  conclusion="The drop clause does not fire, but the R0 clause does between "
+                             "patches, on 2024 alone. Registered on 2024-2025, so open until "
+                             "P10. Hypothesis (b) is not tested yet."),
+            Entry("P6e-C1", "check", "PASS",
+                  title="Does regime B reproduce the earlier sweep?",
+                  question="R1 and R2 on the same folds and seeds match slots_v3.",
+                  independent="regime B's cross-validation against slots_v3",
+                  dependent="within- and between-patch AUC",
+                  result="R1 0.719, 0.886 and R2 0.695, 0.880, as slots_v3.",
+                  conclusion="The 2024 comparison sits on the same models the earlier results "
+                             "came from."),
+            Entry("P6e-C2", "check", "PASS",
+                  title="Was 2025 left alone?",
+                  question="No run scores 2025, and regime A has no 2024 score.",
+                  independent="the result files of both regimes",
+                  dependent="scores written per year",
+                  result="Regime B wrote 2019-2023 and year2024 only. Regime A wrote 2019-2023 "
+                         "only.",
+                  conclusion="The frozen year is untouched and the reading order held."),
+            Entry("P6e-M1", "measurement", "MEASURED",
+                  title="How much of the fall is the cohort?",
+                  question="R0 has no training. How much does it fall too?",
+                  independent="R0, R1, R2 on CV and on 2024",
+                  dependent="change in AUC, and the change net of R0's",
+                  result="R0 falls -0.064 within and -0.046 between. Net of that, R1 -0.013 "
+                         "[-0.035, +0.012] within and -0.062 [-0.136, -0.000] between; R2 +0.001 "
+                         "and -0.039 [-0.102, +0.018].",
+                  conclusion="The within-patch fall is mostly the cohort. Between patches the "
+                             "learned ranking travels worse than the physics."),
+            Entry("P6e-M2", "measurement", "MEASURED",
+                  title="Skill inside one fuel family",
+                  question="How much within-patch skill survives inside a family on 2024?",
+                  independent="pixels of C, D, M only",
+                  dependent="within-patch AUC, CV then 2024",
+                  result="R1: C 0.630, 0.537; D 0.627, 0.596; M 0.593, 0.527. R2: C 0.593, 0.517; "
+                         "D 0.566, 0.570; M 0.564, 0.534.",
+                  conclusion="On an unseen year most within-patch skill is telling fuel types "
+                             "apart, which raises the stakes on E-35."),
+            Entry("P6e-M3", "measurement", "MEASURED",
+                  title="Regime A on the 2019-2023 folds",
+                  question="Does 2024 in training change the old folds?",
+                  independent="regime A against B, same folds and seeds",
+                  dependent="within- and between-patch AUC",
+                  result="R1 -0.008 [-0.018, +0.001] within, -0.007 [-0.021, +0.006] between; R2 "
+                         "-0.005 and -0.003, CIs spanning 0.",
+                  conclusion="No detectable effect on the old folds. This does not test (b)."),
+        ),
+    ),
+    Phase(
+        "P6a-ext", "Band rankings on labels that owe nothing to Landsat", "2026-11-02",
+        "p6a_external_labels", "README.md",
+        "The same search against labels not mapped from Landsat: 14,232 ground plots with "
+        "Sentinel-2 bands, and 98,586 pixels of ATL08 lidar height with AVIRIS-NG bands. All "
+        "tasks finished. No hypothesis was registered for this test (Q35, A-44), so these are "
+        "measurements. Frozen data were not transferred.",
+        (
+            Entry("P6x-C1", "check", "PASS",
+                  title="Did the right packs run?",
+                  question="Pixels per run match the plots and lidar packs.",
+                  independent="result files against pack sizes",
+                  dependent="training plus held-out pixels",
+                  result="14,232 plots and 98,586 pixels. The labels field reads SCANFI in all "
+                         "runs: it is a fixed string in the runner.",
+                  conclusion="The right data ran. The field is wrong and should be fixed in the "
+                             "runner."),
+            Entry("P6x-M1", "measurement", "MEASURED",
+                  title="SWIR against ground plots",
+                  question="Does SWIR still help when labels are measured, not mapped?",
+                  independent="sets added to six VNIR bands, Sentinel-2",
+                  dependent="RMSE per target and combined skill, paired, with noise",
+                  result="SWIR1: conifer -1.51 % [-1.70, -1.25], height -0.33 m [-0.40, -0.22], "
+                         "skill +0.048. SWIR2 -0.99 %, -0.25 m, +0.034. Both -1.78 %, -0.34 m, "
+                         "+0.053. All 5/5 folds. NIR first in 15/15, 1610 second in 11/15.",
+                  conclusion="SWIR's value is not a Landsat artefact, in forests. SWIR1 does most "
+                             "of it: SWIR2 adds +0.005 on top, SWIR1 +0.019 the other way."),
+            Entry("P6x-M2", "measurement", "MEASURED",
+                  title="SWIR against lidar height",
+                  question="Does SWIR help height against ATL08?",
+                  independent="fixed sets against six VNIR bands, AVIRIS-NG",
+                  dependent="height RMSE, paired, with noise",
+                  result="Config B -0.106 m [-0.186, -0.027], Mantis MS + SWIR -0.099, config A "
+                         "-0.036, config C -0.087 [-0.184, +0.014]. Against SCANFI height: config "
+                         "C -0.131, config B -0.081. Searched sets do not beat fixed VNIR.",
+                  conclusion="Same direction and size as SCANFI, so no sign SCANFI inflates "
+                             "SWIR for height. Partial: 9 of 37 lines lack ATL08."),
+        ),
+    ),
+    Phase(
+        "P6a-HS-v3", "AVIRIS-NG band searches, all lines and folds", "2026-11-02",
+        "p6a_hs_v3", "README.md",
+        "The full sweep on aviris_v3: 42 lines, 75 of 75 tasks, SCANFI labels, with noise. "
+        "aviris_v4 changes only 1.62 % of family labels and none of the three targets E-61 and "
+        "E-62 are registered on, so these readings stand until hs_v4 confirms them.",
+        (
+            Entry("E-61", "experiment", "PARTIAL",
+                  result="Extra RMSE removed by extended over standard, k = 4: conifer -0.24 "
+                         "[-0.56, +0.08], closure +0.06 [-0.03, +0.17], height +0.04 [-0.01, "
+                         "+0.09]. Searches unstable. Config C (1610, 2190) scores best, 0.277, "
+                         "and beats searched standard on height by 0.096 m.",
+                  conclusion="The falsifier does not fire, for these searches. They did not find "
+                             "the best set, so this does not show 2190 nm adds nothing: over "
+                             "config A it improves height 0.13 m [0.09, 0.19]. hs_v4 confirms."),
+            Entry("E-62", "experiment", "PARTIAL",
+                  result="No red edge minus VNIR, k = 6: conifer -1.2 % [-2.9, +0.1], closure "
+                         "+2.2 % [-0.3, +5.6]. A 700-760 nm band is in 12/15 best sets.",
+                  conclusion="The falsifier fires: without red edge the set is within 5 % on both "
+                             "targets. The best sets prefer the band but do not need it. Matches "
+                             "the Sentinel-2 half. hs_v4 confirms."),
+            Entry("P6hsv3-M1", "measurement", "MEASURED",
+                  title="What SWIR adds on AVIRIS-NG against SCANFI",
+                  question="How far above fixed VNIR does each set score on the same runs?",
+                  independent="reference and searched sets, same folds and seeds",
+                  dependent="combined skill and RMSE per target, with noise",
+                  result="Fixed VNIR 0.261. Config C +0.016 [-0.000, +0.037], Sentinel-2 +0.013, "
+                         "Mantis MS + SWIR +0.012 [+0.006, +0.018], config A +0.007. Closure "
+                         "improves in every set; percent conifer in none.",
+                  conclusion="A small gain, on closure and height. Ground plots show a much "
+                             "larger one on percent conifer: the main open puzzle."),
         ),
     ),
 )

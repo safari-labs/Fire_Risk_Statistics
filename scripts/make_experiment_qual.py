@@ -50,6 +50,11 @@ SLOTS_V3 = ROOT / "narval_results" / "slots_v3" / "20261026-2121"
 HS_RUN = ROOT / "narval_results" / "hs_v2_provisional" / "20261030-1755"
 HS_PACK = ROOT.parent / "Fire_Risk_Model" / "data" / "aviris_v2" / "dev.npz"
 HS_OUT = RESULTS / "p6a_hs_v2_provisional"
+E63_B = ROOT / "narval_results" / "e63_regime_b" / "20261101-2054"
+PLOTS_RUN = ROOT / "narval_results" / "hs_plots" / "20261101-2024"
+LIDAR_RUN = ROOT / "narval_results" / "hs_lidar" / "20261101-2024"
+LIDAR_PACK = ROOT.parent / "Fire_Risk_Model" / "data" / "aviris_lidar_v1" / "dev.npz"
+EXT_OUT = RESULTS / "p6a_external_labels"
 
 HS_FAMILIES = ("C", "D", "M", "O", "S", "NF", "WA")
 STRIP = (200, 36)       # bins along and across a line
@@ -329,7 +334,7 @@ def _symmetric_max(v: np.ndarray) -> float:
 
 
 def patch_map(pos, panels, out: Path, name: str, title: str, caption: str,
-              clip: float | None = None):
+              clip: float | None = None, what: str = "patch"):
     """Each patch a dot at its location. panels: (values, label, unit). The
     scale is the 98th percentile of the change, or *clip* when given."""
     plt = R._plt()
@@ -345,7 +350,9 @@ def patch_map(pos, panels, out: Path, name: str, title: str, caption: str,
         m = shared or _symmetric_max(v[ok])
         sc = ax.scatter(lon[ok], lat[ok], c=np.clip(v[ok], -m, m), cmap="RdBu_r", vmin=-m, vmax=m,
                         s=14, edgecolors="none")
-        ax.text(0.01, 0.02, f"median {np.median(v[ok]):+.1f} {unit}; n = {int(ok.sum())} patches",
+        plural = f"{what}es" if what.endswith("ch") else f"{what}s"
+        ax.text(0.01, 0.02,
+                f"median {np.median(v[ok]):+.2g} {unit}; n = {int(ok.sum())} {plural}",
                 transform=ax.transAxes, color=R.INK_BRIGHT, fontsize=8)
         cb = fig.colorbar(sc, ax=ax, fraction=0.035, pad=0.02)
         cb.set_label(unit, color=R.INK, fontsize=8)
@@ -353,7 +360,7 @@ def patch_map(pos, panels, out: Path, name: str, title: str, caption: str,
     fig.suptitle(title, color=R.INK_BRIGHT, x=0.01, y=1.0, ha="left", fontsize=12)
     fig.tight_layout()
     scale = f"clipped at +/-{clip:g}" if clip else "clipped at the 98th percentile of the change"
-    R._caption(fig, f"Each dot is one development patch. Blue is lower, red higher, {scale}. "
+    R._caption(fig, f"Each dot is one development {what}. Blue is lower, red higher, {scale}. "
                + caption, y=-0.02)
     R._save(fig, out, name)
 
@@ -448,6 +455,90 @@ def e56_map(out: Path):
               "2024 patches where both sources give a positive HFI; 2025 is the frozen time test "
               "and is not read. Near-zero values make extreme ratios, hence the fixed clip (a "
               "factor of 30). Red = our reconstruction is above what CWFIS issued.", clip=1.5)
+
+
+def e63_map(out: Path):
+    Y = R._Year2024(E63_B)
+    lonlat = {r["stem"]: (float(r["lon"]), float(r["lat"]))
+              for r in R._read_csv(R.E63_R0_2024 / "per_patch.csv")}
+    pos = [{"stem": p, "lon": lonlat[p][0], "lat": lonlat[p][1]} for p in Y.pat]
+    w = np.nanmean(Y.W["r1"], axis=0) - Y.r0_w
+    w[~Y.fire] = np.nan
+    sign = np.where(Y.fire, 1.0, -1.0)
+    rank = (R._rank(Y.S["r1"].mean(axis=0)) - R._rank(np.nan_to_num(Y.r0_s))) / len(Y.pat)
+    patch_map(pos, [(w, "Within-patch AUC: R1 minus R0, 2024 fires", "AUC"),
+                    (100 * sign * rank, "Between patches: rank gained by R1 over R0, 2024",
+                     "percentile points")], out, "qual_E-63_patch_map.png",
+              "E-63  Where R1 beats the physics on a year it never saw",
+              "Regime B, 15 models averaged; R0 is HFI on SCANFI 2020 fuel; both Reconstructed "
+              "(ours). Right: red means R1 moved the patch the right way (fires up, unburned "
+              "down). The runs save tiles from 2019-2023 only, so a 2024 tile needs a job. "
+              "2025 is frozen and was not opened.")
+
+
+def _pool_preds(run: Path, arm: str, names: list[str]) -> dict:
+    """Held-out predictions over the five folds, seed 0."""
+    keep = ("y", "lon", "lat", "line", "group")
+    zs = [np.load(p) for p in sorted((run / arm).glob("f*s0/pred.npz"))]
+    return {k: np.concatenate([z[k] for z in zs])
+            for k in (*keep, *(f"{n}__{t}" for n in names for t in ("pc", "height")))}
+
+
+def e22_plots_map(out: Path):
+    z = _pool_preds(PLOTS_RUN, "references", ["vnir6", "vnir6_swir1"])
+    cell = np.round(z["lon"] * 4) / 4 + 1j * np.round(z["lat"] * 4) / 4
+    cells, inv, n = np.unique(cell, return_inverse=True, return_counts=True)
+    use = n >= 5
+    pos = [{"lon": c.real, "lat": c.imag} for c in cells[use]]
+    panels = []
+    for t, j, lab, unit in (("pc", 0, "percent conifer", "% conifer"),
+                            ("height", 2, "height", "m")):
+        ok = np.isfinite(z["y"][:, j])
+        gain = (np.abs(z[f"vnir6__{t}"] - z["y"][:, j])
+                - np.abs(z[f"vnir6_swir1__{t}"] - z["y"][:, j]))
+        cnt = np.bincount(inv[ok], minlength=len(cells))
+        v = np.bincount(inv[ok], weights=gain[ok], minlength=len(cells)) / np.maximum(cnt, 1)
+        panels.append((v[use], f"{lab}: error removed by adding SWIR1", unit))
+    patch_map(pos, panels, out, "qual_E-22_plots_map.png",
+              "Ground plots  Where SWIR1 helps most against measured labels",
+              "A cell is 0.25 degrees with at least 5 held-out plots, seed 0. Red: "
+              "adding 1610 nm to six VNIR bands lowers the absolute error against the ground "
+              "measurement. Plots have no image tile; each is one point.", what="cell")
+
+
+def _bin_median(v, idx, bins=40):
+    return np.array([np.median(v[idx == b]) if (idx == b).sum() >= 5 else np.nan
+                     for b in range(bins)])
+
+
+def lidar_tracks(out: Path):
+    plt = R._plt()
+    names = {"config_c/VNIR": ("VNIR 6", R.ORANGE), "config_b": ("config B", R.BLUE)}
+    z = _pool_preds(LIDAR_RUN, "references", list(names))
+    top = np.argsort(np.bincount(z["line"]))[::-1][:4]
+    fig, axes = plt.subplots(len(top), 1, figsize=(11, 2.1 * len(top)), facecolor=R.FIG_BG)
+    pack = np.load(LIDAR_PACK)
+    ids = pack["line_ids"]
+    for ax, line in zip(axes, top, strict=True):
+        i = np.flatnonzero((z["line"] == line) & np.isfinite(z["y"][:, 2]))
+        cos, origin, vt, _ = strip_axes(z["lon"][i], z["lat"][i])
+        s = ((np.column_stack([z["lon"][i] * cos, z["lat"][i]]) - origin) @ vt.T)[:, 0]
+        bins = np.linspace(s.min(), s.max(), 41)
+        idx = np.clip(np.digitize(s, bins) - 1, 0, 39)
+        mid = (bins[:-1] + bins[1:]) / 2 * 111
+
+        R._axes(ax, f"{ids[line]}: {len(i):,} held-out pixels", "", "height (m)")
+        ax.plot(mid, _bin_median(z["y"][i, 2], idx), color=R.INK_BRIGHT, lw=2, label="ATL08 lidar")
+        for k, (lab, col) in names.items():
+            ax.plot(mid, _bin_median(z[f"{k}__height"][i], idx), color=col, lw=1.6, label=lab)
+    axes[0].legend(fontsize=7.5, facecolor=R.AX_BG, edgecolor=R.SPINE, labelcolor=R.INK, ncol=3,
+                   loc="upper right")
+    axes[-1].set_xlabel("distance along the line (km)", color=R.INK, fontsize=8)
+    fig.tight_layout()
+    R._caption(fig, "Median in 40 bins along each flight line with the most held-out lidar pixels, "
+               "seed 0, bins with at least 5 pixels. Lidar covers tracks, not swaths, so a strip "
+               "image would be mostly empty.", y=-0.01)
+    R._save(fig, out, "qual_lidar_tracks.png")
 
 
 # ---- AVIRIS-NG line strips ------------------------------------------------
@@ -623,6 +714,8 @@ BUILD = {
     "E-55": lambda: e55_map(RESULTS / "p7b_operational"),
     "E-18": lambda: e18_map(RESULTS / "p6d_startup"),
     "E-56": lambda: (e56_map(RESULTS / "p6b_cohort"), e56_tiles(RESULTS / "p6b_cohort")),
+    "E-63": lambda: e63_map(RESULTS / "p6e_out_of_time"),
+    "E-22": lambda: (e22_plots_map(EXT_OUT), lidar_tracks(EXT_OUT)),
     "E-36": lambda: slot_tiles(
         SV2, [("r2:pred", "R2"), ("r3_pc:pred", "R3 PC"), ("r3_pc:delta_pc", "PC correction"),
               ("r3_pc_shuffled:delta_pc", "twin's correction")], RESULTS / "p7_slots",
@@ -694,6 +787,10 @@ QUAL = [
      "sweep_eco_maps.sh does not pass --mode yet."),
     ("E-62", "p6a_ecology", "tiles", ["maps_family.png"]),
     ("E-60", "p6c_snow", "station map", ["series_map.png", "series.png"]),
+    ("E-61", "p6a_hs_v3", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-62", "p6a_hs_v3", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-22", "p6a_external_labels", "cell map and lidar tracks",
+     ["qual_E-22_plots_map.png", "qual_lidar_tracks.png"]),
     ("E-61", "p6a_hs_v2_provisional", "line strips",
      [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
     ("E-62", "p6a_hs_v2_provisional", "line strips",
@@ -703,7 +800,7 @@ QUAL = [
     ("E-62", "p6a_hs_provisional", "none", "Void run, as E-61 here."),
     ("E-56", "p6b_cohort", "tiles and patch map", ["qual_E-56_cohort_tiles.png",
                                                    "qual_E-56_patch_map.png"]),
-    ("E-63", "p6b_cohort", "none", "PENDING: no results yet (e63_regime_a, e63_regime_b running)."),
+    ("E-63", "p6e_out_of_time", "patch map", ["qual_E-63_patch_map.png"]),
     ("E-18", "p6d_startup", "patch map", ["qual_E-18_patch_map.png"]),
 ]
 

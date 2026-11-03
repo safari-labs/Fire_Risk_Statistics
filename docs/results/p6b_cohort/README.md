@@ -51,5 +51,4 @@ python scripts/make_phase_docs.py --phase P6b
 ## Qualitative view per experiment
 
 - **E-56** Operational FBP outputs on a 2024-2025 cohort (tiles and patch map): [qual_E-56_cohort_tiles.png](qual_E-56_cohort_tiles.png), [qual_E-56_patch_map.png](qual_E-56_patch_map.png)
-- **E-63** Out-of-time generalisation, two training regimes (none): PENDING: no results yet (e63_regime_a, e63_regime_b running).
 <!-- qual:end -->

@@ -43,6 +43,17 @@ def test_listed_files_exist_and_a_none_gives_its_reason(Q):
                 assert (Q.RESULTS / folder / f).exists(), (eid, f)
 
 
+def test_results_scripts_never_redefine_a_top_level_name():
+    """make_experiment_qual calls make_results_package helpers by name, so a
+    second definition silently changes what older figures draw."""
+    import ast
+    for name in ("make_results_package.py", "make_experiment_qual.py"):
+        tree = ast.parse((ROOT / "scripts" / name).read_text(encoding="utf-8"))
+        defs = [n.name for n in tree.body
+                if isinstance(n, (ast.FunctionDef, ast.ClassDef))]
+        assert len(defs) == len(set(defs)), name
+
+
 def test_every_built_view_is_listed(Q):
     assert set(Q.BUILD) | set(Q.HS_SETS) <= {q[0] for q in Q.QUAL}
 

@@ -4048,11 +4048,11 @@ HS_TARGETS = (("pc", "percent conifer", "%"), ("closure", "crown closure", "%"),
 class _HSRun:
     """One AVIRIS sweep: eval rows and search paths per (arm, fold, seed)."""
 
-    def __init__(self, run: Path):
+    def __init__(self, run: Path, arms=None):
         self.run = run
         self.rows, self.paths, self.results = [], {}, {}
         self.tasks = {}
-        for arm in (*(a[0] for a in HS_ARMS), "references"):
+        for arm in arms or (*(a[0] for a in HS_ARMS), "references"):
             ts = sorted(p for p in (run / arm).glob("f*s*") if (p / "eval.jsonl").exists())
             self.tasks[arm] = ts
             for t in ts:
@@ -4112,7 +4112,7 @@ def p6hs_curves(H, out, reference=None, void=""):
             ax.text(0.02, reference, f" Sentinel-2 search, k = 6: {reference:.2f}", color=MUTED,
                     fontsize=7.5, va="bottom", transform=ax.get_yaxis_transform())
         ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
-                  loc="center right")
+                  loc="lower right")
     fig.suptitle(("VOID, labels from the wrong ground. " if void else "")
                  + "E-61 / E-62: skill on held-out AVIRIS-NG groups, by nested band set",
                  color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.06)
@@ -4337,7 +4337,7 @@ def p6hs_same_folds_figure(same, out):
     print(f"  wrote {_rel(out / 'same_folds.png')}")
 
 
-def p6hs_options(H, folds=None):
+def p6hs_options(H, folds=None, arms=HS_ARMS, targets=HS_TARGETS):
     """Every set scored in the sweep, as options for James (A-41). With *folds*,
     scored on those folds only, so the options compare like with like."""
     from safari_bands.band_options import Option, assess
@@ -4353,7 +4353,7 @@ def p6hs_options(H, folds=None):
         return mu, float(np.std(per, ddof=1) / np.sqrt(len(per)))
 
     opts = []
-    for arm, lab, _ in (*HS_ARMS, ("references", "reference", None)):
+    for arm, lab, _ in (*arms, ("references", "reference", None)):
         names = [r for r in dict.fromkeys(x["set"] for x in H.rows if x["arm"] == arm)]
         for name in names:
             s = stats(arm, name)
@@ -4366,7 +4366,7 @@ def p6hs_options(H, folds=None):
                 picks, stable = _hs_stability(H, arm, int(name[1:]))
                 bands = [*fixed, *picks]
             rmse = {t: float(np.mean(list(within(H.get(arm, name, key=f"rmse_{t}")).values())))
-                    for t, _, _ in HS_TARGETS}
+                    for t, _, _ in targets}
             clean = within(H.get(arm, name, noisy=False))
             opts.append(Option(f"{lab}: {name}", list(bands), s[0], s[1], rmse,
                                float(np.mean(list(clean.values()))) if clean else None, stable))
@@ -4518,10 +4518,423 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
         {"run": str(_rel(run)), "diag": str(diag.name) if diag else None}, indent=1))
 
 
+# E-63: out-of-time generalisation. Regime B scores 2024; 2025 stays frozen for P10.
+E63_R0 = "scanfi_tree_prefire"          # same fuel as R1 and R2
+E63_R0_CV = _ROOT / "runs" / "20261024-p3_cffdrs_r0_dated"
+E63_R0_2024 = _ROOT / "runs" / "20261030-e56_cohort_2024"
+E63_RUNGS = (("r1", "R1"), ("r2", "R2"))
+E63_FAMILIES = (("C", "conifer"), ("D", "deciduous"), ("M", "mixedwood"))
+
+
+class _Year2024:
+    """Regime B's fifteen models on the 2024 patches, with R0 on the same patches.
+    One bootstrap resamples the patches for every rung, so differences pair."""
+
+    def __init__(self, run: Path, n_boot=2000, seed=0):
+        r0 = {r["stem"]: r for r in _read_csv(E63_R0_2024 / "per_patch.csv")
+              if r["variant"] == E63_R0}
+        self.S, self.W, self.fam = {}, {}, {}
+        for c, _ in E63_RUNGS:
+            rows = [_read_csv(f) for f in sorted((run / c).glob("f*s*/patches_year2024.csv"))]
+            self.pat = [r["patch"] for r in rows[0]]
+            self.fire = np.array([r["kind"] == "fire" for r in rows[0]])
+            assert all([r["patch"] for r in x] == self.pat for x in rows)
+
+            def arr(key, data=rows):
+                return np.array([[float(r[key] or "nan") for r in x] for x in data])
+            self.S[c], self.W[c] = arr("mean_score"), arr("auc_within")
+            self.fam[c] = {f: arr(f"auc_within_{f}") for f, _ in E63_FAMILIES}
+        self.r0_s = np.array([float(r0[p]["mean_hfi"]) for p in self.pat])
+        self.r0_w = np.array([float(r0[p]["auc_hfi"] or "nan") for p in self.pat])
+        groups = np.array([r0[p]["group"] for p in self.pat])
+        ug = np.unique(groups)
+        gi = {g: np.where(groups == g)[0] for g in ug}
+        rng = np.random.default_rng(seed)
+        self.boots = [np.concatenate([gi[g] for g in rng.choice(ug, len(ug))])
+                      for _ in range(n_boot)]
+
+    def within(self, c, i=None) -> float:
+        i = np.arange(len(self.pat)) if i is None else i
+        w = self.r0_w if c == "r0" else np.nanmean(self.W[c], axis=0)
+        return float(np.nanmean(w[i][self.fire[i]]))
+
+    def between(self, c, i=None) -> float:
+        i = np.arange(len(self.pat)) if i is None else i
+        if c == "r0":
+            return _auc(self.r0_s[i], self.fire[i])
+        return float(np.mean([_auc(s[i], self.fire[i]) for s in self.S[c]]))
+
+    def within_family(self, c, fam) -> float:
+        return float(np.nanmean(np.nanmean(self.fam[c][fam], axis=0)[self.fire]))
+
+
+class _CvR0:
+    """R0 on the 2019-2023 development patches, on the rung sweep's bootstraps."""
+
+    def __init__(self, sweep: _Sweep):
+        r0 = {r["stem"]: r for r in _read_csv(E63_R0_CV / "per_patch.csv")
+              if r["variant"] == E63_R0}
+        self.sweep = sweep
+        self.w = np.array([float(r0[p]["auc_hfi"] or "nan") if p in r0 else np.nan
+                           for p in sweep.pat])
+        self.s = np.array([float(r0[p]["mean_hfi"]) if p in r0 else np.nan for p in sweep.pat])
+        self.fire = np.array([p.endswith("_fire") for p in sweep.pat])
+        self.fold = sweep._score("r2")[1]
+
+    def within(self, i=None) -> float:
+        i = np.arange(len(self.w)) if i is None else i
+        return float(np.nanmean(self.w[i][self.fire[i]]))
+
+    def between(self, i=None) -> float:
+        """Per fold and averaged, as _Sweep scores the rungs."""
+        i = np.arange(len(self.w)) if i is None else i
+        ok = i[np.isfinite(self.s[i])]
+        return float(np.nanmean([_auc(self.s[ok][self.fold[ok] == f],
+                                      self.fire[ok][self.fold[ok] == f]) for f in range(5)]))
+
+
+def _ci95(reps):
+    return [float(x) for x in np.nanpercentile(reps, [2.5, 97.5])]
+
+
+def e63_stats(a_run: Path, b_run: Path) -> dict:
+    Y, B = _Year2024(b_run), _Sweep(b_run)
+    A, R = _Sweep(a_run), _CvR0(B)
+    assert A.pat == B.pat
+    n = 600                             # between-patch AUC per replicate is the slow part
+    cv_r0_w = np.array([R.within(i) for i in B.boots[:n]])
+    cv_r0_b = np.array([R.between(i) for i in B.boots[:n]])
+    y_r0_w = np.array([Y.within("r0", i) for i in Y.boots[:n]])
+    y_r0_b = np.array([Y.between("r0", i) for i in Y.boots[:n]])
+    rungs = [{"rung": "R0", "cv_within": R.within(), "cv_between": R.between(),
+              "y_within": Y.within("r0"), "y_between": Y.between("r0"),
+              "y_within_ci": _ci95(y_r0_w), "y_between_ci": _ci95(y_r0_b),
+              "drop_within": Y.within("r0") - R.within(),
+              "drop_within_ci": _ci95(y_r0_w - cv_r0_w),
+              "drop_between": Y.between("r0") - R.between(),
+              "drop_between_ci": _ci95(y_r0_b - cv_r0_b)}]
+    for c, lab in E63_RUNGS:
+        cvw = B.within(c)
+        cv_w = np.array([np.nanmean(cvw[i]) for i in B.boots[:n]])
+        cv_b = np.array([B.between(c, i) for i in B.boots[:n]])
+        y_w = np.array([Y.within(c, i) for i in Y.boots[:n]])
+        y_b = np.array([Y.between(c, i) for i in Y.boots[:n]])
+        w0, b0, w1, b1 = float(np.nanmean(cvw)), B.between(c), Y.within(c), Y.between(c)
+        rungs.append({
+            "rung": lab, "cv_within": w0, "cv_between": b0,
+            "cv_same_year": B.within_year_between(c),
+            "y_within": w1, "y_between": b1,
+            "y_within_ci": _ci95(y_w), "y_between_ci": _ci95(y_b),
+            "drop_within": w1 - w0, "drop_within_ci": _ci95(y_w - cv_w),
+            "drop_between": b1 - b0, "drop_between_ci": _ci95(y_b - cv_b),
+            "vs_r0_within": w1 - Y.within("r0"), "vs_r0_within_ci": _ci95(y_w - y_r0_w),
+            "vs_r0_between": b1 - Y.between("r0"), "vs_r0_between_ci": _ci95(y_b - y_r0_b),
+            "cv_vs_r0_within": w0 - R.within(), "cv_vs_r0_within_ci": _ci95(cv_w - cv_r0_w),
+            "cv_vs_r0_between": b0 - R.between(), "cv_vs_r0_between_ci": _ci95(cv_b - cv_r0_b),
+            "net_within": (w1 - Y.within("r0")) - (w0 - R.within()),
+            "net_within_ci": _ci95((y_w - y_r0_w) - (cv_w - cv_r0_w)),
+            "net_between": (b1 - Y.between("r0")) - (b0 - R.between()),
+            "net_between_ci": _ci95((y_b - y_r0_b) - (cv_b - cv_r0_b)),
+            "family": {f: Y.within_family(c, f) for f, _ in E63_FAMILIES},
+            "family_cv": {f: float(np.nanmean(B.within_fuel(c, f)))
+                          for f, _ in E63_FAMILIES}})
+    regimes = []
+    for c, lab in E63_RUNGS:
+        d = A.within(c) - B.within(c)
+        db = [A.between(c, i) - B.between(c, i) for i in A.boots[:500]]
+        regimes.append({"rung": lab, "a_within": float(np.nanmean(A.within(c))),
+                        "a_between": A.between(c), "d_within": float(np.nanmean(d)),
+                        "d_within_ci": _ci95([np.nanmean(d[i]) for i in A.boots]),
+                        "d_between": A.between(c) - B.between(c), "d_between_ci": _ci95(db)})
+    issued = [r for r in _read_csv(_ROOT / "docs" / "results" / "p6b_cohort" / "T_e56.csv")
+              if r["output"] == "hfi" and r["r0"] == E63_R0]
+    return {"rungs": rungs, "regimes": regimes, "n_fits": {c: len(B.fits[c]) for c, _ in E63_RUNGS},
+            "n_2024": len(Y.pat), "n_fire_2024": int(Y.fire.sum()), "n_cv_fire": int(R.fire.sum()),
+            "truncated": sum(r.get("truncated", False) for c in B.fits for r in B.fits[c]),
+            "issued_hfi_2024": float(issued[0]["auc_issued"]) if issued else None,
+            "issued_n": int(issued[0]["n"]) if issued else None}
+
+
+def p6e_figures(S, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.6), facecolor=FIG_BG)
+    for ax, key, lab in ((axes[0], "within", "Within-patch AUC"),
+                         (axes[1], "between", "Between-patch AUC")):
+        _axes(ax, lab, "AUC", "")
+        for y, r in zip((2, 1, 0), S["rungs"], strict=True):
+            cv, yr = r[f"cv_{key}"], r[f"y_{key}"]
+            ax.axvspan(cv - 0.05, cv, ymin=(y + 0.2) / 3, ymax=(y + 0.8) / 3, color=MUTED,
+                       alpha=0.25, lw=0)
+            ax.plot(r[f"y_{key}_ci"], [y, y], color=ORANGE, lw=2, solid_capstyle="round")
+            ax.plot(cv, y, "o", color=BLUE, ms=8, label="2019-2023, cross-validated" if y == 2
+                    else None)
+            ax.plot(yr, y, "o", color=ORANGE, ms=8, label="2024, never seen" if y == 2 else None)
+            ax.text(yr, y + 0.2, f"{yr:.3f}", color=INK_BRIGHT, fontsize=8, ha="center")
+            ax.text(cv, y + 0.2, f"{cv:.3f}", color=INK_BRIGHT, fontsize=8, ha="center")
+        ax.set_yticks([2, 1, 0], [r["rung"] for r in S["rungs"]], color=INK_BRIGHT, fontsize=10)
+        ax.set_ylim(-0.5, 2.6)
+    fig.legend(*axes[0].get_legend_handles_labels(), fontsize=8, facecolor=AX_BG,
+               edgecolor=SPINE, labelcolor=INK, loc="upper right", ncol=2,
+               bbox_to_anchor=(0.995, 1.05))
+    fig.suptitle("E-63 (a), regime B: Reconstructed (ours), trained and selected on 2019-2023",
+                 color=INK_BRIGHT, x=0.01, y=1.02, ha="left", fontsize=11.5)
+    fig.tight_layout()
+    _caption(fig, f"Line: 95 % CI on 2024 ({S['n_2024']} patches, {S['n_fire_2024']} fire; each "
+             "patch its own group). Grey: the registered 0.05 tolerance below the cross-validated "
+             "value. R0 has no training, so its fall measures the 2024 cohort, not overfitting. "
+             "The 2024 negatives are unburned patches; the 2019-2023 negatives are mostly "
+             "same-place confusers. 2025 is frozen and was not opened.", y=-0.03)
+    _save(fig, out, "out_of_time.png")
+
+    fig, ax = plt.subplots(figsize=(8.6, 3.3), facecolor=FIG_BG)
+    _axes(ax, "Learned rung minus R0 (HFI, SCANFI 2020 fuel)", "difference in AUC", "")
+    rows = []
+    for r in S["rungs"][1:]:
+        for key, name in (("within", "within"), ("between", "between")):
+            rows.append((f"{r['rung']} {name}, 2019-2023", r[f"cv_vs_r0_{key}"],
+                         r[f"cv_vs_r0_{key}_ci"], BLUE))
+            rows.append((f"{r['rung']} {name}, 2024", r[f"vs_r0_{key}"],
+                         r[f"vs_r0_{key}_ci"], ORANGE))
+    ys = np.arange(len(rows))[::-1]
+    for y, (_, v, ci, col) in zip(ys, rows, strict=True):
+        ax.plot(ci, [y, y], color=col, lw=2, solid_capstyle="round")
+        ax.plot(v, y, "o", color=col, ms=7)
+    ax.axvline(0, color=INK, lw=1)
+    ax.set_yticks(ys, [r[0] for r in rows], fontsize=8, color=INK_BRIGHT)
+    fig.tight_layout()
+    _caption(fig, "95 % CI by group bootstrap. Above 0, the learned rung ranks better than the "
+             "physics alone. Blue: cross-validated, 83 fires. Orange: 2024, 60 fires. Both are "
+             "Reconstructed (ours).", y=-0.03)
+    _save(fig, out, "vs_r0.png")
+
+
+def p6e_tables(S, out, a_run, b_run):
+    def cell(r, k, nd=3):
+        return f"{r[k]:+.{nd}f} {_ci(r[k + '_ci'], nd)}" if k in r else ""
+
+    L = ["# P6e tables: out-of-time generalisation (E-63)\n",
+         f"Runs: `{_rel(b_run)}` (regime B), `{_rel(a_run)}` (regime A). All values are "
+         f"Reconstructed (ours). {S['n_fits']['r1']} fits per rung, none truncated. 2025 is frozen "
+         "and was not opened; regime A has no 2024 score, because 2024 is its training data.\n",
+         "## Regime B, cross-validated against 2024\n",
+         "| rung | within CV | within 2024 | change [95 % CI] | between CV | between 2024 | "
+         "change [95 % CI] |", "|---|---|---|---|---|---|---|"]
+    for r in S["rungs"]:
+        L.append(f"| {r['rung']} | {r['cv_within']:.3f} | {r['y_within']:.3f} | "
+                 f"{cell(r, 'drop_within')} | {r['cv_between']:.3f} | {r['y_between']:.3f} | "
+                 f"{cell(r, 'drop_between')} |")
+    if S["issued_hfi_2024"] is not None:
+        L += ["", f"For scale: the HFI ISSUED by CWFIS on 2024 ranks patches at between-patch AUC "
+              f"{S['issued_hfi_2024']:.3f} ({S['issued_n']} patches paired, E-56). Issued grids "
+              "are 2 km, so they have no within-patch counterpart."]
+    L += ["", "## Learned rung minus R0\n",
+          "| rung | within 2024 | between 2024 | within CV | between CV |", "|---|---|---|---|---|"]
+    for r in S["rungs"][1:]:
+        L.append(f"| {r['rung']} | {cell(r, 'vs_r0_within')} | {cell(r, 'vs_r0_between')} | "
+                 f"{cell(r, 'cv_vs_r0_within')} | {cell(r, 'cv_vs_r0_between')} |")
+    L += ["", "## The change net of R0's change\n",
+          "R0 has no training, so what it loses comes from the cohort. This is not registered.\n",
+          "| rung | within | between |", "|---|---|---|"]
+    for r in S["rungs"][1:]:
+        L.append(f"| {r['rung']} | {cell(r, 'net_within')} | {cell(r, 'net_between')} |")
+    L += ["", "## Same-year between-patch AUC, 2019-2023\n",
+          "Year alone ranks these patches at 0.87 (E-43), so this reads closer to one year's "
+          "ranking than the headline figure.\n", "| rung | same-year pairs | 2024 |",
+          "|---|---|---|"]
+    L += [f"| {r['rung']} | {r['cv_same_year']:.3f} | {r['y_between']:.3f} |"
+          for r in S["rungs"][1:]]
+    L += ["", "## Within-patch AUC inside one fuel family (CV, then 2024)\n",
+          "The all-pixel figure also counts telling one family from another. These count only "
+          "ranking inside a family.\n",
+          "| rung | C | D | M |", "|---|---|---|---|"]
+    L += [f"| {r['rung']} | " + " | ".join(
+        f"{r['family_cv'][f]:.3f}, {r['family'][f]:.3f}" for f, _ in E63_FAMILIES) + " |"
+        for r in S["rungs"][1:]]
+    L += ["", "## Regime A minus regime B, on the same 2019-2023 folds and seeds\n",
+          "Hypothesis (b) is read on 2025, in P10. This only says whether 2024 in training "
+          "changes the 2019-2023 folds.\n",
+          "| rung | A within | A between | within, A - B | between, A - B |",
+          "|---|---|---|---|---|"]
+    L += [f"| {r['rung']} | {r['a_within']:.3f} | {r['a_between']:.3f} | {cell(r, 'd_within')} | "
+          f"{cell(r, 'd_between')} |" for r in S["regimes"]]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+    cols = [k for k in S["rungs"][1] if not k.startswith("family")]
+    _csv(out / "T_regime_b.csv", [{k: r.get(k) for k in cols} for r in S["rungs"]])
+    _csv(out / "T_regimes.csv", S["regimes"])
+
+
+def p6e(run: Path, out: Path, regime_a: Path):
+    """E-63: *run* is regime B, read first as registered."""
+    out.mkdir(parents=True, exist_ok=True)
+    S = e63_stats(regime_a, run)
+    p6e_figures(S, out)
+    p6e_tables(S, out, regime_a, run)
+    (out / "summary.json").write_text(json.dumps(S, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"regime_b": str(_rel(run)),
+                                              "regime_a": str(_rel(regime_a))}, indent=1))
+
+
+# Q35: do the SWIR rankings survive labels that owe nothing to Landsat?
+EXT_PLOTS_ARMS = (("s2_all", "Sentinel-2, all 12 bands", BLUE),
+                  ("s2_no_swir", "Sentinel-2, no SWIR", ORANGE))
+EXT_PLOTS_TARGETS = (("pc", "percent conifer", "%"), ("height", "canopy height", "m"))
+EXT_LIDAR_TARGETS = (("height", "canopy height", "m"),)
+EXT_PLOT_SETS = (("vnir6_swir1", "VNIR 6 + SWIR1"), ("vnir6_swir2", "VNIR 6 + SWIR2"),
+                 ("vnir6_swir1_swir2", "VNIR 6 + SWIR1 + SWIR2"), ("s2_12", "Sentinel-2 12 bands"),
+                 ("s2_vnir10", "Sentinel-2 VNIR 10"))
+EXT_AV_SETS = (("config_a", "config A (1610)"), ("config_b", "config B (1240, 1375, 1610)"),
+               ("config_c", "config C (1610, 2190)"),
+               ("sensor_mantis_ms_plus_swir", "Mantis MS + SWIR"),
+               ("sentinel2_p6_12band", "Sentinel-2 12 bands"))
+
+
+def ext_gain(H, sets, base, keys) -> list[dict]:
+    """Each reference set against *base* on the same folds and seeds."""
+    rows = []
+    for name, lab in sets:
+        row = {"set": name, "label": lab}
+        for k in keys:
+            a, b = H.get("references", name, key=k), H.get("references", base, key=k)
+            kk = sorted(set(a) & set(b))
+            mu, ci, per = _fold_boot({i: a[i] - b[i] for i in kk})
+            row |= {k: mu, f"{k}_ci": ci, f"{k}_base": float(np.mean([b[i] for i in kk])),
+                    f"{k}_folds_better": int((per < 0 if k.startswith("rmse")
+                                              else per > 0).sum())}
+        rows.append(row)
+    return rows
+
+
+def ext_picks(H, arm, steps) -> list[dict]:
+    rows = []
+    for k in range(1, steps + 1):
+        c = {}
+        for kk, p in H.paths.items():
+            if kk[0] == arm and len(p["steps"]) >= k:
+                nm = _hs_band(p["steps"][k - 1]["added"])[0]
+                c[nm] = c.get(nm, 0) + 1
+        rows.append({"step": k, **{f"{n:g}": v for n, v in sorted(c.items())}})
+    return rows
+
+
+def ext_figures(P, L, V, gains, out):
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4), facecolor=FIG_BG,
+                             gridspec_kw={"width_ratios": (1, 1.25)})
+    ax = axes[0]
+    _axes(ax, "Ground plots: best k-band set", "bands (k)", "combined skill (0 = training mean)")
+    for arm, lab, col in EXT_PLOTS_ARMS:
+        ks, m, lo, hi = [], [], [], []
+        for k in range(1, 9):
+            mu, ci, _ = _fold_boot(P.get(arm, f"k{k}"))
+            ks.append(k)
+            m.append(mu)
+            lo.append(ci[0])
+            hi.append(ci[1])
+        ax.plot(ks, m, "-o", color=col, lw=2, ms=5, label=lab)
+        ax.fill_between(ks, lo, hi, color=col, alpha=0.18, lw=0)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, loc="lower right")
+    ax = axes[1]
+    _axes(ax, "Ground plots: what each search step chose (Sentinel-2, all 12 bands)",
+          "band centre (nm)", "step")
+    names = sorted({float(c) for r in ext_picks(P, "s2_all", 8) for c in r if c != "step"})
+    pos = {n: i for i, n in enumerate(names)}
+    for r in ext_picks(P, "s2_all", 8):
+        for c, v in r.items():
+            if c != "step":
+                swir = float(c) > 1000
+                ax.scatter(pos[float(c)], r["step"], s=15 * v, color=ORANGE if swir else BLUE,
+                           alpha=0.85, lw=0)
+    ax.set_xticks(range(len(names)), [f"{n:g}" for n in names], fontsize=7.5, color=INK)
+    ax.invert_yaxis()
+    fig.tight_layout()
+    _caption(fig, "14,232 development plots, 5 folds of 1-degree blocks, 15 runs, with sensor "
+             "noise. Labels are measured on the ground, not mapped. Dots: area counts the 15 "
+             "searches that chose the band at that step; SWIR is orange.", y=-0.03)
+    _save(fig, out, "plots_search.png")
+
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3.5), facecolor=FIG_BG)
+    for ax, (title, rows, key, unit) in zip(axes, gains, strict=True):
+        _axes(ax, title, f"change in RMSE ({unit}) from the VNIR set", "")
+        ys = np.arange(len(rows))[::-1]
+        for y, r in zip(ys, rows, strict=True):
+            ax.plot(r[f"{key}_ci"], [y, y], color=BLUE, lw=2, solid_capstyle="round")
+            ax.plot(r[key], y, "o", color=BLUE, ms=7)
+        ax.axvline(0, color=INK, lw=1)
+        ax.set_yticks(ys, [r["label"] for r in rows], fontsize=7.5, color=INK_BRIGHT)
+    fig.tight_layout()
+    _caption(fig, "Each set against six fixed VNIR bands on the same folds and seeds; 95 % CI from "
+             "resampling the 5 folds; left of 0 is better. Plots and AVIRIS are different sensors "
+             "and places, so compare direction, not size.", y=-0.03)
+    _save(fig, out, "swir_gain.png")
+
+
+def ext_tables(P, L, V, gains, opts, out, run, lidar, scanfi):
+    from safari_bands.band_options import markdown
+    T = ["# P6a-ext tables: labels that owe nothing to Landsat (Q35)\n",
+         f"Runs: `{_rel(run)}` (plots), `{_rel(lidar)}` (lidar), `{_rel(scanfi)}` (SCANFI, for "
+         "comparison). The `labels` field inside these results reads SCANFI for all three: it is "
+         "a fixed string in the runner. The pixel counts show the right packs ran. Noise is "
+         "the placeholder model (A-37).\n"]
+    for title, rows, key, unit in gains:
+        T += [f"## {title}\n", f"| set | RMSE ({unit}) | change from the VNIR set [95 % CI] | "
+              "folds better |", "|---|---|---|---|"]
+        T += [f"| {r['label']} | {r[f'{key}_base'] + r[key]:.2f} | {r[key]:+.3f} "
+              f"{_ci(r[f'{key}_ci'], 3)} | {r[f'{key}_folds_better']}/5 |" for r in rows]
+        T.append("")
+    T += ["## Ground plots: combined skill by nested set (raw + indices, with noise)\n",
+          "| arm | " + " | ".join(f"k = {k}" for k in range(1, 9)) + " |",
+          "|---|" + "---|" * 8]
+    for arm, lab, _ in EXT_PLOTS_ARMS:
+        T.append(f"| {lab} | " + " | ".join(
+            f"{np.mean(list(P.get(arm, f'k{k}').values())):.3f}" for k in range(1, 9)) + " |")
+    T += ["", "## Ground plots: what the 15 searches chose at each step\n"]
+    for r in ext_picks(P, "s2_all", 8):
+        pick = sorted(((v, c) for c, v in r.items() if c != "step"), reverse=True)
+        T.append(f"- Step {r['step']}: " + ", ".join(f"{c} nm ({v})" for v, c in pick))
+    for name, o in opts:
+        T += ["", f"## The options: {name}\n", *markdown(o)]
+    (out / "tables.md").write_text("\n".join(T) + "\n", encoding="utf-8")
+    print(f"  wrote {_rel(out / 'tables.md')}")
+
+
+def p6x(run: Path, out: Path, lidar: Path, scanfi: Path):
+    """Q35: *run* is hs_plots; the lidar sweep and the SCANFI sweep sit beside it."""
+    out.mkdir(parents=True, exist_ok=True)
+    P = _HSRun(run, (*(a[0] for a in EXT_PLOTS_ARMS), "references"))
+    L, V = _HSRun(lidar), _HSRun(scanfi)
+    fixed = "config_c/VNIR"
+    gains = [("Ground plots: percent conifer", ext_gain(P, EXT_PLOT_SETS, "vnir6", ["rmse_pc"]),
+              "rmse_pc", "%"),
+             ("Ground plots: height", ext_gain(P, EXT_PLOT_SETS, "vnir6", ["rmse_height"]),
+              "rmse_height", "m"),
+             ("AVIRIS-NG: height from ATL08 lidar",
+              ext_gain(L, EXT_AV_SETS, fixed, ["rmse_height"]),
+              "rmse_height", "m"),
+             ("AVIRIS-NG: height from SCANFI", ext_gain(V, EXT_AV_SETS, fixed, ["rmse_height"]),
+              "rmse_height", "m"),
+             ("AVIRIS-NG: percent conifer from SCANFI",
+              ext_gain(V, EXT_AV_SETS, fixed, ["rmse_pc"]),
+              "rmse_pc", "%")]
+    ext_figures(P, L, V, [gains[1], gains[2], gains[3]], out)
+    opts = [("ground plots", p6hs_options(P, arms=EXT_PLOTS_ARMS, targets=EXT_PLOTS_TARGETS)),
+            ("ATL08 lidar height", p6hs_options(L, targets=EXT_LIDAR_TARGETS))]
+    ext_tables(P, L, V, gains, opts, out, run, lidar, scanfi)
+    for name, o in opts:
+        _csv(out / f"T_options_{name.split()[0].lower()}.csv", o)
+    (out / "summary.json").write_text(json.dumps(
+        {"gains": {g[0]: g[1] for g in gains},
+         "plots_steps": ext_picks(P, "s2_all", 8)}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps(
+        {"plots": str(_rel(run)), "lidar": str(_rel(lidar)), "scanfi": str(_rel(scanfi))},
+        indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
           "P6b": (p6b, "p6b_cohort"), "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
           "P7": (p7, "p7_slots"),
+          "P6e": (p6e, "p6e_out_of_time"), "P6x": (p6x, "p6a_external_labels"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
 
 
@@ -4541,6 +4954,10 @@ def main(argv=None) -> int:
     ap.add_argument("--diag", type=Path, default=None,
                     help="P6hs: georef_diag.json from aviris_georef_diag.py")
     ap.add_argument("--void", default="", help="P6hs: why this run says nothing about bands")
+    ap.add_argument("--regime-a", type=Path, default=None, help="P6e: the regime A run")
+    ap.add_argument("--lidar-run", type=Path, default=None, help="P6x: the hs_lidar run")
+    ap.add_argument("--scanfi-run", type=Path, default=None,
+                    help="P6x: the AVIRIS sweep on SCANFI labels")
     args = ap.parse_args(argv)
     fn, sub = PHASES[args.phase]
 
@@ -4559,6 +4976,10 @@ def main(argv=None) -> int:
         extra = {"snowoff": resolve(args.snowoff)}
     elif args.phase == "P6hs":
         extra = {"diag": resolve(args.diag), "void": args.void}
+    elif args.phase == "P6e":
+        extra = {"regime_a": resolve(args.regime_a)}
+    elif args.phase == "P6x":
+        extra = {"lidar": resolve(args.lidar_run), "scanfi": resolve(args.scanfi_run)}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
     return 0
 

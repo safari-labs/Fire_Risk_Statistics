@@ -796,6 +796,7 @@ Options:
 
 **Status:** PARTLY ANSWERED (2026-10-30; A-44)
 **Answer so far (James, 2026-10-30):** Point 1: use independent labels; the lidar and ground-plot searches are built (A-44), and James is requesting exact NFI coordinates. Point 2: split open ground into the existing grass, slash and non-fuel classes rather than add a new one. James, 2026-11-01: shrub goes to grass (O), and fetch a harvest layer for slash; built into `aviris_v3` (A-44). James, 2026-11-01: slash stays at 5 years, bryoids are fuel (O), and the ecology pack takes the same labels. Built into `aviris_v4` and `ecology_v3` (A-44); eco_v2 reruns on Nibi.
+**Result on point 1, 2026-11-02 (`docs/results/p6a_external_labels`):** SWIR holds up against labels not mapped from Landsat. On 14,232 ground plots, SWIR1 lowers percent conifer RMSE by 1.51 % [1.25, 1.70] and height by 0.33 m [0.22, 0.40] over six VNIR bands, in 5 of 5 folds. Lidar height agrees in direction and size with SCANFI height, on a partial pack. SWIR is second, not first, on plots, but plots are forest only. Open: why percent conifer gains 8 % on plots and nothing on AVIRIS-NG against SCANFI.
 **Blocks:** nothing now. It shapes how P12 weighs the P6a rankings, and the next ecology run.
 
 Two things about the SCANFI labels limit what the P6a band rankings mean (`docs/results/p6a_ecology`).

@@ -1602,12 +1602,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "2020), spatial-block folds by flight line, under the noise model",
         conclusion="Which SWIR placements, and which detector, the structure targets "
                    "need; feeds E-46 and the SWIR chain choice.",
-        state="NEEDS_DATA",
+        state="PARTIAL",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'",
-        blocker="the corrected pack aviris_v2 goes to the cluster; 11 of 42 pre-fire "
-                "AVIRIS-NG lines still downloading (2026-10-30). The first sweep "
-                "(hs_v1_provisional) is void: rotated lines were placed north-up, so "
-                "its labels came from the wrong ground (A-40 amendment)",
+        blocker="hs_v4 confirms on the final family labels (aviris_v4)",
+        resources="--time=6:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per job of 6 "
+                  "tasks, 3 at once (A-43); hs_v3 measured 81 min median per standard InGaAs "
+                  "task, 153 per extended InGaAs task",
         note="Broadens E-23 (which stays as registered) beyond 1750 nm and adds "
              "vendor reference points. DFA L5 (1348/64) has ~28 % of its response "
              "inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid "
@@ -1615,7 +1615,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. "
              "Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional). "
              "Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks "
-             "and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional).",
+             "and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional). "
+             "Full sweep hs_v3, 2026-11-02 (docs/results/p6a_hs_v3): the falsifier does not "
+             "fire (extra from extended: conifer -0.24, closure +0.06, height +0.04, all CIs "
+             "reach 0), but the searches are unstable and a hand-set 1610 + 2190 nm pair "
+             "beats them on height; hs_v4 confirms.",
     ),
     Experiment(
         "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
@@ -1632,9 +1636,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "on the P6 ecology pack; under the noise model",
         conclusion="Whether a VNIR camera without red edge (as some standard filter "
                    "sets are) gives up structure skill, and which placements win.",
-        state="NEEDS_DATA",
+        state="PARTIAL",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'",
-        blocker="as E-61: rerun on aviris_v2; the first sweep is void (A-40 amendment)",
+        blocker="hs_v4 confirms on the final family labels (aviris_v4)",
+        resources="as E-61; hs_v3 measured 130 min median per VNIR task, 123 per no-red-edge "
+                  "task",
         note="The VNIR arm searches the camera alone (no SWIR band), the question "
              "E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references "
              "(A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/"
@@ -1644,7 +1650,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "camera question waits for the AVIRIS-NG search; the provisional sweep "
              "of 2026-10-29 is VOID (docs/results/p6a_hs_provisional). Partial sweep on "
              "the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold "
-             "(docs/results/p6a_hs_v2_provisional).",
+             "(docs/results/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 "
+             "(docs/results/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on "
+             "percent conifer (-1.2 %) and closure (+2.2 %), though 12/15 best sets keep a "
+             "700-760 nm band; hs_v4 confirms.",
     ),
     # E-63 was registered on 2026-10-29, when James chose the 2024-2025 cohort's
     # role, before any 2024-2025 patch, composite or score existed.
@@ -1668,9 +1677,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "condition an operational satellite always predicts in -- and what "
                    "one more training year buys. 2025 is frozen in both regimes and "
                    "read once, in P10.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B",
-        blocker="",
+        blocker="2025 is read once, in P10",
         resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
                   "task of 18 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a "
                   "first guess here, since regime A adds 1,080 training tiles and "
@@ -1679,7 +1688,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "the out-of-time test; regime B excludes both. Regime B makes no use of any "
              "choice regime A made with 2024 in view, and its 2024 test is scored before "
              "regime A's 2024 training results are looked at. Pack and regimes built "
-             "2026-10-30 (A-42).",
+             "2026-10-30 (A-42). Both regimes ran 2026-11-02 (docs/results/p6e_out_of_time). "
+             "On 2024, (a) is AT RISK: R1 and R2 fall 0.06-0.11, no CI excludes 0.05, and R1 "
+             "- R0 between patches is -0.035 [-0.095, +0.021]. R0 itself falls 0.05-0.06. "
+             "(b) waits for 2025.",
     ),
 )
 
