@@ -1,0 +1,75 @@
+flow,precision,mode,size,params,in_channels,tile,converted,bram18k,lut,dsp,csim_max_abs_err,s_per_scene,dpu_subgraphs,cpu_ops,bram_note,Q7_share,Q7_binding,Q8_share,Q8_binding
+hls4ml,"ap_fixed<19,7>",raw,8x1,7786,8,16,True,754,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,2.692857,bram18k,1.208333,bram18k
+hls4ml,"ap_fixed<19,7>",raw,8x2,31018,8,16,True,1583,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,5.653571,bram18k,2.536859,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x1,2930,22,16,True,521,,,0.000645,,,,stream law (exact on TinyFireUNet) + ROM estimate,1.860714,bram18k,0.834936,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x2,8786,22,16,True,884,,,0.001135,,,,stream law (exact on TinyFireUNet) + ROM estimate,3.157143,bram18k,1.416667,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x3,32018,22,16,True,1714,,,0.000824,,,,stream law (exact on TinyFireUNet) + ROM estimate,6.121429,bram18k,2.746795,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x1,8794,22,16,True,778,,,0.001377,,,,stream law (exact on TinyFireUNet) + ROM estimate,2.778571,bram18k,1.246795,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x2,32026,22,16,True,1608,,,0.000918,,,,stream law (exact on TinyFireUNet) + ROM estimate,5.742857,bram18k,2.576923,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x3,124570,22,16,True,3708,,,0.000678,,,,stream law (exact on TinyFireUNet) + ROM estimate,13.242857,bram18k,5.942308,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x1,30026,22,16,True,1383,,,0.000907,,,,stream law (exact on TinyFireUNet) + ROM estimate,4.939286,bram18k,2.216346,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x2,122570,22,16,True,3483,,,0.000626,,,,stream law (exact on TinyFireUNet) + ROM estimate,12.439286,bram18k,5.581731,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x3,491978,22,16,True,9424,,,0.000906,,,,stream law (exact on TinyFireUNet) + ROM estimate,33.657143,bram18k,15.102564,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x1,110506,22,16,True,2967,,,0.001435,,,,stream law (exact on TinyFireUNet) + ROM estimate,10.596429,bram18k,4.754808,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x2,479914,22,16,True,8908,,,0.000978,,,,stream law (exact on TinyFireUNet) + ROM estimate,31.814286,bram18k,14.275641,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x3,1956010,22,16,True,27726,,,0.001198,,,,stream law (exact on TinyFireUNet) + ROM estimate,99.021429,bram18k,44.432692,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x1,2930,22,32,True,568,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,2.028571,bram18k,0.910256,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x2,8786,22,32,True,931,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,3.325,bram18k,1.491987,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x3,32018,22,32,True,1761,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,6.289286,bram18k,2.822115,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x1,8794,22,32,True,846,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,3.021429,bram18k,1.355769,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x2,32026,22,32,True,1676,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,5.985714,bram18k,2.685897,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x3,124570,22,32,True,3776,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,13.485714,bram18k,6.051282,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x1,30026,22,32,True,1492,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,5.328571,bram18k,2.391026,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x2,122570,22,32,True,3592,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,12.828571,bram18k,5.75641,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x3,491978,22,32,True,9533,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,34.046429,bram18k,15.277244,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x1,110506,22,32,True,3161,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,11.289286,bram18k,5.065705,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x2,479914,22,32,True,9102,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,32.507143,bram18k,14.586538,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x3,1956010,22,32,True,27920,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,99.714286,bram18k,44.74359,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x1,2930,22,64,True,1830,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,6.535714,bram18k,2.932692,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x2,8786,22,64,True,2228,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,7.957143,bram18k,3.570513,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,4x3,32018,22,64,True,3058,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,10.921429,bram18k,4.900641,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x1,8794,22,64,True,2504,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,8.942857,bram18k,4.012821,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x2,32026,22,64,True,3402,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,12.15,bram18k,5.451923,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,8x3,124570,22,64,True,5502,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,19.65,bram18k,8.817308,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x1,30026,22,64,True,3931,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,14.039286,bram18k,6.299679,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x2,122570,22,64,True,6167,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,22.025,bram18k,9.883013,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,16x3,491978,22,64,True,12108,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,43.242857,bram18k,19.403846,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x1,110506,22,64,True,7208,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,25.742857,bram18k,11.551282,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x2,479914,22,64,True,13420,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,47.928571,bram18k,21.50641,bram18k
+hls4ml,"ap_fixed<19,7>",raw+indices,32x3,1956010,22,64,True,32238,,,,,,,stream law (exact on TinyFireUNet) + ROM estimate,115.135714,bram18k,51.663462,bram18k
+DPU,INT8,raw+indices,4x1,2930,22,64,True,,,,,0.003569,1,fix2float,0.018 GOP per 64 px tile; DDR 0.47 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,4x2,8786,22,64,True,,,,,0.004865,1,fix2float,0.024 GOP per 64 px tile; DDR 0.48 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,4x3,32018,22,64,True,,,,,0.006157,1,fix2float,0.031 GOP per 64 px tile; DDR 0.50 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,8x1,8794,22,64,True,,,,,0.009865,1,fix2float,0.050 GOP per 64 px tile; DDR 0.48 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,8x2,32026,22,64,True,,,,,0.015034,1,fix2float,0.076 GOP per 64 px tile; DDR 0.58 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,8x3,124570,22,64,True,,,,,0.020197,1,fix2float,0.102 GOP per 64 px tile; DDR 0.70 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,16x1,30026,22,64,True,,,,,0.031597,1,fix2float,0.159 GOP per 64 px tile; DDR 0.70 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,16x2,122570,22,64,True,,,,,0.052248,1,fix2float,0.263 GOP per 64 px tile; DDR 1.08 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,16x3,491978,22,64,True,,,,,0.072886,1,fix2float,0.367 GOP per 64 px tile; DDR 1.53 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,32x1,110506,22,64,True,,,,,0.111623,1,fix2float,0.562 GOP per 64 px tile; DDR 1.32 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,32x2,479914,22,64,True,,,,,0.194175,1,fix2float,0.977 GOP per 64 px tile; DDR 2.24 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+DPU,INT8,raw+indices,32x3,1956010,22,64,True,,,,,0.276701,1,fix2float,1.393 GOP per 64 px tile; DDR 3.89 MB,,no DPU target for Zynq-7000,,fixed B4096 overlay
+FINN,W8A8,raw+indices,4x1,2930,,64,True,15.0,11445.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.215132,lut,0.049674,lut
+FINN,W4A4,raw+indices,4x1,2930,,64,True,15.0,8448.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.158797,lut,0.036667,lut
+FINN,W8A8,raw+indices,4x2,8786,,64,True,20.0,16476.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.309699,lut,0.07151,lut
+FINN,W4A4,raw+indices,4x2,8786,,64,True,19.0,11896.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.223609,lut,0.051632,lut
+FINN,W8A8,raw+indices,4x3,32018,,64,True,34.0,22774.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.428083,lut,0.098845,lut
+FINN,W4A4,raw+indices,4x3,32018,,64,True,27.0,15616.0,0.0,,3.96,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.293534,lut,0.067778,lut
+FINN,W8A8,raw+indices,8x1,8794,,64,True,16.0,12780.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.240226,lut,0.055469,lut
+FINN,W4A4,raw+indices,8x1,8794,,64,True,15.0,8939.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.168026,lut,0.038798,lut
+FINN,W8A8,raw+indices,8x2,32026,,64,True,30.0,19592.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.368271,lut,0.085035,lut
+FINN,W4A4,raw+indices,8x2,32026,,64,True,23.0,12916.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.242782,lut,0.056059,lut
+FINN,W8A8,raw+indices,8x3,124570,,64,True,76.0,28952.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.544211,lut,0.12566,lut
+FINN,W4A4,raw+indices,8x3,124570,,64,True,47.0,17452.0,0.0,,8.64,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.328045,lut,0.075747,lut
+FINN,W8A8,raw+indices,16x1,30026,,64,True,27.0,15460.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.290602,lut,0.067101,lut
+FINN,W4A4,raw+indices,16x1,30026,,64,True,19.0,9924.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.186541,lut,0.043073,lut
+FINN,W8A8,raw+indices,16x2,122570,,64,True,73.0,25845.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.485808,lut,0.116987,bram18k
+FINN,W4A4,raw+indices,16x2,122570,,64,True,43.0,14970.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.281391,lut,0.06891,bram18k
+FINN,W8A8,raw+indices,16x3,491978,,64,True,253.0,41338.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.903571,bram18k,0.405449,bram18k
+FINN,W4A4,raw+indices,16x3,491978,,64,True,133.0,21134.0,0.0,,34.56,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.475,bram18k,0.213141,bram18k
+FINN,W8A8,raw+indices,32x1,110506,,64,True,64.0,20829.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.391523,lut,0.102564,bram18k
+FINN,W4A4,raw+indices,32x1,110506,,64,True,38.0,11893.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.223553,lut,0.060897,bram18k
+FINN,W8A8,raw+indices,32x2,479914,,64,True,244.0,38372.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.871429,bram18k,0.391026,bram18k
+FINN,W4A4,raw+indices,32x2,479914,,64,True,128.0,19080.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",0.457143,bram18k,0.205128,bram18k
+FINN,W8A8,raw+indices,32x3,1956010,,64,True,964.0,66135.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",3.442857,bram18k,1.544872,bram18k
+FINN,W4A4,raw+indices,32x3,1956010,,64,True,488.0,28498.0,0.0,,138.24,,,"FLOOR: estimate-only, FIFOs (skip buffers) unsized",1.742857,bram18k,0.782051,bram18k

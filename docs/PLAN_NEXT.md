@@ -88,7 +88,7 @@ Recommended: a, steps 1-2 only, then decide on 3-4. This is James's call, since 
    ```bash
    SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7      SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh
    ```
-5. **E-48, hardware options.** First check that `TinyEcologyUNet` (four heads) converts through the existing flows. It mirrors TinyFireUNet's structure, so `sweep_architecture.py`'s BRAM law should carry over, but that is untested. The latency budget is at most 43 s per scene (A-29); if a SWIR camera joins, the budget is re-derived.
+5. **E-48, hardware options.** The conversion check is done (2026-11-05, [p12_convert](results/p12_convert/README.md)): the four-head `TinyEcologyUNet` goes through hls4ml, the DPU and FINN at every E-47 rung. What is left is the option table at E-47's chosen size, on the boards each flow can reach, with power. The latency budget is at most 43 s per scene (A-29); if a SWIR camera joins, the budget is re-derived.
 6. **P10, the final test, once.** It reads every frozen set in one recorded run: the fire test blocks, the 2025 cohort, the AVIRIS test lines, the LFMC test sites, and the ignition test blocks and 2025.
 
 ## 5. Smaller items owed

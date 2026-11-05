@@ -90,7 +90,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-45 Ignition slot value | Needs a pack | - | - | - |
 | E-46 Band and index decision | Needs code | - | [p12_weights](p12_weights/) | - |
 | E-47 Architecture decision | Runnable now | - | - | - |
-| E-48 Hardware decision | Needs a pack | - | - | - |
+| E-48 Hardware decision | Needs a pack | - | [p12_convert](p12_convert/) | - |
 | E-49 Dating the weather (R0) | Partial result | P3 REFUTED | [p3_dated](p3_dated/) | [weather_date](p3_dated/qual_E-49_weather_date.png) |
 | E-50 Latitude-correct day length (R0) | Partial result | P3 SUPPORTED | [p3_dated](p3_dated/) | [patch_map](p3_dated/qual_E-50_patch_map.png) |
 | E-51 Operational start-up (R0) | Partial result | P3 MIXED | [p3_dated](p3_dated/) | [patch_map](p3_dated/qual_E-51_patch_map.png) |

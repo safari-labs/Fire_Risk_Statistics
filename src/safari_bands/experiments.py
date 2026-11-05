@@ -1301,8 +1301,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="BRAM / DSP / LUT, latency, power (A-29)",
         conclusion="The onboard hardware.",
         state="NEEDS_PACK",
-        blocker="E-47 (budgets set in A-29: <= 44 s per scene, revised 2026-10-29 "
+        blocker="E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 "
                 "from 91 s; then lowest power)",
+        note="Conversion pre-check 2026-11-05 (docs/results/p12_convert), untrained "
+             "P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 "
+             "E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but "
+             "only 4x1 at tile 16-32 comes near the Q8 (84-91 % BRAM; 8x2 258 %). "
+             "DPU (Q8): every rung is one DPU subgraph, only fix2float on the CPU, at "
+             "most 0.28 s per scene at peak. FINN (estimate only, BRAM a floor with "
+             "FIFOs unsized): all 24 builds convert; 23 fit the Q8 and 20 the Q7 at "
+             "<= 80 %, and base_ch 4-16 meet 43 s at minimal folding (8x2 W4A4: 24 % "
+             "of the Q7, 8.6 s). Next: FIFO sizing (Vivado on Linux) before the Q7 is "
+             "an option. The index front end divides and is in none of these graphs.",
     ),
     # P3 predictions, registered 2026-10-24 before any P3 number existed.
     # Each is scored under R0 (no learning); the latitude bands hold 30 / 34
