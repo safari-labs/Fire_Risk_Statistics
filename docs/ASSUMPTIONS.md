@@ -1494,7 +1494,7 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Loss:** conditional logistic over each matched set, as above. BCE stays a side check only.
 - **R2's start:** logit P(sustained flaming).
 - **Best epoch:** chosen on the seeded 15 % inner split of the training groups, as above.
-  - James asked whether it should be chosen on the test fold instead. It is not, and the reason is recorded here. Choosing the epoch on the fold it is then scored on reports the best of several looks at the answer, which flatters every rung, most of all the noisy ones (r4 against r4_shuffled). Rule 5 and CLAUDE.md forbid it ("do selection inside training folds"), and a change would need James to relax the rule explicitly.
+  - James asked whether it should be chosen on the test fold instead. It is not, and the reason is recorded here. Choosing the epoch on the fold it is then scored on reports the best of several looks at the answer, which flatters every rung, most of all the noisy ones (r4 against r4_shuffled). Rule 5 and CLAUDE.md forbid it ("do selection inside training folds"), and a change would need James to relax the rule explicitly. James confirmed the inner split the same day.
 - **Noise:** none for now (option a). Every E-45 imagery result is labelled noise-free, and a band claim drawn from it needs a noisy rerun (rule 6).
 - **Predictions registered before any fit (E-45):**
   1. r4 beats r4_shuffled, with the paired CI above 0.

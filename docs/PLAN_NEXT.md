@@ -32,7 +32,7 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 - Tiles read at 242/s on one core, so a fit should take about 12-15 min on a GPU: 17 tasks of 6 fits, 3 h each.
 - The design is in A-48.
 
-**Decided (James, 2026-11-05; A-48).** Conditional logistic loss; R2 starts as logit P(sustained flaming); the best epoch is picked on the 15 % inner split of the training groups (rule 5; James asked about the test fold, and A-48 records why not); noise-free for now. The three predictions are registered in E-45. The pack was rebuilt at Model `a5d6f49` and bundled as `ignition_v1_pack`.
+**Decided (James, 2026-11-05; A-48).** Conditional logistic loss; R2 starts as logit P(sustained flaming); the best epoch is picked on the 15 % inner split of the training groups (rule 5; James asked about the test fold, then confirmed the inner split, A-48); noise-free for now. The three predictions are registered in E-45. The pack was rebuilt at Model `a5d6f49` and bundled as `ignition_v1_pack`.
 
 **Then:**
 1. Send `ignition_v1_pack` to scratch and run `SUBMIT=1 bash scripts/shell/sweep_ignition.sh`.

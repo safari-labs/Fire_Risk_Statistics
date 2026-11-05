@@ -265,7 +265,7 @@ Stage C's floor: ignition receptivity, not occurrence (A-28).
 
 Imagery's value on the ignition process.
 
-*Note:* A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any band claim); epoch chosen on the inner 15 % of training groups (rule 5). Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within +-0.005 of r2. Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a 15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form needs eco sidecars for the points; closure waits for Q26.
+*Note:* A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any band claim); epoch chosen on the inner 15 % of training groups (rule 5, confirmed). Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within +-0.005 of r2. Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a 15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form needs eco sidecars for the points; closure waits for Q26.
 
 *Blocked on:* the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be sent to scratch, and the FW commit pulled
 

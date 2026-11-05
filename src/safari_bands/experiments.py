@@ -1241,7 +1241,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be "
                 "sent to scratch, and the FW commit pulled",
         note="A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any "
-             "band claim); epoch chosen on the inner 15 % of training groups (rule 5). "
+             "band claim); epoch chosen on the inner 15 % of training groups (rule 5, confirmed). "
              "Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with "
              "the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within "
              "+-0.005 of r2. "
