@@ -1232,15 +1232,20 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="slot sources on the ignition target",
         dependent="paired AUC change",
         conclusion="Imagery's value on the ignition process.",
-        state="NEEDS_PACK",
-        runner="Fire_Risk_FW scripts/shell/sweep_ignition.sh (run_ignition.py; 8 configs x "
-               "5 folds x 3 seeds, R0 at seed 0: 100 fits)",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SUBMIT=1 bash scripts/shell/sweep_ignition.sh (run_ignition.py; "
+               "8 configs x 5 folds x 3 seeds, R0 at seed 0: 100 fits)",
         resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per task of "
                   "6 fits, 17 tasks (a first guess: tiles read at 242/s locally, about "
                   "12 min of reading per fit)",
-        blocker="the pack is built locally (Fire_Risk_Model data/ignition_v1_pack, A-48); "
-                "it goes to the cluster once James has reviewed A-48's choices",
-        note="Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each "
+        blocker="the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be "
+                "sent to scratch, and the FW commit pulled",
+        note="A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any "
+             "band claim); epoch chosen on the inner 15 % of training groups (rule 5). "
+             "Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with "
+             "the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within "
+             "+-0.005 of r2. "
+             "Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each "
              "matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a "
              "15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated "
              "against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form "
@@ -1850,6 +1855,41 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "2026-11-04 (docs/results/p6f_lfmc): REFUTED. Conifer RMSE minus the equation "
              "(14.0): simulation GP +26.0 [+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]; "
              "simulation minus empirical +25.5. Conifer LFMC SD is 15.2.",
+    ),
+    Experiment(
+        "E-65", "LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2)",
+        "CFFDRS gaps",
+        hypothesis="Registered 2026-11-05, before any v2 result (A-51). With the prior "
+                   "cut, inside each outer site fold, to the LFMC range of that fold's "
+                   "training records by species and season, the simulation GP on the ten "
+                   "bands, on conifer records: (a) has a bias within +-10 LFMC points; "
+                   "(b) beats prior_mean_fold, the training stratum mean; (c) beats FBP's "
+                   "equation; (d) loses skill without B12 on jack and red pine (E-29). "
+                   "WRONG IF (a) |bias| >= 10; (b), (c) the site-bootstrap CI of its RMSE "
+                   "minus the comparator's reaches 0; (d) the CI of no_b12 minus all10 "
+                   "reaches 0.",
+        independent="prior: lfmc_v1 (60-250 %) or fold-wise narrowed by species x season; "
+                    "band set all10 or no_b12; controls prior_mean_fold and FBP's equation",
+        dependent="RMSE, bias and R2 against gravimetric LFMC on the development records, "
+                  "paired by record, bootstrap over sites; per species and season",
+        conclusion="Whether the +31 bias was the prior, and whether the spectra then carry "
+                   "LFMC beyond the prior's mean. If (b) fails, the simulation route on "
+                   "Sentinel-2 bands has no spectral skill on conifers even with a right-"
+                   "sized prior, and steps 3-4 (backgrounds, a discontinuous canopy) are "
+                   "the remaining physics to try.",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW EXP_NAME=lfmc_v2 SEEDS=\"0 1 2\" SUBMIT=1 bash "
+               "scripts/shell/sweep_lfmc.sh (run_lfmc.py; same lfmc_v1 bundle, v1 arms "
+               "rerun beside the new ones)",
+        blocker="the FW commit must be pushed and pulled",
+        resources="--time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed "
+                  "(v1 took 5 min per seed; the fold arms add about 120 GP fits)",
+        gap="G1 foliar moisture is computed, never observed",
+        note="Step 1 of the fix (docs/results/p6f_reference): PROSPECT-D + 4SAIL match "
+             "Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is "
+             "not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) "
+             "is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the "
+             "training fold enters the prior; the frozen LFMC test sites stay unread.",
     ),
 )
 

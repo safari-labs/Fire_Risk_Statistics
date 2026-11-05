@@ -32,43 +32,26 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 - Tiles read at 242/s on one core, so a fit should take about 12-15 min on a GPU: 17 tasks of 6 fits, 3 h each.
 - The design is in A-48.
 
-**Decisions for James before the sweep:**
-1. **The A-48 choices.**
-   - The loss is conditional logistic over each matched set (alternative: BCE).
-   - R2 starts as logit P(sustained flaming).
-   - The best epoch is picked on a 15 % inner split of the training groups.
-2. **Sensor noise (rule 6).** Neither this runner nor the Stage A slot runner applies the noise model.
-   - Option a: run E-45 noise-free now, as Stage A was, and add noise when bands are searched.
-   - Option b: add the placeholder noise model (A-37) to `make_step` in both runners first. That costs about a day and reruns nothing already done.
-   - Recommended: a. E-45's first question is whether imagery carries any ignition signal at all.
-3. **Predictions to register before any fit** (proposed):
-   - r4 beats r4_shuffled, with the paired CI above 0.
-   - r2 vs r0 is within +-0.01 (learning on fuel and slots barely moves a fuel-only floor).
-   - r2_leaf_ablated vs r2 is within +-0.005. Leaf state moves P only for grass. The SCANFI tree puts no point on grass; CWFIS puts 275 of 7,194 (3.8 %) there. So under SCANFI fuel, green-up can reach the score only through the residual.
+**Decided (James, 2026-11-05; A-48).** Conditional logistic loss; R2 starts as logit P(sustained flaming); the best epoch is picked on the 15 % inner split of the training groups (rule 5; James asked about the test fold, and A-48 records why not); noise-free for now. The three predictions are registered in E-45. The pack was rebuilt at Model `a5d6f49` and bundled as `ignition_v1_pack`.
 
 **Then:**
-1. Commit the pack and runner code in Model and FW, and rebuild the pack (about 10 min). The local pack records Model `0c3aeb0`, which predates `pack_ignition.py`. Then bundle `ignition_v1_pack` as tar.gz + sha256 and send it to scratch.
-2. `SUBMIT=1 bash scripts/shell/sweep_ignition.sh`.
-3. Write the P9b packager.
+1. Send `ignition_v1_pack` to scratch and run `SUBMIT=1 bash scripts/shell/sweep_ignition.sh`.
+2. Write the P9b packager.
    - Paired deltas against r2 and r0, by fold x seed, with a bootstrap over 1-degree blocks.
    - The qualitative view: the E-44 matched sets with the R4 map and the shuffled twin's map.
-4. Fuel slot, replace form. Run the final eco_v3 model on the ignition chips (`predict_eco_fire.py` on the point pack), then add `r3_fuel_replace` and its twin to the sweep.
-5. Closure stays blocked on Q26 (in-stand moisture coefficients).
+3. Fuel slot, replace form. Run the final eco_v3 model on the ignition chips (`predict_eco_fire.py` on the point pack), then add `r3_fuel_replace` and its twin to the sweep.
+4. Closure stays blocked on Q26 (in-stand moisture coefficients).
 
-## 3. A decision on LFMC (T1), after E-64
+## 3. LFMC (T1): fixing the forward model (A-51, E-65)
 
-E-64 says the simulation route, as built, is not a usable LFMC retrieval on Sentinel-2: biased +31, worse than a constant. Two ways on:
+**Decided (James, 2026-11-05): option a, try to fix the forward model.**
 
-- **a. Fix the forward model (a P6f-v2 plan).**
-  1. The PROSPECT/4SAIL reference check owed under A-47.
-  2. Priors narrowed by species and season to the measured range (80-149 % on conifers, not 60-250 %).
-  3. Moss and lichen backgrounds.
-  4. Then a discontinuous-canopy model for conifers.
-  
-  Steps 1-2 are cheap and test whether the bias is the priors. Step 4 is weeks.
-- **b. Park T1's simulation route until James's own LFMC and dry-matter sampling exists.** Report P6f as is. In the band decision, T1 then rests on E-29's weak B12 line.
-
-Recommended: a, steps 1-2 only, then decide on 3-4. This is James's call, since it reopens brief Phase 1.
+1. **Reference check: done** ([p6f_reference](results/p6f_reference/README.md)). PROSPECT-D + 4SAIL match Féret's R packages to 5e-15 with the same leaf-angle classes. The code is not the cause of the +31 bias.
+2. **Narrowed priors: built, on the cluster next** (E-65). Inside each outer site fold, the simulation pool is cut to the training records' LFMC range by species and season, with `prior_mean_fold` as the control to beat. Same `lfmc_v1` bundle, no transfer:
+   ```bash
+   EXP_NAME=lfmc_v2 SEEDS="0 1 2" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh
+   ```
+3. **Moss and lichen backgrounds** and 4. **a discontinuous-canopy model**: decided after E-65. If the GP cannot beat `prior_mean_fold`, the spectra carry no LFMC beyond the prior under 4SAIL, and these are the remaining physics to try.
 
 ## 4. Then the synthesis (P11, P12, P10)
 

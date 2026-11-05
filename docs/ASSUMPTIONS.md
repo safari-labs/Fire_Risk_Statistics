@@ -1490,6 +1490,18 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Not yet runnable.** The replace form of the fuel slot needs eco sidecars for the points, from the final eco_v3 model. Canopy closure acts on ignition only through in-stand moisture, which waits for Q26.
 - **Rule 6 is not met yet.** Neither this runner nor `run_slots.py` (the Stage A slot sweeps) applies the sensor noise model, so their imagery rungs are noise-free. They answer whether imagery carries the signal at all. Any band claim drawn from them needs a noisy rerun. Whether to add noise before the first ignition sweep is a decision for James (the P9b plan).
 
+**Decided (James, 2026-11-05, before any fit).**
+- **Loss:** conditional logistic over each matched set, as above. BCE stays a side check only.
+- **R2's start:** logit P(sustained flaming).
+- **Best epoch:** chosen on the seeded 15 % inner split of the training groups, as above.
+  - James asked whether it should be chosen on the test fold instead. It is not, and the reason is recorded here. Choosing the epoch on the fold it is then scored on reports the best of several looks at the answer, which flatters every rung, most of all the noisy ones (r4 against r4_shuffled). Rule 5 and CLAUDE.md forbid it ("do selection inside training folds"), and a change would need James to relax the rule explicitly.
+- **Noise:** none for now (option a). Every E-45 imagery result is labelled noise-free, and a band claim drawn from it needs a noisy rerun (rule 6).
+- **Predictions registered before any fit (E-45):**
+  1. r4 beats r4_shuffled, with the paired CI above 0.
+  2. r2 is within ±0.01 of r0 (learning on fuel and slots barely moves a fuel-only floor).
+  3. r2_leaf_ablated is within ±0.005 of r2. Leaf state moves P only for grass, and under SCANFI fuel no point is on grass.
+- **Pack:** rebuilt 2026-11-05 at Model `a5d6f49`. It is identical to the 11-04 build except the 24 lagged-weather columns (A-50) and the commit. Bundled as `ignition_v1_pack`.
+
 ## A-49: P12 is decided by James from options; equal head weights; how the two searches merge
 
 **Decision (James, 2026-11-05, before any P12 band, architecture or hardware result).** It amends A-29 and A-41.
@@ -1540,4 +1552,25 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - FMC stays at D, since it depends only on the date, which a stale product still knows.
 - **Which ages matter for SAFARI.** From the end of a belt pass to the next ÉTS contact is a median 7.5 h and at most 10.6 h (A-29). So an uplinked product is 1–2 days old; lags 3 and 7 bound the worst case. Under A-41 weather-dependent products run on the ground, so E-20 bounds that choice rather than sizing an onboard product.
 - **Not rebuilt:** the 2024–2025 cohort pack, which E-20 does not use. The ignition pack picks up the columns when it is rebuilt after the commit (A-48).
-- **Provenance.** The pack's `git_commit` names the Model commit before this change. Like the ignition pack, it must be rebuilt (about 7 min) after the code is committed, then bundled.
+- **Provenance.** The pack's `git_commit` names the Model commit before this change. Like the ignition pack, it must be rebuilt (about 7 min) after the code is committed, then bundled. Done 2026-11-05: rebuilt at Model `a5d6f49`, identical to the earlier build except `git_commit`, and bundled as `stage2_fire_cffdrs_v2_lags`.
+
+## A-51: P6f-v2, fixing the LFMC forward model: reference check, then fold-wise narrowed priors (E-65)
+
+**Decision (James, 2026-11-05: "try and fix the forward model", option a of PLAN_NEXT section 3, steps 1-2). Written before any v2 result.**
+
+**Step 1, the reference check A-47 owed: done** (`docs/results/p6f_reference`).
+- PROSPECT-D + 4SAIL as we run them agree with Féret's R `prospect` 2.0.1 and `prosail` 3.2.0 to 5e-15 once both use the same leaf-angle classes, on 128 cases from the `lfmc_v1` priors. R's current PROSPECT coefficients are the same as ours.
+- The one structural difference is the leaf-angle binning: 13 classes in the original 4SAIL and R, 18 equal ones in Python `prosail`. It is at most 0.1 of the atmospheric-residual sigma and about 0.3 LFMC points through B11. It is kept, and recorded.
+- So the implementation is not the cause of E-64's +31 bias. Phase 1's reference criterion is met for PROSPECT-D + 4SAIL.
+
+**Step 2, narrowed priors, inside the folds (`Fire_Risk_FW scripts/run_lfmc.py`).**
+- **Why inside the folds.** Measured conifer LFMC sits at 80-149 % (1st-99th percentile), while `lfmc_v1` samples 60-250 %. Setting a new prior from the records the retrieval is scored on would tune it on its own answers (rule 5). So in each outer site fold (the folds the empirical arms already use), the prior comes only from that fold's training records.
+- **Stratum** per record: species x season where the training fold holds at least 50 records of that cell, else fuel group x season, else fuel group.
+  - Seasons: spring is Apr-Jun (day 91-181, the conifer dip); summer is Jul-Sep; anything else is "other".
+  - In practice jack and red pine get their own spring and summer strata. Fir, the spruces and black spruce pool into conifer by season, and aspen gets deciduous by season where there are enough records.
+- **Prior:** the existing `lfmc_v1` simulation pool, cut to the stratum's training LFMC range [1st, 99th percentile]. Each stratum keeps 6,000-12,000 of 32,768. The GP is fit on 4,096 of them, as in v1. Only the LFMC range comes from Globe-LFMC; no spectrum and no other parameter does.
+  - Cm, LAI and the backgrounds keep their v1 ranges. Nothing measured says how they move by season at these sites.
+- **Arms added:** `sim_gp_fold_all10` and `sim_gp_fold_no_b12` (E-29 under the narrowed prior). Every v1 arm stays in the same run and seed, with an unchanged generator, so the comparison is paired.
+- **The control that matters:** `prior_mean_fold`, the training stratum's mean LFMC, which carries no spectral information. A narrowed prior pulls predictions toward the middle of the range, which by itself shrinks bias and RMSE. Only beating this control shows the spectra carry LFMC.
+- **No new simulation or transfer.** The cluster's `lfmc_v1` bundle (`s2_pack.npz`, `dev.npz`) is reused. The frozen LFMC test sites stay unread until P10.
+- **Not in step 2:** moss and lichen backgrounds, and a discontinuous canopy (steps 3-4). They are decided after E-65.
