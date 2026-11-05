@@ -873,3 +873,50 @@ Sentinel-2's 5-day revisit is what the P6 snow-off and green-up estimators were 
 4. **Accept it.** SAFARI maps fuel structure, which changes slowly (fuel type, % conifer, closure, height: the P6a estimators), every 1–3 months. Fast variables (LFMC, curing, snow-off) come from Sentinel-2/HLS, with SAFARI as a calibration and validation source.
 
 Options 1 and 4 combine naturally: a background mapping mode plus tasked targets.
+
+---
+
+### Q38 — P12's stability clause: what has to be "stable" before a band is chosen?
+
+**Status:** ANSWERED 2026-11-05: option 1 (raised the same day, before any P12 band decision)
+**Blocks:** which band sets enter E-46's option table as "stable", and whether a consensus set needs a re-scoring run on the cluster.
+**Assumed meanwhile (A-49):** nothing is excluded for instability; every option shows how often each of its bands was chosen.
+
+**What the clause is.** A-29 says every chosen band must be "selected in at least 4 of 6 folds". Band selection runs inside each training fold (rule 5), so each fold's search returns its own nested sets, and they differ. The clause guards against flying a band that one lucky split happened to pick. A band the searches pick in most folds is a property of the data; a band picked in one or two is noise.
+
+**Why it needs restating.**
+
+1. **The count no longer fits.** A-29 counted 6 folds. The searches now run 5 outer folds × 3 seeds = 15 searches, and seeds share their blocks, so 15 is not 15 independent votes.
+2. **Searches rarely agree on a whole set**, only on most of its bands. In eco_v3's equal-weight search:
+
+   | k | distinct sets among 15 searches | most common set | bands chosen in at least 10 of 15 |
+   |---|---|---|---|
+   | 4 | 10 | 4 / 15 | B12 (12), B4 (11) |
+   | 6 | 12 | 3 / 15 | B4 (13), B12 (13), B11 (11), B5 (10) |
+   | 8 | 14 | 2 / 15 | B4 (14), B6 (13), B12 (13), B11 (12), B8 (12), B8A (12), B5 (11) |
+
+   At k = 6 only four bands pass 10 of 15, so no 6-band set is "stable" band by band.
+3. **Neighbouring bands split the vote.** The searches swap B5, B6 and B7 (all red edge) and B8 and B8A (both NIR) between folds. Counted as a region, red edge is in 15 of 15 best 6-band sets (E-62), while no single red-edge band is. On AVIRIS-NG this is worse: neighbouring 10 nm channels are near-duplicates, and the least-chosen SWIR region turns up in only 27–33 % of extended-window searches (hs_v4).
+4. **It can conflict with "the best score wins" (A-41).** The best-scoring set on the outer folds may contain a band chosen in only a few searches.
+
+**Options:**
+
+1. **Consensus set, counted by region, then re-scored** *(recommended)*.
+   - At each k, take the k most-chosen spectral regions, with the most-chosen band within each:
+     - Sentinel-2 regions: blue, green, red, red edge, NIR, SWIR1, SWIR2.
+     - AVIRIS-NG regions: the A-40 windows.
+   - Require each region in at least 10 of 15 searches, the same two-thirds as 4 of 6.
+   - Re-score that exact set on the outer folds, which the E-47 runner already does (`run_eco_arch.py --sizes 8x2 --bands ...`, about 15 short fits). The flown set then has a measured score of its own.
+   - *Pro:* the set that would fly is the set that was scored; it is robust to near-duplicate bands.
+   - *Con:* one more short cluster run per option, and region boundaries are a choice.
+2. **Keep the clause per band, as a flag.** Report each band's count beside the option, choose on score, and list low counts under "cons".
+   - *Pro:* no new run; nothing hidden.
+   - *Con:* the chosen set may be one no search actually produced.
+3. **Per band, as a gate (A-29 as written, 10 of 15).**
+   - *Pro:* strictest.
+   - *Con:* at k = 6 no Sentinel-2 set passes, and on AVIRIS-NG almost nothing does, so the clause would decide by default.
+4. **Drop it.** Performance alone (A-41), with the paired SE as the only guard.
+   - *Pro:* simplest.
+   - *Con:* split-to-split luck is no longer checked at all.
+
+**Answer (James, 2026-11-05):** option 1. Consensus set counted by region, each region in at least 10 of 15 searches, the most-chosen band within each region, then the exact set re-scored on the outer folds. Recorded in A-49.

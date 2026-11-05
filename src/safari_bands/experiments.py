@@ -621,9 +621,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "feature is not loss in a prediction, and this measures "
                    "the half nobody has.",
         state="NEEDS_PACK",
-        runner="--",
-        blocker="lagged FWI sidecars: an ERA5 pass over data already held, "
-                "then a repack",
+        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 "
+               "SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags "
+               "bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)",
+        resources="as the slot sweeps: 35 fits in 2 tasks of 18, --time=2:30:00 "
+                  "--gpus=a100:1 --cpus-per-task=12 --mem=32G; each trained fit is scored "
+                  "four more times (about +1 min)",
+        blocker="the lagged-weather pack (Fire_Risk_Model data/stage2_fire_cffdrs_v2_lags, "
+                "built 2026-11-05) goes to scratch after the Model and FW code is committed "
+                "and the pack rebuilt for its provenance (A-50)",
         gap="G7 CFFDRS assumes same-day observations",
         note="Train once, score at each lag: one model, five scores. The "
              "leakage guard makes an earlier target date strictly safer. P3 "
@@ -632,7 +638,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "on 7-day-old codes; the train-once-score-at-each-lag design still "
              "needs a scoring mode in run_slots. P7: r2_lag7 within -0.024 "
              "[-0.039, -0.011], between -0.052 [-0.101, -0.010]: decay is not "
-             "flat (PARTIAL; per-code ordering and score-at-lag not run).",
+             "flat (PARTIAL; per-code ordering and score-at-lag not run). "
+             "2026-11-05 (A-50): r2_lag7 aged the codes only; wind and humidity "
+             "stayed at D-1. The pack now carries all 13:00 weather at lags 1, 2, "
+             "3 and 7 (no new ERA5 pass: the sidecars held it), run_slots scores one "
+             "model at each lag (--score-lags), and r2_age7 trains on weather that "
+             "is all 7 days old.",
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
@@ -702,7 +713,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "already known. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): "
              "SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 "
              "27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included "
-             "(Q35); the family target's D class is 82 % open ground (P6a-M1).",
+             "(Q35); the family target's D class is 82 % open ground (P6a-M1). eco_v3 on "
+             "the corrected labels, 2026-11-04 (docs/results/p6a_ecology_v3): SUPPORTED "
+             "again, first SWIR at step 1 in 11/15 (B12), median 1.",
         tags=("primary",),
     ),
 
@@ -848,22 +861,37 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         hypothesis="From Jolly et al. (2014), the brief's lead hypothesis H1: dry "
                    "matter, not water content, drives seasonal conifer LFMC, so "
                    "water-only bands will return EWT rather than LFMC and a "
-                   "two-band water contrast is required. Untestable here until an "
-                   "LFMC label exists.",
-        independent="LFMC, the brief's lead retrieval target",
-        dependent="RMSE against gravimetric LFMC",
+                   "two-band water contrast is required. Restated testably on "
+                   "2026-11-03, before any simulation or score: with Sentinel-2's "
+                   "bands, the simulation-trained retrieval (E-64) has lower LFMC "
+                   "error on Globe-LFMC jack and red pine with B11 (1610 nm) and B12 "
+                   "(2190 nm) than with B11 alone. WRONG IF removing B12 does not "
+                   "raise that RMSE with a site-bootstrap CI excluding 0. Reported "
+                   "alongside, not predicted: the same contrast in spring (April-June, "
+                   "the dip) and in summer.",
+        independent="the simulation-trained retrieval's Sentinel-2 bands: all ten 10/20 m "
+                    "bands; the same without B12; without B11 and B12 (VNIR floor)",
+        dependent="RMSE and bias against gravimetric LFMC, Globe-LFMC jack and red pine "
+                  "2017+, development sites, paired by record, bootstrap over sites",
         conclusion="Would make G1's STRONG claim testable -- that a spectral "
                    "estimate beats the FBP equation -- and unblock E-16. "
                    "Globe-LFMC 2.0 is fetched and measured: 2,884 usable "
                    "records at 83 sites, no Canadian ones, and C-2 black "
                    "spruce has 51. It carries no spectra, so each record "
-                   "must be paired with a Sentinel-2 acquisition.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="Globe-LFMC held; the S2 pairing pipeline is unwritten "
-                "(Phase 6a), and PROSAIL for simulated labels is not "
-                "installed (Phase 1)",
+                   "must be paired with a Sentinel-2 acquisition. Also the first "
+                   "moisture evidence for SWIR2 as A-41's tie-breaker.",
+        state="RUNNABLE",
+        runner="P6f (E-64's runs): the no_b12 arm of Fire_Risk_FW/scripts/shell/sweep_lfmc.sh",
+        blocker="",
+        resources="as E-64",
         gap="G1 strong form",
+        note="James (2026-11-03): start the simulation-trained retrieval of brief Phases "
+             "1-4 and compare it with LFMC from Sentinel-2's bands, while CWFIS is asked "
+             "about field LFMC. Globe-LFMC holds LFMC only, not Cw or Cm, so H1 is read "
+             "through LFMC error. Run 2026-11-04 (docs/results/p6f_lfmc): SUPPORTED, "
+             "weakly. Without B12 the simulation GP is +1.7 [+0.4, +3.2] worse on jack and "
+             "red pine, in spring and summer, but that retrieval is biased +31 and worse "
+             "than a constant.",
     ),
     Experiment(
         "E-30", "T2 curing / NPV fraction", "Out of reach",
@@ -993,8 +1021,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                     "imagery_replace (ecology model) vs imagery_correct",
         dependent="paired delta in within-patch AUC per process",
         conclusion="Whether the imager should refresh FBP fuel type.",
-        state="NEEDS_PACK",
-        blocker="E-22 (ecology model) and pack v2",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW RUN_ID=20261102-1959 SUBMIT=1 bash "
+               "scripts/shell/sweep_eco_fire.sh (FW 15a705b); read "
+               "~/scratch/eco_fire_v1/agreement.json; then SUBMIT=1 EXP_NAME=slots_e35 "
+               "ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=r2,r3_fuel_replace,"
+               "r3_fuel_replace_shuffled,r3_fuel_pc_replace,r3_fuel_pc_replace_shuffled,"
+               "r3_pc_replace,r3_pc_replace_shuffled bash scripts/shell/sweep_slots.sh",
+        blocker="",
+        resources="sweep_eco_fire: --time=1:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=48G "
+                  "per job (a first guess: one eco_v3 fit, about 2 min on an A100, plus "
+                  "forward passes); then the slot sweep as E-36",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P5: the cffdrs half runs now (r2 vs r2_cwfis: SCANFI tree vs "
              "CWFIS 2019 under R2); the imagery replace form waits for E-22. "
@@ -1125,8 +1162,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Stage B's floor. CFSDS v1.1 (90 m, fires > 500 ha, "
                    "2002-2024) covers all 99 fire patches: 82 fires, 7,835 "
                    "fire-days.",
-        state="NEEDS_CODE",
-        blocker="FBP port; cfsds.py and the spread dataset are not written",
+        state="PARTIAL",
+        runner="Fire_Risk_Model/scripts/python/eval_spread_r0.py",
+        blocker="the frozen test fires are read in P10",
+        note="Development fires, 2026-11-03 (docs/results/p8a_spread, A-46): rho 0.54 "
+             "[0.49, 0.59], and 0.39 [0.34, 0.44] on days with spread.",
     ),
     Experiment(
         "E-42", "Spread slot value", "CFFDRS mirror",
@@ -1136,7 +1176,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired change in Spearman rho per fire-day",
         conclusion="Imagery's value on the outcome FBP actually predicts.",
         state="NEEDS_PACK",
-        blocker="the spread dataset and the slot network",
+        blocker="only 805 of 4,925 fire-days lie on a patch with imagery (A-46)",
     ),
     Experiment(
         "E-43", "Date-only control", "Controls",
@@ -1161,10 +1201,29 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="none learned: the published ignition relationships",
         dependent="AUC and calibration, starts vs matched controls",
         conclusion="Stage C's floor: ignition receptivity, not occurrence (A-28).",
-        state="NEEDS_DATA",
-        blocker="NFDB points not fetched; the continuous model needs Q26 or "
-                "the Wotton & Wheatley (2025) GAM table (from the authors); "
-                "GLC-X-42 classes are the interim score",
+        state="PARTIAL",
+        runner="Fire_Risk_Model build_ignition_dataset.py --stage weather / scanfi / filter, "
+               "then eval_ignition_r0.py (CPU, no fitting)",
+        blocker="the lightning holdover model needs the Wotton & Wheatley (2025) GAM "
+                "table (Q26); calibration is not scored (case-control sampling fixes the "
+                "base rate)",
+        note="Design, fixed 2026-11-03 before any score (A-46). A control's weather is its "
+             "start's, by construction, so within a matched set only fuel and leaf state "
+             "can differ: P(holdover) and the GLC-X-42 classes are constant inside a set "
+             "and the product's within-set ranking is P(sustained flaming)'s (Beverly & "
+             "Wotton 2007, by fuel category). Scored as the matched-set AUC (each start "
+             "against its own controls, ties 0.5), CI by bootstrap over 1-degree blocks; "
+             "the pooled AUC beside it. DESIGN CHECK: a weather-only score (FFMC class) "
+             "must give a matched-set AUC of exactly 0.5; anything else means the "
+             "weather is not shared. Fuel from the SCANFI step before the start's year "
+             "(fuel_tree), and from the CWFIS layer before it (2014b for 2017-2019, 2019 "
+             "with burn scars for 2020-2024) as the operational arm. "
+             "P9 (2026-11-03, 2021-2024, 758 sets): design check 0.500; SCANFI 0.526 "
+             "[0.507, 0.545], CWFIS 0.535 [0.512, 0.558]. All years (2026-11-04, "
+             "2017-2024, 1,298 sets): design check 0.500; SCANFI 0.530 [0.513, 0.546], "
+             "CWFIS 0.523 [0.506, 0.539] on 1,213 sets. 2017-2020 alone: SCANFI 0.536 "
+             "[0.511, 0.561], CWFIS 0.506 [0.484, 0.530]. Above chance, barely; the edge "
+             "is black spruce over aspen.",
     ),
     Experiment(
         "E-45", "Ignition slot value", "CFFDRS mirror",
@@ -1173,8 +1232,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="slot sources on the ignition target",
         dependent="paired AUC change",
         conclusion="Imagery's value on the ignition process.",
-        state="NEEDS_DATA",
-        blocker="E-44",
+        state="NEEDS_PACK",
+        runner="Fire_Risk_FW scripts/shell/sweep_ignition.sh (run_ignition.py; 8 configs x "
+               "5 folds x 3 seeds, R0 at seed 0: 100 fits)",
+        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per task of "
+                  "6 fits, 17 tasks (a first guess: tiles read at 242/s locally, about "
+                  "12 min of reading per fit)",
+        blocker="the pack is built locally (Fire_Risk_Model data/ignition_v1_pack, A-48); "
+                "it goes to the cluster once James has reviewed A-48's choices",
+        note="Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each "
+             "matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a "
+             "15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated "
+             "against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form "
+             "needs eco sidecars for the points; closure waits for Q26.",
     ),
     Experiment(
         "E-46", "Band and index decision", "CFFDRS mirror",
@@ -1183,19 +1253,45 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "earns a slot on any process's weighted evidence.",
         independent="per-slot nested rankings weighted by slot value (A-29)",
         dependent="the chosen band and index sets, with their margins",
-        conclusion="The CubeSat's bands and indices.",
-        state="NEEDS_PACK",
-        blocker="plan P6/P7 results",
+        conclusion="The CubeSat's bands and indices, presented as options with "
+                   "pros and cons for James to choose (A-49).",
+        state="NEEDS_CODE",
+        blocker="the combiner (A-49: equal head weights; Sentinel-2 decides VNIR and "
+                "whether SWIR is in, AVIRIS-NG the SWIR centres; Q38: consensus set "
+                "by region, at least 10 of 15 searches, re-scored with "
+                "run_eco_arch.py); E-35 for the fuel-type slot's value",
+        note="2026-11-05 (A-49, docs/results/p12_weights): under six head-weighting "
+             "schemes the equal-weight search's best set is tied (paired, one SE) "
+             "with the overall best under five; only maximin separates them, by "
+             "0.009 +- 0.009. The best sets are 7-8 bands under every scheme.",
     ),
     Experiment(
         "E-47", "Architecture decision", "CFFDRS mirror",
-        hypothesis="A tier2-class model is within one SE of the best preset at "
-                   "the chosen bands. WRONG IF only tier3 or larger reaches it.",
-        independent="model preset, R2 vs R4 form",
-        dependent="paired skill at the chosen bands; the onboard/ground split",
-        conclusion="The onboard model.",
-        state="NEEDS_PACK",
-        blocker="E-46",
+        hypothesis="Restated 2026-11-05, before any result (A-49): the onboard model "
+                   "is the ecology estimator (A-41), not the fire network. At E-46's "
+                   "bands, TinyEcologyUNet at the size the bands were ranked with "
+                   "(base_ch 8, depth 2) is within one paired SE of the best rung on "
+                   "the equal-weight combined skill, with sensor noise. WRONG IF only a "
+                   "larger rung (base_ch >= 16 or depth 3) reaches it: then the onboard "
+                   "model is bigger than the band search assumed and E-48 must size for "
+                   "it.",
+        independent="TinyEcologyUNet base_ch 4/8/16/32 x depth 1/2/3 at the chosen "
+                    "bands (raw + indices), with sensor noise",
+        dependent="combined and per-head skill on the outer fold, paired by fold and "
+                  "seed with eco_v3; parameters and MACs per pixel and per 1000 x 1000 "
+                  "px scene",
+        conclusion="The onboard model, as options (each rung within one SE of the "
+                   "best, with its size, pros and cons). The onboard/ground split "
+                   "follows A-41: structure maps onboard, weather-dependent products "
+                   "on the ground, bounded by E-20.",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW BANDS=<E-46 set> SUBMIT=1 bash "
+               "scripts/shell/sweep_eco_arch.sh (run_eco_arch.py)",
+        resources="--time=1:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G; 15 tasks "
+                  "(5 folds x 3 seeds), 3 per job, 12 rungs each (a first guess from "
+                  "eco_v3's 14 s per 8x2 fit)",
+        blocker="the band set: E-46 (a run at a candidate set before then is "
+                "provisional); the FW code must be committed and pulled",
     ),
     Experiment(
         "E-48", "Hardware decision", "Hardware",
@@ -1547,7 +1643,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "noise-free. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): MIXED. "
              "Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined "
              "skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small "
-             "k'. Indices alone are worse at every k they form.",
+             "k'. Indices alone are worse at every k they form. eco_v3, 2026-11-04 "
+             "(docs/results/p6a_ecology_v3): MIXED again, +0.0030 [+0.0006, +0.0057] at k = 8 "
+             "only; maps per input mode show the same structure.",
     ),
     Experiment(
         "E-60", "Snow-off without SWIR", "CFFDRS gaps",
@@ -1604,7 +1702,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "need; feeds E-46 and the SWIR chain choice.",
         state="PARTIAL",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'",
-        blocker="hs_v4 confirms on the final family labels (aviris_v4)",
+        blocker="the held-out AVIRIS test lines wait for P10",
         resources="--time=6:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per job of 6 "
                   "tasks, 3 at once (A-43); hs_v3 measured 81 min median per standard InGaAs "
                   "task, 153 per extended InGaAs task",
@@ -1619,7 +1717,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "Full sweep hs_v3, 2026-11-02 (docs/results/p6a_hs_v3): the falsifier does not "
              "fire (extra from extended: conifer -0.24, closure +0.06, height +0.04, all CIs "
              "reach 0), but the searches are unstable and a hand-set 1610 + 2190 nm pair "
-             "beats them on height; hs_v4 confirms.",
+             "beats them on height. Full sweep hs_v4 on the final labels, 2026-11-03 "
+             "(docs/results/p6a_hs_v4): REFUTED on height only, +0.09 m [+0.01, +0.23] "
+             "against a standard gain of -0.01 m, so the 10 % threshold is degenerate. Lidar "
+             "height (docs/results/p6a_external_labels_v2) does not reproduce it: extended "
+             "minus standard +0.05 m worse [-0.00, +0.11].",
     ),
     Experiment(
         "E-62", "Best VNIR bands, searched broadly", "Hyperspectral",
@@ -1638,7 +1740,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "sets are) gives up structure skill, and which placements win.",
         state="PARTIAL",
         runner="Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'",
-        blocker="hs_v4 confirms on the final family labels (aviris_v4)",
+        blocker="the held-out AVIRIS test lines wait for P10",
         resources="as E-61; hs_v3 measured 130 min median per VNIR task, 123 per no-red-edge "
                   "task",
         note="The VNIR arm searches the camera alone (no SWIR band), the question "
@@ -1653,7 +1755,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "(docs/results/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 "
              "(docs/results/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on "
              "percent conifer (-1.2 %) and closure (+2.2 %), though 12/15 best sets keep a "
-             "700-760 nm band; hs_v4 confirms.",
+             "700-760 nm band. Full sweep hs_v4, 2026-11-03 (docs/results/p6a_hs_v4): REFUTED "
+             "again. Red edge is in 15/15 best sets, but without it conifer is -1.1 % "
+             "[-2.1, -0.3] and closure +2.1 % [+0.9, +3.3]. Sentinel-2 half on eco_v3, "
+             "2026-11-04 (docs/results/p6a_ecology_v3): REFUTED. Red edge in 15/15 best "
+             "6-band sets; without it at k = 6 conifer +0.7 % [-2.0, +2.9], closure -0.9 % "
+             "[-2.0, +0.5].",
     ),
     # E-63 was registered on 2026-10-29, when James chose the 2024-2025 cohort's
     # role, before any 2024-2025 patch, composite or score existed.
@@ -1692,6 +1799,47 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "On 2024, (a) is AT RISK: R1 and R2 fall 0.06-0.11, no CI excludes 0.05, and R1 "
              "- R0 between patches is -0.035 [-0.095, +0.021]. R0 itself falls 0.05-0.06. "
              "(b) waits for 2025.",
+    ),
+    # E-64 was registered on 2026-11-03, when James approved the LFMC plan, before
+    # any simulation, Sentinel-2 pairing, fit or score existed.
+    Experiment(
+        "E-64", "LFMC: simulation-trained, Sentinel-2 empirical, FBP equation",
+        "CFFDRS gaps",
+        hypothesis="(a) Both spectral LFMC estimates -- the simulation-trained retrieval "
+                   "(PROSPECT-D + 4SAIL with the noise model, never fit to Globe-LFMC) and "
+                   "the best empirical Sentinel-2 model fit on Globe-LFMC with site-grouped "
+                   "cross-validation (calibrated NDMI, MSI or NMDI, or a GPR on the bands) "
+                   "-- beat FBP's foliar moisture equation on conifer records. (b) The "
+                   "empirical model beats the simulation-trained one, by less than 10 LFMC "
+                   "points of RMSE. WRONG IF (a) either estimate's RMSE minus the "
+                   "equation's has a site-bootstrap CI reaching 0; or (b) the "
+                   "simulation-trained retrieval wins, or loses by more than 10 points.",
+        independent="LFMC source: FBP equation (latitude, longitude, elevation, date); "
+                    "simulation-trained retrieval; calibrated index models; GPR on "
+                    "Sentinel-2 bands",
+        dependent="RMSE, bias and R2 against gravimetric LFMC, Globe-LFMC 2017+ in "
+                  "Canadian-relevant species, development sites, paired by record, "
+                  "bootstrap over sites; per species and season",
+        conclusion="Whether an observed foliar moisture beats the computed one (G1's "
+                   "strong claim), and whether a retrieval trained on physics transfers to "
+                   "real data with no local calibration -- the condition SAFARI faces in "
+                   "Canada, which has no LFMC sites. The winner becomes the measured-FMC "
+                   "sidecar that unblocks E-16.",
+        state="RUNNABLE",
+        runner="P6f: Statistics scripts/simulate_lfmc.py and Model pair_globe_lfmc.py (both "
+               "run, bundle lfmc_v1); then on Nibi Fire_Risk_FW "
+               "SEEDS=\"0 1 2\" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (FW 2544d00)",
+        blocker="",
+        resources="--time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed "
+                  "(a first guess; 3 seeds)",
+        gap="G1 foliar moisture is computed, never observed",
+        note="FBP's equation describes conifer foliage, so (a) is scored on conifers; "
+             "aspen is reported, not tested. A 15 % of sites, seeded, is frozen for P10. "
+             "Placeholders (A-47): +/- 5-day pairing, 4SAIL turbid medium for every fuel, "
+             "soil-only backgrounds, an atmospheric-correction residual as extra noise. Run "
+             "2026-11-04 (docs/results/p6f_lfmc): REFUTED. Conifer RMSE minus the equation "
+             "(14.0): simulation GP +26.0 [+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]; "
+             "simulation minus empirical +25.5. Conifer LFMC SD is 15.2.",
     ),
 )
 

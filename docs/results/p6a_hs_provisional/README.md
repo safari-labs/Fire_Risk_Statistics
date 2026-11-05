@@ -76,4 +76,5 @@ The sweep has to be rerun on `aviris_v2`, with all five arms (including `referen
 
 - **E-61** Best SWIR bands, searched broadly (none): Void run: its labels came from the wrong ground (A-40 amendment), so a map would only show that error.
 - **E-62** Best VNIR bands, searched broadly (none): Void run, as E-61 here.
+- **P6hs-C1** Do the labels describe the pixels? (existing): [placement.png](placement.png)
 <!-- qual:end -->

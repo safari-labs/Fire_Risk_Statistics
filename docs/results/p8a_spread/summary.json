@@ -1,0 +1,73 @@
+{
+ "all": {
+  "rows": 4504,
+  "fires": 70,
+  "rho": 0.5411377494890424,
+  "rho_moving_days": 0.3893811016158637,
+  "rho_within_fire": 0.5393949178080977,
+  "fires_with_5_days": 70,
+  "share_no_spread": 0.38188277087033745,
+  "implied_burn_hours_median": 2.1388623146066514
+ },
+ "left_out": {
+  "not_burnable": 294
+ },
+ "by_family": {
+  "C": {
+   "rows": 2441,
+   "fires": 70,
+   "rho": 0.5992240064118828,
+   "rho_moving_days": 0.4483978332642917,
+   "rho_within_fire": 0.564527946447079,
+   "fires_with_5_days": 66,
+   "share_no_spread": 0.334289225727161,
+   "implied_burn_hours_median": 1.7689368076405787
+  },
+  "D": {
+   "rows": 838,
+   "fires": 60,
+   "rho": 0.5889213069179732,
+   "rho_moving_days": 0.487696169861484,
+   "rho_within_fire": 0.5262311977528281,
+   "fires_with_5_days": 40,
+   "share_no_spread": 0.36515513126491644,
+   "implied_burn_hours_median": 19.86086235098776
+  },
+  "M": {
+   "rows": 1069,
+   "fires": 55,
+   "rho": 0.6376568050873597,
+   "rho_moving_days": 0.5523688299054289,
+   "rho_within_fire": 0.5975409566471797,
+   "fires_with_5_days": 38,
+   "share_no_spread": 0.529466791393826,
+   "implied_burn_hours_median": 1.053450784572506
+  },
+  "O": {
+   "rows": 156,
+   "fires": 28,
+   "rho": 0.7196685790168259,
+   "rho_moving_days": 0.6495924468922107,
+   "rho_within_fire": 0.7478017898766695,
+   "fires_with_5_days": 12,
+   "share_no_spread": 0.20512820512820512,
+   "implied_burn_hours_median": 0.43596408019441113
+  }
+ },
+ "ci": {
+  "rho": [
+   0.4892128619808022,
+   0.589061102907784
+  ],
+  "rho_moving_days": [
+   0.3411820316701137,
+   0.43824408351562344
+  ]
+ },
+ "config": {
+  "data": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\data\\spread_v1\\dev.csv",
+  "boot": 2000,
+  "seed": 0,
+  "slope": "left out: no wind direction on the row"
+ }
+}

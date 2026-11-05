@@ -1,0 +1,7 @@
+scheme,best_path,best_k,best_mean,best_modal_set,best_modal_share,best_share_swir,best_share_red_edge,n_tied,tied,equal_search_best_k,equal_search_gap,equal_search_gap_se,equal_search_tied,smallest_tied_equal_k,first_choice
+equal (the rule),pc,8,0.41580375847473666,B1 B11 B5 B6 B7 B8 B8A B9,0.2,1.0,1.0,2,combined k=7 (-0.0015 +- 0.0022); combined k=8 (-0.0008 +- 0.0020),8,0.0008141773811416379,0.002046150521276929,True,7,combined k=7
+regression heads only,pc,8,0.4003570969680737,B1 B11 B5 B6 B7 B8 B8A B9,0.2,1.0,1.0,1,combined k=8 (-0.0018 +- 0.0023),8,0.0018273996227348894,0.002303366983953669,True,8,combined k=8
+fuel type first,combined,8,0.4314494648418512,B1 B11 B12 B4 B5 B6 B8 B8A,0.13333333333333333,1.0,1.0,3,combined k=7 (-0.0004 +- 0.0016); pc k=8 (-0.0002 +- 0.0018); family k=8 (-0.0013 +- 0.0026),8,0.0,0.0,True,7,combined k=7
+percent conifer first,pc,8,0.3720636341582182,B1 B11 B5 B6 B7 B8 B8A B9,0.2,1.0,1.0,1,combined k=8 (-0.0014 +- 0.0024),8,0.0013862188709457804,0.002375437590504428,True,8,combined k=8
+canopy first,pc,8,0.42995048987966444,B1 B11 B5 B6 B7 B8 B8A B9,0.2,1.0,1.0,3,combined k=7 (-0.0016 +- 0.0023); combined k=8 (-0.0010 +- 0.0021); height k=8 (-0.0031 +- 0.0033),8,0.0010347677570361998,0.002072135224992812,True,7,combined k=7
+maximin,pc,8,0.9715493816658098,B1 B11 B5 B6 B7 B8 B8A B9,0.2,1.0,1.0,0,,8,0.008780233478627738,0.00875512293402268,False,,pc k=8

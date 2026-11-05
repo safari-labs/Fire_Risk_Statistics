@@ -1,0 +1,148 @@
+{
+ "run": "narval_results\\eco_v3\\20261102-1959",
+ "n_tasks": 15,
+ "mode": "raw+indices",
+ "schemes": {
+  "equal (the rule)": {
+   "pc": 0.25,
+   "closure": 0.25,
+   "height": 0.25,
+   "family": 0.25
+  },
+  "regression heads only": {
+   "pc": 0.3333333333333333,
+   "closure": 0.3333333333333333,
+   "height": 0.3333333333333333,
+   "family": 0.0
+  },
+  "fuel type first": {
+   "pc": 0.16666666666666666,
+   "closure": 0.16666666666666666,
+   "height": 0.16666666666666666,
+   "family": 0.5
+  },
+  "percent conifer first": {
+   "pc": 0.5,
+   "closure": 0.16666666666666666,
+   "height": 0.16666666666666666,
+   "family": 0.16666666666666666
+  },
+  "canopy first": {
+   "pc": 0.16666666666666666,
+   "closure": 0.3333333333333333,
+   "height": 0.3333333333333333,
+   "family": 0.16666666666666666
+  },
+  "maximin": null
+ },
+ "decisions": [
+  {
+   "scheme": "equal (the rule)",
+   "best_path": "pc",
+   "best_k": 8,
+   "best_mean": 0.41580375847473666,
+   "best_modal_set": "B1 B11 B5 B6 B7 B8 B8A B9",
+   "best_modal_share": 0.2,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 2,
+   "tied": "combined k=7 (-0.0015 +- 0.0022); combined k=8 (-0.0008 +- 0.0020)",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.0008141773811416379,
+   "equal_search_gap_se": 0.002046150521276929,
+   "equal_search_tied": true,
+   "smallest_tied_equal_k": 7,
+   "first_choice": "combined k=7"
+  },
+  {
+   "scheme": "regression heads only",
+   "best_path": "pc",
+   "best_k": 8,
+   "best_mean": 0.4003570969680737,
+   "best_modal_set": "B1 B11 B5 B6 B7 B8 B8A B9",
+   "best_modal_share": 0.2,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 1,
+   "tied": "combined k=8 (-0.0018 +- 0.0023)",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.0018273996227348894,
+   "equal_search_gap_se": 0.002303366983953669,
+   "equal_search_tied": true,
+   "smallest_tied_equal_k": 8,
+   "first_choice": "combined k=8"
+  },
+  {
+   "scheme": "fuel type first",
+   "best_path": "combined",
+   "best_k": 8,
+   "best_mean": 0.4314494648418512,
+   "best_modal_set": "B1 B11 B12 B4 B5 B6 B8 B8A",
+   "best_modal_share": 0.13333333333333333,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 3,
+   "tied": "combined k=7 (-0.0004 +- 0.0016); pc k=8 (-0.0002 +- 0.0018); family k=8 (-0.0013 +- 0.0026)",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.0,
+   "equal_search_gap_se": 0.0,
+   "equal_search_tied": true,
+   "smallest_tied_equal_k": 7,
+   "first_choice": "combined k=7"
+  },
+  {
+   "scheme": "percent conifer first",
+   "best_path": "pc",
+   "best_k": 8,
+   "best_mean": 0.3720636341582182,
+   "best_modal_set": "B1 B11 B5 B6 B7 B8 B8A B9",
+   "best_modal_share": 0.2,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 1,
+   "tied": "combined k=8 (-0.0014 +- 0.0024)",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.0013862188709457804,
+   "equal_search_gap_se": 0.002375437590504428,
+   "equal_search_tied": true,
+   "smallest_tied_equal_k": 8,
+   "first_choice": "combined k=8"
+  },
+  {
+   "scheme": "canopy first",
+   "best_path": "pc",
+   "best_k": 8,
+   "best_mean": 0.42995048987966444,
+   "best_modal_set": "B1 B11 B5 B6 B7 B8 B8A B9",
+   "best_modal_share": 0.2,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 3,
+   "tied": "combined k=7 (-0.0016 +- 0.0023); combined k=8 (-0.0010 +- 0.0021); height k=8 (-0.0031 +- 0.0033)",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.0010347677570361998,
+   "equal_search_gap_se": 0.002072135224992812,
+   "equal_search_tied": true,
+   "smallest_tied_equal_k": 7,
+   "first_choice": "combined k=7"
+  },
+  {
+   "scheme": "maximin",
+   "best_path": "pc",
+   "best_k": 8,
+   "best_mean": 0.9715493816658098,
+   "best_modal_set": "B1 B11 B5 B6 B7 B8 B8A B9",
+   "best_modal_share": 0.2,
+   "best_share_swir": 1.0,
+   "best_share_red_edge": 1.0,
+   "n_tied": 0,
+   "tied": "",
+   "equal_search_best_k": 8,
+   "equal_search_gap": 0.008780233478627738,
+   "equal_search_gap_se": 0.00875512293402268,
+   "equal_search_tied": false,
+   "smallest_tied_equal_k": null,
+   "first_choice": "pc k=8"
+  }
+ ]
+}

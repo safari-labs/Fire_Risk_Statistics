@@ -1133,10 +1133,12 @@ PHASES: tuple[Phase, ...] = (
                   question="How much within-patch skill survives inside a family on 2024?",
                   independent="pixels of C, D, M only",
                   dependent="within-patch AUC, CV then 2024",
-                  result="R1: C 0.630, 0.537; D 0.627, 0.596; M 0.593, 0.527. R2: C 0.593, 0.517; "
-                         "D 0.566, 0.570; M 0.564, 0.534.",
-                  conclusion="On an unseen year most within-patch skill is telling fuel types "
-                             "apart, which raises the stakes on E-35."),
+                  result="R0: C 0.522, 0.502; D 0.518, 0.512; M 0.541, 0.496. R1: C 0.630, "
+                         "0.537; D 0.627, 0.596; M 0.593, 0.527. R2: C 0.593, 0.517; D 0.566, "
+                         "0.570; M 0.564, 0.534.",
+                  conclusion="Physics barely ranks pixels inside a family in any year, and "
+                             "R1's fall there is not the cohort. On an unseen year most "
+                             "within-patch skill is fuel type: the stakes on E-35 rise."),
             Entry("P6e-M3", "measurement", "MEASURED",
                   title="Regime A on the 2019-2023 folds",
                   question="Does 2024 in training change the old folds?",
@@ -1217,6 +1219,233 @@ PHASES: tuple[Phase, ...] = (
                          "improves in every set; percent conifer in none.",
                   conclusion="A small gain, on closure and height. Ground plots show a much "
                              "larger one on percent conifer: the main open puzzle."),
+        ),
+    ),
+    Phase(
+        "P6a-HS-v4", "AVIRIS-NG band searches on the final labels", "2026-11-03",
+        "p6a_hs_v4", "README.md",
+        "The full sweep on aviris_v4, the A-44 family labels: 42 lines, 75 of 75 tasks, SCANFI "
+        "labels, with noise. Replaces hs_v3 as the reading of E-61 and E-62.",
+        (
+            Entry("E-61", "experiment", "REFUTED",
+                  result="Extra RMSE removed by extended over standard, k = 4: conifer -0.26 "
+                         "[-0.59, +0.04], closure +0.42 [-0.08, +1.24], height +0.09 m [+0.01, "
+                         "+0.23]. The standard search removed no height error (-0.01 m).",
+                  conclusion="The falsifier fires on height, by 0.09 m (2 % of RMSE), against a "
+                             "degenerate threshold. Lidar does not confirm it: there extended is "
+                             "0.05 m worse [-0.11, +0.00] (P6a-ext-v2). 2190 nm over config A "
+                             "helps height on both label sources."),
+            Entry("E-62", "experiment", "REFUTED",
+                  result="No red edge minus VNIR, k = 6: conifer -1.1 % [-2.1, -0.3], closure "
+                         "+2.1 % [+0.9, +3.3], height +1.0 % [+0.2, +1.9]. A 700-760 nm band "
+                         "is in 15/15 best sets.",
+                  conclusion="The falsifier fires: the best sets always take red edge, but "
+                             "without it the loss is about 2 %, not 5 %. Same as hs_v3 and the "
+                             "Sentinel-2 half."),
+            Entry("HS4-M1", "measurement", "MEASURED",
+                  title="What SWIR adds on AVIRIS-NG against SCANFI",
+                  question="How far above fixed VNIR does each set score on the same runs?",
+                  independent="reference and searched sets, same folds and seeds",
+                  dependent="combined skill and RMSE per target, with noise",
+                  result="Fixed VNIR 0.272. Config C +0.016 [-0.003, +0.042], searched extended "
+                         "+0.015 [+0.004, +0.026], Mantis MS + SWIR +0.013 [+0.003, +0.026], "
+                         "config A +0.006. Closure improves in every fixed set; percent conifer "
+                         "in none.",
+                  conclusion="As hs_v3: a small gain, on closure and height. 12 options tie "
+                             "within one SE of config C."),
+        ),
+    ),
+    Phase(
+        "P6a-ext-v2", "Labels that owe nothing to Landsat, full lidar", "2026-11-03",
+        "p6a_external_labels_v2", "README.md",
+        "P6a-ext with aviris_lidar_v2: 139,848 lidar pixels in 14 groups from 35 of 37 lines. "
+        "Ground plots unchanged. No hypothesis registered (Q35, A-44), so measurements.",
+        (
+            Entry("X2-C1", "check", "PASS",
+                  title="Did the right packs run?",
+                  question="Pixels per run match the lidar pack.",
+                  independent="result files against pack sizes",
+                  dependent="training plus held-out pixels",
+                  result="139,848 lidar pixels. The labels field still reads SCANFI: these runs "
+                         "predate the runner fix.",
+                  conclusion="The right data ran."),
+            Entry("X2-M1", "measurement", "MEASURED",
+                  title="SWIR against lidar height, full pack",
+                  question="Does SWIR help height against ATL08, and do the searches agree?",
+                  independent="fixed and searched sets against six VNIR bands, AVIRIS-NG",
+                  dependent="height RMSE, paired, with noise",
+                  result="Config A -0.040 m [-0.074, -0.020], config B -0.096, config C -0.112 "
+                         "[-0.178, -0.049], searched standard k = 4 -0.131 [-0.235, -0.040], "
+                         "searched extended -0.082 [-0.163, +0.017]. Extended minus standard "
+                         "+0.048 [-0.003, +0.108].",
+                  conclusion="SWIR helps lidar height in every set, and standard InGaAs is "
+                             "enough. SCANFI's extended-over-standard height gain (E-61) is not "
+                             "reproduced on lidar."),
+        ),
+    ),
+    Phase(
+        "P6a-v3", "Ecology band searches on the corrected family labels (eco_v3)", "2026-11-04",
+        "p6a_ecology_v3", "README.md",
+        "eco_v2 repeated on ecology_v3 (A-44: open ground is grass, non-fuel, water or slash, "
+        "not D). 15 of 15 tasks, with noise, maps in all three input modes. Replaces eco_v2 as "
+        "the Sentinel-2 reading of E-22, E-59 and E-62.",
+        (
+            Entry("E-22", "experiment", "SUPPORTED",
+                  result="First SWIR band at step 1 in 11/15 runs (B12 each time), step 3 in "
+                         "the rest; median 1. Closure opens with B12 in 15/15.",
+                  conclusion="As eco_v2: SWIR ranks first for structure, far earlier than in "
+                             "the fire-outcome search (3.5). SCANFI is Landsat-mapped (Q35); "
+                             "independent labels agree on SWIR1 (P6a-ext-v2)."),
+            Entry("E-59", "experiment", "MIXED",
+                  result="Raw + indices minus raw, combined skill: +0.0030 [+0.0006, +0.0057] "
+                         "at k = 8; no CI clears 0 at k <= 4. Indices alone 0.351 against "
+                         "raw 0.411 at k = 6.",
+                  conclusion="Indices help a little, at large k only. Not worth onboard "
+                             "compute on this evidence."),
+            Entry("E-62", "experiment", "REFUTED",
+                  result="Red edge in 15/15 best 6-band sets. Without B5-B7 at k = 6: "
+                         "conifer +0.7 % [-2.0, +2.9], closure -0.9 % [-2.0, +0.5].",
+                  conclusion="The falsifier fires on the Sentinel-2 half too: the best sets "
+                             "take red edge, but losing it costs under 1 % at k = 6 (2-3 % on "
+                             "conifer at k = 7-8)."),
+            Entry("V3-M1", "measurement", "MEASURED",
+                  title="Which fuel families are told apart?",
+                  question="Per-class recall of the estimated family on held-out tiles",
+                  independent="family class, combined k = 8, with noise",
+                  dependent="recall and precision, pooled over folds and seeds",
+                  result="Conifer 0.79, grass 0.86, water 0.96, non-fuel 0.52, deciduous "
+                         "0.38, mixedwood 0.30, slash 0.00. Balanced accuracy 0.54 (eco_v2: "
+                         "0.73 with open ground in D).",
+                  conclusion="Deciduous and mixedwood are mostly called conifer. A "
+                             "replace-form fuel slot (E-35) would raise ignition and spread "
+                             "where the inventory says aspen."),
+        ),
+    ),
+    Phase(
+        "P6f", "LFMC from Sentinel-2 against FBP's equation (E-64, E-29)", "2026-11-04",
+        "p6f_lfmc", "README.md",
+        "PROSPECT-D + 4SAIL simulation-trained retrievals and empirical index and GP models "
+        "against gravimetric LFMC (Globe-LFMC 2017+, development sites: 1,739 records at 37 "
+        "sites), 3 seeds, with the placeholder noise model (A-47).",
+        (
+            Entry("P6f-C1", "check", "PASS",
+                  title="Did the right records run, and only those?",
+                  question="Same records in every seed; frozen sites absent",
+                  independent="the three seeds' predictions",
+                  dependent="record keys; site list against lfmc_test_sites_v1",
+                  result="1,739 identical records in all seeds; FBP's RMSE 20.6 in each, as it "
+                         "must be. The frozen 6 sites never left the machine.",
+                  conclusion="The comparison is paired and clean."),
+            Entry("E-64", "experiment", "REFUTED",
+                  result="Conifer RMSE minus FBP's equation (14.0): simulation GP +26.0 "
+                         "[+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]. Simulation minus "
+                         "empirical +25.5 [+22.1, +28.4].",
+                  conclusion="Neither spectral route beats the equation on conifers; the "
+                             "simulation retrieval is biased +31 points, a forward-model and "
+                             "prior problem. Conifer LFMC SD is 15.2, so nothing does much "
+                             "better than a constant."),
+            Entry("E-29", "experiment", "SUPPORTED",
+                  result="Jack and red pine, simulation GP RMSE without B12 minus with: +1.7 "
+                         "[+0.4, +3.2]; spring +1.7 [+0.1, +3.7], summer +1.4 [+0.0, +2.8]. "
+                         "MLP +7.4 [+1.7, +15.6].",
+                  conclusion="As registered, but weak: B12 helps a retrieval that is worse "
+                             "than a constant. It shows information in the simulated canopy, "
+                             "not LFMC recovered from orbit."),
+            Entry("P6f-M1", "measurement", "MEASURED",
+                  title="What does the noise model do to the simulation retrieval?",
+                  question="The same GP trained on noise-free simulations",
+                  independent="training noise: the noise model vs none (rule 6)",
+                  dependent="conifer RMSE and bias",
+                  result="Noise-free 274 (bias +98) against 40 (bias +31) with noise.",
+                  conclusion="Without the noise model the retrieval does not transfer to real "
+                             "spectra at all."),
+            Entry("P6f-M2", "measurement", "MEASURED",
+                  title="Who follows the conifer season?",
+                  question="RMSE by season; the course at the best-sampled sites",
+                  independent="April-June vs July-September; FBP equation, best empirical, "
+                              "simulation GP",
+                  dependent="RMSE; seasonal curves at Shores #1 and #4 (2018)",
+                  result="Spring: empirical 12.7, equation 14.0. Summer: empirical 17.4, "
+                         "equation 14.3. The equation dips with the measured spring dip; the "
+                         "empirical model is nearly flat.",
+                  conclusion="The date-and-place equation carries the seasonal dip that the "
+                             "spectra, as modelled here, miss."),
+        ),
+    ),
+    Phase(
+        "P8a", "Stage B: FBP spread against CFSDS (E-41)", "2026-11-03",
+        "p8a_spread", "README.md",
+        "CFSDS fire-days of the development fires, each with FBP ROS from its own weather and "
+        "the fuel at its position. Physics only, nothing trained. Frozen fires were not opened.",
+        (
+            Entry("E-41", "experiment", "PARTIAL",
+                  result="Spearman rho 0.54 [0.49, 0.59] over 4,504 fire-days of 70 fires; 0.39 "
+                         "[0.34, 0.44] on days with spread; 0.54 within a fire.",
+                  conclusion="On development fires the falsifier does not fire: FBP ROS tracks "
+                             "daily spread. Test fires wait for P10."),
+            Entry("P8a-M1", "measurement", "MEASURED",
+                  title="How many fire-days can imagery reach?",
+                  question="How many rows lie on a patch with imagery?",
+                  independent="CFSDS rows against the 11.2 km patches",
+                  dependent="rows on a patch",
+                  result="805 of 4,925. P0 counted fires, and all are covered, but fires outgrow "
+                         "their patches.",
+                  conclusion="E-42 has 805 rows unless fires get new chips."),
+        ),
+    ),
+    Phase(
+        "P9", "Stage C: CFFDRS ignition R0 on lightning starts (E-44)", "2026-11-04",
+        "p9_ignition", "README.md",
+        "NFDB lightning starts of 2017-2024 against controls drawn on the same day near "
+        "them and given the start's own weather, so only fuel and leaf state differ inside "
+        "a set. Physics only, nothing trained. Development blocks only. A first pass on "
+        "2021-2024 (fixed before any score, A-46) was repeated on all years once the "
+        "SCANFI 2015 step landed.",
+        (
+            Entry("P9-C1", "check", "PASS",
+                  title="Is the weather really held fixed?",
+                  question="Does a weather-only score rank starts against their own controls?",
+                  independent="the GLC-X-42 FFMC class",
+                  dependent="matched-set AUC",
+                  result="0.500 exactly over 1,298 sets (pooled AUC 0.497).",
+                  conclusion="Every control carries its start's weather; whatever ranks "
+                             "starts inside a set is fuel or leaf state."),
+            Entry("E-44", "experiment", "SUPPORTED",
+                  result="Matched-set AUC 0.530 [0.513, 0.546] with SCANFI fuel (1,298 sets) "
+                         "and 0.523 [0.506, 0.539] with the CWFIS layer before the start "
+                         "(1,213 sets). Pooled 0.521 and 0.515. The 2021-2024 first pass "
+                         "gave 0.526 and 0.535.",
+                  conclusion="R0 is above chance, so the falsifier does not fire, but only "
+                             "just: fuel category alone barely separates where lightning "
+                             "fires took hold. Test blocks wait for P10."),
+            Entry("P9-M1", "measurement", "MEASURED",
+                  title="Where does R0's signal come from?",
+                  question="Which fuel categories do starts and controls sit on?",
+                  independent="Beverly & Wotton category from the SCANFI step before the start",
+                  dependent="share of starts and of controls",
+                  result="Black spruce/moss 56 % of starts vs 48 % of controls; aspen 22 % "
+                         "vs 31 %. Mean P 0.50 and 0.13.",
+                  conclusion="R0's edge is the conifer-over-aspen ordering; the other "
+                             "categories hold too few points to move it."),
+            Entry("P9-M2", "measurement", "MEASURED",
+                  title="What did the filter leave?",
+                  question="How many points survive the filter?",
+                  independent="the A-46 filter",
+                  dependent="sets and points kept",
+                  result="1,298 sets, 7,194 points. Of 1,499 drawn starts: 44 coarse "
+                         "coordinates, 97 burned before D, 36 non-fuel, 20 without imagery, "
+                         "4 lost every control.",
+                  conclusion="Enough sets for a CI of about +-0.017."),
+            Entry("P9-M3", "measurement", "MEASURED",
+                  title="Do the two periods agree?",
+                  question="Does R0 hold on 2017-2020 alone, with older fuel layers?",
+                  independent="period (2017-2020: SCANFI 2015, CWFIS 2014b or 2019)",
+                  dependent="matched-set AUC",
+                  result="2017-2020 (538 sets): SCANFI 0.536 [0.511, 0.561], CWFIS 0.506 "
+                         "[0.484, 0.530] on 507 sets. 2021-2024: SCANFI 0.526, CWFIS 0.535.",
+                  conclusion="The SCANFI arm holds in both periods. The CWFIS arm does not "
+                             "clear chance on 2017-2020, so the two fuel sources trade "
+                             "places by period and neither is read as better."),
         ),
     ),
 )

@@ -23,6 +23,7 @@ from safari_bands.config.schemas import (
     IndexCatalogue,
     Optics,
     Orbit,
+    PriorSet,
 )
 
 M = TypeVar("M", bound=BaseModel)
@@ -103,6 +104,11 @@ def load_orbit(name_or_path: str | Path = "default") -> Orbit:
 
 def load_atmospheric_windows() -> AtmosphericWindows:
     return _load_one(AtmosphericWindows, config_dir() / "atmospheric_windows.yaml")
+
+
+def load_priors(name_or_path: str | Path) -> PriorSet:
+    path = _resolve(name_or_path, config_dir() / "priors")
+    return _load_one(PriorSet, path)
 
 
 def load_index_catalogue() -> IndexCatalogue:

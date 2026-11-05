@@ -45,10 +45,17 @@ For scale, the HFI **ISSUED by CWFIS** gives between-patch AUC 0.834 on 2024 (11
 
 | Rung | C: CV, then 2024 | D: CV, then 2024 | M: CV, then 2024 |
 |---|---|---|---|
+| R0 | 0.522, 0.502 | 0.518, 0.512 | 0.541, 0.496 |
 | R1 | 0.630, 0.537 | 0.627, 0.596 | 0.593, 0.527 |
 | R2 | 0.593, 0.517 | 0.566, 0.570 | 0.564, 0.534 |
 
-The all-pixel within-patch AUC also counts telling one family from another. Inside conifer and mixedwood, 2024 skill is near 0.53. So on an unseen year, most of the within-patch skill is fuel type, which is what R1 and R2 are given. That raises the value of the fuel-type slot (E-35), still unmeasured. R0 has no by-family figure in these runs, so we can't yet say how much of this fall is the cohort.
+The all-pixel within-patch AUC also counts telling one family from another.
+
+- **The physics barely ranks pixels inside a family, in any year.** R0 is 0.50-0.54 in both CV and 2024, so nearly all of its within-patch skill is fuel type.
+- **This fall isn't the cohort.** R0 moves 0.01-0.05 inside a family, while R1 falls 0.09 in conifer and 0.07 in mixedwood. Whatever R1 learned inside a family in 2019-2023 mostly didn't carry to 2024. So the heading above holds for all pixels, but not inside a family.
+- **So on an unseen year, most within-patch skill is fuel type.** That raises the value of the fuel-type slot (E-35), still unmeasured.
+
+R0 here comes from `runs/20261102-r0_family_dev` and `runs/20261102-r0_family_2024`, reruns that reproduce the earlier scores on all 316 patches and add the by-family columns.
 
 ## Regime A, on the 2019-2023 folds only
 

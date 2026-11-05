@@ -1402,3 +1402,142 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - **Slash is too rare to learn in the AVIRIS packs:** 982 pixels, 968 of them in group 7. A fold holding out group 7 trains on almost none. Read slash skill from this pack with care.
   - **Fuel code unchanged:** `fuel_from_scanfi` still feeds the fire study, so only the family label moves. The ecology pack takes the same labels as `ecology_v3`, with harvest read at every pixel and 2020 as the imagery year.
 - **Land-cover names.** SCANFI classes are 1 bryoid, 2 herbs, 3 rock, 4 shrub, 5 broadleaf, 6 conifer, 7 mixed, 8 water, checked against closure, height and WorldCover. `LCC_CLASSES` in `scanfi.py` is wrong but kept, since ecology patch file names embed it; use `LANDCOVER_NAMES`.
+## A-45: The imagery fuel slot (E-35)
+
+**Assumption (2026-11-03, written before any E-35 result).** James asked for the code on 2026-11-03. These are the placeholders it uses; none has been reviewed yet.
+
+- **Estimator.** The ecology model, refit on the whole ecology development set with the sweep's hyperparameters, raw + indices, with sensor noise (rule 6). It sees ecology tiles only, so no fire outcome reaches it, and the slot folds need no matching fit. One fit, seed 0.
+- **Bands.** The 11 bands both packs hold. The fire packs have no B12, so a set using it is refused. A flown band set can be swapped in with `BANDS=`.
+- **From family to fuel.** The estimator has no species head, so it gives a family, not a fuel type. A pixel whose family agrees with SCANFI's keeps SCANFI's code. One that disagrees takes a default: C-2, D-1/D-2, M-1/M-2 at 50 %, O-1, S-1, non-fuel, water. So the arm measures what an imager adds to an inventory, not an imager alone.
+- **Slash.** The FBP table has no slash code, so code 21 is ours, and S-1 stands in for slash of unknown origin.
+- **Residual.** A replaced slot is also taken from the residual: with fuel replaced, it sees the estimated closure and height, and CWFIS percent conifer is blanked.
+- **Twin.** The shuffled twin permutes the estimates across the batch, as it permutes bands.
+- **Sidecars, not a new pack.** Estimates sit beside the fire pack, so earlier results keep their files. Frozen files are refused, and test estimates are made once, in P10.
+- **Not built.** The register also names `imagery_correct` for fuel. FBP takes one discrete fuel per pixel, so a correction needs a soft mix over fuels, which isn't built. Replacing CBH from height needs a height-to-CBH ratio we don't have, so it isn't built either.
+- **Main risk.** The estimator learned June-August 2020 composites, and the fire tiles are pre-fire composites, often spring: median NIR is 0.18 on the fire pack and 0.28 on the ecology pack. If `agreement.json` shows poor agreement with SCANFI, a null result here says the estimator did not transfer, not that imagery has no value.
+- **Reading by family.** Replacing fuel changes which pixels count as which family, so E-35 is read on all pixels.
+
+## A-46: The Stage B and Stage C datasets (P8, P9)
+
+**Assumption (2026-11-03).** James asked for these pipelines on 2026-11-03. The values below are placeholders until reviewed. E-41 and E-44 are registered, so nothing here changes what they test.
+
+**Stage B (`build_spread_dataset.py`, `data/spread_v1`)**
+- **Rows.** CFSDS v1.1 fire-days of the development fires, joined on the fire ID: 4,925 rows, 70 fires. Twelve fires touching the frozen test groups are left out, and their patches aren't opened.
+- **Fuel.** A fire outgrows its 11.2 km patch, so only 805 rows fall on it. Those take SCANFI from the step before the fire. The other 4,120 take the national CWFIS 2019 layer with burn scars, so they have no closure or height. Column `fuel_source` says which. The 2019 layer can be up to 4 years older than the fire.
+- **Imagery.** E-42 can only use the 805 rows on a patch, unless fires get new chips.
+- **Physics.** FBP ROS from each row's FFMC, BUI and wind. Slope is left out because the row has no wind direction. Leaf state is the patch's on D, held for the whole fire, which will be wrong for fires lasting past green-up.
+- **Units.** ROS is per minute and CFSDS spread is per day, so the comparison is by rank, and the gap is reported as implied burning hours.
+
+**Stage C (`build_ignition_dataset.py`, `data/ignition_v1`)**
+- **Starts.** NFDB `CAUSE = N`, from 2017. `labels.is_lightning` had no `N`, so it would have matched nothing. Natural cause is read as lightning. Records with a date outside their year, a perimeter centroid for coordinates, or a carryover note are dropped: 24,222 starts remain.
+- **Frozen.** `splits/ignition_test_v1.json`: a seeded 15 % of 1-degree blocks, every block a fire test patch touches, and all of 2025. 159 of 946 blocks and 6,439 starts.
+- **Draw.** 1,500 development starts, seeded, which leaves 17,783 unused. Earth Engine time is the limit, not data.
+- **Controls.** Five per start, same day and same 0.1-degree ERA5-Land cell, at least 2 km from any NFDB fire of any cause within 14 days. Same-cell controls can share a stand's fuel with their start, so this design understates what fuel can explain.
+- **Chips.** 128 x 128 px at 20 m (2.56 km), with the composite ending the day before. The filter stage then drops controls on non-fuel or ground burned before D.
+- **Known limit.** Controls hold weather fixed, not strike density (A-28).
+
+**Stage C sidecars and R0 scoring (added 2026-11-03, before any score)**
+- **Weather is shared by construction.** The draw's 0.1-degree cells are `floor(lon / 0.1)`, so their edges sit on multiples of 0.1 degree. ERA5-Land's pixels are centred on those grid points, so their edges are 0.05 degree off ours, and a "same-cell" control can sit in the neighbouring ERA5-Land pixel. So each start's weather is fetched once (13:00 LDT, lags 1, 2, 3 and 7 days before D, every variant) and written unchanged for its controls, marked `shared_from`. The matched design now holds weather fixed exactly, and it costs 1,499 fetches instead of 8,994. Stations are not built for Stage C: no Stage C experiment uses them.
+- **Leaf state.** Built the same way as the fire patches (`greenup.leaf_on`). CWFIS green-up is held for 2020-2023 only, so 2017-2019 and 2024 points use the 2020-2023 climatology for their calendar day.
+- **Fuel.** SCANFI v2 from the step before the start's year (`pre_fire`: 2015 for 2017-2020, 2020 for 2021-2024), converted by `fuel_tree`. The operational arm uses the CWFIS layer before the start: 2014b for 2017-2019, and 2019 with burn scars for 2020-2024.
+- **Filter, the same for starts and controls.** The 5 x 5 px (100 m) middle of the chip must be mostly burnable by that SCANFI step, with none of it burned before D. Starts whose coordinates have fewer than 3 decimals are dropped, because ~1 km is too coarse to say what fuel the start burned in. That is 44 of the 1,499 drawn. A set keeps its start and its surviving controls, and goes if either is gone. The old filter applied only to controls and read the latest SCANFI file present, which could post-date the start.
+- **Scoring (E-44).**
+  - **Score.** Within a matched set only fuel and leaf state can differ. So R0's within-set score is Beverly & Wotton (2007) P(sustained flaming) for the fuel category at the chip's centre (majority of the 5 x 5 px window), with the shared FFMC, DMC, ISI, FWI and RH.
+  - **Metric.** The matched-set AUC: each start against its own controls, ties counted 0.5. The CI comes from a bootstrap over 1-degree blocks. The pooled AUC is reported beside it.
+  - **Design check.** A weather-only score must give a matched-set AUC of exactly 0.5.
+  - **Coordinate bias.** NFDB coordinates are reported, often rounded, while controls are exact. A start's fuel is therefore read with more position error than a control's, which pulls the AUC towards 0.5.
+  - **First pass, 2021-2024 only (decided before any score).** Their SCANFI step (2020) is held locally, at 0.8 s a chip. The 2015 step that 2017-2020 points need streams from NRCan at about 160 s a chip, about 14 h for ~3,700 chips; holding it locally takes 33 GB on a disk with 63 GB free. So E-44's first score covers the 2021-2024 sets. 2017-2020 is added, and the score rerun on all years, once 2015 is held. The CWFIS arm is scored on the same sets, so the two fuel arms stay paired. *Done 2026-11-04:* the 2015 step was streamed (3,636 chips, 12 failed reads retried), and E-44 was rescored on all years (`runs/20261104-0330_ignition_r0`); the 2021-2024 run is kept beside it.
+
+**FMC and LFMC.** The CWFIS folder `downloads/cffdrs/` serves `fmc_current.tif`: today's FBP estimate, plus the same grid on the WCS from 2024. It is computed, so it can't be a label (rule 3) or test G1. It does serve E-56's outstanding FMC comparison.
+
+## A-47: The LFMC retrievals (P6f, E-29, E-64)
+
+**Assumption (2026-11-03, written before any fit or score).** James approved the plan on 2026-11-03: the simulation-trained retrieval of brief Phases 1-4, compared with LFMC from Sentinel-2's bands and with FBP's equation, while CWFIS is asked about field LFMC. These are the choices the code makes; none has been reviewed yet.
+
+**Forward model (`src/safari_bands/forward.py`, `scripts/simulate_lfmc.py`)**
+- **Models.** PROSPECT-D leaf, 4SAIL canopy (`prosail` 2.0.5), 1 nm, 400-2500 nm, bidirectional reflectance factor. 4SAIL is a turbid medium for every fuel, conifer stands included; a discontinuous-canopy model can replace it behind `CanopyModel`. PROSPECT is a broadleaf model, and needles are approximated by a high N. PROSPECT-PRO isn't in the package (A-7), so dry matter is one Cm.
+- **No independent reference check yet.** The brief's Phase 1 'done when' asks that spectra reproduce a reference implementation. Only physical-behaviour tests exist (`tests/test_forward.py`): more water darkens SWIR, chlorophyll darkens red, LAI brightens NIR. A comparison with ARTMO or the R `prospect` package is still owed.
+- **Priors (`config/priors/lfmc_v1.yaml`).** Uniform and wide, by fuel group (conifer, deciduous), not by fuel type and season. LFMC and Cm are sampled and Cw derived, so LFMC runs 60-250 % (conifer) and 70-300 % (deciduous). Sun zenith 25-65 degrees. 32,768 Sobol points per group, seed 20261103.
+- **Background.** `prosail`'s dry/wet soil mixture only. Moss, lichen, litter and snow wait for a spectral library, which matters for black spruce and lichen woodland.
+- **Sensor.** Gaussian responses of `sentinel2_p6_12band`. Noise is the placeholder instrument model (A-37) plus an atmospheric-correction residual of 0.005 + 5 % of reflectance, one seeded draw. The noise-free copy is kept (rule 6).
+
+**Globe-LFMC pairing (`Fire_Risk_Model/scripts/python/pair_globe_lfmc.py`)**
+- **Records.** 2017 onward, the six species of A-23. 46 records flagged 'isolated' and one below 30 % (not live foliage) were dropped: 2,837 records at 43 sites (site = name and coordinates; A-23's count of 83 used another key). No two samples shared a site, species and date, so nothing was averaged.
+- **Frozen.** A seeded 15 % of sites (6), `data/reference/lfmc_test_sites_v1.json`: 527 records, all jack pine, red pine, spruce and fir, no aspen. They are paired and packed (`test.npz`) but never leave this machine; P10 reads them once.
+- **Pairing.** S2_SR_HARMONIZED within +/- 5 days, a 30 m buffer, SCL vegetation or bare only, at least half the buffer clear, the nearest date wins. 2,098 of 2,837 records paired, median 2 days apart. Development: 1,739 records at 37 sites. Black spruce has 16, so no claim is made for C-2 alone.
+
+**Retrievals (`Fire_Risk_FW/scripts/run_lfmc.py`)**
+- **Of record.** The simulation-trained retrieval E-64 tests is a GP with an ARD kernel, fit on 4,096 noisy simulations of the record's fuel group. An MLP ensemble on all 32,768 is reported beside it. Band sets: all ten 10/20 m bands, without B12 (E-29), and VNIR only.
+- **Empirical.** NDMI, MSI and NMDI with a quadratic calibration, and a GP on the ten bands, out of fold over 5 site-grouped folds per fuel group. 'Best' is chosen inside each outer fold by 4 inner site-grouped folds, so the selection never sees what it is scored on (rule 5).
+- **FBP's equation and the 120 % ceiling.** FBP's FMC comes from latitude, longitude, elevation and date, and runs about 85-120 %. Measured jack pine LFMC reaches about 220 %, so the equation will miss high values by construction. That is part of what E-64(a) measures. FBP also rejects a supplied FMC above 120 % (`resolve_fmc`), so a measured value cannot enter FBP unchanged. How to map LFMC onto FBP's FMC is a question for the E-16 step, not settled here.
+
+## A-48: Stage C learned rungs (E-45)
+
+**Assumption (2026-11-04, written before any fit).** E-45 asks whether imagery adds to E-44's R0 on the same matched sets. These are the choices the code makes. James has not reviewed them yet; the sweep waits for that.
+
+**Pack (`Fire_Risk_Model/src/data/pack_ignition.py`, `scripts/python/pack_ignition_v1.py`)**
+- **One 128 x 128 tile per kept point**, in the v2 layout, so the Stage A network reads it unchanged. The label is 1 (start) or 0 (control) on the 5 x 5 px centre that R0 and the filter read, and ignore elsewhere. `/set` and `/is_start` name the matched set.
+- **Development only.** The ignition freeze kept test blocks and 2025 out of the draw, and the script refuses a frozen point. Folds come from `groups.json`: matched sets joined by the start's 1-degree block, the R0 bootstrap unit.
+- **CWFIS 2014b in 2019 codes.** The network reads one code space, so 2017-2019 points get their 2014b codes translated. Where 2019 has no exact twin, the Beverly & Wotton category decides: C-6 becomes C-5 (both FC5), and 2014b's M-1, M-2, M-3 and M-4 become M-1/2 C50 (all FC6). Slash becomes the slash code, and wetland becomes unknown. A test checks every 2014b code keeps its category under both leaf states. FBP spread would differ for C-6 and M-3/M-4; ignition does not.
+- **No terrain, station or elevation for points.** Slope and aspect are 0, station columns are NaN, and FMC on D is computed without elevation. None of these enters P(sustained flaming).
+- **Parity.** R0 computed through the pack and `run_ignition.py` equals `eval_ignition_r0.py` to 5e-5 on the points checked (float32). R0's point score is P(sustained flaming) at the window's most common fuel code, the evaluator's rule; the learned rungs score the mean logit over the centre.
+
+**Runner (`Fire_Risk_FW/scripts/run_ignition.py`, `scripts/shell/sweep_ignition.sh`)**
+- **Loss: conditional logistic over each matched set**, -log softmax(set scores)[start]. This is the standard estimator for a matched case-control design. Inside a set the weather is shared (A-46), so the per-patch danger term cancels and only fuel, leaf state and imagery can be learned. `--loss bce` is the unconditional check.
+- **R2 starts as R0 for this process.** Its logit starts as logit P(sustained flaming), not as FBP intensity as in Stage A.
+- **Selection inside training (rule 5).** A seeded 15 % of the training groups picks the best epoch by matched-set AUC. The held-out fold is scored once, at that epoch.
+- **Configurations.** r0_scanfi, r0_cwfis, r1, r2, r2_cwfis, r2_leaf_ablated (green-up), r4 and r4_shuffled, over 5 folds x 3 seeds, paired by fold and seed. R0 runs at seed 0 only.
+- **Not yet runnable.** The replace form of the fuel slot needs eco sidecars for the points, from the final eco_v3 model. Canopy closure acts on ignition only through in-stand moisture, which waits for Q26.
+- **Rule 6 is not met yet.** Neither this runner nor `run_slots.py` (the Stage A slot sweeps) applies the sensor noise model, so their imagery rungs are noise-free. They answer whether imagery carries the signal at all. Any band claim drawn from them needs a noisy rerun. Whether to add noise before the first ignition sweep is a decision for James (the P9b plan).
+
+## A-49: P12 is decided by James from options; equal head weights; how the two searches merge
+
+**Decision (James, 2026-11-05, before any P12 band, architecture or hardware result).** It amends A-29 and A-41.
+
+- **Every P12 decision is a table of options, not a single pick.** This holds for bands and indices, for architecture and for hardware. Each option shows its score and margin against the best (paired, with its SE), cost, pros and cons. The A-29/A-41 rules still rank the options and mark the one they would pick, but James chooses. The deliverable `docs/results/cubesat_decision.md` has the three option tables and the choice made.
+- **The four structure heads weigh equally:** percent conifer, closure, height and fuel family, each 1/4. This is eco_v3's `combined` selector, so the S2 searches already ran on it. It replaces A-29's weighting by each slot's CFFDRS value, which is near zero or unmeasured for every structure slot (E-36, E-37 AT RISK; E-35 pending; E-39 blocked on Q26).
+- **Other weightings are compared, not chosen.** `scripts/compare_head_weights.py` re-scores eco_v3's five searched paths (equal weights and one per head) under the six schemes in its `SCHEMES` table:
+  - equal;
+  - regression heads only;
+  - fuel type first (1/2);
+  - percent conifer first (1/2);
+  - canopy first (closure and height, 1/3 each);
+  - maximin (the worst head's skill as a share of its all-band skill).
+  The schemes were written before the script's first output. **Changed after the first output:** the tie test moved from one SE of the mean over folds to one SE of the paired difference (same fold and seed). The first form was dominated by fold-to-fold difficulty. No equal-search verdict changed: it was tied under the same five schemes both ways.
+  - **Limit:** only the five searched paths are ranked. A search under another scheme could find a set none of them holds, so a non-equal scheme's best is a lower bound.
+- **Ties are paired.** "Within one SE of the best" means the paired difference to the best is at most one SE of that difference, SE over the 5 outer folds, with seeds averaged within a fold. Seeds share their blocks, so they are not independent.
+- **How the two searches merge.**
+  - Sentinel-2 (eco_v3) decides the VNIR bands and whether SWIR is in.
+  - AVIRIS-NG (hs_v4 on SCANFI, checked on lidar in `p6a_external_labels_v2`) decides the SWIR centres and widths.
+  - Sentinel-2 cannot place SWIR, and AVIRIS-NG covers too little of the land to rank VNIR against Sentinel-2's 904 tiles.
+- **Stability clause (Q38, James 2026-11-05: option 1).** It replaces A-29's "4 of 6 folds" per band.
+  - At each k, the consensus set takes the k spectral regions chosen most often across the 15 searches, with the most-chosen band within each region. Sentinel-2 regions: blue, green, red, red edge, NIR, SWIR1, SWIR2. AVIRIS-NG regions: the A-40 windows.
+  - A region counts as stable when it is in at least 10 of 15 searches (two-thirds, as 4 of 6 was). A consensus set whose k-th region falls short is still listed, with the shortfall under "cons".
+  - That exact set is re-scored on the same outer folds (`run_eco_arch.py --sizes 8x2`, 5 folds × 3 seeds), so the option table carries its own measured score and paired margin, not an inherited one.
+  - Each search's best set stays in the table beside the consensus set, with its per-band counts, so the reader sees both.
+
+**First reading (2026-11-05, `docs/results/p12_weights/`).** All on eco_v3's searched sets, raw + indices, with placeholder noise.
+- **Under five of six schemes, the equal-weight search's best set is tied with the overall best.** The overall best is the percent-conifer search's 8-band set under every scheme except "fuel type first", where it is the equal-weight search's own.
+- **Only maximin separates them:** the percent-conifer search's 8-band set leads by 0.009 ± 0.009 (borderline).
+- **The best sets are 7–8 bands under every scheme.** Under equal weights, the equal-weight search's k = 7 set is tied with the best. Its k = 5 and 6 sets are about 0.008 below (about two paired SEs), and its k = 4 set 0.0115 ± 0.0007 below.
+- **The weighting barely moves the choice.**
+
+## A-50: Weather age (E-20): the lagged-weather pack and score-at-lag
+
+**Assumption (2026-11-05; James asked for the E-20 pack to be rebuilt).**
+
+- **No new ERA5 pass was needed.** Each patch's `_fwi_v2.json` already held the 13:00 weather (wind, direction, temperature, RH, rain) at lags 1, 2, 3 and 7. The v2 pack had kept only lag 1's.
+- **Pack `Fire_Risk_Model/data/stage2_fire_cffdrs_v2_lags`.** It adds 24 columns `<var>_lag<k>`, appended after the original 62, so older packs still read by name.
+  - Every other dataset is byte-identical to `stage2_fire_cffdrs_v2`, checked on train and val.
+  - Lag 1 equals the original D-1 columns, and the new columns are 100 % finite.
+  - The test split is rebuilt as before and stays unread until P10.
+- **What P7's r2_lag7 measured.** It aged the codes only: FFMC to FWI were 7 days old, but wind and RH were from D-1. E-20's P7 number (-0.024 within) is therefore the cost of stale codes with fresh wind, not of a stale product.
+- **The design now:**
+  - `lag_weather: true` in a configuration reads wind, direction and RH at the codes' lag.
+  - `run_slots.py --score-lags 1,2,3,7` scores one trained model with all its weather k days old, on the same patches at every lag.
+  - `r2_age7` trains on weather that is all 7 days old, the "trained for staleness" design.
+  - R0 at each lag gives the physics-only decay.
+  - FMC stays at D, since it depends only on the date, which a stale product still knows.
+- **Which ages matter for SAFARI.** From the end of a belt pass to the next ÉTS contact is a median 7.5 h and at most 10.6 h (A-29). So an uplinked product is 1–2 days old; lags 3 and 7 bound the worst case. Under A-41 weather-dependent products run on the ground, so E-20 bounds that choice rather than sizing an onboard product.
+- **Not rebuilt:** the 2024–2025 cohort pack, which E-20 does not use. The ignition pack picks up the columns when it is rebuilt after the commit (A-48).
+- **Provenance.** The pack's `git_commit` names the Model commit before this change. Like the ignition pack, it must be rebuilt (about 7 min) after the code is committed, then bundled.

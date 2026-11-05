@@ -1,0 +1,354 @@
+{
+ "gains": {
+  "Ground plots: percent conifer": [
+   {
+    "set": "vnir6_swir1",
+    "label": "VNIR 6 + SWIR1",
+    "rmse_pc": -1.5103794097900392,
+    "rmse_pc_ci": [
+     -1.7002522786458336,
+     -1.2507218678792318
+    ],
+    "rmse_pc_base": 19.07220064798991,
+    "rmse_pc_folds_better": 5
+   },
+   {
+    "set": "vnir6_swir2",
+    "label": "VNIR 6 + SWIR2",
+    "rmse_pc": -0.9913243611653646,
+    "rmse_pc_ci": [
+     -1.1539068857828776,
+     -0.8436056772867838
+    ],
+    "rmse_pc_base": 19.07220064798991,
+    "rmse_pc_folds_better": 5
+   },
+   {
+    "set": "vnir6_swir1_swir2",
+    "label": "VNIR 6 + SWIR1 + SWIR2",
+    "rmse_pc": -1.7794953028361002,
+    "rmse_pc_ci": [
+     -2.0598594665527346,
+     -1.4624802271525064
+    ],
+    "rmse_pc_base": 19.07220064798991,
+    "rmse_pc_folds_better": 5
+   },
+   {
+    "set": "s2_12",
+    "label": "Sentinel-2 12 bands",
+    "rmse_pc": -2.149402681986491,
+    "rmse_pc_ci": [
+     -2.3760555267333983,
+     -1.8924797693888347
+    ],
+    "rmse_pc_base": 19.07220064798991,
+    "rmse_pc_folds_better": 5
+   },
+   {
+    "set": "s2_vnir10",
+    "label": "Sentinel-2 VNIR 10",
+    "rmse_pc": -0.23245951334635417,
+    "rmse_pc_ci": [
+     -0.3101680755615234,
+     -0.13998006184895834
+    ],
+    "rmse_pc_base": 19.07220064798991,
+    "rmse_pc_folds_better": 5
+   }
+  ],
+  "Ground plots: height": [
+   {
+    "set": "vnir6_swir1",
+    "label": "VNIR 6 + SWIR1",
+    "rmse_height": -0.32567481994628905,
+    "rmse_height_ci": [
+     -0.398886760075887,
+     -0.22113971710205077
+    ],
+    "rmse_height_base": 4.117925771077474,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "vnir6_swir2",
+    "label": "VNIR 6 + SWIR2",
+    "rmse_height": -0.24976835250854493,
+    "rmse_height_ci": [
+     -0.3140087886651357,
+     -0.1592488447825114
+    ],
+    "rmse_height_base": 4.117925771077474,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "vnir6_swir1_swir2",
+    "label": "VNIR 6 + SWIR1 + SWIR2",
+    "rmse_height": -0.3387490749359131,
+    "rmse_height_ci": [
+     -0.42719740867614747,
+     -0.21389393806457518
+    ],
+    "rmse_height_base": 4.117925771077474,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "s2_12",
+    "label": "Sentinel-2 12 bands",
+    "rmse_height": -0.3433086077372233,
+    "rmse_height_ci": [
+     -0.4321018377939859,
+     -0.21950605710347496
+    ],
+    "rmse_height_base": 4.117925771077474,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "s2_vnir10",
+    "label": "Sentinel-2 VNIR 10",
+    "rmse_height": -0.02427679697672526,
+    "rmse_height_ci": [
+     -0.03801817893981933,
+     -0.0034168561299641916
+    ],
+    "rmse_height_base": 4.117925771077474,
+    "rmse_height_folds_better": 4
+   }
+  ],
+  "AVIRIS-NG: height from ATL08 lidar": [
+   {
+    "set": "config_a",
+    "label": "config A (1610)",
+    "rmse_height": -0.03995920817057292,
+    "rmse_height_ci": [
+     -0.07350130081176758,
+     -0.01994155248006185
+    ],
+    "rmse_height_base": 3.8545310338338217,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "config_b",
+    "label": "config B (1240, 1375, 1610)",
+    "rmse_height": -0.09649060567220052,
+    "rmse_height_ci": [
+     -0.2019721349080404,
+     0.008990923563639322
+    ],
+    "rmse_height_base": 3.8545310338338217,
+    "rmse_height_folds_better": 4
+   },
+   {
+    "set": "config_c",
+    "label": "config C (1610, 2190)",
+    "rmse_height": -0.11150755882263183,
+    "rmse_height_ci": [
+     -0.17847774823506674,
+     -0.048770300547281896
+    ],
+    "rmse_height_base": 3.8545310338338217,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "sensor_mantis_ms_plus_swir",
+    "label": "Mantis MS + SWIR",
+    "rmse_height": -0.11931680043538412,
+    "rmse_height_ci": [
+     -0.22071102460225425,
+     -0.03113020261128744
+    ],
+    "rmse_height_base": 3.8545310338338217,
+    "rmse_height_folds_better": 4
+   },
+   {
+    "set": "sentinel2_p6_12band",
+    "label": "Sentinel-2 12 bands",
+    "rmse_height": -0.1394063631693522,
+    "rmse_height_ci": [
+     -0.2922475337982178,
+     -0.028116830190022785
+    ],
+    "rmse_height_base": 3.8545310338338217,
+    "rmse_height_folds_better": 4
+   }
+  ],
+  "AVIRIS-NG: height from SCANFI": [
+   {
+    "set": "config_a",
+    "label": "config A (1610)",
+    "rmse_height": 0.014850680033365886,
+    "rmse_height_ci": [
+     -0.04763277371724446,
+     0.07733413378397624
+    ],
+    "rmse_height_base": 3.8198046048482257,
+    "rmse_height_folds_better": 3
+   },
+   {
+    "set": "config_b",
+    "label": "config B (1240, 1375, 1610)",
+    "rmse_height": -0.0525326410929362,
+    "rmse_height_ci": [
+     -0.15386516253153482,
+     0.04203569094340007
+    ],
+    "rmse_height_base": 3.8198046048482257,
+    "rmse_height_folds_better": 4
+   },
+   {
+    "set": "config_c",
+    "label": "config C (1610, 2190)",
+    "rmse_height": -0.10896615982055664,
+    "rmse_height_ci": [
+     -0.2737124125162761,
+     -0.004178810119628904
+    ],
+    "rmse_height_base": 3.8198046048482257,
+    "rmse_height_folds_better": 4
+   },
+   {
+    "set": "sensor_mantis_ms_plus_swir",
+    "label": "Mantis MS + SWIR",
+    "rmse_height": -0.08013302485148112,
+    "rmse_height_ci": [
+     -0.17558838526407877,
+     -0.023284276326497395
+    ],
+    "rmse_height_base": 3.8198046048482257,
+    "rmse_height_folds_better": 5
+   },
+   {
+    "set": "sentinel2_p6_12band",
+    "label": "Sentinel-2 12 bands",
+    "rmse_height": -0.0598265806833903,
+    "rmse_height_ci": [
+     -0.12572905222574868,
+     0.0060758908589681
+    ],
+    "rmse_height_base": 3.8198046048482257,
+    "rmse_height_folds_better": 3
+   }
+  ],
+  "AVIRIS-NG: percent conifer from SCANFI": [
+   {
+    "set": "config_a",
+    "label": "config A (1610)",
+    "rmse_pc": 0.18900286356608073,
+    "rmse_pc_ci": [
+     -0.03848063151041666,
+     0.4164863586425781
+    ],
+    "rmse_pc_base": 24.439579900105795,
+    "rmse_pc_folds_better": 1
+   },
+   {
+    "set": "config_b",
+    "label": "config B (1240, 1375, 1610)",
+    "rmse_pc": 0.461957041422526,
+    "rmse_pc_ci": [
+     -0.028287493387857996,
+     1.0417645772298179
+    ],
+    "rmse_pc_base": 24.439579900105795,
+    "rmse_pc_folds_better": 1
+   },
+   {
+    "set": "config_c",
+    "label": "config C (1610, 2190)",
+    "rmse_pc": 0.3615123748779297,
+    "rmse_pc_ci": [
+     0.013295110066731777,
+     0.8364999135335287
+    ],
+    "rmse_pc_base": 24.439579900105795,
+    "rmse_pc_folds_better": 2
+   },
+   {
+    "set": "sensor_mantis_ms_plus_swir",
+    "label": "Mantis MS + SWIR",
+    "rmse_pc": 0.24225870768229166,
+    "rmse_pc_ci": [
+     -0.06387519836425781,
+     0.588604736328125
+    ],
+    "rmse_pc_base": 24.439579900105795,
+    "rmse_pc_folds_better": 1
+   },
+   {
+    "set": "sentinel2_p6_12band",
+    "label": "Sentinel-2 12 bands",
+    "rmse_pc": 0.07584813435872396,
+    "rmse_pc_ci": [
+     -0.3893006642659505,
+     0.5244508107503255
+    ],
+    "rmse_pc_base": 24.439579900105795,
+    "rmse_pc_folds_better": 2
+   }
+  ]
+ },
+ "plots_steps": [
+  {
+   "step": 1,
+   "783": 9,
+   "842": 6
+  },
+  {
+   "step": 2,
+   "560": 3,
+   "705": 1,
+   "1610": 11
+  },
+  {
+   "step": 3,
+   "705": 11,
+   "1610": 4
+  },
+  {
+   "step": 4,
+   "705": 2,
+   "842": 3,
+   "945": 3,
+   "2190": 7
+  },
+  {
+   "step": 5,
+   "443": 1,
+   "490": 1,
+   "705": 1,
+   "842": 1,
+   "865": 1,
+   "945": 6,
+   "2190": 4
+  },
+  {
+   "step": 6,
+   "560": 2,
+   "665": 2,
+   "740": 3,
+   "842": 2,
+   "865": 1,
+   "945": 4,
+   "2190": 1
+  },
+  {
+   "step": 7,
+   "490": 1,
+   "560": 3,
+   "665": 2,
+   "740": 3,
+   "842": 1,
+   "865": 3,
+   "945": 2
+  },
+  {
+   "step": 8,
+   "443": 1,
+   "490": 5,
+   "560": 3,
+   "665": 2,
+   "740": 1,
+   "783": 1,
+   "865": 2
+  }
+ ]
+}

@@ -98,3 +98,14 @@ def test_strip_bins_average_and_vote(Q):
 def test_symmetric_scale_is_never_zero(Q):
     assert Q._symmetric_max(np.zeros(4)) == 1.0
     assert Q._symmetric_max(np.array([-3.0, 1.0])) > 0
+
+
+def test_every_phase_has_a_qualitative_figure(Q):
+    """Each phase folder gets at least one picture, not only a reason (P11)."""
+    drawn = {folder for _, folder, kind, what in Q.QUAL if kind != "none" and what}
+    assert [p.pid for p in PHASES if p.folder not in drawn] == []
+
+
+def test_a_phase_entry_can_name_a_view(Q):
+    assert Q._ref_name("P0-3") == "SCANFI time step on burned ground"
+    assert Q._ref_name("E-41")

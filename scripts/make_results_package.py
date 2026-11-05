@@ -2636,6 +2636,7 @@ ECO_TARGETS = (("pc", "percent conifer", "rmse_pc", "RMSE (%)"),
                ("closure", "crown closure", "rmse_closure", "RMSE (%)"),
                ("height", "canopy height", "rmse_height", "RMSE (m)"),
                ("family", "fuel family", "balanced_acc_family", "balanced accuracy"))
+FUEL_FAMILIES = ("C", "D", "M", "O", "S", "NF", "WA")
 ECO_FAMILY_COL = {"C": GREEN, "D": ORANGE, "M": BLUE, "O": AMBER, "S": PINK, "NF": "#b9b9c6",
                   "WA": "#3a3d4a"}
 #: E-2's fire-outcome search: the rung at which B11 entered, per fold ("never" = 99).
@@ -2656,6 +2657,15 @@ class _EcoRun:
             self.paths[(fold, seed)] = json.loads((t / "search.json").read_text())
             self.results[(fold, seed)] = json.loads((t / "result.json").read_text())
         self.fits = [json.loads(x) for x in (run / "fits.jsonl").read_text().splitlines()]
+
+    @property
+    def design(self) -> str:
+        """'5 outer folds of 1-degree blocks x 3 seeds', or what a partial upload holds."""
+        folds = {f for f, _ in self.results}
+        seeds = {s for _, s in self.results}
+        full = len(self.results) == len(folds) * len(seeds)
+        return (f"{len(folds)} outer folds of 1-degree blocks x {len(seeds)} "
+                f"seed{'s' if len(seeds) > 1 else ''}" + ("" if full else ", incomplete"))
 
     def get(self, sel, k, mode, noisy, key="skill_combined"):
         return {(r["fold"], r["seed"]): r["metrics"][key] for r in self.rows
@@ -2710,7 +2720,7 @@ def p6a_curves(E, out):
                    loc="lower right")
     fig.suptitle("E-22 / E-59: ecology skill (SCANFI v2 2020 labels) by nested Sentinel-2 band set",
                  color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.03)
-    _caption(fig, f"Mean over {n} runs (5 outer folds of 1-degree blocks x 3 seeds); band = 95 % "
+    _caption(fig, f"Mean over {n} runs ({E.design}); band = 95 % "
              "CI resampling whole folds. Combined skill = mean of the skills for percent "
              "conifer, closure, height (1 - RMSE / RMSE of the training mean) and fuel family "
              "(balanced accuracy, chance = 0). Solid: with the placeholder sensor noise (rule 6); "
@@ -2884,13 +2894,13 @@ def p6a_red_edge(E, out):
     return res
 
 
-def p6a_tiles(out, n=4, seed=0):
+def p6a_tiles(out, pack=ECO_PACK, n=4, seed=0):
     """Qualitative: true colour and the SCANFI labels the estimators learn, on seeded
     development tiles. The runner saves no predictions, so there is no model map."""
     import h5py
     plt = _plt()
     from matplotlib.colors import ListedColormap
-    with h5py.File(ECO_PACK, "r") as f:
+    with h5py.File(pack, "r") as f:
         order = [str(b) for b in f.attrs["band_order"]]
         fams = [str(x) for x in f.attrs["families"]]
         valid_share = f["valid"][:, ::16, ::16].reshape(len(f["valid"]), -1).mean(axis=1)
@@ -2954,8 +2964,12 @@ ECO_MAP_TARGETS = (("pc", 0, "percent conifer (%)", 100, "%"),
 
 def _load_eco_maps(maps_dir: Path, per_fold: int = 1):
     """One or more held-out tiles per fold from predict_eco_maps.py outputs."""
+    import zipfile
     tiles = []
     for d in sorted(p for p in maps_dir.glob("f*s*") if (p / "maps.npz").exists()):
+        if not zipfile.is_zipfile(d / "maps.npz"):     # cut-off transfer: copy it again
+            print(f"  SKIPPED {_rel(d / 'maps.npz')}: not a complete npz")
+            continue
         z = np.load(d / "maps.npz")
         meta = json.loads((d / "maps.json").read_text())
         for i in range(min(per_fold, z["label"].shape[0])):
@@ -2979,7 +2993,17 @@ def _blank(ax):
         s.set_color(SPINE)
 
 
-def p6a_maps(maps_dir: Path, out: Path):
+def _eco_open_ground(pack: Path) -> bool:
+    """Does the pack split open ground into its own families (A-44)?"""
+    import h5py
+    if not pack.exists():
+        return False
+    with h5py.File(pack, "r") as f:
+        return "open_ground" in f.attrs
+
+
+def p6a_maps(maps_dir: Path, out: Path, open_ground: bool = False, mode: str = "raw+indices"):
+    suffix = "" if mode == "raw+indices" else f"_{mode}"
     """Labelled images: SCANFI label against each nested set's prediction on
     held-out tiles, one figure per target (E-22, E-62)."""
     plt = _plt()
@@ -3040,11 +3064,12 @@ def p6a_maps(maps_dir: Path, out: Path):
                      "tiles", color=INK_BRIGHT, fontsize=11, x=0.01, ha="left", y=1.0)
         _caption(fig, "One held-out tile per outer fold (never seen in training or band "
                  "selection). Each set refitted on its fold's training tiles as the sweep did "
-                 "(raw + indices, with sensor noise); bands top-left, tile RMSE bottom-left. "
+                 f"({mode.replace('+', ' + ')}, with sensor noise); bands top-left, tile "
+                 "RMSE bottom-left. "
                  "Last column: the k = 6 set's error, red over-predicted, blue under.",
                  y=0.0)
-        _save(fig, out, f"maps_{name}.png")
-        made.append(f"maps_{name}.png")
+        _save(fig, out, f"maps_{name}{suffix}.png")
+        made.append(f"maps_{name}{suffix}.png")
     # fuel family
     fams = tiles[0]["families"]
     fcmap = ListedColormap([ECO_FAMILY_COL[x] for x in fams])
@@ -3088,11 +3113,13 @@ def p6a_maps(maps_dir: Path, out: Path):
                bbox_to_anchor=(0.99, -0.01))
     fig.suptitle("P6a, fuel family: SCANFI (CFS tree) and each nested set's prediction on "
                  "HELD-OUT tiles", color=INK_BRIGHT, fontsize=11, x=0.01, ha="left", y=1.0)
-    _caption(fig, "As the regression maps. D includes all open ground under 10 % closure "
-             "(P6a-M1). Pixel agreement bottom-left; last column marks where the k = 6 set "
-             "disagrees with SCANFI.", y=-0.02)
-    _save(fig, out, "maps_family.png")
-    made.append("maps_family.png")
+    ground = ("Open ground under 10 % closure takes grass, non-fuel, water or slash from "
+              "land cover and harvest (A-44)." if open_ground else
+              "D includes all open ground under 10 % closure (P6a-M1).")
+    _caption(fig, f"As the regression maps. {ground} Pixel agreement bottom-left; last column "
+             "marks where the k = 6 set disagrees with SCANFI.", y=-0.02)
+    _save(fig, out, f"maps_family{suffix}.png")
+    made.append(f"maps_family{suffix}.png")
     return made
 
 
@@ -3114,8 +3141,8 @@ def p6a_resources(E):
 
 def p6a_tables(E, out, summ, trows, freq, idx, red, res):
     L = ["# P6a tables: the ecology estimator band searches (E-22, E-59, E-62 S2 half)\n",
-         f"Run: `{_rel(E.run)}` (Nibi, H100). {len(E.tasks)} tasks: 5 outer folds of 1-degree "
-         "blocks x 3 seeds, 226 development patches (904 tiles), SCANFI v2 2020 labels, "
+         f"Run: `{_rel(E.run)}` (Nibi, H100). {len(E.tasks)} tasks: {E.design}, "
+         "226 development patches (904 tiles), SCANFI v2 2020 labels, "
          "placeholder sensor noise. The frozen test set (45 patches) was not opened.\n",
          "## Combined skill by nested set (with noise; noise-free in brackets)\n",
          "| path | input | " + " | ".join(f"k={k}" for k in range(1, 9)) + " |",
@@ -3195,18 +3222,78 @@ def p6a_tables(E, out, summ, trows, freq, idx, red, res):
             "job_mem_peak": jm}
 
 
-def p6a(run: Path, out: Path, maps: Path | None = None):
+def family_rows(conf_by_fold: dict, families=FUEL_FAMILIES) -> list[dict]:
+    """Recall and precision per fuel family, from one confusion matrix per fold
+    (rows are the label). The fold range shows a class that one fold carries."""
+    conf = {f: np.asarray(c, float) for f, c in conf_by_fold.items()}
+    tot = sum(conf.values())
+    rows = []
+    for i, name in enumerate(families):
+        n = tot[i].sum()
+        if not n:
+            continue
+        per = [c[i, i] / c[i].sum() for c in conf.values() if c[i].sum()]
+        called = tot[:, i].sum()
+        rows.append({"family": name, "px": int(n), "share": float(n / tot.sum()),
+                     "recall": float(tot[i, i] / n),
+                     "precision": float(tot[i, i] / called) if called else float("nan"),
+                     "recall_min": float(min(per)), "recall_max": float(max(per)),
+                     "folds": len(per)})
+    return rows
+
+
+def family_section(title: str, by_set: list[tuple[str, list[dict]]]) -> list[str]:
+    L = [f"## {title}\n", "| set | family | pixels | share | recall | precision | "
+         "recall, fold range | folds with the class |", "|---|---|---|---|---|---|---|---|"]
+    for name, rows in by_set:
+        L += [f"| {name} | {r['family']} | {r['px']:,} | {r['share']:.2%} | {r['recall']:.3f} | "
+              f"{r['precision']:.3f} | {r['recall_min']:.3f} to {r['recall_max']:.3f} | "
+              f"{r['folds']} |" for r in rows]
+    return L
+
+
+def _append_tables(out: Path, lines: list[str]):
+    p = out / "tables.md"
+    p.write_text(p.read_text(encoding="utf-8").rstrip() + "\n\n" + "\n".join(lines) + "\n",
+                 encoding="utf-8")
+
+
+def p6a_families(E, out):
+    """Per-class results for the last combined set, where the run saved its
+    confusion matrices (from eco_v3 on)."""
+    k = max(r["k"] for r in E.rows if r["selector"] == "combined")
+    conf = {}
+    for r in E.rows:
+        c = (r["metrics"] or {}).get("confusion_family")
+        if c and r["selector"] == "combined" and r["k"] == k and r["noisy"] \
+                and r["mode"] == "raw+indices":
+            conf[r["fold"]] = conf.get(r["fold"], 0) + np.asarray(c)
+    if not conf:
+        return None
+    rows = family_rows(conf)
+    _csv(out / "T_family.csv", rows)
+    _append_tables(out, family_section(f"Fuel family, per class (combined, k = {k})",
+                                       [(f"k = {k}", rows)]))
+    return rows
+
+
+def p6a(run: Path, out: Path, maps: Path | None = None, pack: Path | None = None):
     out.mkdir(parents=True, exist_ok=True)
+    pack = pack or ECO_PACK
     maps = maps or run / "maps"
+    open_ground = _eco_open_ground(pack)
     if maps.exists():
-        p6a_maps(maps, out)
+        p6a_maps(maps, out, open_ground)
+    for mode in ("raw", "indices"):             # E-59: sweep_eco_maps.sh MODE=
+        if (run / f"maps_{mode}").exists():
+            p6a_maps(run / f"maps_{mode}", out, open_ground, mode)
     E = _EcoRun(run)
     summ = p6a_curves(E, out)
     trows = p6a_targets(E, out)
     freq = p6a_selection(E, out)
     idx = p6a_indices(E, out)
     red = p6a_red_edge(E, out)
-    tiles = p6a_tiles(out) if ECO_PACK.exists() else []
+    tiles = p6a_tiles(out, pack) if pack.exists() else []
     supp_scores(list(E.paths.values()),
                 (("combined", "combined skill"), ("no_red_edge", "no red edge"),
                  ("pc", "percent conifer"), ("closure", "closure"), ("height", "height"),
@@ -3214,13 +3301,15 @@ def p6a(run: Path, out: Path, maps: Path | None = None):
                 ECO_BANDS, out, "scores", "Ecology searches", "skill", "skill")
     res = p6a_resources(E)
     usage = p6a_tables(E, out, summ, trows, freq, idx, red, res)
+    families = p6a_families(E, out)
     (out / "summary.json").write_text(json.dumps(
         {"curves": {f"{a}|{k}|{m}|{'noisy' if n else 'clean'}": v
                     for (a, k, m, n), v in summ.items()},
          "targets": trows, "selection": freq, "indices": idx, "red_edge": red,
          "first_swir": {f"f{f}s{s}": v for (f, s), v in E.first_swir().items()},
-         "tiles": tiles, "resources": usage}, indent=1, default=float))
-    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+         "tiles": tiles, "resources": usage, "families": families}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)), "pack": pack.parent.name},
+                                             indent=1))
 
 
 # ── P6c: the snow-off estimator (E-60) ──────────────────────────────────────
@@ -4484,6 +4573,30 @@ def p6hs_tables(H, out, summ, e61, e62, res, D, void, options=None, same=()):
     print(f"  wrote {_rel(out / 'tables.md')}")
 
 
+def p6hs_families(H, out, sets=("config_c/VNIR", "config_c", "sentinel2_p6_12band")):
+    """Per-class results from each task's held-out predictions; a pack with no
+    family labels (lidar) has none."""
+    by_set = []
+    for name in sets:
+        conf = {}
+        for t in H.tasks.get("references", []):
+            z = np.load(t / "pred.npz")
+            key = f"{name}__family"
+            if key not in z.files:
+                continue
+            m = z["family"] >= 0
+            y, p = z["family"][m].astype(int), z[key][m].astype(int)
+            k = len(FUEL_FAMILIES)
+            fold = int(t.name[1:].split("s")[0])
+            conf[fold] = conf.get(fold, 0) + np.bincount(y * k + p, minlength=k * k).reshape(k, k)
+        if conf and sum(np.asarray(c).sum() for c in conf.values()):
+            by_set.append((name, family_rows(conf)))
+    if by_set:
+        _csv(out / "T_family.csv", [{"set": n, **r} for n, rows in by_set for r in rows])
+        _append_tables(out, family_section("Fuel family, per class", by_set))
+    return by_set
+
+
 def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
     out.mkdir(parents=True, exist_ok=True)
     H = _HSRun(run)
@@ -4507,6 +4620,8 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
         p6hs_same_folds_figure([(f, r) for f, r, _ in same], out)
     options = None if void or same else p6hs_options(H)
     p6hs_tables(H, out, summ, e61, e62, res, D, void, options, same)
+    if not void:
+        p6hs_families(H, out)
     (out / "summary.json").write_text(json.dumps(
         {"void": void, "curves": {f"{a}|{n}|{'noisy' if z else 'clean'}": v
                                   for (a, n, z), v in summ.items()},
@@ -4520,8 +4635,8 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
 
 # E-63: out-of-time generalisation. Regime B scores 2024; 2025 stays frozen for P10.
 E63_R0 = "scanfi_tree_prefire"          # same fuel as R1 and R2
-E63_R0_CV = _ROOT / "runs" / "20261024-p3_cffdrs_r0_dated"
-E63_R0_2024 = _ROOT / "runs" / "20261030-e56_cohort_2024"
+E63_R0_CV = _ROOT / "runs" / "20261102-r0_family_dev"    # reruns of the P3 and E-56 R0,
+E63_R0_2024 = _ROOT / "runs" / "20261102-r0_family_2024"  # adding auc_<output>_<family>
 E63_RUNGS = (("r1", "R1"), ("r2", "R2"))
 E63_FAMILIES = (("C", "conifer"), ("D", "deciduous"), ("M", "mixedwood"))
 
@@ -4546,6 +4661,8 @@ class _Year2024:
             self.fam[c] = {f: arr(f"auc_within_{f}") for f, _ in E63_FAMILIES}
         self.r0_s = np.array([float(r0[p]["mean_hfi"]) for p in self.pat])
         self.r0_w = np.array([float(r0[p]["auc_hfi"] or "nan") for p in self.pat])
+        self.r0_fam = {f: np.array([float(r0[p][f"auc_hfi_{f}"] or "nan") for p in self.pat])
+                       for f, _ in E63_FAMILIES}
         groups = np.array([r0[p]["group"] for p in self.pat])
         ug = np.unique(groups)
         gi = {g: np.where(groups == g)[0] for g in ug}
@@ -4565,7 +4682,8 @@ class _Year2024:
         return float(np.mean([_auc(s[i], self.fire[i]) for s in self.S[c]]))
 
     def within_family(self, c, fam) -> float:
-        return float(np.nanmean(np.nanmean(self.fam[c][fam], axis=0)[self.fire]))
+        w = self.r0_fam[fam] if c == "r0" else np.nanmean(self.fam[c][fam], axis=0)
+        return float(np.nanmean(w[self.fire]))
 
 
 class _CvR0:
@@ -4577,6 +4695,8 @@ class _CvR0:
         self.sweep = sweep
         self.w = np.array([float(r0[p]["auc_hfi"] or "nan") if p in r0 else np.nan
                            for p in sweep.pat])
+        self.fam = {f: np.array([float(r0[p][f"auc_hfi_{f}"] or "nan") if p in r0 else np.nan
+                                 for p in sweep.pat]) for f, _ in E63_FAMILIES}
         self.s = np.array([float(r0[p]["mean_hfi"]) if p in r0 else np.nan for p in sweep.pat])
         self.fire = np.array([p.endswith("_fire") for p in sweep.pat])
         self.fold = sweep._score("r2")[1]
@@ -4584,6 +4704,9 @@ class _CvR0:
     def within(self, i=None) -> float:
         i = np.arange(len(self.w)) if i is None else i
         return float(np.nanmean(self.w[i][self.fire[i]]))
+
+    def within_family(self, fam) -> float:
+        return float(np.nanmean(self.fam[fam][self.fire]))
 
     def between(self, i=None) -> float:
         """Per fold and averaged, as _Sweep scores the rungs."""
@@ -4612,7 +4735,9 @@ def e63_stats(a_run: Path, b_run: Path) -> dict:
               "drop_within": Y.within("r0") - R.within(),
               "drop_within_ci": _ci95(y_r0_w - cv_r0_w),
               "drop_between": Y.between("r0") - R.between(),
-              "drop_between_ci": _ci95(y_r0_b - cv_r0_b)}]
+              "drop_between_ci": _ci95(y_r0_b - cv_r0_b),
+              "family": {f: Y.within_family("r0", f) for f, _ in E63_FAMILIES},
+              "family_cv": {f: R.within_family(f) for f, _ in E63_FAMILIES}}]
     for c, lab in E63_RUNGS:
         cvw = B.within(c)
         cv_w = np.array([np.nanmean(cvw[i]) for i in B.boots[:n]])
@@ -4749,7 +4874,7 @@ def p6e_tables(S, out, a_run, b_run):
           "| rung | C | D | M |", "|---|---|---|---|"]
     L += [f"| {r['rung']} | " + " | ".join(
         f"{r['family_cv'][f]:.3f}, {r['family'][f]:.3f}" for f, _ in E63_FAMILIES) + " |"
-        for r in S["rungs"][1:]]
+        for r in S["rungs"]]
     L += ["", "## Regime A minus regime B, on the same 2019-2023 folds and seeds\n",
           "Hypothesis (b) is read on 2025, in P10. This only says whether 2024 in training "
           "changes the 2019-2023 folds.\n",
@@ -4930,12 +5055,457 @@ def p6x(run: Path, out: Path, lidar: Path, scanfi: Path):
         indent=1))
 
 
+# E-35: the imagery fuel slot. Read on all pixels: replacing fuel moves pixels between families.
+E35_ARMS = (("r3_fuel_replace", "Fuel from imagery"),
+            ("r3_pc_replace", "Percent conifer from imagery"),
+            ("r3_fuel_pc_replace", "Fuel and percent conifer from imagery"))
+
+
+def p7e_rows(W, arms=E35_ARMS, base="r2") -> list[dict]:
+    """Each arm against the inventory, and against its shuffled twin: the
+    registered falsifier is the twin gaining as much."""
+    rows = []
+    for arm, lab in arms:
+        if arm not in W.patch:
+            continue
+        twin = f"{arm}_shuffled"
+        rows.append({"arm": arm, "label": lab, "vs_base": W.paired(arm, base),
+                     "twin_vs_base": W.paired(twin, base) if twin in W.patch else None,
+                     "vs_twin": W.paired(arm, twin) if twin in W.patch else None})
+    return rows
+
+
+def p7e_figure(rows, out):
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(8.6, 0.8 + 0.62 * len(rows) * 2), facecolor=FIG_BG)
+    _axes(ax, "E-35: within-patch AUC against the inventory (R2), Reconstructed (ours)",
+          "difference in AUC", "")
+    pts = []
+    for r in rows:
+        pts.append((r["label"], r["vs_base"], BLUE))
+        if r["twin_vs_base"]:
+            pts.append(("  its shuffled twin", r["twin_vs_base"], ORANGE))
+    ys = np.arange(len(pts))[::-1]
+    for y, (_, p, col) in zip(ys, pts, strict=True):
+        ax.plot(p["d_within_ci"], [y, y], color=col, lw=2, solid_capstyle="round")
+        ax.plot(p["d_within"], y, "o", color=col, ms=7)
+    ax.axvline(0, color=INK, lw=1)
+    ax.set_yticks(ys, [p[0] for p in pts], fontsize=8.5, color=INK_BRIGHT)
+    fig.tight_layout()
+    _caption(fig, "95 % CI by group bootstrap, all pixels. E-35 fails if the twin gains as much "
+             "as its arm. Read agreement.json first: see A-45.", y=-0.03)
+    _save(fig, out, "fuel_slot.png")
+
+
+def p7e(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    rows = p7e_rows(W)
+    p7e_figure(rows, out)
+    L = ["# P7e tables: the imagery fuel slot (E-35)\n", f"Run: `{_rel(run)}`. All values are "
+         "Reconstructed (ours), within-patch AUC on all pixels.\n",
+         "| arm | against R2 | twin against R2 | arm against twin | folds won against R2 |",
+         "|---|---|---|---|---|"]
+
+    def cell(p):
+        return "" if not p else f"{p['d_within']:+.3f} {_ci(p['d_within_ci'], 3)}"
+    L += [f"| {r['label']} | {cell(r['vs_base'])} | {cell(r['twin_vs_base'])} | "
+          f"{cell(r['vs_twin'])} | {r['vs_base']['folds_won_within']}/5 |" for r in rows]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    (out / "summary.json").write_text(json.dumps(rows, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
+# E-41: FBP spread against CFSDS, physics only (Fire_Risk_Model eval_spread_r0.py).
+def p8a(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    S = json.loads((run / "summary.json").read_text())
+    plt = _plt()
+    fams = sorted(S["by_family"], key=lambda f: -S["by_family"][f]["rows"])
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.5), facecolor=FIG_BG)
+    x = np.arange(len(fams))
+    _axes(axes[0], "FBP ROS against CFSDS daily spread", "fuel family", "Spearman rho")
+    axes[0].bar(x - 0.2, [S["by_family"][f]["rho"] for f in fams], 0.38, color=BLUE,
+                label="all fire-days")
+    axes[0].bar(x + 0.2, [S["by_family"][f]["rho_moving_days"] for f in fams], 0.38, color=ORANGE,
+                label="days with spread")
+    axes[0].legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    _axes(axes[1], "Burning hours a day that would join ROS to spread", "fuel family",
+          "implied hours, median")
+    axes[1].bar(x, [S["by_family"][f]["implied_burn_hours_median"] for f in fams], 0.5, color=BLUE)
+    for ax in axes:
+        ax.set_xticks(x, [f"{f}\n{S['by_family'][f]['rows']:,}" for f in fams], color=INK)
+    fig.tight_layout()
+    _caption(fig, f"{S['all']['rows']:,} fire-days of {S['all']['fires']} development fires, "
+             "Reconstructed (ours). Counts under each family. No slope: the rows have no wind "
+             "direction. Frozen fires were not opened.", y=-0.03)
+    _save(fig, out, "spread_r0.png")
+    a, c = S["all"], S["ci"]
+    L = ["# P8a tables: FBP spread against CFSDS (E-41)\n", f"Run: `{_rel(run)}`.\n",
+         "| | rho [95 % CI] |", "|---|---|",
+         f"| all fire-days | {a['rho']:.2f} {_ci(c['rho'])} |",
+         f"| days with spread | {a['rho_moving_days']:.2f} {_ci(c['rho_moving_days'])} |",
+         f"| within a fire, mean over {a['fires_with_5_days']} fires | "
+         f"{a['rho_within_fire']:.2f} |",
+         "", "| family | fire-days | rho | rho, days with spread | implied hours |",
+         "|---|---|---|---|---|"]
+    L += [f"| {f} | {S['by_family'][f]['rows']:,} | {S['by_family'][f]['rho']:.2f} | "
+          f"{S['by_family'][f]['rho_moving_days']:.2f} | "
+          f"{S['by_family'][f]['implied_burn_hours_median']:.1f} |" for f in fams]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    (out / "summary.json").write_text(json.dumps(S, indent=1))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
+# E-44: CFFDRS ignition R0 on lightning starts and matched controls
+# (Fire_Risk_Model eval_ignition_r0.py).
+P9_SCORES = {"ffmc_class": "FFMC class (weather only:\ndesign check)",
+             "p_sf_cwfis": "P(sustained flaming),\nCWFIS fuel before the start",
+             "p_sf_scanfi": "P(sustained flaming),\nSCANFI fuel before the start"}
+#: Beverly & Wotton (2007) surface-fuel categories (Fire_Risk_Model src/data/ignition.py).
+BW_NAMES = {"FC1": "grass,\nspring", "FC2": "grass,\nsummer", "FC3": "jack pine,\nlichen",
+            "FC4": "jack pine,\nmoss", "FC5": "pine,\nneedles", "FC6": "mixedwood,\nmoss",
+            "FC7": "mixedwood,\nneedles", "FC8": "black spruce,\nmoss",
+            "FC9": "aspen,\ngrass", "FC10": "aspen,\nleaf", "": "no\ncategory"}
+
+
+def p9(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    S = json.loads((run / "summary.json").read_text())
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.8), facecolor=FIG_BG,
+                             gridspec_kw={"width_ratios": [1, 1.4]})
+    ax = axes[0]
+    _axes(ax, "Starts ranked above their own controls", "matched-set AUC", "")
+    names = [k for k in P9_SCORES if k in S["scores"]]
+    for i, k in enumerate(names):
+        s = S["scores"][k]
+        ax.barh(i, s["matched_auc"] - 0.5, left=0.5, height=0.5,
+                color=SPINE if k == "ffmc_class" else BLUE)
+        if s["ci"]:
+            ax.plot(s["ci"], [i, i], color=INK, lw=1.5)
+        ax.text(max(s["matched_auc"], (s["ci"] or [0, 0])[1]) + 0.005, i,
+                f"{s['matched_auc']:.3f}  (n {s['sets_scored']:,})", va="center", color=INK,
+                fontsize=8)
+    ax.axvline(0.5, color=INK, lw=0.8, ls="--")
+    ax.set_yticks(range(len(names)), [P9_SCORES[k] for k in names], color=INK, fontsize=8)
+    lo = min(0.45, *(S["scores"][k]["ci"][0] for k in names if S["scores"][k]["ci"]))
+    hi = max(0.6, *(S["scores"][k]["ci"][1] for k in names if S["scores"][k]["ci"]))
+    ax.set_xlim(lo - 0.01, hi + 0.08)
+    ax = axes[1]
+    _axes(ax, "Where starts and controls sit (SCANFI fuel)", "Beverly & Wotton category",
+          "share of points")
+    cat = S["by_category"]["scanfi"]
+    keys = sorted(cat, key=lambda c: -(cat[c]["starts"] + cat[c]["controls"]))
+    ns, nc = S["starts"], S["controls"]
+    x = np.arange(len(keys))
+    ax.bar(x - 0.2, [cat[c]["starts"] / ns for c in keys], 0.38, color=ORANGE, label="starts")
+    ax.bar(x + 0.2, [cat[c]["controls"] / nc for c in keys], 0.38, color=BLUE, label="controls")
+    ax.set_xticks(x, [BW_NAMES.get(c, c) for c in keys], color=INK, fontsize=7.5)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    fig.tight_layout()
+    _caption(fig, f"{S['sets']:,} matched sets ({S['starts']:,} NFDB lightning starts, "
+             f"{S['controls']:,} controls on the same day, sharing the start's weather), "
+             "development blocks only. Reconstructed (ours). CI: bootstrap over 1-degree "
+             "blocks. The weather-only score must sit at exactly 0.5.", y=-0.03)
+    _save(fig, out, "ignition_r0.png")
+    L = ["# P9 tables: CFFDRS ignition R0 on lightning starts (E-44)\n", f"Run: `{_rel(run)}`. "
+         "Reconstructed (ours).\n",
+         f"Design check (weather-only matched-set AUC = 0.5): "
+         f"{'passed' if S['design_check_passed'] else 'FAILED'}.\n",
+         "| score | matched-set AUC [95 % CI] | sets | pooled AUC | unscored points |",
+         "|---|---|---|---|---|"]
+    for k in names:
+        s = S["scores"][k]
+        L.append(f"| {P9_SCORES[k].replace(chr(10), ' ')} | {s['matched_auc']:.3f} "
+                 f"{_ci(s['ci'], 3) if s['ci'] else ''} | {s['sets_scored']:,} | "
+                 f"{s['pooled_auc']:.3f} | {s['unscored_points']:,} |")
+    for f in ("scanfi", "cwfis"):
+        L += ["", f"Fuel categories ({f}):", "", "| category | starts | controls | mean P |",
+              "|---|---|---|---|"]
+        cat = S["by_category"][f]
+        L += [f"| {c or '-'} {BW_NAMES.get(c, '').replace(chr(10), ' ')} | {cat[c]['starts']:,} | "
+              f"{cat[c]['controls']:,} | "
+              f"{'' if cat[c]['mean_p'] is None else format(cat[c]['mean_p'], '.3f')} |"
+              for c in sorted(cat, key=lambda c: -(cat[c]["starts"] + cat[c]["controls"]))]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    (out / "summary.json").write_text(json.dumps(S, indent=1))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
+# ── P6f: LFMC retrievals against Globe-LFMC (E-64, E-29) ──────────────────────
+
+#: (column, label, family). Families: cffdrs, sim (PROSPECT-D + 4SAIL, never fit
+#: to Globe-LFMC), emp (fit on Globe-LFMC out of fold), clean (noise-free sim).
+LFMC_MODELS = [
+    ("fbp", "FBP foliar moisture equation", "cffdrs"),
+    ("sim_gp_all10", "simulation GP, 10 bands (of record)", "sim"),
+    ("sim_mlp_all10", "simulation MLP, 10 bands", "sim"),
+    ("sim_gp_no_b12", "simulation GP, no B12", "sim"),
+    ("sim_mlp_no_b12", "simulation MLP, no B12", "sim"),
+    ("sim_gp_vnir", "simulation GP, VNIR only", "sim"),
+    ("sim_mlp_vnir", "simulation MLP, VNIR only", "sim"),
+    ("sim_gp_all10_clean", "simulation GP, trained noise-free", "clean"),
+    ("emp_ndmi", "NDMI, calibrated", "emp"),
+    ("emp_msi", "MSI, calibrated", "emp"),
+    ("emp_nmdi", "NMDI, calibrated", "emp"),
+    ("emp_gp", "GP on the 10 bands", "emp"),
+    ("emp_best", "best empirical, chosen in inner folds", "emp"),
+]
+LFMC_FAMILY = {"cffdrs": (AMBER, "FBP equation (CFFDRS)"),
+               "sim": (BLUE, "simulation-trained (never sees Globe-LFMC)"),
+               "emp": (GREEN, "empirical, fit on Globe-LFMC out of fold"),
+               "clean": (MUTED, "simulation, trained without noise (rule 6)")}
+SPRING, SUMMER = (91, 181), (182, 273)          # day of year: April-June, July-September
+
+
+def _lfmc_rows(run: Path) -> tuple[list[dict], list[dict]]:
+    """One row per record, each model's squared error and prediction averaged
+    over seeds (records are identical across seeds); and the fits.json files."""
+    seeds = sorted(p for p in run.glob("s*") if (p / "predictions.csv").exists())
+    if not seeds:
+        raise SystemExit(f"no s*/predictions.csv under {run}")
+    per = [_read_csv(p / "predictions.csv") for p in seeds]
+    fits = [json.loads((p / "fits.json").read_text()) for p in seeds]
+    keys = [(r["site"], r["label"], r["date"]) for r in per[0]]
+    for rows in per[1:]:
+        if [(r["site"], r["label"], r["date"]) for r in rows] != keys:
+            raise SystemExit("seeds hold different records")
+    out = []
+    for i, r in enumerate(per[0]):
+        y = float(r["lfmc"])
+        row = {"group": r["site"], "species": r["label"], "fuel": r["group"],
+               "doy": int(r["doy"]), "lfmc": y, "date": r["date"]}
+        for m, _, _ in LFMC_MODELS:
+            p = np.array([float(rows[i][m]) for rows in per])
+            row[f"{m}_pred"] = float(p.mean())
+            row[f"{m}_se"] = float(np.mean((p - y) ** 2))
+        out.append(row)
+    return out, fits
+
+
+def _lfmc_stats(rows, m) -> dict:
+    if not rows:
+        return {"n": 0}
+    y = np.array([r["lfmc"] for r in rows])
+    p = np.array([r[f"{m}_pred"] for r in rows])
+    se = np.array([r[f"{m}_se"] for r in rows])
+    sst = float(np.sum((y - y.mean()) ** 2))
+    return {"n": len(rows), "rmse": float(np.sqrt(se.mean())), "bias": float(np.mean(p - y)),
+            "r2": float(1 - np.sum((p - y) ** 2) / sst) if sst > 0 else float("nan")}
+
+
+def _lfmc_rmse(rows, m) -> float:
+    return float(np.sqrt(np.mean([r[f"{m}_se"] for r in rows]))) if rows else float("nan")
+
+
+def _lfmc_contrast(rows, a, b, n=2000) -> dict:
+    """RMSE(a) - RMSE(b), CI by bootstrap over sites (paired: same records)."""
+    def stat(rs):
+        return _lfmc_rmse(rs, a) - _lfmc_rmse(rs, b)
+    return {"d": stat(rows), "ci": _boot_groups(rows, stat, n=n), "n": len(rows),
+            "sites": len({r["group"] for r in rows})}
+
+
+def p6f_rmse(subsets, out):
+    plt = _plt()
+    names = [s for s in ("conifer", "deciduous") if subsets[s]]
+    fig, axes = plt.subplots(1, len(names), figsize=(6.2 * len(names), 5.6), facecolor=FIG_BG,
+                             sharey=True, squeeze=False)
+    xmax = 60.0
+    for ax, name in zip(axes[0], names, strict=True):
+        rows = subsets[name]
+        _axes(ax, f"{name}: {len(rows):,} records, {len({r['group'] for r in rows})} sites",
+              "RMSE against gravimetric LFMC (LFMC %)")
+        for j, (m, _, fam) in enumerate(LFMC_MODELS):
+            r = _lfmc_rmse(rows, m)
+            ci = _boot_groups(rows, lambda rs, m=m: _lfmc_rmse(rs, m), n=1000)
+            col = LFMC_FAMILY[fam][0]
+            y = len(LFMC_MODELS) - 1 - j
+            if r > xmax:
+                ax.annotate(f"{r:.0f} →", (xmax, y), color=col, fontsize=8.5,
+                            ha="right", va="center")
+                continue
+            ax.plot([ci[0], min(ci[1], xmax)], [y, y], color=col, lw=2, solid_capstyle="round")
+            ax.plot(r, y, "o", color=col, ms=8, mec=FIG_BG, mew=2)
+            ax.text(min(ci[1], xmax) + 0.8, y, f"{r:.1f}", color=INK, fontsize=8, va="center")
+        fb = _lfmc_rmse(rows, "fbp")
+        ax.axvline(fb, color=AMBER, lw=1, ls="--", alpha=0.7)
+        ax.set_xlim(0, xmax)
+        ax.set_yticks(range(len(LFMC_MODELS)))
+        ax.set_yticklabels([lab for _, lab, _ in LFMC_MODELS][::-1])
+    handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=8)
+               for c, _ in LFMC_FAMILY.values()]
+    fig.legend(handles, [t for _, t in LFMC_FAMILY.values()], loc="lower center", ncol=2,
+               fontsize=8.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
+               bbox_to_anchor=(0.5, -0.1))
+    fig.suptitle("P6f: LFMC from Sentinel-2 against FBP's equation (E-64, E-29)",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.02)
+    _caption(fig, "Globe-LFMC 2017+, development sites only (the frozen 15 % of sites is not "
+             "read). Squared errors averaged over 3 seeds; bars: 95 % CI by bootstrap over sites. "
+             "Dashed: FBP's equation. A value off the axis is printed at its edge. All "
+             "estimates are ours; nothing here was issued by CWFIS.", y=-0.14)
+    _save(fig, out, "lfmc_rmse.png")
+
+
+def p6f_scatter(rows, out):
+    plt = _plt()
+    show = [("fbp", "FBP equation"), ("emp_best", "best empirical"),
+            ("sim_gp_all10", "simulation GP (of record)"), ("sim_mlp_all10", "simulation MLP")]
+    fig, axes = plt.subplots(1, 4, figsize=(17, 4.6), facecolor=FIG_BG, sharex=True, sharey=True)
+    y = np.array([r["lfmc"] for r in rows])
+    lim = (40, 260)
+    for ax, (m, lab) in zip(axes, show, strict=True):
+        p = np.clip([r[f"{m}_pred"] for r in rows], *lim)
+        fam = {k: f for k, _, f in LFMC_MODELS}[m]
+        _axes(ax, f"{lab}\nRMSE {_lfmc_rmse(rows, m):.1f}, bias "
+                  f"{_lfmc_stats(rows, m)['bias']:+.1f}", "measured LFMC (%)",
+              "estimated LFMC (%)" if m == "fbp" else "")
+        ax.plot(lim, lim, color=MUTED, lw=1, ls="--")
+        ax.scatter(y, p, s=7, color=LFMC_FAMILY[fam][0], alpha=0.35, lw=0)
+        ax.set_xlim(*lim)
+        ax.set_ylim(*lim)
+    fig.suptitle("P6f: conifer records, estimate against measurement", color=INK_BRIGHT,
+                 fontsize=11.5, x=0.01, ha="left", y=1.05)
+    _caption(fig, "Each dot is a gravimetric sample, prediction averaged over 3 seeds; values "
+             "beyond 40-260 % are drawn at the edge. FBP's equation runs 85-120 % and is "
+             "capped at 120 (the flat row); measured conifer LFMC here runs about 75-170 %.",
+             y=-0.06)
+    _save(fig, out, "lfmc_scatter.png")
+
+
+def p6f_series(rows, out, n=4):
+    """The qualitative view: the seasonal course at the best-sampled conifer
+    site-species pairs, measured against each estimate."""
+    plt = _plt()
+    by = {}
+    for r in rows:
+        if r["fuel"] == "conifer":
+            by.setdefault((r["group"], r["species"]), []).append(r)
+    top = sorted(by, key=lambda k: -len(by[k]))[:n]
+    fig, axes = plt.subplots(1, len(top), figsize=(4.6 * len(top), 4.2), facecolor=FIG_BG,
+                             sharey=True, squeeze=False)
+    lines = [("fbp", "FBP equation", AMBER), ("emp_best", "best empirical", GREEN),
+             ("sim_gp_all10", "simulation GP", BLUE)]
+    for ax, k in zip(axes[0], top, strict=True):
+        rs = sorted(by[k], key=lambda r: (r["date"][:4], r["doy"]))
+        years = sorted({r["date"][:4] for r in rs})
+        yr = max(years, key=lambda yy: sum(r["date"][:4] == yy for r in rs))
+        rs = [r for r in rs if r["date"][:4] == yr]
+        _axes(ax, f"{k[0].split('|')[0]}, {k[1]}, {yr}\n{len(rs)} samples", "day of year",
+              "LFMC (%)" if ax is axes[0][0] else "")
+        d = [r["doy"] for r in rs]
+        ax.plot(d, [r["lfmc"] for r in rs], "o-", color=INK_BRIGHT, ms=4, lw=1.2,
+                label="measured")
+        for m, lab, col in lines:
+            ax.plot(d, [r[f"{m}_pred"] for r in rs], "-", color=col, lw=1.6, label=lab)
+        ax.axvspan(*SPRING, color=SPINE, alpha=0.35, lw=0)
+        ax.set_ylim(40, 260)
+    axes[0][0].legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    fig.suptitle("P6f: the conifer season at the best-sampled sites (E-64, E-29)",
+                 color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.06)
+    _caption(fig, "Shaded: April-June, where the spring dip in LFMC should show (Jolly et al. "
+             "2014). Each site's best-sampled year; predictions averaged over 3 seeds; "
+             "estimates are ours.", y=-0.04)
+    _save(fig, out, "qual_E-64_series.png")
+
+
+def p6f(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    rows, fits = _lfmc_rows(run)
+    con = [r for r in rows if r["fuel"] == "conifer"]
+    subsets = {"all": rows, "conifer": con,
+               "deciduous": [r for r in rows if r["fuel"] == "deciduous"],
+               "jack and red pine": [r for r in con if r["species"] in ("jack pine", "red pine")],
+               "conifer, April-June": [r for r in con if SPRING[0] <= r["doy"] <= SPRING[1]],
+               "conifer, July-September": [r for r in con if SUMMER[0] <= r["doy"] <= SUMMER[1]]}
+    stats = {s: {m: _lfmc_stats(rs, m) for m, _, _ in LFMC_MODELS} for s, rs in subsets.items()}
+    pine = subsets["jack and red pine"]
+    contrasts = {
+        "E-64a sim GP - FBP (conifer)": _lfmc_contrast(con, "sim_gp_all10", "fbp"),
+        "E-64a best empirical - FBP (conifer)": _lfmc_contrast(con, "emp_best", "fbp"),
+        "E-64b sim GP - best empirical (conifer)": _lfmc_contrast(con, "sim_gp_all10", "emp_best"),
+        "E-29 sim GP: no B12 - all 10 (jack, red pine)":
+            _lfmc_contrast(pine, "sim_gp_no_b12", "sim_gp_all10"),
+        "E-29 sim MLP: no B12 - all 10 (jack, red pine)":
+            _lfmc_contrast(pine, "sim_mlp_no_b12", "sim_mlp_all10"),
+        "E-29 sim GP, April-June":
+            _lfmc_contrast([r for r in pine if SPRING[0] <= r["doy"] <= SPRING[1]],
+                           "sim_gp_no_b12", "sim_gp_all10"),
+        "E-29 sim GP, July-September":
+            _lfmc_contrast([r for r in pine if SUMMER[0] <= r["doy"] <= SUMMER[1]],
+                           "sim_gp_no_b12", "sim_gp_all10"),
+        "sim MLP - FBP (conifer)": _lfmc_contrast(con, "sim_mlp_all10", "fbp"),
+    }
+    per_seed = {m: [] for m, _, _ in LFMC_MODELS}
+    for f in fits:
+        for m in per_seed:
+            per_seed[m].append(f.get("rmse_quick", {}).get(m))
+    choice = {}
+    for f in fits:
+        for c in f.get("emp_best_choice", []):
+            choice.setdefault(c["group"], {}).setdefault(c["chosen"], 0)
+            choice[c["group"]][c["chosen"]] += 1
+    relevance = {}
+    for f in fits:
+        for key, bands in f.get("relevance", {}).items():
+            for b, v in bands.items():
+                relevance.setdefault(key, {}).setdefault(b, []).append(v)
+    relevance = {k: {b: float(np.mean(v)) for b, v in d.items()} for k, d in relevance.items()}
+    p6f_rmse(subsets, out)
+    p6f_scatter(con, out)
+    p6f_series(rows, out)
+
+    lab = {m: label for m, label, _ in LFMC_MODELS}
+    L = ["# P6f tables: LFMC retrievals against Globe-LFMC (E-64, E-29)", "",
+         f"Run: `{_rel(run)}`, {len(fits)} seeds. Development sites only; the frozen 15 % of "
+         "sites (`lfmc_test_sites_v1.json`) was not read. Squared errors and predictions are "
+         "averaged over seeds per record. CIs: 2,000 bootstrap draws over sites. All values "
+         "are Reconstructed (ours).", ""]
+    L += ["## Registered contrasts (RMSE difference, LFMC points)", "",
+          "| contrast | records | sites | difference | 95 % CI |", "|---|---|---|---|---|"]
+    L += [f"| {k} | {v['n']:,} | {v['sites']} | {v['d']:+.2f} | {_ci(v['ci'])} |"
+          for k, v in contrasts.items()]
+    for s, st in stats.items():
+        n = st["fbp"]["n"]
+        L += ["", f"## {s} ({n:,} records, {len({r['group'] for r in subsets[s]})} sites)", "",
+              "| model | RMSE | bias | R2 |", "|---|---|---|---|"]
+        L += [f"| {lab[m]} | {v['rmse']:.1f} | {v['bias']:+.1f} | {v['r2']:.2f} |"
+              for m, v in st.items() if v.get("n")]
+    L += ["", "## RMSE per seed, all records (fits.json)", "", "| model | " +
+          " | ".join(f"s{i}" for i in range(len(fits))) + " |",
+          "|---|" + "---|" * len(fits)]
+    L += [f"| {lab[m]} | " + " | ".join(_f(v, 1) for v in vs) + " |"
+          for m, vs in per_seed.items() if any(v is not None for v in vs)]
+    L += ["", "## Best empirical model, chosen inside each outer fold", "",
+          "| fuel group | choices over folds x seeds |", "|---|---|"]
+    L += [f"| {g} | " + ", ".join(f"{k} {v}" for k, v in sorted(c.items(), key=lambda x: -x[1]))
+          + " |" for g, c in choice.items()]
+    if relevance:
+        bands = sorted({b for d in relevance.values() for b in d},
+                       key=lambda b: ECO_BANDS.index(b) if b in ECO_BANDS else 99)
+        L += ["", "## Simulation GP band relevance (ARD, mean over seeds; higher = more used)",
+              "", "| group / bands | " + " | ".join(bands) + " |",
+              "|---|" + "---|" * len(bands)]
+        L += [f"| {k} | " + " | ".join(_f(d.get(b, float("nan")), 2) for b in bands) + " |"
+              for k, d in relevance.items()]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_models.csv", [{"subset": s, "model": m, **v} for s, st in stats.items()
+                                for m, v in st.items()])
+    (out / "summary.json").write_text(json.dumps(
+        {"stats": stats, "contrasts": contrasts, "per_seed": per_seed, "emp_choice": choice,
+         "relevance": relevance}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
           "P6b": (p6b, "p6b_cohort"), "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
           "P7": (p7, "p7_slots"),
           "P6e": (p6e, "p6e_out_of_time"), "P6x": (p6x, "p6a_external_labels"),
-          "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3")}
+          "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3"),
+          "P7e": (p7e, "p7e_fuel_slot"), "P8a": (p8a, "p8a_spread"),
+          "P9": (p9, "p9_ignition"), "P6f": (p6f, "p6f_lfmc")}
 
 
 def main(argv=None) -> int:
@@ -4946,6 +5516,8 @@ def main(argv=None) -> int:
     ap.add_argument("--legacy-run", type=Path, default=None, help="P3: the P2 legacy run")
     ap.add_argument("--station-run", type=Path, default=None, help="P3: the station-weather run")
     ap.add_argument("--p3-run", type=Path, default=None, help="P5: the dated R0 run")
+    ap.add_argument("--eco-pack", type=Path, default=None,
+                    help="P6a: the ecology dev.h5 (default ecology_v2)")
     ap.add_argument("--maps", type=Path, default=None,
                     help="P6a/P6c: prediction maps (default <run>/maps)")
     ap.add_argument("--signed-run", type=Path, default=None,
@@ -4971,7 +5543,7 @@ def main(argv=None) -> int:
     elif args.phase == "P6c":
         extra = {"signed": resolve(args.signed_run), "maps": resolve(args.maps)}
     elif args.phase == "P6a":
-        extra = {"maps": resolve(args.maps)}
+        extra = {"maps": resolve(args.maps), "pack": resolve(args.eco_pack)}
     elif args.phase == "P6d":
         extra = {"snowoff": resolve(args.snowoff)}
     elif args.phase == "P6hs":

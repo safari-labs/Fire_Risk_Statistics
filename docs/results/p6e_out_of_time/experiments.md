@@ -57,9 +57,9 @@ Regime B trains and selects on 2019-2023 and scores 2024, 60 fires and 60 unburn
 | Question (measurement; no hypothesis registered) | How much within-patch skill survives inside a family on 2024? |
 | Varied (independent) | pixels of C, D, M only |
 | Measured (dependent) | within-patch AUC, CV then 2024 |
-| Result | R1: C 0.630, 0.537; D 0.627, 0.596; M 0.593, 0.527. R2: C 0.593, 0.517; D 0.566, 0.570; M 0.564, 0.534. |
+| Result | R0: C 0.522, 0.502; D 0.518, 0.512; M 0.541, 0.496. R1: C 0.630, 0.537; D 0.627, 0.596; M 0.593, 0.527. R2: C 0.593, 0.517; D 0.566, 0.570; M 0.564, 0.534. |
 | Verdict | **MEASURED**: no hypothesis: a measurement or control, reported as found |
-| Conclusion | On an unseen year most within-patch skill is telling fuel types apart, which raises the stakes on E-35. |
+| Conclusion | Physics barely ranks pixels inside a family in any year, and R1's fall there is not the cohort. On an unseen year most within-patch skill is fuel type: the stakes on E-35 rise. |
 
 ## P6e-M3: Regime A on the 2019-2023 folds (measurement): **MEASURED**
 

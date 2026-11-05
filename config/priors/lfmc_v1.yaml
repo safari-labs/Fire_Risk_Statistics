@@ -1,0 +1,70 @@
+# Parameter priors for the LFMC simulations (P6f, E-29, E-64).
+#
+# PLACEHOLDER (A-47). Ranges are uniform and come from general knowledge of
+# PROSPECT/SAIL inversions over forest, not from a cited compilation; every
+# result built on them inherits the label. They are wide on purpose: a
+# retrieval trained on too narrow a prior cannot fail visibly, and the brief
+# asks for priors per fuel type and season, which these do only by fuel group.
+#
+# LFMC IS SAMPLED, NOT DERIVED. Sampling Cw and Cm independently would give
+# LFMC = 100 Cw / Cm from about 12 to 1200 %, mostly impossible. So LFMC and
+# Cm are sampled, and Cw = LFMC x Cm / 100 (g cm-2). The target is then a
+# radiative transfer input, as rule 3 asks.
+#
+# Units: Cab, Car, Cant in ug cm-2; Cw, Cm in g cm-2; LFMC in %; angles in
+# degrees; LAI in m2 m-2. Soil brightness (rsoil) scales prosail's built-in
+# dry/wet soil mixture (psoil = share of the dry spectrum).
+
+name: lfmc_v1
+description: Uniform priors for the simulation-trained LFMC retrieval, conifer and deciduous.
+placeholder: true
+seed: 20261103
+
+# Sobol points per fuel group (a power of two keeps the sequence balanced).
+samples_per_group: 32768
+
+# Sun-view geometry, shared: Sentinel-2 is near nadir; spring overpasses at
+# 45-60 N reach high solar zenith (brief section 4).
+geometry:
+  tts: [25.0, 65.0]
+  tto: [0.0, 10.0]
+  psi: [0.0, 180.0]
+
+groups:
+  conifer:              # jack, red, white and black spruce, balsam fir
+    n: [1.8, 2.8]       # needles are thick; PROSPECT is a broadleaf model (A-47)
+    cab: [20.0, 60.0]
+    car: [4.0, 15.0]
+    cbrown: [0.0, 0.5]
+    ant: [0.0, 2.0]
+    cm: [0.012, 0.040]  # needle LMA 120-400 g m-2
+    lfmc: [60.0, 250.0]
+    lai: [0.5, 6.0]
+    ala: [40.0, 75.0]   # mean leaf inclination
+    hspot: [0.05, 0.5]
+    rsoil: [0.3, 1.2]
+    psoil: [0.0, 1.0]
+  deciduous:            # trembling aspen
+    n: [1.2, 2.0]
+    cab: [15.0, 70.0]
+    car: [3.0, 18.0]
+    cbrown: [0.0, 1.0]
+    ant: [0.0, 4.0]
+    cm: [0.003, 0.012]
+    lfmc: [70.0, 300.0]
+    lai: [0.3, 6.0]
+    ala: [35.0, 65.0]
+    hspot: [0.05, 0.5]
+    rsoil: [0.3, 1.2]
+    psoil: [0.0, 1.0]
+
+# Residual error of a standard atmospheric correction, added as Gaussian noise
+# on top of the sensor model (brief Phase 2): sigma = absolute + relative x rho.
+atmospheric_residual:
+  absolute: 0.005
+  relative: 0.05
+
+# The Sentinel-2 L2A bands the simulations are convolved to. The retrieval
+# uses the ten 10/20 m bands (B1 and B9 are 60 m, and B9 sits in water vapour).
+band_set: sentinel2_p6_12band
+retrieval_bands: [B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12]

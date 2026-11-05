@@ -1,0 +1,145 @@
+{
+ "points": 7194,
+ "starts": 1298,
+ "controls": 5896,
+ "sets": 1298,
+ "season_not_started": 42,
+ "left_out_no_weather": {
+  "points": 0,
+  "sets": 0
+ },
+ "years": [
+  2017,
+  2018,
+  2019,
+  2020,
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "weather_shared": true,
+ "scores": {
+  "p_sf_scanfi": {
+   "matched_auc": 0.5297444786851566,
+   "sets_scored": 1298,
+   "ci": [
+    0.5133342234227973,
+    0.546106328295207
+   ],
+   "pooled_auc": 0.5208966853294809,
+   "unscored_points": 0
+  },
+  "p_sf_cwfis": {
+   "matched_auc": 0.5227535037098104,
+   "sets_scored": 1213,
+   "ci": [
+    0.5064894604294948,
+    0.5389020046702684
+   ],
+   "pooled_auc": 0.5146077210609409,
+   "unscored_points": 473
+  },
+  "ffmc_class": {
+   "matched_auc": 0.5,
+   "sets_scored": 1298,
+   "ci": [
+    0.5,
+    0.5
+   ],
+   "pooled_auc": 0.49651574910152974,
+   "unscored_points": 0
+  }
+ },
+ "design_check_passed": true,
+ "by_category": {
+  "scanfi": {
+   "FC10": {
+    "starts": 281,
+    "controls": 1807,
+    "mean_p": 0.1346425021394004
+   },
+   "FC3": {
+    "starts": 24,
+    "controls": 74,
+    "mean_p": 0.7039100749055237
+   },
+   "FC4": {
+    "starts": 83,
+    "controls": 340,
+    "mean_p": 0.49340203700152363
+   },
+   "FC5": {
+    "starts": 10,
+    "controls": 36,
+    "mean_p": 0.41358262244568383
+   },
+   "FC6": {
+    "starts": 169,
+    "controls": 795,
+    "mean_p": 0.32759481228733867
+   },
+   "FC8": {
+    "starts": 731,
+    "controls": 2844,
+    "mean_p": 0.4970623402371446
+   }
+  },
+  "cwfis": {
+   "none": {
+    "starts": 80,
+    "controls": 393,
+    "mean_p": null
+   },
+   "FC1": {
+    "starts": 5,
+    "controls": 38,
+    "mean_p": 0.7416566800730591
+   },
+   "FC10": {
+    "starts": 125,
+    "controls": 862,
+    "mean_p": 0.11543533439101905
+   },
+   "FC2": {
+    "starts": 37,
+    "controls": 195,
+    "mean_p": 0.7884140818121976
+   },
+   "FC3": {
+    "starts": 56,
+    "controls": 268,
+    "mean_p": 0.6786521519009197
+   },
+   "FC4": {
+    "starts": 178,
+    "controls": 671,
+    "mean_p": 0.5590102378677966
+   },
+   "FC5": {
+    "starts": 144,
+    "controls": 613,
+    "mean_p": 0.49412479469085724
+   },
+   "FC6": {
+    "starts": 235,
+    "controls": 1163,
+    "mean_p": 0.2977524717072546
+   },
+   "FC8": {
+    "starts": 438,
+    "controls": 1693,
+    "mean_p": 0.4543172513848573
+   }
+  }
+ },
+ "config": {
+  "data": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\data\\ignition_v1",
+  "boot": 2000,
+  "seed": 0,
+  "years": null,
+  "window_px": 5,
+  "weather": "c2, lag 1 (D-1, 13:00 LDT)",
+  "model_commit": "0c3aeb08bc7c0a3ae40a22096e3ee40dfb187af4"
+ }
+}

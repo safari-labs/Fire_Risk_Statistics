@@ -6,6 +6,8 @@ Project owner: James (safari-labs). Scientific context, decisions to date and th
 
 @docs/STAGE1_BRIEF.md
 
+The CFFDRS equation chain as implemented, and the table of **where imagery can enter it** (the slots every experiment and P12 refer to), are in `docs/CFFDRS_CHAIN.md`. Keep that table current when a slot's status changes.
+
 ## Methodological rules
 
 These come from the planning discussion (reasons in section 8 of the brief). Do not relax them without asking James.

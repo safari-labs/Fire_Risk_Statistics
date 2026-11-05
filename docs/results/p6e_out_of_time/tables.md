@@ -43,6 +43,7 @@ The all-pixel figure also counts telling one family from another. These count on
 
 | rung | C | D | M |
 |---|---|---|---|
+| R0 | 0.522, 0.502 | 0.518, 0.512 | 0.541, 0.496 |
 | R1 | 0.630, 0.537 | 0.627, 0.596 | 0.593, 0.527 |
 | R2 | 0.593, 0.517 | 0.566, 0.570 | 0.564, 0.534 |
 

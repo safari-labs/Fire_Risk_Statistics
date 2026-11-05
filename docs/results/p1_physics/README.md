@@ -67,3 +67,9 @@ The continuous models exist in the module but refuse to run until their coeffici
 - **Figures:** `scripts/python/plot_fbp_validation.py`.
 
 **Next:** P2, the first result. Compute R0 for every fuel-inventory variant on the sidecars already held, then build the interpretation package for it.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **P1-3** What each slot can move (patch map): [qual_P1_slot_maps.png](qual_P1_slot_maps.png)
+<!-- qual:end -->

@@ -699,6 +699,252 @@ def hs_strips(run: Path, pack_path: Path, out: Path, eid: str) -> list[str]:
     return made
 
 
+# ---- phases without a training run: P0, P1, P8a ----------------------------
+# Fire_Risk_Model/scripts/python/export_qual_views.py reads the rasters and runs
+# the FBP port (physics, nothing trained) into QUAL_VIEWS/qual/*.npz.
+
+QUAL_VIEWS = ROOT / "runs" / "20261103-qual_views"
+FUEL_FAMILIES = ("C", "D", "M", "O", "S")
+
+
+def _code_family(codes: np.ndarray) -> np.ndarray:
+    """CWFIS fuel codes -> 0 none, 1-5 = FUEL_FAMILIES. 1-9 conifer, 10-19
+    deciduous, 20-29 slash, 30-39 grass, 100-199 non-fuel and water, 400+
+    mixedwood (the 2014b, 2019 and 2024 layers share this scheme)."""
+    c = np.asarray(codes)
+    fam = np.zeros(c.shape, np.int8)
+    for k, (lo, hi) in enumerate(((1, 9), (10, 19), (400, 999), (30, 39), (20, 29)), start=1):
+        fam[(c >= lo) & (c <= hi)] = k
+    return fam
+
+
+def _family_cmap():
+    from matplotlib.colors import ListedColormap
+    return ListedColormap([R.AX_BG] + [R.ECO_FAMILY_COL[f] for f in FUEL_FAMILIES])
+
+
+def _family_legend(fig, y=0.06):
+    plt = R._plt()
+    names = {"C": "conifer", "D": "deciduous", "M": "mixedwood", "O": "grass", "S": "slash"}
+    handles = [plt.Rectangle((0, 0), 1, 1, color=R.ECO_FAMILY_COL[f]) for f in FUEL_FAMILIES]
+    handles.append(plt.Rectangle((0, 0), 1, 1, color=R.AX_BG, ec=R.SPINE))
+    leg = fig.legend(handles, [names[f] for f in FUEL_FAMILIES] + ["non-fuel, water"],
+                     loc="lower center", ncol=6, frameon=False, fontsize=8,
+                     bbox_to_anchor=(0.5, y))
+    for t in leg.get_texts():
+        t.set_color(R.INK)
+
+
+def p0_inventory(out: Path):
+    """P0-2 and P0-3: what each fuel inventory shows on ground that burned."""
+    from matplotlib.colors import ListedColormap
+    plt = R._plt()
+    seq, _ = _seq_cmaps()
+    z = np.load(QUAL_VIEWS / "qual" / "p0_inventory.npz")
+    cols = (("rgb", "S2 pre-fire composite"), ("nbac", "NBAC burned"),
+            ("closure_2015", "SCANFI 2015 closure"), ("closure_2020", "SCANFI 2020 closure"),
+            ("closure_2025", "SCANFI 2025 closure"), ("fuel_2019", "CWFIS 2019 fuel"),
+            ("fuel_2024", "CWFIS 2024 fuel"))
+    n = len(z["stems"])
+    fig, axes = plt.subplots(n, len(cols), figsize=(2.05 * len(cols), 2.15 * n),
+                             facecolor=R.FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.1,
+                                                              "top": 0.92, "bottom": 0.13})
+    im = None
+    for i in range(n):
+        for j, (k, lab) in enumerate(cols):
+            ax = axes[i, j]
+            R._blank(ax)
+            a = z[k][i]
+            if k == "rgb":
+                ax.imshow(R._stretch(np.moveaxis(a, -1, 0)), interpolation="nearest")
+            elif k == "nbac":
+                ax.imshow(a, cmap=ListedColormap([R.AX_BG, R.INK_BRIGHT]), vmin=0, vmax=1,
+                          interpolation="nearest")
+            elif k.startswith("closure"):
+                im = ax.imshow(a, cmap=seq, vmin=0, vmax=80, interpolation="nearest")
+            else:
+                ax.imshow(_code_family(a), cmap=_family_cmap(), vmin=0, vmax=5,
+                          interpolation="nearest")
+            if i == 0:
+                ax.set_title(lab, color=R.INK, fontsize=8, loc="left")
+        stem = str(z["stems"][i])
+        axes[i, 0].set_ylabel(f"{stem.split('_')[2]} fire\n{stem.rsplit('_', 2)[0]}\n"
+                              f"{z['burned_share'][i]:.0%} burned", color=R.INK, fontsize=7)
+    a, b = axes[-1, 2].get_position(), axes[-1, 4].get_position()
+    cax = fig.add_axes([a.x0 + 0.005, a.y0 - 0.03, b.x1 - a.x0 - 0.01, 0.008])
+    cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+    cb.set_label("SCANFI crown closure (%)", color=R.INK, fontsize=8)
+    cb.ax.tick_params(colors=R.INK, labelsize=7.5)
+    _family_legend(fig, y=0.02)
+    fig.suptitle("P0  Which inventories already show the fire? One development fire per year",
+                 color=R.INK_BRIGHT, x=0.01, y=0.975, ha="left", fontsize=12)
+    R._caption(fig, "A fire scar in an inventory dated after the fire is leakage: the closure "
+               "drop, or the change of fuel family, inside the white NBAC area. SCANFI 2015 is "
+               "before every fire; 2020 already shows the 2019-2020 fires; 2025 shows all of "
+               "them; CWFIS 2024 has the scars written in (P0-2, P0-3). Fuel codes grouped by "
+               "family. Development fires only.", y=0.0)
+    R._save(fig, out, "qual_P0_inventory_vintage.png")
+
+
+def p1_slots(out: Path):
+    """P1-3: what each FBP slot moves, mapped over one development patch."""
+    from matplotlib.colors import LogNorm, TwoSlopeNorm
+    plt = R._plt()
+    _, div = _seq_cmaps()
+    z = np.load(QUAL_VIEWS / "qual" / "p1_slots.npz")
+    base = z["hfi_base"]
+    burn = base > 0
+    changes = (("hfi_pc0", "percent conifer 0"), ("hfi_pc100", "percent conifer 100"),
+               ("hfi_green", "leaves on (green)"), ("hfi_fmc120", "FMC 120 %"))
+    fig, axes = plt.subplots(1, 3 + len(changes), figsize=(2.3 * (3 + len(changes)), 3.2),
+                             facecolor=R.FIG_BG, gridspec_kw={"wspace": 0.05, "bottom": 0.3})
+    for ax in axes:
+        R._blank(ax)
+    axes[0].imshow(R._stretch(np.moveaxis(z["rgb"][0], -1, 0)), interpolation="nearest")
+    axes[0].set_title("S2 pre-fire composite", color=R.INK, fontsize=8, loc="left")
+    axes[1].imshow(z["family"], cmap=_family_cmap(), vmin=0, vmax=5, interpolation="nearest")
+    axes[1].set_title("fuel (CWFIS 2019)", color=R.INK, fontsize=8, loc="left")
+    hm = axes[2].imshow(np.where(burn, base, np.nan), cmap=_seq_cmaps()[0],
+                        norm=LogNorm(100, 50000), interpolation="nearest")
+    axes[2].set_title("HFI as mapped", color=R.INK, fontsize=8, loc="left")
+    dm = None
+    for ax, (k, lab) in zip(axes[3:], changes, strict=True):
+        d = np.where(burn, np.log10(np.maximum(z[k], 1) / np.maximum(base, 1)), np.nan)
+        dm = ax.imshow(np.clip(d, -1, 1), cmap=div, norm=TwoSlopeNorm(0, -1, 1),
+                       interpolation="nearest")
+        moved = np.nanmean(np.abs(d[burn]) > 0.05)
+        ax.set_title(f"{lab}\n{moved:.0%} of pixels move", color=R.INK, fontsize=8, loc="left")
+    for im, at, lab in ((hm, (2, 2), "HFI (kW/m, log)"),
+                        (dm, (3, len(axes) - 1), "HFI change, log10 (orange = lower)")):
+        a, b = axes[at[0]].get_position(), axes[at[1]].get_position()
+        cax = fig.add_axes([a.x0 + 0.005, a.y0 - 0.06, b.x1 - a.x0 - 0.01, 0.025])
+        cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+        cb.set_label(lab, color=R.INK, fontsize=8)
+        cb.ax.tick_params(colors=R.INK, labelsize=7.5)
+    _family_legend(fig, y=-0.02)
+    ffmc, bui, ws = z["weather"]
+    fig.suptitle(f"P1  What each slot moves: patch {z['stem']}, day {int(z['doy'])}",
+                 color=R.INK_BRIGHT, x=0.01, y=1.02, ha="left", fontsize=12)
+    R._caption(fig, f"The ported FBP equations on a reference high-danger day (FFMC {ffmc:.0f}, "
+               f"BUI {bui:.0f}, wind {ws:.0f} km/h); the patch's own day was calm, and on a "
+               "calm day no slot moves anything. Each change panel moves one slot over the "
+               "whole patch and keeps the rest. Percent conifer moves only mixedwood; leaf "
+               "state only deciduous and mixedwood. FMC 120 % cuts full crowning from 31 % to "
+               "18 % of burnable pixels here, but HFI moves by less than the 12 % (0.05 log10) "
+               "a pixel needs to count as moved. Reconstructed (ours).", y=-0.1)
+    R._save(fig, out, "qual_P1_slot_maps.png")
+
+
+def p8a_progression(out: Path):
+    """E-41: observed day of burning, and FBP ROS against observed daily
+    spread, for the development fires with the most fire-days."""
+    plt = R._plt()
+    seq, _ = _seq_cmaps()
+    z = np.load(QUAL_VIEWS / "qual" / "p8a_progression.npz")
+    ids = [str(x) for x in z["ids"]]
+    fig, axes = plt.subplots(len(ids), 2, figsize=(12, 3.6 * len(ids)), facecolor=R.FIG_BG,
+                             gridspec_kw={"width_ratios": [1, 1.5], "wspace": 0.38,
+                                          "hspace": 0.35, "top": 0.915})
+    for i, fid in enumerate(ids):
+        m, s = axes[i]
+        R._blank(m)
+        dob = z[f"dob_{i}"]
+        x0, x1, y0, y1 = z[f"extent_{i}"]
+        im = m.imshow(dob, cmap=seq, extent=(x0, x1, y0, y1), interpolation="nearest")
+        px0, py0, px1, py1 = z[f"patch_{i}"]
+        m.add_patch(plt.Rectangle((px0, py0), px1 - px0, py1 - py0, fill=False,
+                                  ec=R.AMBER, lw=1.6))
+        m.set_xlim(min(x0, px0) - 2000, max(x1, px1) + 2000)
+        m.set_ylim(min(y0, py0) - 2000, max(y1, py1) + 2000)
+        m.set_title(f"fire {fid}: day of burning (CFSDS)", color=R.INK, fontsize=9, loc="left")
+        cb = fig.colorbar(im, ax=m, fraction=0.04, pad=0.02)
+        cb.set_label("day of year", color=R.INK, fontsize=8)
+        cb.ax.tick_params(colors=R.INK, labelsize=7.5)
+        days, obs, ros = z[f"days_{i}"], z[f"spread_{i}"], z[f"ros_{i}"]
+
+        def pct(v):
+            return (np.argsort(np.argsort(v)) + 0.5) / len(v) * 100
+
+        s.set_facecolor(R.AX_BG)
+        for sp in s.spines.values():
+            sp.set_color(R.SPINE)
+        s.plot(days, pct(obs), color=R.INK_BRIGHT, lw=1.6, marker="o", ms=3,
+               label="observed daily spread (CFSDS)")
+        s.plot(days, pct(ros), color=R.BLUE, lw=1.6, marker="o", ms=3,
+               label="FBP ROS (R0, its own weather)")
+        r = np.corrcoef(pct(obs), pct(ros))[0, 1]
+        s.set_title(f"{len(days)} fire-days, Spearman {r:.2f}", color=R.INK, fontsize=9,
+                    loc="left")
+        s.set_ylabel("percentile within the fire", color=R.INK, fontsize=8)
+        s.set_ylim(0, 100)
+        s.tick_params(colors=R.INK, labelsize=7.5)
+        s.grid(color=R.SPINE, lw=0.5)
+        if i == len(ids) - 1:
+            s.set_xlabel("day of year", color=R.INK, fontsize=8)
+    leg = fig.legend(*axes[0, 1].get_legend_handles_labels(), loc="upper right", ncol=2,
+                     fontsize=8, frameon=False, bbox_to_anchor=(0.9, 0.975))
+    for t in leg.get_texts():
+        t.set_color(R.INK)
+    fig.suptitle("E-41  FBP spread against observed daily progression: the three development "
+                 "fires with the most fire-days", color=R.INK_BRIGHT, x=0.01, y=0.995,
+                 ha="left", fontsize=12)
+    R._caption(fig, "Left: CFSDS day of burning (kriged from hotspots, 90 m); amber box = the "
+               "11.2 km image patch, which is why only 805 of 4,925 fire-days lie on imagery "
+               "(P8a-M1). Right: both series as percentiles within the fire, because ROS is "
+               "per minute and CFSDS spread per day; Spearman ranks the same way. Fire-days "
+               "without weather are left out. Reconstructed (ours).", y=0.0)
+    R._save(fig, out, "qual_E-41_progression.png")
+
+
+def p9_sets(out: Path):
+    """E-44: three matched sets, one per outcome (R0 ranked the start above every
+    control, tied it, ranked it below), each start beside three of its controls."""
+    plt = R._plt()
+    z = np.load(QUAL_VIEWS / "qual" / "p9_sets.npz")
+    cases = [str(c) for c in z["cases"]]
+    rows = list(dict.fromkeys(cases))
+    per = max(cases.count(c) for c in rows)
+    fig, axes = plt.subplots(len(rows), 2 * per, figsize=(1.75 * 2 * per, 2.25 * len(rows)),
+                             facecolor=R.FIG_BG, gridspec_kw={"wspace": 0.04, "hspace": 0.75,
+                                                              "top": 0.84, "bottom": 0.14,
+                                                              "left": 0.01, "right": 0.99})
+    axes = np.atleast_2d(axes)
+    for ax in axes.flat:
+        R._blank(ax)
+    say = {"above": "R0 ranked the start above every control",
+           "tied": "R0 tied the start with every control",
+           "below": "R0 ranked the start below every control"}
+    for i, case in enumerate(rows):
+        idx = [k for k, c in enumerate(cases) if c == case]
+        for j, k in enumerate(idx):
+            a, f = axes[i, 2 * j], axes[i, 2 * j + 1]
+            a.imshow(R._stretch(np.moveaxis(z["rgb"][k], -1, 0)), interpolation="nearest")
+            f.imshow(_code_family(z["fuel"][k]), cmap=_family_cmap(), vmin=0, vmax=5,
+                     interpolation="nearest")
+            h, w = z["fuel"][k].shape
+            for ax in (a, f):
+                ax.add_patch(plt.Rectangle((w // 2 - 2.5, h // 2 - 2.5), 5, 5, fill=False,
+                                           ec=R.AMBER, lw=1.4))
+            kind = str(z["kinds"][k])
+            cat = R.BW_NAMES.get(str(z["cats"][k]), str(z["cats"][k])).replace("\n", " ")
+            head = (f"START, {str(z['stems'][k]).split('_')[2]}" if kind == "start"
+                    else "control")
+            a.set_title(f"{head}\n{cat}, P {z['p'][k]:.2f}",
+                        color=R.INK_BRIGHT if kind == "start" else R.INK, fontsize=7.5, loc="left")
+        fig.text(0.01, axes[i, 0].get_position().y1 + 0.07, say[case], color=R.AMBER,
+                 fontsize=9, ha="left")
+    _family_legend(fig, y=0.03)
+    fig.suptitle("E-44  Lightning starts and their matched controls, as R0 sees them",
+                 color=R.INK_BRIGHT, x=0.01, y=0.975, ha="left", fontsize=12)
+    R._caption(fig, "Each pair of panels: the pre-start Sentinel-2 composite (2.56 km) and the "
+               "SCANFI fuel family from the step before the start; the amber box is the 100 m "
+               "window R0 reads. Controls share the start's day and weather, so only the fuel "
+               "category moves P(sustained flaming) (Beverly & Wotton 2007). Sets chosen by "
+               "outcome, then at random within it (seed 0). Development blocks only. "
+               "Reconstructed (ours).", y=0.0)
+    R._save(fig, out, "qual_E-44_sets.png")
+
+
 # ---- the register of views ------------------------------------------------
 
 SV2, SV3 = SLOTS_V2, SLOTS_V3
@@ -715,6 +961,10 @@ BUILD = {
     "E-18": lambda: e18_map(RESULTS / "p6d_startup"),
     "E-56": lambda: (e56_map(RESULTS / "p6b_cohort"), e56_tiles(RESULTS / "p6b_cohort")),
     "E-63": lambda: e63_map(RESULTS / "p6e_out_of_time"),
+    "P0-3": lambda: p0_inventory(RESULTS / "p0_verify"),
+    "P1-3": lambda: p1_slots(RESULTS / "p1_physics"),
+    "E-41": lambda: p8a_progression(RESULTS / "p8a_spread"),
+    "E-44": lambda: p9_sets(RESULTS / "p9_ignition"),
     "E-22": lambda: (e22_plots_map(EXT_OUT), lidar_tracks(EXT_OUT)),
     "E-36": lambda: slot_tiles(
         SV2, [("r2:pred", "R2"), ("r3_pc:pred", "R3 PC"), ("r3_pc:delta_pc", "PC correction"),
@@ -783,8 +1033,17 @@ QUAL = [
     ("E-22", "p6a_ecology", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
                                       "maps_family.png", "tiles.png"]),
     ("E-59", "p6a_ecology", "none", "NEEDS A JOB: the saved maps use one input mode (raw + "
-     "indices). Maps per mode need cluster refits with predict_eco_maps.py --mode, and "
-     "sweep_eco_maps.sh does not pass --mode yet."),
+     "indices). Maps per mode come with eco_v3 (sweep_eco_maps.sh MODE=raw and MODE=indices), "
+     "and the package draws them from maps_raw and maps_indices."),
+    ("E-22", "p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
+                                         "maps_family.png", "tiles.png"]),
+    ("E-59", "p6a_ecology_v3", "tiles", [f"maps_{t}_{m}.png" for m in ("raw", "indices")
+                                         for t in ("pc", "closure", "height", "family")]),
+    ("E-62", "p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png"]),
+    ("E-61", "p6a_hs_v4", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-62", "p6a_hs_v4", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-22", "p6a_external_labels_v2", "cell map and lidar tracks",
+     ["qual_E-22_plots_map.png", "qual_lidar_tracks.png"]),
     ("E-62", "p6a_ecology", "tiles", ["maps_family.png"]),
     ("E-60", "p6c_snow", "station map", ["series_map.png", "series.png"]),
     ("E-61", "p6a_hs_v3", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
@@ -802,24 +1061,45 @@ QUAL = [
                                                    "qual_E-56_patch_map.png"]),
     ("E-63", "p6e_out_of_time", "patch map", ["qual_E-63_patch_map.png"]),
     ("E-18", "p6d_startup", "patch map", ["qual_E-18_patch_map.png"]),
+    ("E-41", "p8a_spread", "fire progression", ["qual_E-41_progression.png"]),
+    ("E-44", "p9_ignition", "matched sets", ["qual_E-44_sets.png"]),
+    ("P0-3", "p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
+    ("P1-3", "p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
+    ("P5-M1", "p5_slotnet", "existing", ["tiles.png"]),
+    ("P6hs-C1", "p6a_hs_provisional", "existing", ["placement.png"]),
+    ("E-35", "p7e_fuel_slot", "none", "PENDING: eco_v3 is done; needs sweep_eco_fire's "
+     "sidecars and the slot sweep. The runs save fuel_used and fuel_inventory in samples.npz "
+     "for the tiles."),
+    ("E-64", "p6f_lfmc", "site series", ["qual_E-64_series.png", "lfmc_scatter.png"]),
+    ("E-29", "p6f_lfmc", "site series", ["qual_E-64_series.png"]),
+    ("E-45", "p9_ignition", "none", "PENDING: the ignition sweep has not run (A-48). The view "
+     "will be E-44's matched sets with the R4 map and its shuffled twin's."),
 ]
+
+
+def _ref_name(ref: str) -> str:
+    """An experiment's register name, or a phase entry's title (P0-3, P5-M1)."""
+    from safari_bands.experiments import by_id
+    from safari_bands.phases import PHASES
+    try:
+        return by_id(ref).name
+    except KeyError:
+        return next(e.title for p in PHASES for e in p.entries if e.ref == ref)
 
 
 def write_index():
     lines = ["# Qualitative output per experiment", "",
              "Generated by `scripts/make_experiment_qual.py`; do not edit by hand.", "",
              "| Experiment | Name | Folder | View | Files or reason |", "|---|---|---|---|---|"]
-    from safari_bands.experiments import by_id
     for eid, folder, kind, what in QUAL:
         cell = what if isinstance(what, str) else ", ".join(
             f"[{f}]({folder}/{f})" for f in what)
-        lines.append(f"| {eid} | {by_id(eid).name} | [{folder}]({folder}/) | {kind} | {cell} |")
+        lines.append(f"| {eid} | {_ref_name(eid)} | [{folder}]({folder}/) | {kind} | {cell} |")
     INDEX.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
 def write_readmes():
     """One block in each pack's README, replaced on every run."""
-    from safari_bands.experiments import by_id
     for folder in sorted({q[1] for q in QUAL}):
         p = RESULTS / folder / "README.md"
         if not p.exists():
@@ -828,7 +1108,7 @@ def write_readmes():
         for eid, f, kind, what in QUAL:
             if f == folder:
                 cell = what if isinstance(what, str) else ", ".join(f"[{x}]({x})" for x in what)
-                block.append(f"- **{eid}** {by_id(eid).name} ({kind}): {cell}")
+                block.append(f"- **{eid}** {_ref_name(eid)} ({kind}): {cell}")
         block.append(END)
         t = p.read_text(encoding="utf-8")
         body = "\n".join(block)
@@ -841,12 +1121,18 @@ def write_readmes():
 
 
 def main(argv=None) -> int:
+    global LIDAR_RUN, LIDAR_PACK, EXT_OUT
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--only", nargs="*", default=None, help="experiment ids (default: all)")
     ap.add_argument("--hs-run", type=Path, default=HS_RUN)
     ap.add_argument("--hs-pack", type=Path, default=HS_PACK)
     ap.add_argument("--hs-out", type=Path, default=HS_OUT)
+    ap.add_argument("--lidar-run", type=Path, default=LIDAR_RUN, help="E-22: the hs_lidar run")
+    ap.add_argument("--lidar-pack", type=Path, default=LIDAR_PACK, help="E-22: its lidar pack")
+    ap.add_argument("--ext-out", type=Path, default=EXT_OUT, help="E-22: the P6x package folder")
     args = ap.parse_args(argv)
+    LIDAR_RUN, LIDAR_PACK, EXT_OUT = (args.lidar_run.resolve(), args.lidar_pack.resolve(),
+                                      args.ext_out.resolve())
     want = set(args.only) if args.only else {*BUILD, *HS_SETS}
     for eid in sorted(want):
         if eid in HS_SETS:

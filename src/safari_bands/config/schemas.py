@@ -320,3 +320,51 @@ class IndexCatalogue(StrictModel):
             if index.name == name or name in index.aliases:
                 return index
         return None
+
+
+# --- Phase 1 parameter priors ------------------------------------------------
+
+#: The leaf and canopy parameters every fuel group must bound (forward.py).
+PRIOR_PARAMETERS = ("n", "cab", "car", "cbrown", "ant", "cm", "lfmc", "lai", "ala", "hspot",
+                    "rsoil", "psoil")
+GEOMETRY_PARAMETERS = ("tts", "tto", "psi")
+
+
+class AtmosphericResidual(StrictModel):
+    """Residual atmospheric-correction error as noise: sigma = abs + rel x rho."""
+
+    absolute: float = Field(ge=0)
+    relative: float = Field(ge=0)
+
+
+class PriorSet(StrictModel, PlaceholderMixin):
+    """Uniform priors per fuel group for the radiative transfer simulations.
+
+    LFMC and Cm are sampled and Cw derived (Cw = LFMC x Cm / 100), so the
+    target is a radiative transfer input (rule 3).
+    """
+
+    name: str
+    description: str = ""
+    seed: int
+    samples_per_group: int = Field(gt=0)
+    geometry: dict[str, tuple[float, float]]
+    groups: dict[str, dict[str, tuple[float, float]]] = Field(min_length=1)
+    atmospheric_residual: AtmosphericResidual
+    band_set: str
+    retrieval_bands: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _complete_and_ordered(self) -> PriorSet:
+        if set(self.geometry) != set(GEOMETRY_PARAMETERS):
+            raise ValueError(f"geometry must bound exactly {GEOMETRY_PARAMETERS}")
+        for g, ranges in self.groups.items():
+            missing = set(PRIOR_PARAMETERS) - set(ranges)
+            extra = set(ranges) - set(PRIOR_PARAMETERS)
+            if missing or extra:
+                raise ValueError(f"group {g!r}: missing {sorted(missing)}, unknown {sorted(extra)}")
+        for where, ranges in (("geometry", self.geometry), *self.groups.items()):
+            for k, (lo, hi) in ranges.items():
+                if not lo <= hi:
+                    raise ValueError(f"{where}.{k}: lower bound {lo} above upper {hi}")
+        return self

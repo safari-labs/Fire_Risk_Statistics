@@ -75,3 +75,9 @@ The `--time=3:00:00` per fit is a first guess. R0 fits are evaluation only (abou
 - **Curing** uses the FBP default of 80 %, because the CWFIS curing product is not held. E-38 measures a correction to a default, not to the operational product.
 - **Lagged and station configurations** pair their codes with lag-1 ERA5 wind, RH and FMC (A-34).
 - **Nothing here is a finding about imagery.** P5 delivers the instrument; P7 reads it.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **P5-M1** R0 through the network on real data (existing): [tiles.png](tiles.png)
+<!-- qual:end -->

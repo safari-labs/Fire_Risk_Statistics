@@ -48,6 +48,6 @@ Tasks took 47 minutes median (52 max) of the 3 hours requested, with 343–460 f
 ## Qualitative view per experiment
 
 - **E-22** Ecology arm (tiles): [maps_pc.png](maps_pc.png), [maps_closure.png](maps_closure.png), [maps_height.png](maps_height.png), [maps_family.png](maps_family.png), [tiles.png](tiles.png)
-- **E-59** Indices as model inputs (none): NEEDS A JOB: the saved maps use one input mode (raw + indices). Maps per mode need cluster refits with predict_eco_maps.py --mode, and sweep_eco_maps.sh does not pass --mode yet.
+- **E-59** Indices as model inputs (none): NEEDS A JOB: the saved maps use one input mode (raw + indices). Maps per mode come with eco_v3 (sweep_eco_maps.sh MODE=raw and MODE=indices), and the package draws them from maps_raw and maps_indices.
 - **E-62** Best VNIR bands, searched broadly (tiles): [maps_family.png](maps_family.png)
 <!-- qual:end -->
