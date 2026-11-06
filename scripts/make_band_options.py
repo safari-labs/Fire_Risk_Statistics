@@ -136,6 +136,10 @@ def load_hs(run: Path) -> dict:
                         continue
                     out["sets"].setdefault((arm_dir.name, r["set"]), {})[t] = \
                         (float(r["metrics"]["skill_combined"]), list(r["bands"]))
+            rj = d / "result.json"
+            if rj.exists():
+                out.setdefault("pixels", {})[t] = json.loads(
+                    rj.read_text(encoding="utf-8")).get("pixels")
             sj = d / "search.json"
             if sj.exists():
                 for arm, p in json.loads(sj.read_text(encoding="utf-8")).items():
@@ -537,8 +541,12 @@ def commands(s2_rows, hs_rows) -> list[str]:
           "`narval_results/bands_consensus/` (plain copy).", "",
           "## AVIRIS-NG consensus SWIR sets (hs_v4 folds and seeds, references arm)", "",
           "```bash",
-          "ARMS=references GRID=configs/noise/p12_consensus_grid.json EXP_NAME=hs_consensus "
+          "ARMS=references GRID=configs/noise/p12_consensus_grid.json "
+          "SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_consensus "
           "SUBMIT=1 bash scripts/shell/sweep_hs.sh", "```", "",
+          "`SCRATCH_DATA` must be `aviris_v4`, the pack hs_v4 ran on (`sweep_hs.sh` "
+          "defaults to aviris_v2). The combiner rejects any task whose pixel counts "
+          "differ from hs_v4's.", "",
           f"It scores {len(hs_rows)} consensus sets plus three anchors (config_c/VNIR, config_a, "
           "config_c). Copy back to `narval_results/hs_consensus/`.", "",
           "Then: `python scripts/make_band_options.py --eco-rescore narval_results/bands_consensus "
@@ -565,7 +573,16 @@ def main(argv=None) -> int:
         write_grid(hsc)
     rescore = (load_eco_rescore(args.eco_rescore, {r["k"]: r["bands"] for r in s2c})
                if args.eco_rescore else {})
-    hs_rescore = load_hs(args.hs_rescore)["sets"] if args.hs_rescore else {}
+    hs_rescore = {}
+    if args.hs_rescore:
+        rs = load_hs(args.hs_rescore)
+        bad = {t for t, px in rs.get("pixels", {}).items()
+               if px != hs.get("pixels", {}).get(t)}
+        if bad:
+            print(f"  hs re-score: {len(bad)} tasks ran on other pixels than hs_v4 "
+                  f"(wrong pack?), dropped: {sorted(bad)}")
+        hs_rescore = {k: {t: v for t, v in d.items() if t not in bad}
+                      for k, d in rs["sets"].items()}
 
     s2_recs = judge(s2_options(eco, s2c, rescore, info))
     sw_recs = judge(swir_options(hs, hsc, hs_rescore))

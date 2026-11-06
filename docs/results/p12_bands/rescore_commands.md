@@ -20,8 +20,10 @@ Copy back `~/scratch/fw_experiments/bands_consensus/` to `narval_results/bands_c
 ## AVIRIS-NG consensus SWIR sets (hs_v4 folds and seeds, references arm)
 
 ```bash
-ARMS=references GRID=configs/noise/p12_consensus_grid.json EXP_NAME=hs_consensus SUBMIT=1 bash scripts/shell/sweep_hs.sh
+ARMS=references GRID=configs/noise/p12_consensus_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_consensus SUBMIT=1 bash scripts/shell/sweep_hs.sh
 ```
+
+`SCRATCH_DATA` must be `aviris_v4`, the pack hs_v4 ran on (`sweep_hs.sh` defaults to aviris_v2). The combiner rejects any task whose pixel counts differ from hs_v4's.
 
 It scores 8 consensus sets plus three anchors (config_c/VNIR, config_a, config_c). Copy back to `narval_results/hs_consensus/`.
 
