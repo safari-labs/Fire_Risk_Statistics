@@ -1083,8 +1083,8 @@ QUAL = [
      [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
     ("E-62", "P6/p6a_hs_v2_provisional", "line strips",
      [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-61", "P6/p6a_hs_provisional", "none", "Void run: its labels came from the wrong ground (A-40 "
-     "amendment), so a map would only show that error."),
+    ("E-61", "P6/p6a_hs_provisional", "none", "Void run: its labels came from the wrong "
+     "ground (A-40 amendment), so a map would only show that error."),
     ("E-62", "P6/p6a_hs_provisional", "none", "Void run, as E-61 here."),
     ("E-56", "P6/p6b_cohort", "tiles and patch map", ["qual_E-56_cohort_tiles.png",
                                                    "qual_E-56_patch_map.png"]),
