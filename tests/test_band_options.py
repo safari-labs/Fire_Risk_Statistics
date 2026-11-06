@@ -63,3 +63,21 @@ def test_noise_sensitivity_and_stability_are_reported():
     r = assess([_opt("a", VNIR, 0.40, skill_clean=0.45, stable="unstable: searches disagree")])[0]
     assert any("sensitive to noise" in c for c in r["cons"])
     assert "unstable: searches disagree" in r["cons"]
+
+
+def test_consensus_counts_region_slots_and_picks_the_most_chosen_band():
+    from safari_bands.band_options import consensus
+    region = {"B5": "re", "B6": "re", "B7": "re", "B8": "nir", "B8A": "nir",
+              "B4": "red", "B11": "swir1"}.get
+    sets = [["B4", "B5", "B8", "B11"], ["B4", "B6", "B8A", "B11"],
+            ["B4", "B5", "B8", "B8A"], ["B4", "B5", "B6", "B11"],
+            ["B4", "B5", "B8", "B11"], ["B4", "B7", "B8", "B11"]]
+    c = consensus(sets, region, 4, order=["B4", "B8", "B5", "B11", "B6", "B7", "B8A"])
+    # slots: red 6/6, red edge 6/6, nir 5/6, swir1 5/6 (red edge's second slot: 1/6)
+    assert c["bands"] == ["B4", "B8", "B5", "B11"]
+    assert c["min_support"] == 5 and c["need"] == 4 and c["stable"]
+    assert c["exact_matches"] == 2
+    # a second slot in one region is counted only where a search holds two bands there
+    c5 = consensus(sets, region, 5)
+    assert sum(1 for s in c5["slots"] if s["region"] == "nir") == 1
+    assert not consensus(sets, region, 6)["stable"]

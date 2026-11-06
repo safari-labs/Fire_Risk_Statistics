@@ -620,16 +620,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "recommendation -- BUI best, FWI worst. Drift in a "
                    "feature is not loss in a prediction, and this measures "
                    "the half nobody has.",
-        state="NEEDS_PACK",
+        state="PARTIAL",
         runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 "
                "SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags "
                "bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)",
         resources="as the slot sweeps: 35 fits in 2 tasks of 18, --time=2:30:00 "
                   "--gpus=a100:1 --cpus-per-task=12 --mem=32G; each trained fit is scored "
                   "four more times (about +1 min)",
-        blocker="the lagged-weather pack (Fire_Risk_Model data/stage2_fire_cffdrs_v2_lags, "
-                "built 2026-11-05) goes to scratch after the Model and FW code is committed "
-                "and the pack rebuilt for its provenance (A-50)",
+        blocker="the per-code ordering half needs per-code weather arms (not built)",
         gap="G7 CFFDRS assumes same-day observations",
         note="Train once, score at each lag: one model, five scores. The "
              "leakage guard makes an earlier target date strictly safer. P3 "
@@ -643,7 +641,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "stayed at D-1. The pack now carries all 13:00 weather at lags 1, 2, "
              "3 and 7 (no new ERA5 pass: the sidecars held it), run_slots scores one "
              "model at each lag (--score-lags), and r2_age7 trains on weather that "
-             "is all 7 days old.",
+             "is all 7 days old."
+             " lags_v1 2026-11-05 (docs/results/p7d_weather_age, 35/35 fits): between "
+             "patches R2 loses -0.023 [-0.056, +0.012] at 2 days, -0.055 [-0.075, -0.034] "
+             "at 3 and -0.051 [-0.091, -0.011] at 7; R0 HFI -0.044, -0.093, -0.061. Within "
+             "patches flat (<= 0.007). r2_age7 is worse than r2 at every age (within "
+             "-0.018 to -0.022, 5/5 folds). PARTIAL: decay is not flat; the per-code "
+             "ordering half was not run.",
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
@@ -1240,7 +1244,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "12 min of reading per fit)",
         blocker="the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be "
                 "sent to scratch, and the FW commit pulled",
-        note="A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any "
+        note="ignition_v1 partial 2026-11-05 (docs/results/p9b_ignition_rungs, 36/100 "
+             "fits): r1 - r0_scanfi +0.052 [+0.033, +0.072] on 1,292 sets; r2 - r0 +0.056 "
+             "[+0.038, +0.075] on folds 0-3, so prediction 2 fails provisionally; r4, "
+             "r4_shuffled and r2_leaf_ablated not yet in. "
+             "A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any "
              "band claim); epoch chosen on the inner 15 % of training groups (rule 5, confirmed). "
              "Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with "
              "the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within "
@@ -1260,15 +1268,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="the chosen band and index sets, with their margins",
         conclusion="The CubeSat's bands and indices, presented as options with "
                    "pros and cons for James to choose (A-49).",
-        state="NEEDS_CODE",
-        blocker="the combiner (A-49: equal head weights; Sentinel-2 decides VNIR and "
-                "whether SWIR is in, AVIRIS-NG the SWIR centres; Q38: consensus set "
-                "by region, at least 10 of 15 searches, re-scored with "
-                "run_eco_arch.py); E-35 for the fuel-type slot's value",
+        state="RUNNABLE",
+        runner="Statistics scripts/make_band_options.py (consensus, grid, provisional table); "
+               "then on Nibi docs/results/p12_bands/rescore_commands.md (8 sweep_eco_arch "
+               "runs and one sweep_hs references run), then make_band_options.py "
+               "--eco-rescore --hs-rescore",
+        blocker="the consensus re-scores (cluster); E-35 for the fuel-type slot's value",
         note="2026-11-05 (A-49, docs/results/p12_weights): under six head-weighting "
              "schemes the equal-weight search's best set is tied (paired, one SE) "
              "with the overall best under five; only maximin separates them, by "
-             "0.009 +- 0.009. The best sets are 7-8 bands under every scheme.",
+             "0.009 +- 0.009. The best sets are 7-8 bands under every scheme."
+             " Consensus 2026-11-05 (docs/results/p12_bands): Sentinel-2 stable at k=1 (B12) "
+             "and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no "
+             "AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot).",
     ),
     Experiment(
         "E-47", "Architecture decision", "CFFDRS mirror",

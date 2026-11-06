@@ -1,0 +1,718 @@
+{
+ "level": [
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 1,
+   "mean": 0.6708425752689493,
+   "ci": [
+    0.649303951296065,
+    0.6963772329527125
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 2,
+   "mean": 0.6671390879308403,
+   "ci": [
+    0.6461233731643936,
+    0.6925280544295427
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 3,
+   "mean": 0.6670960084401674,
+   "ci": [
+    0.6469741572065384,
+    0.6937294010127271
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 7,
+   "mean": 0.6635452615310341,
+   "ci": [
+    0.6451158620278475,
+    0.691572312447316
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 1,
+   "mean": 0.8581846210706505,
+   "ci": [
+    0.8023646125116712,
+    0.9150759609399316
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 2,
+   "mean": 0.8138498871770932,
+   "ci": [
+    0.7540873015873016,
+    0.8768114884842826
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 3,
+   "mean": 0.7655187908496732,
+   "ci": [
+    0.7013398692810457,
+    0.8336805555555555
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 7,
+   "mean": 0.7973918456271397,
+   "ci": [
+    0.7502941176470588,
+    0.8421121226268286
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 1,
+   "mean": 0.6970240850070065,
+   "ci": [
+    0.6725379355427112,
+    0.7227248195451283
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 2,
+   "mean": 0.6947226176335545,
+   "ci": [
+    0.6699963201923725,
+    0.722054100941727
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 3,
+   "mean": 0.696458505242095,
+   "ci": [
+    0.6673690994404895,
+    0.7255759621849277
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 7,
+   "mean": 0.6967562832437489,
+   "ci": [
+    0.6720062313091665,
+    0.7236487362179697
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 1,
+   "mean": 0.876657426859633,
+   "ci": [
+    0.8380088702147527,
+    0.9154513888888889
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 2,
+   "mean": 0.8540813686585746,
+   "ci": [
+    0.8008889666977904,
+    0.8983891612200434
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 3,
+   "mean": 0.8216129785247434,
+   "ci": [
+    0.7798585434173669,
+    0.8633496732026142
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 7,
+   "mean": 0.8254184497873224,
+   "ci": [
+    0.79590436637618,
+    0.8586688842203547
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 1,
+   "mean": 0.6793785203375147,
+   "ci": [
+    0.6572077957656018,
+    0.703736584787694
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 2,
+   "mean": 0.6740801674473996,
+   "ci": [
+    0.6511135888064552,
+    0.697046746088344
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 3,
+   "mean": 0.6743458302986447,
+   "ci": [
+    0.647520973849118,
+    0.7011706867481716
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 7,
+   "mean": 0.6767160055839067,
+   "ci": [
+    0.6562596098893579,
+    0.7010287290037962
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 1,
+   "mean": 0.8563546853926758,
+   "ci": [
+    0.8096018640094926,
+    0.909551334422658
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 2,
+   "mean": 0.8303261165577341,
+   "ci": [
+    0.7686328976034859,
+    0.8920193355119824
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 3,
+   "mean": 0.7997497147006952,
+   "ci": [
+    0.7397953625894803,
+    0.8597040668119099
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 7,
+   "mean": 0.8201187234152922,
+   "ci": [
+    0.7895533769063181,
+    0.8495657128592178
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  }
+ ],
+ "decay": [
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.0037034873381089906,
+   "ci": [
+    -0.00667602147702615,
+    0.0008917857245539507
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.0037465668287819387,
+   "ci": [
+    -0.0070360559445514555,
+    -0.0009343553782585001
+   ],
+   "n": 5,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "within patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.00729731373791509,
+   "ci": [
+    -0.016477603249191675,
+    -0.0007800458357968499
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.044334733893557424,
+   "ci": [
+    -0.07507002801120448,
+    -0.014808590102707719
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.09266583022097727,
+   "ci": [
+    -0.11296296296296297,
+    -0.07461435963274199
+   ],
+   "n": 5,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only (SCANFI fuel)",
+   "metric": "between patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.060792775443510735,
+   "ci": [
+    -0.13420138888888894,
+    0.01587159342903866
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.0023014673734518933,
+   "ci": [
+    -0.005911638574087985,
+    0.001068555850297496
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.0005655797649115168,
+   "ci": [
+    -0.006642911037606547,
+    0.004303847919668839
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.0002678017632573952,
+   "ci": [
+    -0.0023151813531576988,
+    0.0016624678805064299
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.02257605820105819,
+   "ci": [
+    -0.05608368347338936,
+    0.012038398692810478
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.05504444833488953,
+   "ci": [
+    -0.07450202303143481,
+    -0.033852963060223985
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.05123897707231042,
+   "ci": [
+    -0.09106027596223674,
+    -0.011091658885776559
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.00529835289011494,
+   "ci": [
+    -0.009933754801023069,
+    -0.0007527944952337108
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.005032690038869688,
+   "ci": [
+    -0.012637764233452597,
+    0.000328251375398129
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "within patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.0026625147536079624,
+   "ci": [
+    -0.008372050988532182,
+    0.0017632456274941626
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 2,
+   "vs": "lag 1, same fit",
+   "mean": -0.026028568834941385,
+   "ci": [
+    -0.06547067901234568,
+    0.012942927170868344
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 3,
+   "vs": "lag 1, same fit",
+   "mean": -0.056604970691980484,
+   "ci": [
+    -0.08783409197012138,
+    -0.03047619047619049
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r2_age7",
+   "label": "R2, trained on 7-day-old weather",
+   "metric": "between patches",
+   "lag": 7,
+   "vs": "lag 1, same fit",
+   "mean": -0.036235961977383525,
+   "ci": [
+    -0.08956404320987651,
+    0.021688582840543643
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  }
+ ],
+ "train_stale": [
+  {
+   "metric": "within patches",
+   "lag": 1,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.01764556466949186,
+   "ci": [
+    -0.025601458063892652,
+    -0.00924527666052355
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "metric": "within patches",
+   "lag": 2,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.020642450186154907,
+   "ci": [
+    -0.030205075036472195,
+    -0.009759984954719369
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "metric": "within patches",
+   "lag": 3,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.022112674943450032,
+   "ci": [
+    -0.03352644196570629,
+    -0.009349697114017326
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "metric": "within patches",
+   "lag": 7,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.02004027765984243,
+   "ci": [
+    -0.026830876322064063,
+    -0.010778883914889341
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "metric": "between patches",
+   "lag": 1,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.020302741466957163,
+   "ci": [
+    -0.04978485838779958,
+    -0.003600217864923749
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "metric": "between patches",
+   "lag": 2,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.023755252100840358,
+   "ci": [
+    -0.05470666044195457,
+    0.002773692810457495
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "metric": "between patches",
+   "lag": 3,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.021863263824048122,
+   "ci": [
+    -0.043387540201265666,
+    -0.0034331880900508134
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "metric": "between patches",
+   "lag": 7,
+   "contrast": "r2_age7 minus r2 (same fold and seed)",
+   "mean": -0.005299726372030267,
+   "ci": [
+    -0.027483368347338923,
+    0.017676107480029086
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  }
+ ]
+}

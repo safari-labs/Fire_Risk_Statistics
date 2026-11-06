@@ -1,0 +1,25 @@
+config,label,metric,lag,mean,ci,n,folds_below,n_folds
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",within patches,1,0.6708425752689493,"[0.649303951296065, 0.6963772329527125]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",within patches,2,0.6671390879308403,"[0.6461233731643936, 0.6925280544295427]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",within patches,3,0.6670960084401674,"[0.6469741572065384, 0.6937294010127271]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",within patches,7,0.6635452615310341,"[0.6451158620278475, 0.691572312447316]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",between patches,1,0.8581846210706505,"[0.8023646125116712, 0.9150759609399316]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",between patches,2,0.8138498871770932,"[0.7540873015873016, 0.8768114884842826]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",between patches,3,0.7655187908496732,"[0.7013398692810457, 0.8336805555555555]",5,0,5
+r0_scanfi,"R0 HFI, physics only (SCANFI fuel)",between patches,7,0.7973918456271397,"[0.7502941176470588, 0.8421121226268286]",5,0,5
+r2,"R2, trained on D-1 weather",within patches,1,0.6970240850070065,"[0.6725379355427112, 0.7227248195451283]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,2,0.6947226176335545,"[0.6699963201923725, 0.722054100941727]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,3,0.696458505242095,"[0.6673690994404895, 0.7255759621849277]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,7,0.6967562832437489,"[0.6720062313091665, 0.7236487362179697]",15,0,5
+r2,"R2, trained on D-1 weather",between patches,1,0.876657426859633,"[0.8380088702147527, 0.9154513888888889]",15,0,5
+r2,"R2, trained on D-1 weather",between patches,2,0.8540813686585746,"[0.8008889666977904, 0.8983891612200434]",15,0,5
+r2,"R2, trained on D-1 weather",between patches,3,0.8216129785247434,"[0.7798585434173669, 0.8633496732026142]",15,0,5
+r2,"R2, trained on D-1 weather",between patches,7,0.8254184497873224,"[0.79590436637618, 0.8586688842203547]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",within patches,1,0.6793785203375147,"[0.6572077957656018, 0.703736584787694]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",within patches,2,0.6740801674473996,"[0.6511135888064552, 0.697046746088344]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",within patches,3,0.6743458302986447,"[0.647520973849118, 0.7011706867481716]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",within patches,7,0.6767160055839067,"[0.6562596098893579, 0.7010287290037962]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",between patches,1,0.8563546853926758,"[0.8096018640094926, 0.909551334422658]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",between patches,2,0.8303261165577341,"[0.7686328976034859, 0.8920193355119824]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",between patches,3,0.7997497147006952,"[0.7397953625894803, 0.8597040668119099]",15,0,5
+r2_age7,"R2, trained on 7-day-old weather",between patches,7,0.8201187234152922,"[0.7895533769063181, 0.8495657128592178]",15,0,5

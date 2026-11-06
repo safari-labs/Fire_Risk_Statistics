@@ -36,6 +36,10 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P6a-v3](p6a_ecology_v3/README.md) | 2026-11-04 | Ecology band searches on the corrected family labels (eco_v3) | 1 MEASURED, 1 MIXED, 1 REFUTED, 1 SUPPORTED |
 | [P6f](p6f_lfmc/README.md) | 2026-11-04 | LFMC from Sentinel-2 against FBP's equation (E-64, E-29) | 2 MEASURED, 1 PASS, 1 REFUTED, 1 SUPPORTED |
 | [P9](p9_ignition/README.md) | 2026-11-04 | Stage C: CFFDRS ignition R0 on lightning starts (E-44) | 3 MEASURED, 1 PASS, 1 SUPPORTED |
+| [P12a](p12_bands/README.md) | 2026-11-05 | Band options: the consensus sets (E-46, Q38) | 1 PENDING |
+| [P6f-v2](p6f_reference/README.md) | 2026-11-05 | Fixing the LFMC forward model, step 1: the reference check | 1 PASS, 1 PENDING |
+| [P7d](p7d_weather_age/README.md) | 2026-11-05 | Weather age: one model scored with stale weather (lags_v1) | 1 PARTIAL |
+| [P9b](p9b_ignition_rungs/README.md) | 2026-11-05 | Ignition learned rungs, partial (ignition_v1) | 1 PENDING |
 
 ## Experiments
 
@@ -62,7 +66,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-17 Station-density stratification | Needs code | - | - | - |
 | E-18 Snow-off startup | Runnable now | P6d REFUTED | [p6d_startup](p6d_startup/) | [patch_map](p6d_startup/qual_E-18_patch_map.png) |
 | E-19 Latitude-banded weather | Runnable now | - | - | - |
-| E-20 Weather staleness | Needs a pack | P7 PARTIAL | [p7_slots](p7_slots/) | [staleness](p7_slots/qual_E-20_staleness.png) |
+| E-20 Weather staleness | Partial result | P7 PARTIAL, P7d PARTIAL | [p7_slots](p7_slots/), [p7d_weather_age](p7d_weather_age/) | [staleness](p7_slots/qual_E-20_staleness.png), [trained_stale](p7d_weather_age/qual_E-20_trained_stale.png) |
 | E-21 Fuel-layer refresh | Partial result | P2 AT RISK, P3 AT RISK | [p2_r0](p2_r0/), [p3_dated](p3_dated/) | [inventory_age](p3_dated/qual_E-21_inventory_age.png) |
 | E-22 Ecology arm | Runnable now | P6a SUPPORTED, P6a-v3 SUPPORTED | [p6a_ecology](p6a_ecology/), [p6a_ecology_v3](p6a_ecology_v3/) | - |
 | E-23 SWIR band placement | Needs new data | - | - | - |
@@ -87,8 +91,8 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-42 Spread slot value | Needs a pack | - | - | - |
 | E-43 Date-only control | Partial result | P3 SUPPORTED | [p3_dated](p3_dated/) | - |
 | E-44 Ignition R0 | Partial result | P9 SUPPORTED | [p9_ignition](p9_ignition/) | [sets](p9_ignition/qual_E-44_sets.png) |
-| E-45 Ignition slot value | Runnable now | - | - | - |
-| E-46 Band and index decision | Needs code | - | [p12_weights](p12_weights/) | - |
+| E-45 Ignition slot value | Runnable now | P9b PENDING | [p9b_ignition_rungs](p9b_ignition_rungs/) | [sets_map](p9b_ignition_rungs/qual_E-45_sets_map.png) |
+| E-46 Band and index decision | Runnable now | P12a PENDING | [p12_bands](p12_bands/), [p12_weights](p12_weights/) | [band_placement](p12_bands/qual_E-46_band_placement.png) |
 | E-47 Architecture decision | Runnable now | - | - | - |
 | E-48 Hardware decision | Needs a pack | - | [p12_convert](p12_convert/) | - |
 | E-49 Dating the weather (R0) | Partial result | P3 REFUTED | [p3_dated](p3_dated/) | [weather_date](p3_dated/qual_E-49_weather_date.png) |
@@ -107,4 +111,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-62 Best VNIR bands, searched broadly | Partial result | P6a AT RISK, P6a-HS-prov PENDING, P6a-HS-v2 PENDING, P6a-HS-v3 PARTIAL, P6a-HS-v4 REFUTED, P6a-v3 REFUTED | [p6a_ecology](p6a_ecology/), [p6a_hs_provisional](p6a_hs_provisional/), [p6a_hs_v2_provisional](p6a_hs_v2_provisional/), [p6a_hs_v3](p6a_hs_v3/), [p6a_hs_v4](p6a_hs_v4/), [p6a_ecology_v3](p6a_ecology_v3/) | [closure](p6a_hs_v2_provisional/qual_E-62_closure.png), [family](p6a_hs_v2_provisional/qual_E-62_family.png), [height](p6a_hs_v2_provisional/qual_E-62_height.png), [pc](p6a_hs_v2_provisional/qual_E-62_pc.png), [closure](p6a_hs_v3/qual_E-62_closure.png), [family](p6a_hs_v3/qual_E-62_family.png), [height](p6a_hs_v3/qual_E-62_height.png), [pc](p6a_hs_v3/qual_E-62_pc.png), [closure](p6a_hs_v4/qual_E-62_closure.png), [family](p6a_hs_v4/qual_E-62_family.png), [height](p6a_hs_v4/qual_E-62_height.png), [pc](p6a_hs_v4/qual_E-62_pc.png) |
 | E-63 Out-of-time generalisation, two training regimes | Partial result | P6b PENDING, P6e AT RISK | [p6b_cohort](p6b_cohort/), [p6e_out_of_time](p6e_out_of_time/) | [patch_map](p6e_out_of_time/qual_E-63_patch_map.png) |
 | E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [p6f_lfmc](p6f_lfmc/) | [series](p6f_lfmc/qual_E-64_series.png) |
-| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | - | [p6f_reference](p6f_reference/) | - |
+| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 PENDING | [p6f_reference](p6f_reference/) | - |

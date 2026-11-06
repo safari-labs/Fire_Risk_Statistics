@@ -1,0 +1,232 @@
+{
+ "coverage": {
+  "r0_scanfi": {
+   "fits": 5,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "sets": 1292
+  },
+  "r0_cwfis": {
+   "fits": 5,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "sets": 1292
+  },
+  "r1": {
+   "fits": 15,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "sets": 1292
+  },
+  "r2": {
+   "fits": 10,
+   "folds": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sets": 1057
+  },
+  "r2_cwfis": {
+   "fits": 1,
+   "folds": [
+    0
+   ],
+   "sets": 278
+  }
+ },
+ "levels": [
+  {
+   "config": "r0_scanfi",
+   "label": "R0, SCANFI fuel",
+   "matched_auc": 0.5331567253460947,
+   "ci": [
+    0.5175135641540939,
+    0.54919982427643
+   ],
+   "sets": 1292,
+   "blocks": 394,
+   "fits": 5,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "config": "r0_cwfis",
+   "label": "R0, CWFIS fuel",
+   "matched_auc": 0.5281148521620236,
+   "ci": [
+    0.511727093557419,
+    0.5446455262244398
+   ],
+   "sets": 1292,
+   "blocks": 394,
+   "fits": 5,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "config": "r1",
+   "label": "R1, learned on the CFFDRS inputs",
+   "matched_auc": 0.5855124480145845,
+   "ci": [
+    0.5672320328683428,
+    0.6030585727876369
+   ],
+   "sets": 1292,
+   "blocks": 394,
+   "fits": 15,
+   "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "config": "r2",
+   "label": "R2, physics + residual",
+   "matched_auc": 0.5875830710038475,
+   "ci": [
+    0.5679437590037912,
+    0.6066803546825154
+   ],
+   "sets": 1057,
+   "blocks": 316,
+   "fits": 10,
+   "folds": [
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "config": "r2_cwfis",
+   "label": "R2, CWFIS fuel",
+   "matched_auc": 0.6020408163265306,
+   "ci": [
+    0.5679297159354113,
+    0.6338152651332402
+   ],
+   "sets": 278,
+   "blocks": 79,
+   "fits": 1,
+   "folds": [
+    0
+   ]
+  }
+ ],
+ "contrasts": [
+  {
+   "a": "r1",
+   "b": "r0_scanfi",
+   "d": 0.05235572266848976,
+   "ci": [
+    0.03308630052220984,
+    0.07240956895000407
+   ],
+   "sets": 1292,
+   "blocks": 394,
+   "complete": true
+  },
+  {
+   "a": "r2",
+   "b": "r0_scanfi",
+   "d": 0.05641832808674363,
+   "ci": [
+    0.038244961280551354,
+    0.07494317100431062
+   ],
+   "sets": 1057,
+   "blocks": 316,
+   "complete": false
+  },
+  {
+   "a": "r2",
+   "b": "r1",
+   "d": -0.00020986358866736943,
+   "ci": [
+    -0.014889295174392764,
+    0.014739048745496378
+   ],
+   "sets": 1057,
+   "blocks": 316,
+   "complete": false
+  },
+  {
+   "a": "r2_cwfis",
+   "b": "r0_cwfis",
+   "d": 0.07535321821036112,
+   "ci": [
+    0.03642530893789282,
+    0.1172385669438317
+   ],
+   "sets": 278,
+   "blocks": 79,
+   "complete": false
+  },
+  {
+   "a": "r2_cwfis",
+   "b": "r2",
+   "d": 0.008895866038723166,
+   "ci": [
+    -0.025018923420374026,
+    0.04376264741631344
+   ],
+   "sets": 278,
+   "blocks": 79,
+   "complete": false
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": "r4 beats r4_shuffled, paired CI above 0",
+   "verdict": "PENDING (not in the run yet)"
+  },
+  {
+   "prediction": "r2 within +-0.01 of r0",
+   "verdict": "REFUTED (provisional: fits missing)",
+   "a": "r2",
+   "b": "r0_scanfi",
+   "d": 0.05641832808674363,
+   "ci": [
+    0.038244961280551354,
+    0.07494317100431062
+   ],
+   "sets": 1057,
+   "blocks": 316,
+   "complete": false
+  },
+  {
+   "prediction": "r2_leaf_ablated within +-0.005 of r2",
+   "verdict": "PENDING (not in the run yet)"
+  }
+ ]
+}

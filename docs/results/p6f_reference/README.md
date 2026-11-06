@@ -49,3 +49,9 @@ Tables: [T_reference.csv](T_reference.csv), [summary.json](summary.json). All va
 
 - The reference shares the 4SAIL lineage (Verhoef's equations, Féret's port). It checks the implementation, not whether a turbid medium describes a conifer stand.
 - PROSPECT-PRO (proteins and carbon-based constituents in place of one Cm) is in the R package but not in ours. It is not used here.
+
+<!-- qual:start -->
+## Qualitative view per experiment
+
+- **P6f-C2** Does our forward model reproduce a reference implementation? (spectra): [qual_P6f_spectra.png](qual_P6f_spectra.png)
+<!-- qual:end -->

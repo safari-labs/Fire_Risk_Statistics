@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -114,6 +115,54 @@ def assess(options: list[Option], chains: dict | None = None) -> list[dict]:
                 r["dominated_by"] = b["option"]
                 break
     return out
+
+
+#: Q38 option 1 (James, 2026-11-05): a slot is stable when this share of the
+#: searches supports it (10 of 15, as 4 of 6 was).
+STABLE_SHARE = 2 / 3
+
+
+def consensus(sets: list[list[str]], region_of, k: int, order: list[str] | None = None) -> dict:
+    """The consensus k-band set of several searches, counted by region (Q38).
+
+    A k-band set can hold several bands of one region (B8 and B8A, say), so the
+    unit is a region SLOT: slot n of region r is supported by every search whose
+    set holds at least n bands of r. The k best-supported slots win (ties: lower
+    n, then the region's first appearance in ``order``), and each region is
+    filled with its most-chosen bands. Returns the bands, each slot's support
+    and whether every slot reaches ``STABLE_SHARE`` of the searches.
+    """
+    n = len(sets)
+    order = order or sorted({b for s in sets for b in s})
+    rank = {b: i for i, b in enumerate(order)}
+    counts = [{} for _ in sets]
+    for c, s in zip(counts, sets, strict=True):
+        for b in s:
+            c[region_of(b)] = c.get(region_of(b), 0) + 1
+    regions = sorted({r for c in counts for r in c},
+                     key=lambda r: min(rank.get(b, 1e9) for s in sets for b in s
+                                       if region_of(b) == r))
+    slots = [(r, j, sum(c.get(r, 0) >= j for c in counts))
+             for r in regions for j in range(1, max(c.get(r, 0) for c in counts) + 1)]
+    slots.sort(key=lambda x: (-x[2], x[1], regions.index(x[0])))
+    take = slots[:k]
+    picks = []
+    for r in regions:
+        m = sum(1 for x in take if x[0] == r)
+        if not m:
+            continue
+        votes = {}
+        for s in sets:
+            for b in s:
+                if region_of(b) == r:
+                    votes[b] = votes.get(b, 0) + 1
+        picks += sorted(votes, key=lambda b: (-votes[b], rank.get(b, 1e9)))[:m]
+    need = int(np.ceil(STABLE_SHARE * n - 1e-9))
+    support = [{"region": r, "slot": j, "support": s} for r, j, s in take]
+    return {"bands": sorted(picks, key=lambda b: rank.get(b, 1e9)), "slots": support,
+            "min_support": min((s for _, _, s in take), default=0), "n_searches": n,
+            "stable": all(s >= need for _, _, s in take), "need": need,
+            "exact_matches": sum(sorted(s) == sorted(picks) for s in sets)}
 
 
 def markdown(records: list[dict], placeholder: bool = True) -> list[str]:

@@ -163,6 +163,51 @@ def figure(py, ref, band_rows, out: Path) -> None:
     plt.close(fig)
 
 
+def qual_spectra(p, groups, py, ref, out: Path) -> None:
+    """Qualitative view: three conifer cases (low, middle, high LFMC), our canopy
+    spectrum over the reference's, with their difference."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    con = [i for i, g in enumerate(groups) if g == "conifer"]
+    order = sorted(con, key=lambda i: p["lfmc"][i])
+    pick = [order[0], order[len(order) // 2], order[-1]]
+    fig, axs = plt.subplots(2, 3, figsize=(13, 5.6), facecolor=FIG_BG, sharex=True,
+                            gridspec_kw={"height_ratios": [2.2, 1], "hspace": 0.08})
+    for j, i in enumerate(pick):
+        a, d = axs[0, j], axs[1, j]
+        for ax in (a, d):
+            ax.set_facecolor(AX_BG)
+            for sp in ax.spines.values():
+                sp.set_color(SPINE)
+            ax.tick_params(colors=INK, labelsize=8)
+            ax.grid(True, color=SPINE, lw=0.6, alpha=0.6)
+        a.plot(F.WAVELENGTHS, ref["ours"]["canopy"][i], color=ORANGE, lw=3, alpha=0.7,
+               label="reference (R, 13 leaf-angle classes)")
+        a.plot(F.WAVELENGTHS, py["canopy"][i], color=BLUE, lw=1.2, label="ours (Python, 18)")
+        a.set_title(f"conifer, LFMC {p['lfmc'][i]:.0f} %, LAI {p['lai'][i]:.1f}, "
+                    f"leaf angle {p['ala'][i]:.0f} deg", color=INK_BRIGHT, fontsize=9.5,
+                    loc="left")
+        d.plot(F.WAVELENGTHS, ref["ours"]["canopy"][i] - py["canopy"][i], color=ORANGE, lw=1)
+        d.plot(F.WAVELENGTHS, ref["ours18"]["canopy"][i] - py["canopy"][i], color=BLUE, lw=1)
+        d.axhline(0, color=MUTED, lw=0.8)
+        d.set_xlabel("wavelength (nm)", color=INK, fontsize=9)
+        if j == 0:
+            a.set_ylabel("canopy reflectance", color=INK, fontsize=9)
+            d.set_ylabel("R minus ours", color=INK, fontsize=9)
+            leg = a.legend(frameon=False, fontsize=8, loc="center right")
+            for t in leg.get_texts():
+                t.set_color(INK)
+    fig.suptitle("P6f-v2  Our forward model over the reference, three conifer cases",
+                 color=INK_BRIGHT, x=0.01, y=0.99, ha="left", fontsize=12)
+    fig.text(0.01, -0.01, "Bottom: orange is the reference as released (13 leaf-angle classes) "
+             "minus ours; blue is the reference with our 18 classes minus ours, flat at 1e-15. "
+             "Cases: the lowest, middle and highest LFMC of the conifer draws. Reconstructed "
+             "(ours).", color=MUTED, fontsize=8.5, ha="left", va="top", wrap=True)
+    fig.savefig(out, dpi=150, facecolor=FIG_BG, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--per-group", type=int, default=64)
@@ -207,6 +252,7 @@ def main(argv=None) -> int:
     import pandas as pd
     pd.DataFrame(rows).to_csv(out / "T_reference.csv", index=False, float_format="%.6g")
     figure(py, ref, rows, out / "reference.png")
+    qual_spectra(p, groups, py, ref, out / "qual_P6f_spectra.png")
 
     def worst(tag, keys):
         return {k: float(np.abs(ref[tag][k] - py[k]).max()) for k in keys}

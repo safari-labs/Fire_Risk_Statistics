@@ -5498,6 +5498,291 @@ def p6f(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── P7d: weather age, score-at-lag (E-20, A-50) ─────────────────────────────
+# run_slots.py --score-lags scores each trained fit with ALL its weather k days
+# old (codes, wind, direction, RH); r2_age7 is trained on 7-day-old weather.
+# Lags are fit-level aggregates, so deltas pair within a fit (lag k vs lag 1)
+# or by fold x seed (r2_age7 vs r2), with a bootstrap over the 5 outer folds.
+
+#: R0 is scored per FBP output; HFI (intensity) is the one R2 starts from.
+R0_LAG_OUTPUT = "hfi"
+LAG_CFG = (("r0_scanfi", "R0 HFI, physics only (SCANFI fuel)", AMBER),
+           ("r2", "R2, trained on D-1 weather", BLUE),
+           ("r2_age7", "R2, trained on 7-day-old weather", ORANGE))
+LAGS = ("1", "2", "3", "7")
+LAG_METRICS = (("auc_within_mean", "within patches"), ("auc_between", "between patches"))
+
+
+def _lag_scores(run: Path) -> dict:
+    """{config: {lag: {(fold, seed): score dict}}}."""
+    out: dict = {}
+    for c, _, _ in LAG_CFG:
+        for f in sorted((run / c).glob("f*s*/result.json")):
+            r = json.loads(f.read_text(encoding="utf-8"))
+            for lag, v in (r.get("lag_scores") or {}).items():
+                sc = (v or {}).get("score") or (v or {}).get(R0_LAG_OUTPUT)
+                if sc:
+                    out.setdefault(c, {}).setdefault(lag, {})[(r["fold"], r["seed"])] = sc
+    return out
+
+
+def _lag_stat(d: dict) -> dict:
+    if not d:
+        return {"mean": float("nan"), "ci": [float("nan")] * 2, "n": 0, "folds_below": 0,
+                "n_folds": 0}
+    m, ci, per = _fold_boot(d)
+    return {"mean": m, "ci": list(ci), "n": len(d), "folds_below": int((per < 0).sum()),
+            "n_folds": len(per)}
+
+
+def p7d(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    S = _lag_scores(run)
+    level, delta, train = [], [], []
+    for c, lab, _ in LAG_CFG:
+        for key, mlab in LAG_METRICS:
+            base = {t: s[key] for t, s in S.get(c, {}).get("1", {}).items()}
+            for lag in LAGS:
+                cur = {t: s[key] for t, s in S.get(c, {}).get(lag, {}).items()}
+                level.append({"config": c, "label": lab, "metric": mlab, "lag": int(lag),
+                              **_lag_stat(cur)})
+                if lag != "1":
+                    d = {t: cur[t] - base[t] for t in set(cur) & set(base)}
+                    delta.append({"config": c, "label": lab, "metric": mlab, "lag": int(lag),
+                                  "vs": "lag 1, same fit", **_lag_stat(d)})
+    for key, mlab in LAG_METRICS:
+        for lag in LAGS:
+            a = {t: s[key] for t, s in S.get("r2_age7", {}).get(lag, {}).items()}
+            b = {t: s[key] for t, s in S.get("r2", {}).get(lag, {}).items()}
+            d = {t: a[t] - b[t] for t in set(a) & set(b)}
+            train.append({"metric": mlab, "lag": int(lag),
+                          "contrast": "r2_age7 minus r2 (same fold and seed)", **_lag_stat(d)})
+
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.2), facecolor=FIG_BG)
+    for ax, (_key, mlab) in zip(axes, LAG_METRICS, strict=True):
+        _axes(ax, f"AUC {mlab}", "age of all the weather (days)", "AUC")
+        for i, (c, lab, col) in enumerate(LAG_CFG):
+            rows = [r for r in level if r["config"] == c and r["metric"] == mlab and r["n"]]
+            if not rows:
+                continue
+            x = np.array([r["lag"] for r in rows]) + (i - 1) * 0.06
+            m = np.array([r["mean"] for r in rows])
+            lo = m - np.array([r["ci"][0] for r in rows])
+            hi = np.array([r["ci"][1] for r in rows]) - m
+            ax.errorbar(x, m, yerr=[lo, hi], color=col, marker="o", ms=5, lw=2, capsize=3,
+                        label=f"{lab} ({rows[0]['n']} fits)")
+        ax.set_xticks([1, 2, 3, 7])
+    h, lb = axes[0].get_legend_handles_labels()
+    leg = fig.legend(h, lb, loc="upper center", ncol=3, frameon=False, fontsize=8.5,
+                     bbox_to_anchor=(0.5, 1.06))
+    for t in leg.get_texts():
+        t.set_color(INK)
+    fig.tight_layout()
+    _caption(fig, "E-20. Every fit is trained once and scored with its 13:00 weather (codes, "
+             "wind, direction, RH) 1, 2, 3 and 7 days old; FMC stays at the date. Development "
+             "patches only, test blocks unread. CI: bootstrap over the 5 outer folds, seeds "
+             "averaged within a fold. Reconstructed (ours).", y=-0.03)
+    _save(fig, out, "weather_age.png")
+
+    def row(r):
+        return (f"| {r.get('label', r.get('contrast'))} | {r['metric']} | {r['lag']} | "
+                f"{r['mean']:+.4f} [{r['ci'][0]:+.4f}, {r['ci'][1]:+.4f}] | "
+                f"{r['folds_below']}/{r.get('n_folds', 0)} | {r['n']} |")
+    L = ["# P7d tables: weather age (E-20)\n", f"Run: `{_rel(run)}`. Reconstructed (ours).\n",
+         "## AUC at each weather age\n", "| configuration | metric | lag (days) | AUC [95 % CI] "
+         "| folds below 0 | fits |", "|---|---|---|---|---|---|"]
+    L += [row(r) for r in level]
+    L += ["", "## Decay: lag k minus lag 1, within the same fit\n",
+          "| configuration | metric | lag (days) | change [95 % CI] | folds below 0 | fits |",
+          "|---|---|---|---|---|---|"]
+    L += [row(r) for r in delta]
+    L += ["", "## Training on stale weather: r2_age7 minus r2, same fold and seed\n",
+          "| contrast | metric | scored at lag | difference [95 % CI] | folds below 0 | pairs |",
+          "|---|---|---|---|---|---|"]
+    L += [row(r) for r in train]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_lags.csv", level)
+    _csv(out / "T_decay.csv", delta)
+    _csv(out / "T_train_stale.csv", train)
+    (out / "summary.json").write_text(json.dumps(
+        {"level": level, "decay": delta, "train_stale": train}, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
+# ── P9b: ignition learned rungs (E-45, A-48) ────────────────────────────────
+# Each matched set (a start and up to five controls sharing its weather) is
+# held out in one fold. Matched-set AUC = the share of (start, control) pairs
+# in which the start scores higher, ties half. Configurations pair set by set,
+# seeds averaged per set; CI by bootstrap over the start's 1-degree block.
+
+IGN_CFG = (("r0_scanfi", "R0, SCANFI fuel"), ("r0_cwfis", "R0, CWFIS fuel"),
+           ("r1", "R1, learned on the CFFDRS inputs"), ("r2", "R2, physics + residual"),
+           ("r2_cwfis", "R2, CWFIS fuel"), ("r2_leaf_ablated", "R2, leaf state ablated"),
+           ("r4", "R4, + imagery"), ("r4_shuffled", "R4, imagery shuffled"))
+#: E-45's predictions, registered 2026-11-05 before any fit (A-48).
+IGN_PRED = (("r4", "r4_shuffled", "above", 0.0, "r4 beats r4_shuffled, paired CI above 0"),
+            ("r2", "r0_scanfi", "within", 0.01, "r2 within +-0.01 of r0"),
+            ("r2_leaf_ablated", "r2", "within", 0.005, "r2_leaf_ablated within +-0.005 of r2"))
+IGN_GROUPS = _ROOT.parent / "Fire_Risk_Model" / "data" / "ignition_v1_pack" / "groups.json"
+
+
+def _ign_sets(run: Path) -> tuple[dict, dict]:
+    """{config: {set: (concordant, pairs)}} seeds averaged, and coverage."""
+    out, cov = {}, {}
+    for c, _ in IGN_CFG:
+        per: dict = {}
+        fits = sorted((run / c).glob("f*s*/points.csv"))
+        for f in fits:
+            by: dict = {}
+            for r in _read_csv(f):
+                by.setdefault(r["set"], []).append((int(r["is_start"]), float(r["score"]),
+                                                    r["stem"]))
+            for s, pts in by.items():
+                st = [p for p in pts if p[0] == 1]
+                ct = [p for p in pts if p[0] == 0]
+                if len(st) != 1 or not ct:
+                    continue
+                conc = sum(1.0 if st[0][1] > q[1] else 0.5 if st[0][1] == q[1] else 0.0
+                           for q in ct)
+                per.setdefault(s, {"stem": st[0][2], "v": []})["v"].append((conc, len(ct)))
+        if per:
+            out[c] = {s: (float(np.mean([a for a, _ in d["v"]])), d["v"][0][1], d["stem"])
+                      for s, d in per.items()}
+            folds = sorted({json.loads((f.parent / "result.json").read_text())["fold"]
+                            for f in fits})
+            cov[c] = {"fits": len(fits), "folds": folds, "sets": len(per)}
+    return out, cov
+
+
+def _ign_auc(d: dict, sets) -> float:
+    num = sum(d[s][0] for s in sets)
+    den = sum(d[s][1] for s in sets)
+    return num / den if den else float("nan")
+
+
+def p9b(run: Path, out: Path, n_boot=2000, seed=0):
+    out.mkdir(parents=True, exist_ok=True)
+    S, cov = _ign_sets(run)
+    groups = json.loads(IGN_GROUPS.read_text())["groups"]
+    block_of = {stem: b for b, stems in groups.items() for stem in stems}
+    rng = np.random.default_rng(seed)
+
+    def boot(sets, fn):
+        blocks: dict = {}
+        for s in sets:
+            blocks.setdefault(block_of.get(S_any[s][2], s), []).append(s)
+        keys = list(blocks)
+        reps = []
+        for _ in range(n_boot):
+            pick = [s for b in rng.choice(len(keys), len(keys)) for s in blocks[keys[b]]]
+            reps.append(fn(pick))
+        return list(np.nanpercentile(reps, [2.5, 97.5])), len(keys)
+
+    S_any = next(iter(S.values())) if S else {}
+    levels = []
+    for c, lab in IGN_CFG:
+        if c not in S:
+            continue
+        sets = sorted(S[c])
+        S_any = S[c]
+        ci, nb = boot(sets, lambda p, c=c: _ign_auc(S[c], p))
+        levels.append({"config": c, "label": lab, "matched_auc": _ign_auc(S[c], sets),
+                       "ci": ci, "sets": len(sets), "blocks": nb, **cov[c]})
+
+    def contrast(a, b):
+        if a not in S or b not in S:
+            return None
+        sets = sorted(set(S[a]) & set(S[b]))
+        if not sets:
+            return None
+        nonlocal S_any
+        S_any = S[a]
+        d = _ign_auc(S[a], sets) - _ign_auc(S[b], sets)
+        ci, nb = boot(sets, lambda p: _ign_auc(S[a], p) - _ign_auc(S[b], p))
+        return {"a": a, "b": b, "d": d, "ci": ci, "sets": len(sets), "blocks": nb,
+                "complete": cov[a]["fits"] >= (5 if a.startswith("r0") else 15)
+                and cov[b]["fits"] >= (5 if b.startswith("r0") else 15)}
+
+    pairs = [("r1", "r0_scanfi"), ("r2", "r0_scanfi"), ("r2", "r1"), ("r2_cwfis", "r0_cwfis"),
+             ("r2_cwfis", "r2"), ("r2_leaf_ablated", "r2"), ("r4", "r2"),
+             ("r4", "r4_shuffled"), ("r4_shuffled", "r2")]
+    cons = [x for x in (contrast(a, b) for a, b in pairs) if x]
+    verdicts = []
+    for a, b, kind, tol, text in IGN_PRED:
+        x = next((r for r in cons if r["a"] == a and r["b"] == b), None)
+        if x is None:
+            v = "PENDING (not in the run yet)"
+        elif kind == "above":
+            v = "SUPPORTED" if x["ci"][0] > 0 else "REFUTED" if x["ci"][1] <= 0 else "NOT SHOWN"
+        else:
+            v = ("SUPPORTED" if -tol <= x["ci"][0] and x["ci"][1] <= tol else
+                 "REFUTED" if x["ci"][0] > tol or x["ci"][1] < -tol else "INCONCLUSIVE")
+        if x is not None and not x["complete"] and not v.startswith("PENDING"):
+            v += " (provisional: fits missing)"
+        verdicts.append({"prediction": text, "verdict": v, **(x or {})})
+
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2), facecolor=FIG_BG,
+                             gridspec_kw={"width_ratios": [1, 1.1]})
+    ax = axes[0]
+    _axes(ax, "Starts ranked above their own controls", "matched-set AUC", "")
+    for i, r in enumerate(levels):
+        ax.barh(i, r["matched_auc"] - 0.5, left=0.5, height=0.5,
+                color=AMBER if r["config"].startswith("r0") else BLUE)
+        ax.plot(r["ci"], [i, i], color=INK, lw=1.5)
+        ax.text(r["ci"][1] + 0.004, i, f"{r['matched_auc']:.3f}  ({r['fits']} fits, "
+                f"{r['sets']:,} sets)", va="center", color=INK, fontsize=7.5)
+    ax.axvline(0.5, color=INK, lw=0.8, ls="--")
+    ax.set_yticks(range(len(levels)), [r["label"] for r in levels], color=INK, fontsize=8)
+    ax.set_xlim(0.47, max(0.66, max((r["ci"][1] for r in levels), default=0.6) + 0.07))
+    ax = axes[1]
+    _axes(ax, "Paired differences (same sets)", "difference in matched-set AUC", "")
+    for i, r in enumerate(cons):
+        col = GREEN if r["ci"][0] > 0 else PINK if r["ci"][1] < 0 else MUTED
+        ax.plot(r["ci"], [i, i], color=col, lw=2)
+        ax.plot([r["d"]], [i], "o", color=col, ms=5)
+        ax.text(r["ci"][1] + 0.003, i, f"{r['d']:+.3f}" + ("" if r["complete"] else "  partial"),
+                va="center", color=INK, fontsize=7.5)
+    ax.axvline(0, color=INK, lw=0.8, ls="--")
+    ax.set_yticks(range(len(cons)), [f"{r['a']} - {r['b']}" for r in cons], color=INK,
+                  fontsize=8)
+    fig.tight_layout()
+    _caption(fig, "E-45. NFDB natural-cause starts and up to five controls on the same day "
+             "sharing the start's weather, development blocks only (the ignition freeze is "
+             "unread). Noise-free imagery (A-48). CI: bootstrap over the start's 1-degree "
+             "block. 'partial': a configuration has fewer than its 15 fits (5 for R0). "
+             "Reconstructed (ours).", y=-0.03)
+    _save(fig, out, "ignition_rungs.png")
+
+    L = ["# P9b tables: ignition learned rungs (E-45)\n", f"Run: `{_rel(run)}`. "
+         "Reconstructed (ours).\n", "## Coverage\n",
+         "| configuration | fits | folds | sets scored |", "|---|---|---|---|"]
+    L += [f"| {c} | {cov[c]['fits']} | {', '.join(map(str, cov[c]['folds']))} | "
+          f"{cov[c]['sets']:,} |" for c, _ in IGN_CFG if c in cov]
+    missing = [c for c, _ in IGN_CFG if c not in cov]
+    if missing:
+        L.append(f"\nNot in the run yet: {', '.join(missing)}.")
+    L += ["", "## Matched-set AUC\n", "| configuration | AUC [95 % CI] | sets | blocks |",
+          "|---|---|---|---|"]
+    L += [f"| {r['label']} | {r['matched_auc']:.4f} [{r['ci'][0]:.4f}, {r['ci'][1]:.4f}] | "
+          f"{r['sets']:,} | {r['blocks']} |" for r in levels]
+    L += ["", "## Paired contrasts (sets both hold)\n",
+          "| a - b | difference [95 % CI] | sets | complete |", "|---|---|---|---|"]
+    L += [f"| {r['a']} - {r['b']} | {r['d']:+.4f} [{r['ci'][0]:+.4f}, {r['ci'][1]:+.4f}] | "
+          f"{r['sets']:,} | {'yes' if r['complete'] else 'no'} |" for r in cons]
+    L += ["", "## Registered predictions (2026-11-05, before any fit)\n",
+          "| prediction | verdict |", "|---|---|"]
+    L += [f"| {v['prediction']} | {v['verdict']} |" for v in verdicts]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_rungs.csv", levels)
+    _csv(out / "T_contrasts.csv", cons)
+    (out / "summary.json").write_text(json.dumps(
+        {"coverage": cov, "levels": levels, "contrasts": cons, "predictions": verdicts},
+        indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
           "P6b": (p6b, "p6b_cohort"), "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
@@ -5505,7 +5790,8 @@ PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P6e": (p6e, "p6e_out_of_time"), "P6x": (p6x, "p6a_external_labels"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3"),
           "P7e": (p7e, "p7e_fuel_slot"), "P8a": (p8a, "p8a_spread"),
-          "P9": (p9, "p9_ignition"), "P6f": (p6f, "p6f_lfmc")}
+          "P9": (p9, "p9_ignition"), "P6f": (p6f, "p6f_lfmc"),
+          "P7d": (p7d, "p7d_weather_age"), "P9b": (p9b, "p9b_ignition_rungs")}
 
 
 def main(argv=None) -> int:

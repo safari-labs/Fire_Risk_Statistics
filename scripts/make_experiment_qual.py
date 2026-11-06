@@ -47,6 +47,8 @@ E18_RUN = ROOT / "runs" / "20261030-e18_s2_startup"
 E56_RUN = ROOT / "runs" / "20261101-e56_cohort_2024_qual"
 SLOTS_V2 = ROOT / "narval_results" / "slots_v2" / "7289478"
 SLOTS_V3 = ROOT / "narval_results" / "slots_v3" / "20261026-2121"
+LAGS_V1 = ROOT / "narval_results" / "lags_v1" / "20261105-1625"
+IGN_V1 = ROOT / "narval_results" / "ignition_v1" / "20261105-1625"
 HS_RUN = ROOT / "narval_results" / "hs_v2_provisional" / "20261030-1755"
 HS_PACK = ROOT.parent / "Fire_Risk_Model" / "data" / "aviris_v2" / "dev.npz"
 HS_OUT = RESULTS / "p6a_hs_v2_provisional"
@@ -945,6 +947,24 @@ def p9_sets(out: Path):
     R._save(fig, out, "qual_E-44_sets.png")
 
 
+def p9b_map(out: Path):
+    """E-45: each matched set at its start, coloured by how far learning on the
+    CFFDRS inputs (R1) moved the start above its own controls, against R0."""
+    S, _ = R._ign_sets(IGN_V1)
+    a, b = S["r1"], S["r0_scanfi"]
+    sets = sorted(set(a) & set(b))
+    pos = [{"lon": float(a[s][2].split("_")[0]), "lat": float(a[s][2].split("_")[1])}
+           for s in sets]
+    d = np.array([a[s][0] / a[s][1] - b[s][0] / b[s][1] for s in sets])
+    patch_map(pos, [(d, "share of controls the start outranks: R1 minus R0", "share")], out,
+              "qual_E-45_sets_map.png",
+              "E-45  Where learning on the CFFDRS inputs moves the start above its controls",
+              "Dots sit at the NFDB start (development blocks only; the "
+              "ignition freeze is unread). Red: R1 ranks the start above more of its own "
+              "controls than R0 does. R1 uses no imagery. Reconstructed (ours).",
+              clip=1.0, what="set")
+
+
 # ---- the register of views ------------------------------------------------
 
 SV2, SV3 = SLOTS_V2, SLOTS_V3
@@ -965,6 +985,7 @@ BUILD = {
     "P1-3": lambda: p1_slots(RESULTS / "p1_physics"),
     "E-41": lambda: p8a_progression(RESULTS / "p8a_spread"),
     "E-44": lambda: p9_sets(RESULTS / "p9_ignition"),
+    "E-45": lambda: p9b_map(RESULTS / "p9b_ignition_rungs"),
     "E-22": lambda: (e22_plots_map(EXT_OUT), lidar_tracks(EXT_OUT)),
     "E-36": lambda: slot_tiles(
         SV2, [("r2:pred", "R2"), ("r3_pc:pred", "R3 PC"), ("r3_pc:delta_pc", "PC correction"),
@@ -980,12 +1001,20 @@ BUILD = {
         "The flat blue is real: the correction sits pinned at its +0.7 bound on most tiles (see "
         "corrections.png). The twin's imagery is shuffled, so it learns only that constant.",
         delta_max=0.7, delta_label="correction (log factor)"),
-    "E-20": lambda: slot_tiles(
+    "E-20": lambda: (slot_tiles(
         SV2, [("r2:pred", "R2, 1-day codes"), ("r2_lag7:pred", "R2, 7-day codes"),
               ("r2_lag7:pred-r2:pred", "change in rank")], RESULTS / "p7_slots",
         "qual_E-20_staleness.png", "E-20  Staleness: fresh and week-old codes (seed 0)",
         "Last column: within-tile rank with 7-day codes minus 1-day codes.",
         delta_label="change in percentile"),
+        slot_tiles(
+        LAGS_V1, [("r2:pred", "R2, trained on D-1 weather"),
+                  ("r2_age7:pred", "R2, trained 7 days stale"),
+                  ("r2_age7:pred-r2:pred", "change in rank")], RESULTS / "p7d_weather_age",
+        "qual_E-20_trained_stale.png", "E-20  Training on week-old weather (seed 0)",
+        "Both scored with the weather they were trained on (lag 1 and lag 7). Weather is one "
+        "value per tile, so within a tile only the learned fuel and slot terms move the rank.",
+        delta_label="change in percentile")),
     "E-38": lambda: slot_tiles(
         SV3, [("r2_cwfis:pred", "R2, CWFIS fuel"), ("r3_curing_cwfis:pred", "R3 curing"),
               ("r3_curing_cwfis:delta_curing", "curing correction"),
@@ -1063,6 +1092,10 @@ QUAL = [
     ("E-18", "p6d_startup", "patch map", ["qual_E-18_patch_map.png"]),
     ("E-41", "p8a_spread", "fire progression", ["qual_E-41_progression.png"]),
     ("E-44", "p9_ignition", "matched sets", ["qual_E-44_sets.png"]),
+    ("E-45", "p9b_ignition_rungs", "set map", ["qual_E-45_sets_map.png"]),
+    ("E-20", "p7d_weather_age", "tiles", ["qual_E-20_trained_stale.png"]),
+    ("E-46", "p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
+    ("P6f-C2", "p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
     ("P0-3", "p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
     ("P1-3", "p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
     ("P5-M1", "p5_slotnet", "existing", ["tiles.png"]),

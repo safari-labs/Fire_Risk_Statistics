@@ -1527,6 +1527,16 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - A region counts as stable when it is in at least 10 of 15 searches (two-thirds, as 4 of 6 was). A consensus set whose k-th region falls short is still listed, with the shortfall under "cons".
   - That exact set is re-scored on the same outer folds (`run_eco_arch.py --sizes 8x2`, 5 folds × 3 seeds), so the option table carries its own measured score and paired margin, not an inherited one.
   - Each search's best set stays in the table beside the consensus set, with its per-band counts, so the reader sees both.
+  - **Implementation, fixed 2026-11-05 before any re-score** (`scripts/make_band_options.py`, `band_options.consensus`):
+    - The unit is a region **slot**. A region's n-th slot is supported by the searches whose set holds at least n bands in that region. The k best-supported slots form the set (ties: lower n, then region order). Each region takes its most-chosen bands.
+    - Sentinel-2 regions come from the band roles in `config/bands`. The three red-edge bands are one region, B8 and B8A are NIR, and SWIR1 and SWIR2 stay apart.
+    - AVIRIS-NG SWIR uses 50 nm bins, not the A-40 role windows, which leave out 1000-1550 and 1750-2080 nm where searched bands land.
+    - The consensus is not forced to nest across k; each k's set is re-scored as a fixed set.
+    - Sentinel-2 sets are re-scored with `run_eco_arch.py` at 8x2, on eco_v3's folds, seeds and hyperparameters. AVIRIS-NG sets are re-scored as fixed references through `sweep_hs.sh ARMS=references` with `configs/noise/p12_consensus_grid.json`, which also holds the config_c/VNIR, config_a and config_c anchors.
+    - Ties in the option table are paired (as above). The search-procedure rows stay in the table, labelled as such.
+  - **First counting (docs/results/p12_bands):**
+    - Sentinel-2 consensus sets are stable at k = 1 (B12) and k = 5 (B4, B5, B8A, B11, B12), and reach 6-9 of 15 at the other k.
+    - No AVIRIS-NG SWIR set is stable (4-8 of 15).
 
 **First reading (2026-11-05, `docs/results/p12_weights/`).** All on eco_v3's searched sets, raw + indices, with placeholder noise.
 - **Under five of six schemes, the equal-weight search's best set is tied with the overall best.** The overall best is the percent-conifer search's 8-band set under every scheme except "fuel type first", where it is the equal-weight search's own.

@@ -1448,6 +1448,92 @@ PHASES: tuple[Phase, ...] = (
                              "places by period and neither is read as better."),
         ),
     ),
+    Phase(
+        "P6f-v2", "Fixing the LFMC forward model, step 1: the reference check", "2026-11-05",
+        "p6f_reference", "README.md",
+        "James chose to try to fix the forward model behind E-64's +31 bias (A-51). Step 1 "
+        "checks our PROSPECT-D + 4SAIL against Feret's R packages on 128 cases from the "
+        "lfmc_v1 priors. Step 2, priors narrowed inside each outer fold, is on the cluster "
+        "(E-65).",
+        (
+            Entry("P6f-C2", "check", "PASS",
+                  title="Does our forward model reproduce a reference implementation?",
+                  question="Leaf and canopy reflectance within 1e-4 of Feret's R prospect "
+                           "2.0.1 and prosail 3.2.0, given the same inputs",
+                  independent="implementation (Python prosail 2.0.5, R reference)",
+                  dependent="largest absolute reflectance difference, 400-2500 nm",
+                  result="5e-15 on the leaf and 3e-15 on the canopy once both use the same "
+                         "leaf-angle classes. R's PROSPECT coefficients equal ours. The "
+                         "original 4SAIL's 13 leaf-angle classes against Python's 18 differ "
+                         "by up to 0.0025, at most 0.1 of the atmospheric-residual sigma "
+                         "(about 0.3 LFMC points in B11).",
+                  conclusion="The code is right, so E-64's bias is not an implementation "
+                             "error. The suspects left are the priors (E-65), needles as "
+                             "broadleaves, soil-only backgrounds and the turbid canopy."),
+            Entry("E-65", "experiment", "PENDING",
+                  result="Running on Nibi (lfmc_v2, 3 seeds).",
+                  conclusion="Read against prior_mean_fold, the control a narrowed prior "
+                             "must beat."),
+        ),
+    ),
+    Phase(
+        "P7d", "Weather age: one model scored with stale weather (lags_v1)", "2026-11-05",
+        "p7d_weather_age", "README.md",
+        "E-20 with the rebuilt pack (A-50): every trained fit scored with ALL its 13:00 "
+        "weather 1, 2, 3 and 7 days old, and R2 also trained on 7-day-old weather. "
+        "r0_scanfi, r2, r2_age7: 35 of 35 fits. Every number is our reconstruction.",
+        (
+            Entry("E-20", "experiment", "PARTIAL",
+                  result="Between patches, R2 loses -0.023 [-0.056, +0.012] at 2 days, "
+                         "-0.055 [-0.075, -0.034] at 3 and -0.051 [-0.091, -0.011] at 7; R0 "
+                         "(HFI) -0.044, -0.093 and -0.061. Within patches R2 is flat (at most "
+                         "-0.002). Training on 7-day-old weather is worse at every age, "
+                         "within -0.018 to -0.022 (5/5 folds), and does not recover the "
+                         "loss at 7 days.",
+                  conclusion="Decay is not flat, so a stale product costs skill: from 3 "
+                             "days, about 0.05 AUC between patches. It barely touches the "
+                             "within-patch ranking, which rests on fuel. The per-code "
+                             "ordering half was not run. For P12 (A-41): weather-dependent "
+                             "products belong on the ground with fresh weather; an onboard "
+                             "product would be 1-2 days old, where the loss is not yet "
+                             "resolved."),
+        ),
+    ),
+    Phase(
+        "P9b", "Ignition learned rungs, partial (ignition_v1)", "2026-11-05",
+        "p9b_ignition_rungs", "README.md",
+        "E-45's first fits: 36 of 100 (r0 x2 complete, r1 15/15, r2 10/15 on folds 0-3, "
+        "r2_cwfis 1/15; r2_leaf_ablated, r4 and r4_shuffled not yet in). Matched sets of "
+        "NFDB natural-cause starts and same-day controls, conditional logistic loss, "
+        "noise-free (A-48).",
+        (
+            Entry("E-45", "experiment", "PENDING",
+                  result="Imagery (r4 vs r4_shuffled) not yet in. Registered prediction 2 "
+                         "fails on what has run: r1 - r0 +0.052 [+0.033, +0.072] on all "
+                         "1,292 sets; r2 - r0 +0.056 [+0.038, +0.075] on 1,057 (fold 4 "
+                         "missing); r2 - r1 -0.000.",
+                  conclusion="Learning on the CFFDRS inputs alone (fuel, the SCANFI structure "
+                             "slots, leaf state) lifts ignition ranking from 0.533 to 0.586, "
+                             "so imagery has to beat 0.586, not R0's 0.533. Verdict waits for "
+                             "the complete sweep."),
+        ),
+    ),
+    Phase(
+        "P12a", "Band options: the consensus sets (E-46, Q38)", "2026-11-05",
+        "p12_bands", "README.md",
+        "The 15 searches per k counted by region (Q38 option 1): Sentinel-2 regions by band "
+        "role, AVIRIS-NG SWIR by 50 nm bins. The consensus sets go to the cluster as fixed "
+        "sets; until they return, the option table carries the search scores.",
+        (
+            Entry("E-46", "experiment", "PENDING",
+                  result="Sentinel-2 consensus stable at k=1 (B12, 11 of 15) and k=5 (B4, B5, "
+                         "B8A, B11, B12; weakest region 10 of 15); 6-9 of 15 at the other k. "
+                         "AVIRIS-NG SWIR: no consensus set is stable (weakest 50 nm slot 4-8 "
+                         "of 15).",
+                  conclusion="The re-scores decide which sets enter the option table with a "
+                             "measured score."),
+        ),
+    ),
 )
 
 

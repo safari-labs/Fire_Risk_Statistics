@@ -1,0 +1,664 @@
+{
+ "eco": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Statistics\\narval_results\\eco_v3\\20261102-1959",
+ "hs": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Statistics\\narval_results\\hs_v4\\20261102-1959",
+ "eco_rescore": "None",
+ "hs_rescore": "None",
+ "consensus": [
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 1,
+   "bands": [
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 11
+    }
+   ],
+   "min_support": 11,
+   "n_searches": 15,
+   "stable": true,
+   "need": 10,
+   "exact_matches": 11
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 2,
+   "bands": [
+    "B4",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 11
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 6
+    }
+   ],
+   "min_support": 6,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 2
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 3,
+   "bands": [
+    "B4",
+    "B11",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "swir1",
+     "slot": 1,
+     "support": 8
+    }
+   ],
+   "min_support": 8,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 4
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 4,
+   "bands": [
+    "B4",
+    "B6",
+    "B8A",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 11
+    },
+    {
+     "region": "nir",
+     "slot": 1,
+     "support": 11
+    },
+    {
+     "region": "red edge",
+     "slot": 1,
+     "support": 9
+    }
+   ],
+   "min_support": 9,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 5,
+   "bands": [
+    "B4",
+    "B5",
+    "B8A",
+    "B11",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "red edge",
+     "slot": 1,
+     "support": 15
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "nir",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "swir1",
+     "slot": 1,
+     "support": 10
+    }
+   ],
+   "min_support": 10,
+   "n_searches": 15,
+   "stable": true,
+   "need": 10,
+   "exact_matches": 1
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 6,
+   "bands": [
+    "B4",
+    "B5",
+    "B6",
+    "B8A",
+    "B11",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "red edge",
+     "slot": 1,
+     "support": 15
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 13
+    },
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 13
+    },
+    {
+     "region": "nir",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "swir1",
+     "slot": 1,
+     "support": 11
+    },
+    {
+     "region": "red edge",
+     "slot": 2,
+     "support": 8
+    }
+   ],
+   "min_support": 8,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 3
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 7,
+   "bands": [
+    "B4",
+    "B8",
+    "B5",
+    "B3",
+    "B6",
+    "B11",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "red edge",
+     "slot": 1,
+     "support": 15
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 14
+    },
+    {
+     "region": "nir",
+     "slot": 1,
+     "support": 13
+    },
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 13
+    },
+    {
+     "region": "red edge",
+     "slot": 2,
+     "support": 12
+    },
+    {
+     "region": "swir1",
+     "slot": 1,
+     "support": 11
+    },
+    {
+     "region": "green",
+     "slot": 1,
+     "support": 8
+    }
+   ],
+   "min_support": 8,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0
+  },
+  {
+   "source": "Sentinel-2 (eco_v3)",
+   "arm": "combined",
+   "k": 8,
+   "bands": [
+    "B4",
+    "B8",
+    "B5",
+    "B3",
+    "B6",
+    "B8A",
+    "B11",
+    "B12"
+   ],
+   "slots": [
+    {
+     "region": "nir",
+     "slot": 1,
+     "support": 15
+    },
+    {
+     "region": "red edge",
+     "slot": 1,
+     "support": 15
+    },
+    {
+     "region": "red",
+     "slot": 1,
+     "support": 14
+    },
+    {
+     "region": "swir2",
+     "slot": 1,
+     "support": 13
+    },
+    {
+     "region": "red edge",
+     "slot": 2,
+     "support": 13
+    },
+    {
+     "region": "swir1",
+     "slot": 1,
+     "support": 12
+    },
+    {
+     "region": "green",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "nir",
+     "slot": 2,
+     "support": 9
+    }
+   ],
+   "min_support": 9,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_std",
+   "k": 1,
+   "bands": [
+    "1570/60@std"
+   ],
+   "slots": [
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 5
+    }
+   ],
+   "min_support": 5,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 2,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_std/k1"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_std",
+   "k": 2,
+   "bands": [
+    "1500/20@std",
+    "1570/60@std"
+   ],
+   "slots": [
+    {
+     "region": "1500 nm",
+     "slot": 1,
+     "support": 7
+    },
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 7
+    }
+   ],
+   "min_support": 7,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 1,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_std/k2"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_std",
+   "k": 3,
+   "bands": [
+    "1500/20@std",
+    "1530/20@std",
+    "1630/40@std"
+   ],
+   "slots": [
+    {
+     "region": "1500 nm",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 8
+    },
+    {
+     "region": "1650 nm",
+     "slot": 1,
+     "support": 8
+    }
+   ],
+   "min_support": 8,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_std/k3"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_std",
+   "k": 4,
+   "bands": [
+    "1500/20@std",
+    "1530/20@std",
+    "1580/20@std",
+    "1630/40@std"
+   ],
+   "slots": [
+    {
+     "region": "1500 nm",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "1650 nm",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "1600 nm",
+     "slot": 1,
+     "support": 8
+    }
+   ],
+   "min_support": 8,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_std/k4"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_ext",
+   "k": 1,
+   "bands": [
+    "1580/80@ext"
+   ],
+   "slots": [
+    {
+     "region": "1600 nm",
+     "slot": 1,
+     "support": 4
+    }
+   ],
+   "min_support": 4,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 1,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_ext/k1"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_ext",
+   "k": 2,
+   "bands": [
+    "1580/80@ext",
+    "1990/20@ext"
+   ],
+   "slots": [
+    {
+     "region": "2000 nm",
+     "slot": 1,
+     "support": 5
+    },
+    {
+     "region": "1600 nm",
+     "slot": 1,
+     "support": 4
+    }
+   ],
+   "min_support": 4,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_ext/k2"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_ext",
+   "k": 3,
+   "bands": [
+    "1550/100@ext",
+    "1580/80@ext",
+    "1990/20@ext"
+   ],
+   "slots": [
+    {
+     "region": "2000 nm",
+     "slot": 1,
+     "support": 7
+    },
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 4
+    },
+    {
+     "region": "1600 nm",
+     "slot": 1,
+     "support": 4
+    }
+   ],
+   "min_support": 4,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_ext/k3"
+  },
+  {
+   "source": "AVIRIS-NG (hs_v4)",
+   "arm": "swir_ext",
+   "k": 4,
+   "bands": [
+    "1530/60@ext",
+    "1690/40@ext",
+    "1990/20@ext",
+    "2270/40@ext"
+   ],
+   "slots": [
+    {
+     "region": "2000 nm",
+     "slot": 1,
+     "support": 9
+    },
+    {
+     "region": "1550 nm",
+     "slot": 1,
+     "support": 5
+    },
+    {
+     "region": "1700 nm",
+     "slot": 1,
+     "support": 5
+    },
+    {
+     "region": "2250 nm",
+     "slot": 1,
+     "support": 5
+    }
+   ],
+   "min_support": 5,
+   "n_searches": 15,
+   "stable": false,
+   "need": 10,
+   "exact_matches": 0,
+   "fixed": [
+    "490/40",
+    "560/35",
+    "665/30",
+    "705/20",
+    "740/20",
+    "865/30"
+   ],
+   "set": "consensus/swir_ext/k4"
+  }
+ ],
+ "best_s2": "pc search, k=8",
+ "best_swir": "reference: config_c",
+ "pending": {
+  "s2": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "swir": [
+   "consensus/swir_std/k1",
+   "consensus/swir_std/k2",
+   "consensus/swir_std/k3",
+   "consensus/swir_std/k4",
+   "consensus/swir_ext/k1",
+   "consensus/swir_ext/k2",
+   "consensus/swir_ext/k3",
+   "consensus/swir_ext/k4"
+  ]
+ }
+}

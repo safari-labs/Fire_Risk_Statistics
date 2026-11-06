@@ -35,7 +35,7 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 **Decided (James, 2026-11-05; A-48).** Conditional logistic loss; R2 starts as logit P(sustained flaming); the best epoch is picked on the 15 % inner split of the training groups (rule 5; James asked about the test fold, then confirmed the inner split, A-48); noise-free for now. The three predictions are registered in E-45. The pack was rebuilt at Model `a5d6f49` and bundled as `ignition_v1_pack`.
 
 **Then:**
-1. Send `ignition_v1_pack` to scratch and run `SUBMIT=1 bash scripts/shell/sweep_ignition.sh`.
+1. Running on Nibi. First 36 of 100 fits packaged ([p9b_ignition_rungs](results/p9b_ignition_rungs/README.md)): R1 beats R0 by +0.052, so prediction 2 fails provisionally; the imagery rungs are not in yet. Rerun `make_results_package.py --phase P9b` when the sweep completes.
 2. Write the P9b packager.
    - Paired deltas against r2 and r0, by fold x seed, with a bootstrap over 1-degree blocks.
    - The qualitative view: the E-44 matched sets with the R4 map and the shuffled twin's map.
@@ -58,16 +58,14 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 **Decided 2026-11-05 (A-49).** Every P12 decision is an option table with pros and cons, and James chooses. The four structure heads weigh equally. Sentinel-2 decides VNIR and whether SWIR is in; AVIRIS-NG decides the SWIR centres. The weighting check (`results/p12_weights`) shows the choice barely depends on the weights. Stability clause (Q38): option 1, a consensus set by region, re-scored.
 
 1. **Value map (P11).** Add Stage C's row (E-44 floor, E-45 deltas), the Stage A fuel-slot row (E-35) and E-20's weather-age row. Regenerate `figures/value_map.png`.
-2. **E-46, band and index options (P12).**
-   - Build the combiner. It reads the eco_v3 and hs_v4 searches, builds candidate sets per k (each search's best and the consensus set by region, Q38), and writes the option table with scores, paired margins, band counts, cost, pros and cons.
-   - Each consensus set is re-scored on the cluster: `BANDS=<set> SIZES=8x2 SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh`, about 15 short fits per set.
-   - Red edge: E-62 is refuted on both halves, but every best set carries a 700-760 nm band; it stays with its margin stated.
+2. **E-46, band and index options (P12).** The combiner is built and the consensus sets are counted ([p12_bands](results/p12_bands/README.md)). Sentinel-2 consensus is stable at k = 1 and k = 5; no AVIRIS-NG SWIR consensus is stable. Next, on Nibi, the commands in [rescore_commands.md](results/p12_bands/rescore_commands.md): 8 `sweep_eco_arch.sh` runs and one `sweep_hs.sh` references run. Then `make_band_options.py --eco-rescore ... --hs-rescore ...` writes the option table with every fixed set's own paired score.
 3. **E-47, architecture options.** The hypothesis was restated 2026-11-05, before any result: the onboard model is the ecology estimator. The ladder sweep is built:
    ```bash
    BANDS=<E-46 set> SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh     # 12 sizes x 15 tasks
    ```
    It can run now at a candidate set as a provisional reading. The rungs pair with eco_v3 by fold and seed.
-4. **E-20, weather age** (rebuilt pack, A-50). After the commit, rebuild and bundle `stage2_fire_cffdrs_v2_lags`, transfer it, then:
+4. **E-20, weather age: done** ([p7d_weather_age](results/p7d_weather_age/README.md), PARTIAL). Between patches R2 loses about 0.05 AUC from 3 days; training on stale weather does not help. Weather-dependent products stay on the ground (A-41). The original plan text follows for the record.
+   (Was: E-20, weather age, rebuilt pack, A-50.) After the commit, rebuild and bundle `stage2_fire_cffdrs_v2_lags`, transfer it, then:
    ```bash
    SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7      SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh
    ```
