@@ -1584,3 +1584,30 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **The control that matters:** `prior_mean_fold`, the training stratum's mean LFMC, which carries no spectral information. A narrowed prior pulls predictions toward the middle of the range, which by itself shrinks bias and RMSE. Only beating this control shows the spectra carry LFMC.
 - **No new simulation or transfer.** The cluster's `lfmc_v1` bundle (`s2_pack.npz`, `dev.npz`) is reused. The frozen LFMC test sites stay unread until P10.
 - **Not in step 2:** moss and lichen backgrounds, and a discontinuous canopy (steps 3-4). They are decided after E-65.
+
+## A-52: Dragonfly's published bands and product line (2026-11-06)
+
+**Recorded (James, 2026-11-06, from DFA's product list and band tables).** The vendor catalogue is in `config/vendors/dragonfly.yaml`, verbatim. That file is a record, not a band set, so it sits outside `validate`'s rule-7 check.
+
+- **Product line.** Every family is TRL-9:
+  - Gecko (<1U): snapshot only, swath 80 or 160 km at 500 km.
+  - Mantis (<1U): snapshot; MS 6 bands, 400-1000 nm; HS 96 bands, 470-900 nm; SWIR 4 bands, 1000-1750 nm.
+  - Chameleon (<3U): the same modes as Mantis, with MS at 11 bands, 400-1000 nm.
+  - Caiman (<3U): snapshot, MS 11 bands, 400-1000 nm.
+- **Mantis MS standard bands:** blue 480/69, green 545/70, red 660/60, pan 625/350, NIR1 780/20, NIR2 900/20. DFA builds filter blocks in-house, so alternative bands can be ordered.
+- **Mantis HS:** its 96 bands can be selected in orbit for each imaging session.
+- **Mantis SWIR:** at most 4 of 12 standard filters, L1 1059/67 to L12 1702/87.
+- **Rule 7 against the standard filters** (checked in code):
+  - Forbidden at the FWHM extent: pan (crosses O2-A at 755-772), NIR1 (770-790 nm, 2 nm into O2-A) and L5 1348/64 (water vapour 1330-1490).
+  - Skirt warnings only: L3, L4 and L12.
+- **The standard MS block lacks the bands the searches choose.** It has no red edge (705 or 740) and no narrow NIR (865). Red edge is in every best Sentinel-2 set and leads percent conifer (E-62, eco_v3). `sensor_mantis_vnir6` (490, 560, 665, 705, 740, 865) stays the custom block to ask DFA for.
+- **SWIR filters near 1000 nm:** L1 and L2 (1025-1093 nm) sit near the dichroic crossover A-20 places at about 1000 nm, so their throughput there is unknown.
+- **What this corrects:**
+  - The spreadsheet's "band centres not published" notes, and its 400-900 nm range for Mantis and Chameleon MS (DFA states 400-1000).
+  - Its "roadmap" label for Mantis SWIR, with 14.8 m GSD and an 18 km swath. A-18 and A-20 (confirmed) make Mantis SWIR a mode of the same head, with the same 32 m GSD and 32 km swath as MS, imaging at the same time.
+  - The spreadsheet itself is James's and is left unedited.
+- **Still unknown (Q40):**
+  - the Chameleon and Caiman MS band centres;
+  - whether Chameleon SWIR uses the Mantis filter catalogue;
+  - the GSD and swath of the Chameleon and Caiman variants;
+  - per-band SNR.

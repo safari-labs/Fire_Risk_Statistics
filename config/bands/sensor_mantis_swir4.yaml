@@ -50,9 +50,11 @@
 name: sensor_mantis_swir4
 description: >
   Mantis SWIR, the candidate 4-band SWIR pushbroom mode (1000-1750
-  nm). BAND CENTRES ARE PROVISIONAL SLOTS chosen to respect rule 7 and the
-  InGaAs response edge — the vendor publishes only the envelope, and the
-  placements are what this study is meant to determine.
+  nm). PROVISIONAL SLOTS chosen to respect rule 7 and the InGaAs response
+  edge. DFA has since published its 12 standard filters, 4 of which are
+  fitted (config/vendors/dragonfly.yaml, A-52); the nearest to these slots are
+  L4 1213/83, L6 1557/45, L9 1599/43 and L11 1674/39. E-66 scores the
+  catalogue itself.
 role_in_study: candidate
 swir_content: "4 bands in 1000-1750 nm, centres TBD by this study"
 detector_class: ingaas_std

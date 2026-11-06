@@ -76,3 +76,60 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 
 - **The PROSPECT/4SAIL reference check** (A-47) is still owed before P6f's simulation arm is read as Phase 1 "done".
 - **Stage B.** E-42 needs imagery chips for the CFSDS fire-days off our patches (805 of 4,925 on a patch). Not scheduled; it would need a plan of its own.
+
+## 6. Sensor comparison: what each Dragonfly camera would offer (E-66), plan for approval
+
+**Question (James, 2026-11-06).** For each Dragonfly sensor in the inventory, what retrieval performance would it offer, alone and in combination? The vendor data is in A-52 and `config/vendors/dragonfly.yaml`.
+
+**Approach.** Score every sensor's real band set on AVIRIS-NG, the only data here that covers 400-2500 nm at 5 nm (rule 2). The data is the `aviris_v4` pack with SCANFI labels: percent conifer, closure, height and fuel family. The folds, seeds and noise model are hs_v4's, so every row pairs with hs_v4 and with the other rows, fold by fold.
+- **Fixed sets** go through the `references` arm.
+- **Sets the vendor lets us choose** are searched, nested (rule 1):
+  - the 4 SWIR filters, picked from DFA's catalogue;
+  - the in-orbit HS selection, picked from the 470-900 nm channels.
+
+| Row | Sensor | Bands |
+|---|---|---|
+| 1 | Snapshot RGB (Gecko, Mantis, Chameleon, Caiman) | DFA's blue, green and red (480/69, 545/70, 660/60) as the RGB proxy |
+| 2 | Mantis MS, standard block | as published (Q39), and the rule-7-clean subset 480, 545, 660, 900 |
+| 3 | Mantis MS, custom block | 490, 560, 665, 705, 740, 865 (`sensor_mantis_vnir6`) |
+| 4 | Mantis or Chameleon HS, all channels | the 470-900 nm channels at AVIRIS-NG's 5 nm (about 87; the camera's 96 at 4.5 nm is slightly finer) |
+| 5 | Mantis HS, 6 chosen in orbit | best k <= 6 searched from the 470-900 nm channels |
+| 6 | Chameleon or Caiman MS 11 | **placeholder** until DFA answers Q40: Sentinel-2's ten VNIR bands |
+| 7 | Mantis SWIR alone | best k <= 4 of DFA's 11 rule-7-clean filters (L5 excluded), no VNIR |
+| 8 | Mantis MS custom + SWIR | best k <= 4 DFA filters with row 3 fixed (one head, simultaneous; A-20) |
+| 9 | Mantis MS standard + SWIR | the same with row 2 fixed |
+| 10 | Anchors | config_c/VNIR, config_a, sentinel2_p6_12band, for pairing with hs_v4 |
+
+**Reported per row:**
+- combined skill, and RMSE per head;
+- paired gap to the best row (A-49);
+- the bands chosen;
+- beside each row, unscored: size, mass, power, TRL, GSD and swath (from DFA where stated, else the spreadsheet, labelled).
+
+The result is P12's sensor option table, with pros and cons. Cost never ranks (A-41).
+
+**Not modelled, and stated:**
+- GSD and swath: the pack is at 20 m.
+- Per-band SNR beyond the placeholder model (A-37; the same model for all rows, so the comparison is spectral).
+- Focal-plane misregistration (E-28).
+
+**Proposed predictions** (registered in E-66 once approved):
+1. The custom MS block beats the standard one (paired CI above 0): red edge matters.
+2. MS custom alone beats SWIR alone (paired CI above 0): James's MS-or-SWIR question.
+3. All HS channels are within one paired SE of MS custom: more bands buy little beyond 6 well-placed ones.
+4. MS custom + SWIR beats MS custom alone (CI above 0): the SWIR mode earns its place with DFA's real filters.
+5. RGB scores below every MS row.
+
+**Code (no training locally):**
+- Statistics:
+  - a `config/grids/p12_sensors.yaml` grid;
+  - `hs_grid.py` arms that take an explicit candidate list (DFA's catalogue) instead of a regular grid;
+  - band sets for the DFA standard block and the RGB proxy;
+  - a P12b packager.
+- FW: `run_hs_search.py` accepts the arms the grid names, instead of a fixed list.
+- Tests for each piece.
+- Cluster: one `sweep_hs.sh` run on `aviris_v4`. It is about 75 tasks; the DFA search arms are small (11 candidates), and the HS search is the size of hs_v4's VNIR arm. A lidar-height cross-check on `aviris_lidar_v2` follows for the leading rows.
+
+**Open before running:**
+- Q39: score the standard block as published?
+- Q40: DFA confirmations. Without them, row 6 stays a placeholder and is labelled so.

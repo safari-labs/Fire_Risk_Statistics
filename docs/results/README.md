@@ -43,7 +43,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 
 ## Experiments
 
-36 of 65 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+36 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -111,4 +111,5 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-62 Best VNIR bands, searched broadly | Partial result | P6a AT RISK, P6a-HS-prov PENDING, P6a-HS-v2 PENDING, P6a-HS-v3 PARTIAL, P6a-HS-v4 REFUTED, P6a-v3 REFUTED | [p6a_ecology](p6a_ecology/), [p6a_hs_provisional](p6a_hs_provisional/), [p6a_hs_v2_provisional](p6a_hs_v2_provisional/), [p6a_hs_v3](p6a_hs_v3/), [p6a_hs_v4](p6a_hs_v4/), [p6a_ecology_v3](p6a_ecology_v3/) | [closure](p6a_hs_v2_provisional/qual_E-62_closure.png), [family](p6a_hs_v2_provisional/qual_E-62_family.png), [height](p6a_hs_v2_provisional/qual_E-62_height.png), [pc](p6a_hs_v2_provisional/qual_E-62_pc.png), [closure](p6a_hs_v3/qual_E-62_closure.png), [family](p6a_hs_v3/qual_E-62_family.png), [height](p6a_hs_v3/qual_E-62_height.png), [pc](p6a_hs_v3/qual_E-62_pc.png), [closure](p6a_hs_v4/qual_E-62_closure.png), [family](p6a_hs_v4/qual_E-62_family.png), [height](p6a_hs_v4/qual_E-62_height.png), [pc](p6a_hs_v4/qual_E-62_pc.png) |
 | E-63 Out-of-time generalisation, two training regimes | Partial result | P6b PENDING, P6e AT RISK | [p6b_cohort](p6b_cohort/), [p6e_out_of_time](p6e_out_of_time/) | [patch_map](p6e_out_of_time/qual_E-63_patch_map.png) |
 | E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [p6f_lfmc](p6f_lfmc/) | [series](p6f_lfmc/qual_E-64_series.png) |
+| E-66 What each Dragonfly sensor would offer | Needs code | - | - | - |
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 PENDING | [p6f_reference](p6f_reference/) | - |

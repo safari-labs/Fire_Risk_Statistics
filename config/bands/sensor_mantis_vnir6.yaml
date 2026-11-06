@@ -38,10 +38,11 @@
 
 name: sensor_mantis_vnir6
 description: >
-  Dragonfly Mantis, the candidate 6-band VNIR pushbroom (400-1000 nm). BAND
-  CENTRES ARE PROVISIONAL SLOTS — the vendor publishes only the envelope and
-  the count. Choosing the six from the ten Sentinel-2 bands in this range is
-  the part of the study answerable with data already in hand.
+  Dragonfly Mantis, the candidate 6-band VNIR pushbroom (400-1000 nm). A
+  CUSTOM filter block to request from DFA, not DFA's standard one: DFA's
+  standard bands (480, 545, 660, pan 625/350, 780, 900; config/vendors/
+  dragonfly.yaml, A-52) carry no red edge and no 865 nm, which every best
+  Sentinel-2 set holds. DFA builds blocks in-house, so this set is orderable.
 role_in_study: candidate
 swir_content: "none - VNIR only"
 detector_class: silicon_cmos

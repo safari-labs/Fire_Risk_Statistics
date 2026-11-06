@@ -1,0 +1,88 @@
+# Dragonfly Aerospace (DFA) CubeSat imagers: what the vendor states.
+#
+# Source: DFA's product list and band tables, sent to James and recorded
+# 2026-11-06 (two screenshots in the session; A-52). This file is the vendor's
+# catalogue VERBATIM, not a band set: config/bands/ holds the band sets the
+# study scores, which must pass rule 7. Filters here that overlap a forbidden
+# atmospheric region are kept as published and flagged under rule7 below.
+#
+# Not stated by DFA (still assumptions, in CubeSat_Sensors_and_Lenses.xlsx and
+# the band sets): GSD and swath of the MS/HS/SWIR variants, power, mass, the
+# Chameleon and Caiman MS band centres, and whether Chameleon SWIR uses the
+# Mantis SWIR filter catalogue.
+
+vendor: Dragonfly Aerospace
+recorded: 2026-11-06
+source: "DFA product list and band tables (screenshots from James, 2026-11-06)"
+
+products:
+  Gecko:
+    size: "<1U"
+    trl: 9
+    variants:
+      - {type: snapshot, bands: "RGB or monochrome",
+         swath_km_at_500km: {standard: 80, wide: 160}}
+  Mantis:
+    size: "<1U"
+    trl: 9
+    variants:
+      - {type: snapshot, bands: "RGB or monochrome"}
+      - {type: pushbroom, kind: multispectral, n_bands: 6, range_nm: [400, 1000]}
+      - {type: pushbroom, kind: hyperspectral, n_bands: 96, range_nm: [470, 900],
+         note: "bands selectable in orbit per imaging session"}
+      - {type: pushbroom, kind: swir, n_bands: 4, range_nm: [1000, 1750],
+         note: "4 chosen from the standard SWIR filter catalogue below"}
+  Chameleon:
+    size: "<3U"
+    trl: 9
+    variants:
+      - {type: snapshot, bands: "RGB or monochrome"}
+      - {type: pushbroom, kind: multispectral, n_bands: 11, range_nm: [400, 1000]}
+      - {type: pushbroom, kind: hyperspectral, n_bands: 96, range_nm: [470, 900]}
+      - {type: pushbroom, kind: swir, n_bands: 4, range_nm: [1000, 1750]}
+  Caiman:
+    size: "<3U"
+    trl: 9
+    variants:
+      - {type: snapshot, bands: "RGB or monochrome"}
+      - {type: pushbroom, kind: multispectral, n_bands: 11, range_nm: [400, 1000]}
+
+# Mantis MS: DFA's six standard bands. "Should alternative bands be required,
+# please let us know as we build these filter blocks in-house."
+mantis_ms_standard_bands:
+  custom_filters_available: true
+  bands:
+    - {name: blue,  centre_nm: 480, fwhm_nm: 69}
+    - {name: green, centre_nm: 545, fwhm_nm: 70}
+    - {name: red,   centre_nm: 660, fwhm_nm: 60}
+    - {name: pan,   centre_nm: 625, fwhm_nm: 350}
+    - {name: nir1,  centre_nm: 780, fwhm_nm: 20}
+    - {name: nir2,  centre_nm: 900, fwhm_nm: 20}
+
+# Mantis SWIR: DFA's standard filters, from which at most 4 are fitted.
+mantis_swir_filter_catalogue:
+  max_selected: 4
+  range_nm: [1000, 1750]
+  filters:
+    - {name: L1,  centre_nm: 1059, fwhm_nm: 67}
+    - {name: L2,  centre_nm: 1068, fwhm_nm: 49}
+    - {name: L3,  centre_nm: 1192, fwhm_nm: 82}
+    - {name: L4,  centre_nm: 1213, fwhm_nm: 83}
+    - {name: L5,  centre_nm: 1348, fwhm_nm: 64}
+    - {name: L6,  centre_nm: 1557, fwhm_nm: 45}
+    - {name: L7,  centre_nm: 1575, fwhm_nm: 74}
+    - {name: L8,  centre_nm: 1591, fwhm_nm: 39}
+    - {name: L9,  centre_nm: 1599, fwhm_nm: 43}
+    - {name: L10, centre_nm: 1596, fwhm_nm: 69}
+    - {name: L11, centre_nm: 1674, fwhm_nm: 39}
+    - {name: L12, centre_nm: 1702, fwhm_nm: 87}
+
+# Rule 7 (config/atmospheric_windows.yaml) at the FWHM extent, checked 2026-11-06.
+rule7:
+  pan:  "450-800 nm crosses o2_a_band 755-772: forbidden at the FWHM extent"
+  nir1: "770-790 nm reaches 2 nm into o2_a_band 755-772 (the B7 precedent moved the
+         edge to 772 for 773-793; 780/20 still overlaps): forbidden as configured"
+  L5:   "1316-1380 nm overlaps water_vapour_1400 1330-1490: forbidden"
+  skirt_warnings: "L3, L4 (o2_1270) and L12 (water_vapour_1900) reach a forbidden region
+                   only at 2x FWHM: a warning, as for Sentinel-2's own SWIR bands"
+  others: "clear of every forbidden region at 2x FWHM"

@@ -920,3 +920,39 @@ Options 1 and 4 combine naturally: a background mapping mode plus tasked targets
    - *Con:* split-to-split luck is no longer checked at all.
 
 **Answer (James, 2026-11-05):** option 1. Consensus set counted by region, each region in at least 10 of 15 searches, the most-chosen band within each region, then the exact set re-scored on the outer folds. Recorded in A-49.
+
+---
+
+### Q39 — Score DFA's standard Mantis bands as published, though two break rule 7?
+
+**Status:** OPEN (raised 2026-11-06, for E-66)
+**Blocks:** whether E-66 scores the vendor's standard MS block with all six bands.
+
+DFA's pan (625/350, 450-800 nm) crosses the O2-A band, and NIR1 (780/20, 770-790 nm) reaches 2 nm into it. Rule 7 makes both errors in a band set (`validate`), and rule 7 is not relaxed without asking.
+
+**Options:**
+1. **Score the standard block as published, marked as a vendor product, alongside its rule-7-clean subset** *(recommended)*.
+   - *Pro:* E-66 then says what the camera DFA ships actually offers.
+   - *Con:* the vendor set needs a labelled exception, since it is an evaluation of an existing product, not a band design.
+2. **Clean subset only** (480, 545, 660, 900).
+   - *Pro:* no exception.
+   - *Con:* it under-rates the shipped camera.
+3. **Move the O2-A edge again**, as was done for B7 (783/20).
+   - *Con:* 780/20 needs 770, and the O2-A lines run to about 771. The edge would then sit inside the feature.
+
+**Answer:**
+
+---
+
+### Q40 — What to ask Dragonfly to confirm
+
+**Status:** OPEN (raised 2026-11-06)
+**Blocks:** the Chameleon and Caiman arms of E-66 (they use placeholder bands until answered), and the hardware columns of P12's option table.
+
+1. **Band centres and widths of the Chameleon and Caiman MS blocks** (11 bands, 400-1000 nm). Are custom blocks possible, as for Mantis?
+2. **Does Chameleon SWIR use the same 12-filter catalogue as Mantis SWIR?**
+3. **GSD, swath and per-band SNR** (or the radiometric model) for each MS, HS and SWIR variant at 500 km.
+4. **SWIR throughput near the dichroic crossover (~1000 nm):** are L1 and L2 (1059 and 1068 nm) usable at full response?
+5. **Can a custom 6-band MS block carry 490, 560, 665, 705, 740 and 865 nm?** That is the set the band searches point to (A-52).
+
+**Answer:**

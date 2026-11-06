@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-65 experiments. **52 can run today** on data already packed and staged.
+66 experiments. **52 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -18,7 +18,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 |---|---|---|---|
 | **Runnable now** | 29 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-29, E-34, E-35, E-36, E-37, E-38, E-45, E-46, E-47, E-55, E-57, E-58, E-59, E-60, E-64, E-65 |
 | **Partial result** | 23 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-20, E-21, E-32, E-33, E-41, E-43, E-44, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
-| **Needs code** | 3 | no new data; a runner or a flag has to be written | E-17, E-39, E-40 |
+| **Needs code** | 4 | no new data; a runner or a flag has to be written | E-17, E-39, E-40, E-66 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
 | **Needs new data** | 4 | free to obtain, not yet held | E-9, E-23, E-24, E-25 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -128,6 +128,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-27** | Cost per input channel | BRAM scales roughly linearly with input channel count, so 96 channels are infeasible on the target part and 11 are affordable. Stream BRAM is ceil(width/18) x ceil(depth/1024) and width never stops paying. WRONG IF scaling is sub-linear because the first convolution dominates, which would make a wide input cheaper than the marginal-cost argument assumes. | input channel count: 3 / 6 / 10 / 11 / 96 | BRAM, DSP, LUT and latency from a real conversion | Runnable now | `sweep_architecture.py --widths` |
 | **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `sweep_axes.sh SETS=shift` |
 | **E-48** | Hardware decision | The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does. | board (Q7, Q8, Q9) x model x input channels | BRAM / DSP / LUT, latency, power (A-29) | Needs a pack | *none yet* |
+| **E-66** | What each Dragonfly sensor would offer | PROPOSED 2026-11-06, to be registered on James's approval (PLAN_NEXT section 6). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set. | sensor band set: RGB, Mantis MS standard and custom, HS (all; 6 chosen), Chameleon/Caiman MS 11 (placeholder), Mantis SWIR (4 of 12 DFA filters), MS + SWIR | combined skill and RMSE per head on SCANFI labels, paired by fold and seed with hs_v4; lidar height for the leading rows | Needs code | `Fire_Risk_FW ARMS=... GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 bash scripts/shell/sweep_hs.sh (after the code in PLAN_NEXT section 6)` |
 
 ### Out of reach
 
@@ -738,6 +739,16 @@ The onboard hardware.
 *Note:* Conversion pre-check 2026-11-05 (docs/results/p12_convert), untrained P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but only 4x1 at tile 16-32 comes near the Q8 (84-91 % BRAM; 8x2 258 %). DPU (Q8): every rung is one DPU subgraph, only fix2float on the CPU, at most 0.28 s per scene at peak. FINN (estimate only, BRAM a floor with FIFOs unsized): all 24 builds convert; 23 fit the Q8 and 20 the Q7 at <= 80 %, and base_ch 4-16 meet 43 s at minimal folding (8x2 W4A4: 24 % of the Q7, 8.6 s). Next: FIFO sizing (Vivado on Linux) before the Q7 is an option. The index front end divides and is in none of these graphs.
 
 *Blocked on:* E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 from 91 s; then lowest power)
+
+**E-66 — What each Dragonfly sensor would offer**
+
+*Hypothesis:* PROPOSED 2026-11-06, to be registered on James's approval (PLAN_NEXT section 6). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set.
+
+P12's sensor option table: what each camera DFA sells would deliver, with size, power, TRL, GSD and swath beside it (A-41: cost never ranks).
+
+*Note:* Vendor data in config/vendors/dragonfly.yaml (A-52). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled.
+
+*Blocked on:* James's approval of the plan; Q39 (standard block as published) and Q40 (Chameleon and Caiman bands) before rows 2 and 6 are final
 
 ### Out of reach
 
