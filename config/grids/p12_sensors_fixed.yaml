@@ -1,0 +1,42 @@
+# E-66 follow-up: DFA SWIR filters scored as FIXED sets with each MS block
+# (sensors_v1 searched them per fold, and search noise cost about as much as
+# SWIR gained: p12_sensors). Same pack, folds and seeds as hs_v4 and
+# sensors_v1, so every row pairs with both.
+# Export: safari-bands hs-grid --grid p12_sensors_fixed
+#           --json ../Fire_Risk_FW/configs/noise/p12_sensors_fixed_grid.json
+
+name: p12_sensors_fixed
+step_nm: 10.0
+arms: {}
+
+references:
+  # Anchors already scored in hs_v4 and sensors_v1.
+  - sensor_mantis_vnir6
+  - sensor_mantis_ms_plus_swir
+  - {name: dfa_ms_standard, vendor: dragonfly, list: mantis_ms_standard_bands,
+     detector: silicon_cmos,
+     rule7_exception: "Q39 (James, 2026-11-06): scored as published"}
+  # DFA's nearest filters to the configured slots 1240, 1550, 1610, 1680
+  # (the best standard-InGaAs set in p12_bands): L4, L6, L9, L11.
+  - {name: dfa_custom_nearest, vendor: dragonfly, list: mantis_swir_filter_catalogue,
+     include: [L4, L6, L9, L11], detector: ingaas_std, with: [sensor_mantis_vnir6]}
+  - {name: dfa_standard_nearest, vendor: dragonfly, list: mantis_swir_filter_catalogue,
+     include: [L4, L6, L9, L11], detector: ingaas_std, with: [dfa_ms_standard]}
+  # The sensors_v1 consensus on the custom block, counted by 50 nm bin (Q38):
+  # ~1550 (L6, 10 of 15), ~1600 (L9 10, L8 8), ~1650 (L11 10), ~1050 (L2 5, L1 4).
+  - {name: dfa_custom_consensus, vendor: dragonfly, list: mantis_swir_filter_catalogue,
+     include: [L2, L6, L9, L11], detector: ingaas_std, with: [sensor_mantis_vnir6]}
+  # The nearest set alone, for the MS-or-SWIR question at fixed filters.
+  - {name: dfa_swir_nearest_alone, vendor: dragonfly, list: mantis_swir_filter_catalogue,
+     include: [L4, L6, L9, L11], detector: ingaas_std}
+
+role_windows_nm:
+  BLUE: [450.0, 520.0]
+  GREEN: [530.0, 590.0]
+  RED: [630.0, 690.0]
+  RED_EDGE1: [695.0, 715.0]
+  RED_EDGE2: [730.0, 750.0]
+  RED_EDGE3: [775.0, 795.0]
+  NIR: [840.0, 885.0]
+  SWIR1: [1550.0, 1700.0]
+  SWIR2: [2080.0, 2350.0]

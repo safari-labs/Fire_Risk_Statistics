@@ -660,7 +660,7 @@ Whether an observed foliar moisture beats the computed one (G1's strong claim), 
 
 Whether the +31 bias was the prior, and whether the spectra then carry LFMC beyond the prior's mean. If (b) fails, the simulation route on Sentinel-2 bands has no spectral skill on conifers even with a right-sized prior, and steps 3-4 (backgrounds, a discontinuous canopy) are the remaining physics to try.
 
-*Note:* Step 1 of the fix (docs/results/p6f_reference): PROSPECT-D + 4SAIL match Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the training fold enters the prior; the frozen LFMC test sites stay unread.
+*Note:* Step 1 of the fix (docs/results/p6f_reference): PROSPECT-D + 4SAIL match Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the training fold enters the prior; the frozen LFMC test sites stay unread. lfmc_v2 2026-11-06 (docs/results/p6f_lfmc_v2): MIXED. Conifers: narrowed GP RMSE 13.2, bias +4.2 (1 holds); minus the stratum mean +1.09 [+0.59, +1.60] (2 fails: no spectral skill beyond the prior); minus FBP -0.80 [-1.66, -0.01] (3 holds), but the stratum mean beats FBP by -1.89; no B12 +0.07 (4 fails).
 
 *Blocked on:* the FW commit must be pushed and pulled
 
@@ -746,7 +746,7 @@ The onboard hardware.
 
 P12's sensor option table: what each Mantis mode would deliver, with GSD, swath, power, size and TRL from DFA's datasheet beside it (A-41: cost never ranks).
 
-*Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled.
+*Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled. sensors_v1 2026-11-06 (docs/results/p12_sensors), 75/75: MIXED. (2), (3), (5) hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).
 
 ### Out of reach
 

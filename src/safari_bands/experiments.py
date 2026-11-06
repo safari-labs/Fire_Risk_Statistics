@@ -1901,7 +1901,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is "
              "not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) "
              "is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the "
-             "training fold enters the prior; the frozen LFMC test sites stay unread.",
+             "training fold enters the prior; the frozen LFMC test sites stay unread."
+             " lfmc_v2 2026-11-06 (docs/results/p6f_lfmc_v2): MIXED. Conifers: narrowed GP "
+             "RMSE 13.2, bias +4.2 (1 holds); minus the stratum mean +1.09 [+0.59, +1.60] "
+             "(2 fails: no spectral skill beyond the prior); minus FBP -0.80 [-1.66, -0.01] "
+             "(3 holds), but the stratum mean beats FBP by -1.89; no B12 +0.07 (4 fails).",
     ),
     Experiment(
         "E-66", "What each Dragonfly Mantis mode would offer", "Hardware",
@@ -1935,7 +1939,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule "
              "7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR "
              "beyond the placeholder model and misregistration are reported beside the "
-             "scores, not modelled.",
+             "scores, not modelled."
+             " sensors_v1 2026-11-06 (docs/results/p12_sensors), 75/75: MIXED. (2), (3), (5) "
+             "hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed "
+             "configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. "
+             "Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).",
     ),
 )
 

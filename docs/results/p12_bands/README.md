@@ -56,9 +56,23 @@ python scripts/make_phase_docs.py --phase P12a
 - **Sentinel-2:** the best option is still the percent-conifer search at k = 8 (0.4158). The equal-weight search at k = 7–8 ties with it, and k = 5–6 sit about 0.008 below. All of these are *search procedure* scores: each fold scored its own set, which no single fixed set reproduces. Each row says so under its cons.
 - **The consensus sets are listed below each table with no score.** They enter the option table, with pros and cons, only once re-scored.
 
+## The first re-score (2026-11-06)
+
+`narval_results/bands_consensus`, 8 × 15 tasks, completed on Narval. **Only k = 1 is valid.**
+- `sweep_eco_arch.sh` passed `BANDS` inside sbatch's comma-separated `--export` list, so `BANDS=B4,B12` reached the jobs as `BANDS=B4`. Every k ≥ 2 run trained on its first band only. The combiner rejects them because their bands don't match the consensus.
+- Fixed in FW `6b1499a`, with a test. The k = 2–8 sets are rerun as `bands_consensus_v2`.
+- **k = 1 (B12 alone), scored as a fixed set:** 0.2693 ± 0.0104. That is 0.009 above the equal-weight search's own k = 1 procedure score (0.2602), because 4 of the 15 searches chose another band first.
+
+## The AVIRIS-NG re-score (2026-11-06)
+
+`narval_results/hs_consensus/20261106-1202`: 15 of 15 tasks, every task's pixels matching hs_v4's (`aviris_v4`). A duplicate submission, `20261106-1201`, is ignored. Each consensus SWIR set is scored as a fixed set:
+- **Best overall:** the extended-InGaAs consensus at k = 4 (1530, 1690, 1990, 2270 nm), 0.2895, tied with config C (0.2881). No Dragonfly mode reaches these (A-18).
+- **Best on standard InGaAs, which Mantis SWIR is:** the configured slots 1240, 1550, 1610, 1680 (`sensor_mantis_ms_plus_swir`), 0.2853, 0.0042 ± 0.0009 below the best. They are ahead of every standard-InGaAs consensus (best: k = 4, 0.2796) and searched set. A short band near 1240 plus three across the 1550-1680 shoulder beats the placements the searches converge on.
+- DFA's nearest filters to those slots are scored as fixed sets next ([p12_sensors](../p12_sensors/README.md)).
+
 ## Next
 
-1. **Re-score on Nibi** ([rescore_commands.md](rescore_commands.md)). The 8 Sentinel-2 consensus sets go through `sweep_eco_arch.sh` (size 8×2, 5 jobs each). The 8 AVIRIS-NG sets go in one `sweep_hs.sh` references run with `configs/noise/p12_consensus_grid.json`.
+1. **Re-score k = 2–8 on Narval** ([rescore_commands.md](rescore_commands.md), now `EXP_NAME=bands_consensus_v2`). The 8 AVIRIS-NG sets run in one `sweep_hs.sh` references job with `configs/noise/p12_consensus_grid.json` (running as `hs_consensus`).
 2. Rerun `make_band_options.py` with both re-scores. The option table then puts each fixed set's own paired score beside the search scores, and James chooses (A-49).
 3. E-47's size ladder at the chosen set.
 

@@ -535,10 +535,12 @@ def commands(s2_rows, hs_rows) -> list[str]:
          "## Sentinel-2 consensus sets (eco_v3 folds and seeds, size 8x2, with noise)", "",
          "```bash"]
     for r in s2_rows:
-        L.append(f"BANDS={','.join(r['bands'])} SIZES={RESCORE_SIZE} EXP_NAME=bands_consensus "
+        L.append(f"BANDS={','.join(r['bands'])} SIZES={RESCORE_SIZE} EXP_NAME=bands_consensus_v2 "
                  f"RUN_ID=k{r['k']} SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh")
-    L += ["```", "", "Copy back `~/scratch/fw_experiments/bands_consensus/` to "
-          "`narval_results/bands_consensus/` (plain copy).", "",
+    L += ["```", "", "Copy back `~/scratch/fw_experiments/bands_consensus_v2/` to "
+          "`narval_results/bands_consensus_v2/` (plain copy). The first run, "
+          "`bands_consensus`, passed only the first band at k >= 2 (fixed in FW 6b1499a).",
+          "",
           "## AVIRIS-NG consensus SWIR sets (hs_v4 folds and seeds, references arm)", "",
           "```bash",
           "ARMS=references GRID=configs/noise/p12_consensus_grid.json "
@@ -549,7 +551,8 @@ def commands(s2_rows, hs_rows) -> list[str]:
           "differ from hs_v4's.", "",
           f"It scores {len(hs_rows)} consensus sets plus three anchors (config_c/VNIR, config_a, "
           "config_c). Copy back to `narval_results/hs_consensus/`.", "",
-          "Then: `python scripts/make_band_options.py --eco-rescore narval_results/bands_consensus "
+          "Then: `python scripts/make_band_options.py "
+          "--eco-rescore narval_results/bands_consensus_v2 "
           "--hs-rescore narval_results/hs_consensus/<run>`."]
     return L
 

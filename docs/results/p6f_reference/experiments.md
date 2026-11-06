@@ -17,13 +17,13 @@ James chose to try to fix the forward model behind E-64's +31 bias (A-51). Step 
 | Verdict | **PASS**: the check met its criterion |
 | Conclusion | The code is right, so E-64's bias is not an implementation error. The suspects left are the priors (E-65), needles as broadleaves, soil-only backgrounds and the turbid canopy. |
 
-## E-65: LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) (experiment): **PENDING**
+## E-65: LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) (experiment): **MIXED**
 
 | | |
 |---|---|
 | Hypothesis (registered) | Registered 2026-11-05, before any v2 result (A-51). With the prior cut, inside each outer site fold, to the LFMC range of that fold's training records by species and season, the simulation GP on the ten bands, on conifer records: (a) has a bias within +-10 LFMC points; (b) beats prior_mean_fold, the training stratum mean; (c) beats FBP's equation; (d) loses skill without B12 on jack and red pine (E-29). WRONG IF (a) |bias| >= 10; (b), (c) the site-bootstrap CI of its RMSE minus the comparator's reaches 0; (d) the CI of no_b12 minus all10 reaches 0. |
 | Varied (independent) | prior: lfmc_v1 (60-250 %) or fold-wise narrowed by species x season; band set all10 or no_b12; controls prior_mean_fold and FBP's equation |
 | Measured (dependent) | RMSE, bias and R2 against gravimetric LFMC on the development records, paired by record, bootstrap over sites; per species and season |
-| Result | Running on Nibi (lfmc_v2, 3 seeds). |
-| Verdict | **PENDING**: not yet run |
-| Conclusion | Read against prior_mean_fold, the control a narrowed prior must beat. |
+| Result | lfmc_v2 (3 seeds, results in p6f_lfmc_v2): narrowed GP RMSE 13.2, bias +4.2 on conifers; worse than the stratum mean by +1.09 [+0.59, +1.60]; better than FBP by -0.80 [-1.66, -0.01]. |
+| Verdict | **MIXED**: part of the registered prediction held and part failed |
+| Conclusion | The bias was the prior; the spectra add nothing beyond it. |

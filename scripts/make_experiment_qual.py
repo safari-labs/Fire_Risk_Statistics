@@ -1096,6 +1096,8 @@ QUAL = [
     ("E-20", "p7d_weather_age", "tiles", ["qual_E-20_trained_stale.png"]),
     ("E-46", "p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
     ("P6f-C2", "p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
+    ("E-65", "p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),
+    ("E-66", "p12_sensors", "band placement", ["qual_E-66_sensor_bands.png"]),
     ("P0-3", "p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
     ("P1-3", "p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
     ("P5-M1", "p5_slotnet", "existing", ["tiles.png"]),

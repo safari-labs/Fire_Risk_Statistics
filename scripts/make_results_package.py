@@ -5251,12 +5251,27 @@ LFMC_MODELS = [
     ("emp_nmdi", "NMDI, calibrated", "emp"),
     ("emp_gp", "GP on the 10 bands", "emp"),
     ("emp_best", "best empirical, chosen in inner folds", "emp"),
+    # P6f-v2 (E-65, A-51): priors narrowed inside each outer fold, and the control.
+    ("sim_gp_fold_all10", "simulation GP, priors narrowed in fold", "sim2"),
+    ("sim_gp_fold_no_b12", "simulation GP, narrowed, no B12", "sim2"),
+    ("prior_mean_fold", "training stratum mean (control)", "control"),
 ]
 LFMC_FAMILY = {"cffdrs": (AMBER, "FBP equation (CFFDRS)"),
                "sim": (BLUE, "simulation-trained (never sees Globe-LFMC)"),
+               "sim2": (PINK, "simulation, priors narrowed inside each fold (E-65)"),
                "emp": (GREEN, "empirical, fit on Globe-LFMC out of fold"),
+               "control": (INK_BRIGHT, "training stratum mean, no spectra (E-65 control)"),
                "clean": (MUTED, "simulation, trained without noise (rule 6)")}
 SPRING, SUMMER = (91, 181), (182, 273)          # day of year: April-June, July-September
+
+
+def _lfmc_present(run: Path) -> list[tuple[str, str, str]]:
+    """The LFMC_MODELS a run holds (v1 runs have no E-65 columns)."""
+    seeds = sorted(p for p in run.glob("s*") if (p / "predictions.csv").exists())
+    if not seeds:
+        raise SystemExit(f"no s*/predictions.csv under {run}")
+    head = _read_csv(seeds[0] / "predictions.csv")[0]
+    return [m for m in LFMC_MODELS if m[0] in head]
 
 
 def _lfmc_rows(run: Path) -> tuple[list[dict], list[dict]]:
@@ -5265,6 +5280,7 @@ def _lfmc_rows(run: Path) -> tuple[list[dict], list[dict]]:
     seeds = sorted(p for p in run.glob("s*") if (p / "predictions.csv").exists())
     if not seeds:
         raise SystemExit(f"no s*/predictions.csv under {run}")
+    present = _lfmc_present(run)
     per = [_read_csv(p / "predictions.csv") for p in seeds]
     fits = [json.loads((p / "fits.json").read_text()) for p in seeds]
     keys = [(r["site"], r["label"], r["date"]) for r in per[0]]
@@ -5276,7 +5292,7 @@ def _lfmc_rows(run: Path) -> tuple[list[dict], list[dict]]:
         y = float(r["lfmc"])
         row = {"group": r["site"], "species": r["label"], "fuel": r["group"],
                "doy": int(r["doy"]), "lfmc": y, "date": r["date"]}
-        for m, _, _ in LFMC_MODELS:
+        for m, _, _ in present:
             p = np.array([float(rows[i][m]) for rows in per])
             row[f"{m}_pred"] = float(p.mean())
             row[f"{m}_se"] = float(np.mean((p - y) ** 2))
@@ -5307,7 +5323,8 @@ def _lfmc_contrast(rows, a, b, n=2000) -> dict:
             "sites": len({r["group"] for r in rows})}
 
 
-def p6f_rmse(subsets, out):
+def p6f_rmse(subsets, out, models=None):
+    models = models or LFMC_MODELS
     plt = _plt()
     names = [s for s in ("conifer", "deciduous") if subsets[s]]
     fig, axes = plt.subplots(1, len(names), figsize=(6.2 * len(names), 5.6), facecolor=FIG_BG,
@@ -5317,11 +5334,11 @@ def p6f_rmse(subsets, out):
         rows = subsets[name]
         _axes(ax, f"{name}: {len(rows):,} records, {len({r['group'] for r in rows})} sites",
               "RMSE against gravimetric LFMC (LFMC %)")
-        for j, (m, _, fam) in enumerate(LFMC_MODELS):
+        for j, (m, _, fam) in enumerate(models):
             r = _lfmc_rmse(rows, m)
             ci = _boot_groups(rows, lambda rs, m=m: _lfmc_rmse(rs, m), n=1000)
             col = LFMC_FAMILY[fam][0]
-            y = len(LFMC_MODELS) - 1 - j
+            y = len(models) - 1 - j
             if r > xmax:
                 ax.annotate(f"{r:.0f} →", (xmax, y), color=col, fontsize=8.5,
                             ha="right", va="center")
@@ -5332,14 +5349,17 @@ def p6f_rmse(subsets, out):
         fb = _lfmc_rmse(rows, "fbp")
         ax.axvline(fb, color=AMBER, lw=1, ls="--", alpha=0.7)
         ax.set_xlim(0, xmax)
-        ax.set_yticks(range(len(LFMC_MODELS)))
-        ax.set_yticklabels([lab for _, lab, _ in LFMC_MODELS][::-1])
-    handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=8)
-               for c, _ in LFMC_FAMILY.values()]
-    fig.legend(handles, [t for _, t in LFMC_FAMILY.values()], loc="lower center", ncol=2,
+        ax.set_yticks(range(len(models)))
+        ax.set_yticklabels([lab for _, lab, _ in models][::-1])
+    fams = [f for f in LFMC_FAMILY if any(m[2] == f for m in models)]
+    handles = [plt.Line2D([], [], marker="o", ls="", color=LFMC_FAMILY[f][0], ms=8)
+               for f in fams]
+    fig.legend(handles, [LFMC_FAMILY[f][1] for f in fams], loc="lower center", ncol=2,
                fontsize=8.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK,
                bbox_to_anchor=(0.5, -0.1))
-    fig.suptitle("P6f: LFMC from Sentinel-2 against FBP's equation (E-64, E-29)",
+    v2 = any(m[2] == "sim2" for m in models)
+    fig.suptitle("P6f: LFMC from Sentinel-2 against FBP's equation (E-64, E-29"
+                 + (", E-65)" if v2 else ")"),
                  color=INK_BRIGHT, fontsize=11.5, x=0.01, ha="left", y=1.02)
     _caption(fig, "Globe-LFMC 2017+, development sites only (the frozen 15 % of sites is not "
              "read). Squared errors averaged over 3 seeds; bars: 95 % CI by bootstrap over sites. "
@@ -5350,8 +5370,11 @@ def p6f_rmse(subsets, out):
 
 def p6f_scatter(rows, out):
     plt = _plt()
+    v2 = "sim_gp_fold_all10_pred" in rows[0]
     show = [("fbp", "FBP equation"), ("emp_best", "best empirical"),
-            ("sim_gp_all10", "simulation GP (of record)"), ("sim_mlp_all10", "simulation MLP")]
+            ("sim_gp_all10", "simulation GP (of record)"),
+            ("sim_gp_fold_all10", "simulation GP, priors narrowed") if v2 else
+            ("sim_mlp_all10", "simulation MLP")]
     fig, axes = plt.subplots(1, 4, figsize=(17, 4.6), facecolor=FIG_BG, sharex=True, sharey=True)
     y = np.array([r["lfmc"] for r in rows])
     lim = (40, 260)
@@ -5387,6 +5410,8 @@ def p6f_series(rows, out, n=4):
                              sharey=True, squeeze=False)
     lines = [("fbp", "FBP equation", AMBER), ("emp_best", "best empirical", GREEN),
              ("sim_gp_all10", "simulation GP", BLUE)]
+    if "sim_gp_fold_all10_pred" in rows[0]:
+        lines.append(("sim_gp_fold_all10", "simulation GP, narrowed", PINK))
     for ax, k in zip(axes[0], top, strict=True):
         rs = sorted(by[k], key=lambda r: (r["date"][:4], r["doy"]))
         years = sorted({r["date"][:4] for r in rs})
@@ -5413,13 +5438,15 @@ def p6f_series(rows, out, n=4):
 def p6f(run: Path, out: Path):
     out.mkdir(parents=True, exist_ok=True)
     rows, fits = _lfmc_rows(run)
+    models = _lfmc_present(run)
+    have = {m for m, _, _ in models}
     con = [r for r in rows if r["fuel"] == "conifer"]
     subsets = {"all": rows, "conifer": con,
                "deciduous": [r for r in rows if r["fuel"] == "deciduous"],
                "jack and red pine": [r for r in con if r["species"] in ("jack pine", "red pine")],
                "conifer, April-June": [r for r in con if SPRING[0] <= r["doy"] <= SPRING[1]],
                "conifer, July-September": [r for r in con if SUMMER[0] <= r["doy"] <= SUMMER[1]]}
-    stats = {s: {m: _lfmc_stats(rs, m) for m, _, _ in LFMC_MODELS} for s, rs in subsets.items()}
+    stats = {s: {m: _lfmc_stats(rs, m) for m, _, _ in models} for s, rs in subsets.items()}
     pine = subsets["jack and red pine"]
     contrasts = {
         "E-64a sim GP - FBP (conifer)": _lfmc_contrast(con, "sim_gp_all10", "fbp"),
@@ -5437,7 +5464,19 @@ def p6f(run: Path, out: Path):
                            "sim_gp_no_b12", "sim_gp_all10"),
         "sim MLP - FBP (conifer)": _lfmc_contrast(con, "sim_mlp_all10", "fbp"),
     }
-    per_seed = {m: [] for m, _, _ in LFMC_MODELS}
+    if "sim_gp_fold_all10" in have:            # E-65, registered 2026-11-06 (A-51)
+        contrasts.update({
+            "E-65b narrowed sim GP - stratum mean (conifer)":
+                _lfmc_contrast(con, "sim_gp_fold_all10", "prior_mean_fold"),
+            "E-65c narrowed sim GP - FBP (conifer)":
+                _lfmc_contrast(con, "sim_gp_fold_all10", "fbp"),
+            "E-65d narrowed: no B12 - all 10 (jack, red pine)":
+                _lfmc_contrast(pine, "sim_gp_fold_no_b12", "sim_gp_fold_all10"),
+            "narrowed sim GP - wide-prior sim GP (conifer)":
+                _lfmc_contrast(con, "sim_gp_fold_all10", "sim_gp_all10"),
+            "stratum mean - FBP (conifer)": _lfmc_contrast(con, "prior_mean_fold", "fbp"),
+        })
+    per_seed = {m: [] for m, _, _ in models}
     for f in fits:
         for m in per_seed:
             per_seed[m].append(f.get("rmse_quick", {}).get(m))
@@ -5452,11 +5491,11 @@ def p6f(run: Path, out: Path):
             for b, v in bands.items():
                 relevance.setdefault(key, {}).setdefault(b, []).append(v)
     relevance = {k: {b: float(np.mean(v)) for b, v in d.items()} for k, d in relevance.items()}
-    p6f_rmse(subsets, out)
+    p6f_rmse(subsets, out, models)
     p6f_scatter(con, out)
     p6f_series(rows, out)
 
-    lab = {m: label for m, label, _ in LFMC_MODELS}
+    lab = {m: label for m, label, _ in models}
     L = ["# P6f tables: LFMC retrievals against Globe-LFMC (E-64, E-29)", "",
          f"Run: `{_rel(run)}`, {len(fits)} seeds. Development sites only; the frozen 15 % of "
          "sites (`lfmc_test_sites_v1.json`) was not read. Squared errors and predictions are "
@@ -5791,7 +5830,8 @@ PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
           "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3"),
           "P7e": (p7e, "p7e_fuel_slot"), "P8a": (p8a, "p8a_spread"),
           "P9": (p9, "p9_ignition"), "P6f": (p6f, "p6f_lfmc"),
-          "P7d": (p7d, "p7d_weather_age"), "P9b": (p9b, "p9b_ignition_rungs")}
+          "P7d": (p7d, "p7d_weather_age"), "P9b": (p9b, "p9b_ignition_rungs"),
+          "P6f2": (p6f, "p6f_lfmc_v2")}
 
 
 def main(argv=None) -> int:

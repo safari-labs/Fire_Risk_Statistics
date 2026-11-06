@@ -108,3 +108,13 @@ def test_hs_reference_and_search_share_the_same_surface_bands(sensors, windows):
         lo, hi = b["centre_nm"] - b["fwhm_nm"] / 2, b["centre_nm"] + b["fwhm_nm"] / 2
         assert 470 <= lo and hi <= 900
         assert not any(r.overlaps(lo, hi) for r in windows.forbidden_regions)
+
+
+def test_a_reference_can_add_vendor_filters_to_an_ms_block():
+    c = load_study_config()
+    t = build_table(load_grid("p12_sensors_fixed"), c.detectors, c.optics, c.orbit, c.windows)
+    refs = t["references"]
+    assert refs["dfa_custom_nearest"][:6] == refs["sensor_mantis_vnir6"]
+    assert refs["dfa_custom_nearest"][6:] == ["1213/83@std", "1557/45@std", "1599/43@std",
+                                              "1674/39@std"]
+    assert refs["dfa_standard_nearest"][:6] == refs["dfa_ms_standard"]   # pan kept (Q39)

@@ -1470,10 +1470,11 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="The code is right, so E-64's bias is not an implementation "
                              "error. The suspects left are the priors (E-65), needles as "
                              "broadleaves, soil-only backgrounds and the turbid canopy."),
-            Entry("E-65", "experiment", "PENDING",
-                  result="Running on Nibi (lfmc_v2, 3 seeds).",
-                  conclusion="Read against prior_mean_fold, the control a narrowed prior "
-                             "must beat."),
+            Entry("E-65", "experiment", "MIXED",
+                  result="lfmc_v2 (3 seeds, results in p6f_lfmc_v2): narrowed GP RMSE 13.2, "
+                         "bias +4.2 on conifers; worse than the stratum mean by +1.09 "
+                         "[+0.59, +1.60]; better than FBP by -0.80 [-1.66, -0.01].",
+                  conclusion="The bias was the prior; the spectra add nothing beyond it."),
         ),
     ),
     Phase(
@@ -1532,6 +1533,49 @@ PHASES: tuple[Phase, ...] = (
                          "of 15).",
                   conclusion="The re-scores decide which sets enter the option table with a "
                              "measured score."),
+        ),
+    ),
+    Phase(
+        "P6f2", "LFMC with priors narrowed inside each fold (lfmc_v2)", "2026-11-06",
+        "p6f_lfmc_v2", "README.md",
+        "E-65 (A-51, step 2 of fixing the forward model): the lfmc_v1 simulation pool cut, in "
+        "each outer site fold, to the training records' LFMC range by species and season; the "
+        "training stratum mean as the control. 3 seeds, complete; every v1 arm reran and "
+        "matches v1.",
+        (
+            Entry("E-65", "experiment", "MIXED",
+                  result="Conifers (1,584 records, 31 sites): narrowed GP RMSE 13.2, bias +4.2 "
+                         "(1 SUPPORTED); minus the stratum mean +1.09 [+0.59, +1.60] (2 "
+                         "REFUTED); minus FBP -0.80 [-1.66, -0.01] (3 SUPPORTED), but the "
+                         "stratum mean beats FBP by -1.89 [-2.57, -1.21]; no B12 minus all 10 "
+                         "+0.07 [-0.02, +0.21] (4 REFUTED).",
+                  conclusion="The +31 bias was the prior. With a right-sized prior the "
+                             "spectra add nothing beyond a species-and-season mean, so T1 "
+                             "brings no band requirement on current evidence. The mean itself "
+                             "beats FBP's equation, an option for G1 that needs only the fuel "
+                             "map and the date."),
+        ),
+    ),
+    Phase(
+        "P12b", "What each Dragonfly Mantis mode would offer (sensors_v1)", "2026-11-06",
+        "p12_sensors", "README.md",
+        "E-66 on AVIRIS-NG (aviris_v4), hs_v4's folds and seeds: RGB, the MS standard block "
+        "(as published, Q39) and its clean subset, the custom block, all 81 HS channels and 6 "
+        "chosen in orbit, SWIR alone (4 of DFA's 10 usable filters), and each MS block with 4 "
+        "searched filters. 75 of 75 tasks; spectral only (no SNR published).",
+        (
+            Entry("E-66", "experiment", "MIXED",
+                  result="(1) custom - standard MS +0.013 [-0.003, +0.029] REFUTED as "
+                         "registered; (2) MS custom - SWIR alone +0.047 [+0.026, +0.067] "
+                         "SUPPORTED; (3) HS all - MS custom +0.004 [-0.005, +0.014] "
+                         "SUPPORTED; (4) MS custom + searched DFA SWIR - MS custom +0.008 "
+                         "[-0.000, +0.017] REFUTED as registered; (5) RGB 0.095 below the "
+                         "lowest MS row SUPPORTED. At the fixed configured slots SWIR adds "
+                         "+0.016 [+0.004, +0.029].",
+                  conclusion="MS over SWIR if only one; 6 well-placed bands match 81 HS "
+                             "channels; SWIR adds at a fixed filter set but searched per fold "
+                             "it loses its gain to search noise. DFA's filters as fixed sets "
+                             "(p12_sensors_fixed) decide the SWIR block."),
         ),
     ),
 )

@@ -37,13 +37,15 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P6f](p6f_lfmc/README.md) | 2026-11-04 | LFMC from Sentinel-2 against FBP's equation (E-64, E-29) | 2 MEASURED, 1 PASS, 1 REFUTED, 1 SUPPORTED |
 | [P9](p9_ignition/README.md) | 2026-11-04 | Stage C: CFFDRS ignition R0 on lightning starts (E-44) | 3 MEASURED, 1 PASS, 1 SUPPORTED |
 | [P12a](p12_bands/README.md) | 2026-11-05 | Band options: the consensus sets (E-46, Q38) | 1 PENDING |
-| [P6f-v2](p6f_reference/README.md) | 2026-11-05 | Fixing the LFMC forward model, step 1: the reference check | 1 PASS, 1 PENDING |
+| [P6f-v2](p6f_reference/README.md) | 2026-11-05 | Fixing the LFMC forward model, step 1: the reference check | 1 MIXED, 1 PASS |
 | [P7d](p7d_weather_age/README.md) | 2026-11-05 | Weather age: one model scored with stale weather (lags_v1) | 1 PARTIAL |
 | [P9b](p9b_ignition_rungs/README.md) | 2026-11-05 | Ignition learned rungs, partial (ignition_v1) | 1 PENDING |
+| [P12b](p12_sensors/README.md) | 2026-11-06 | What each Dragonfly Mantis mode would offer (sensors_v1) | 1 MIXED |
+| [P6f2](p6f_lfmc_v2/README.md) | 2026-11-06 | LFMC with priors narrowed inside each fold (lfmc_v2) | 1 MIXED |
 
 ## Experiments
 
-36 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+38 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -111,5 +113,5 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-62 Best VNIR bands, searched broadly | Partial result | P6a AT RISK, P6a-HS-prov PENDING, P6a-HS-v2 PENDING, P6a-HS-v3 PARTIAL, P6a-HS-v4 REFUTED, P6a-v3 REFUTED | [p6a_ecology](p6a_ecology/), [p6a_hs_provisional](p6a_hs_provisional/), [p6a_hs_v2_provisional](p6a_hs_v2_provisional/), [p6a_hs_v3](p6a_hs_v3/), [p6a_hs_v4](p6a_hs_v4/), [p6a_ecology_v3](p6a_ecology_v3/) | [closure](p6a_hs_v2_provisional/qual_E-62_closure.png), [family](p6a_hs_v2_provisional/qual_E-62_family.png), [height](p6a_hs_v2_provisional/qual_E-62_height.png), [pc](p6a_hs_v2_provisional/qual_E-62_pc.png), [closure](p6a_hs_v3/qual_E-62_closure.png), [family](p6a_hs_v3/qual_E-62_family.png), [height](p6a_hs_v3/qual_E-62_height.png), [pc](p6a_hs_v3/qual_E-62_pc.png), [closure](p6a_hs_v4/qual_E-62_closure.png), [family](p6a_hs_v4/qual_E-62_family.png), [height](p6a_hs_v4/qual_E-62_height.png), [pc](p6a_hs_v4/qual_E-62_pc.png) |
 | E-63 Out-of-time generalisation, two training regimes | Partial result | P6b PENDING, P6e AT RISK | [p6b_cohort](p6b_cohort/), [p6e_out_of_time](p6e_out_of_time/) | [patch_map](p6e_out_of_time/qual_E-63_patch_map.png) |
 | E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [p6f_lfmc](p6f_lfmc/) | [series](p6f_lfmc/qual_E-64_series.png) |
-| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 PENDING | [p6f_reference](p6f_reference/) | - |
-| E-66 What each Dragonfly Mantis mode would offer | Runnable now | - | - | - |
+| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 MIXED, P6f2 MIXED | [p6f_reference](p6f_reference/), [p6f_lfmc_v2](p6f_lfmc_v2/) | - |
+| E-66 What each Dragonfly Mantis mode would offer | Runnable now | P12b MIXED | [p12_sensors](p12_sensors/) | [sensor_bands](p12_sensors/qual_E-66_sensor_bands.png) |

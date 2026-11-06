@@ -13,6 +13,7 @@ mapping (config/grids/p12_sensors.yaml, E-66):
         vendor catalogue (config/vendors/); forbidden bands are dropped unless
         rule7_exception records James's leave to score them as published;
     {name, range_nm, step_nm, fwhm_nm, detector}  a contiguous set (an HS mode).
+Either may add `with: [ref, ...]`: those sets' bands first (MS block + SWIR filters).
 A fixed set may also name a mapping reference by its name.
 
 ARMS search a regular grid (range_nm, fwhm_nm, the grid's step_nm or the
@@ -178,7 +179,9 @@ def build_table(grid: dict, detectors: dict[str, Detector], optics, orbit,
             w = float(spec["fwhm_nm"])
             kept = [(float(c), w) for c in np.arange(lo, hi + 1e-9, spec["step_nm"])
                     if _clear(float(c), w, windows)]
-        return [add(f"{c:g}/{w:g}{_suffix(det)}", float(c), float(w), det) for c, w in kept]
+        base = [i for ref in spec.get("with", []) for i in ref_ids(ref)]
+        return base + [add(f"{c:g}/{w:g}{_suffix(det)}", float(c), float(w), det)
+                       for c, w in kept]
 
     def ref_ids(ref):
         if isinstance(ref, dict):
