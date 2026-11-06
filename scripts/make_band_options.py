@@ -19,7 +19,7 @@ NIR_NARROW -> NIR). AVIRIS-NG SWIR: 50 nm bins, as the hs packager counts them;
 A-40's role windows leave out 1000-1550 and 1750-2080 nm, where searched SWIR
 bands do land.
 
-Writes docs/results/p12_bands/: T_consensus.csv, T_options_s2.csv,
+Writes docs/results/P12/p12_bands/: T_consensus.csv, T_options_s2.csv,
 T_options_swir.csv, consensus.png, skill.png, summary.json, options.md and
 rescore_commands.md; and the re-score grid
 Fire_Risk_FW/configs/noise/p12_consensus_grid.json.
@@ -563,7 +563,7 @@ def main(argv=None) -> int:
     ap.add_argument("--hs", type=Path, default=HS)
     ap.add_argument("--eco-rescore", type=Path, default=None)
     ap.add_argument("--hs-rescore", type=Path, default=None)
-    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "p12_bands")
+    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_bands")
     ap.add_argument("--no-grid", action="store_true", help="do not write the FW grid")
     args = ap.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)

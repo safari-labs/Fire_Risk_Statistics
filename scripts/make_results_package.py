@@ -4601,7 +4601,7 @@ def p6hs(run: Path, out: Path, diag: Path | None = None, void: str = ""):
     out.mkdir(parents=True, exist_ok=True)
     H = _HSRun(run)
     ref = None
-    s2 = _ROOT / "docs" / "results" / "p6a_ecology" / "summary.json"
+    s2 = _ROOT / "docs" / "results" / "P6/p6a_ecology" / "summary.json"
     if s2.exists():
         ref = json.loads(s2.read_text())["curves"]["combined|6|raw+indices|noisy"][0]
     summ = p6hs_curves(H, out, ref, void)
@@ -4771,7 +4771,7 @@ def e63_stats(a_run: Path, b_run: Path) -> dict:
                         "a_between": A.between(c), "d_within": float(np.nanmean(d)),
                         "d_within_ci": _ci95([np.nanmean(d[i]) for i in A.boots]),
                         "d_between": A.between(c) - B.between(c), "d_between_ci": _ci95(db)})
-    issued = [r for r in _read_csv(_ROOT / "docs" / "results" / "p6b_cohort" / "T_e56.csv")
+    issued = [r for r in _read_csv(_ROOT / "docs" / "results" / "P6/p6b_cohort" / "T_e56.csv")
               if r["output"] == "hfi" and r["r0"] == E63_R0]
     return {"rungs": rungs, "regimes": regimes, "n_fits": {c: len(B.fits[c]) for c, _ in E63_RUNGS},
             "n_2024": len(Y.pat), "n_fire_2024": int(Y.fire.sum()), "n_cv_fire": int(R.fire.sum()),
@@ -5822,16 +5822,16 @@ def p9b(run: Path, out: Path, n_boot=2000, seed=0):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
-PHASES = {"P2": (p2, "p2_r0"), "P3": (p3, "p3_dated"), "P4": (p4, "p4_prefire"),
-          "P5": (p5, "p5_slotnet"), "P6a": (p6a, "p6a_ecology"), "P6c": (p6c, "p6c_snow"),
-          "P6b": (p6b, "p6b_cohort"), "P6d": (p6d, "p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
-          "P7": (p7, "p7_slots"),
-          "P6e": (p6e, "p6e_out_of_time"), "P6x": (p6x, "p6a_external_labels"),
-          "P7b": (p7b, "p7b_operational"), "P7c": (p7c, "p7c_slots_v3"),
-          "P7e": (p7e, "p7e_fuel_slot"), "P8a": (p8a, "p8a_spread"),
-          "P9": (p9, "p9_ignition"), "P6f": (p6f, "p6f_lfmc"),
-          "P7d": (p7d, "p7d_weather_age"), "P9b": (p9b, "p9b_ignition_rungs"),
-          "P6f2": (p6f, "p6f_lfmc_v2")}
+PHASES = {"P2": (p2, "P2/p2_r0"), "P3": (p3, "P3/p3_dated"), "P4": (p4, "P4/p4_prefire"),
+          "P5": (p5, "P5/p5_slotnet"), "P6a": (p6a, "P6/p6a_ecology"), "P6c": (p6c, "P6/p6c_snow"),
+          "P6b": (p6b, "P6/p6b_cohort"), "P6d": (p6d, "P6/p6d_startup"), "P6hs": (p6hs, "p6a_hs"),
+          "P7": (p7, "P7/p7_slots"),
+          "P6e": (p6e, "P6/p6e_out_of_time"), "P6x": (p6x, "P6/p6a_external_labels"),
+          "P7b": (p7b, "P7/p7b_operational"), "P7c": (p7c, "P7/p7c_slots_v3"),
+          "P7e": (p7e, "P7/p7e_fuel_slot"), "P8a": (p8a, "P8/p8a_spread"),
+          "P9": (p9, "P9/p9_ignition"), "P6f": (p6f, "P6/p6f_lfmc"),
+          "P7d": (p7d, "P7/p7d_weather_age"), "P9b": (p9b, "P9/p9b_ignition_rungs"),
+          "P6f2": (p6f, "P6/p6f_lfmc_v2")}
 
 
 def main(argv=None) -> int:

@@ -20,7 +20,9 @@ from safari_bands.phases import PHASES
 REPO = Path(__file__).resolve().parents[2]
 RESULTS = REPO / "docs" / "results"
 
-_NAMED = re.compile(r"docs/results/\s*([A-Za-z0-9_\-]+)")
+#: A results folder named in a note: docs/results/<phase group>/<folder>, e.g.
+#: docs/results/P7/p7d_weather_age (packages are grouped by phase number).
+_NAMED = re.compile(r"docs/results/\s*((?:P\d+/)?[A-Za-z0-9_\-]+)")
 
 #: Verdicts that say a result exists. PENDING says the opposite.
 RESULT_VERDICTS = ("SUPPORTED", "REFUTED", "AT RISK", "MIXED", "PARTIAL", "MEASURED", "PASS",

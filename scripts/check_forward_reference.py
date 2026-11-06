@@ -18,7 +18,7 @@ R packages `prospect` and `prosail` (scripts/r/prosail_reference.R):
     python scripts/check_forward_reference.py                 # 64 cases per group
     python scripts/check_forward_reference.py --per-group 8   # quick
 
-Writes docs/results/p6f_reference/ (T_reference.csv, reference.png,
+Writes docs/results/P6/p6f_reference/ (T_reference.csv, reference.png,
 summary.json) and runs/<stamp>_forward_reference/.
 """
 from __future__ import annotations
@@ -213,7 +213,7 @@ def main(argv=None) -> int:
     ap.add_argument("--per-group", type=int, default=64)
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
-    out = args.out or project_root() / "docs" / "results" / "p6f_reference"
+    out = args.out or project_root() / "docs" / "results" / "P6/p6f_reference"
     out.mkdir(parents=True, exist_ok=True)
     run = start_run("forward_reference", seed=SEED, per_group=args.per_group)
 

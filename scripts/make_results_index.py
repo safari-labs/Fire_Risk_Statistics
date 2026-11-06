@@ -64,8 +64,10 @@ def markdown() -> str:
     for x in EXPERIMENTS:
         hist = ", ".join(f"{pid} {v}" for pid, _, v in O.phase_verdicts(x.eid)) or "-"
         dirs = ", ".join(f"[{f}]({f}/)" for f in O.folders(x.eid)) or "-"
-        own = ", ".join(f"[{p.stem.removeprefix(f'qual_{x.eid}_')}]({p.parent.name}/{p.name})"
-                        for p in O.figures(x.eid) if p.name.startswith(f"qual_{x.eid}_")) or "-"
+        own = ", ".join(
+            f"[{p.stem.removeprefix(f'qual_{x.eid}_')}]"
+            f"({p.relative_to(O.RESULTS).as_posix()})"
+            for p in O.figures(x.eid) if p.name.startswith(f"qual_{x.eid}_")) or "-"
         L.append(f"| {x.eid} {_cell(x.name)} | {STATES[x.state]['label']} | {hist} | {dirs} | "
                  f"{own} |")
     return "\n".join(L) + "\n"

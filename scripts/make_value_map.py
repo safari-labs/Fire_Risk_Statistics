@@ -54,20 +54,20 @@ def _pair(rows, a, b, **match):
 
 def p7(kind: str, a: str, b: str = "r2") -> dict:
     """A contrast from the first slot sweep: within and between."""
-    r = _pair(_summary("p7_slots")[kind], a, b)
+    r = _pair(_summary("P7/p7_slots")[kind], a, b)
     return {"within": (r["d_within"], *r["d_within_ci"]),
             "between": (r["d_between"], *r["d_between_ci"]), "n_fire": r["n_fire"]}
 
 
 def p7c(kind: str, a: str, b: str, fam: str) -> dict:
     """A contrast from the second slot sweep, on one fuel family's pixels: within only."""
-    r = _pair(_summary("p7c_slots_v3")[kind], a, b, fam=fam)
+    r = _pair(_summary("P7/p7c_slots_v3")[kind], a, b, fam=fam)
     return {"within": (r["d"], *r["ci"]), "between": None, "n_fire": r["n_fire"]}
 
 
 def p6d(variant: str, code: str) -> dict:
     """E-18: R0's between-patch AUC with the imagery start-up minus the ERA5 rule, >= 55 N."""
-    r = _summary("p6d_startup")["falsifier"]["north"][variant]["auc_minus_c2"][code]
+    r = _summary("P6/p6d_startup")["falsifier"]["north"][variant]["auc_minus_c2"][code]
     return {"within": None, "between": (r["d"], *r["ci"]), "n_patch": r["n"]}
 
 
@@ -123,13 +123,13 @@ def resolve() -> list[dict]:
 
 
 def _ladder() -> list[tuple[str, float, float]]:
-    rows = {r["config"]: r for r in _summary("p7_slots")["ladder"]}
+    rows = {r["config"]: r for r in _summary("P7/p7_slots")["ladder"]}
     names = (("R0", "r0_scanfi"), ("R1", "r1"), ("R2", "r2"), ("R4", "r4"))
     return [(n, rows[c]["within"], rows[c]["between"]) for n, c in names]
 
 
 def _stage_b() -> dict:
-    return _summary("p8a_spread")
+    return _summary("P8/p8a_spread")
 
 
 def figure(rows: list[dict]) -> None:

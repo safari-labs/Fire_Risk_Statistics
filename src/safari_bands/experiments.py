@@ -571,7 +571,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "rule as well as the flat spinup. The falsifier in the hypothesis was added "
              "at the same time, before any date existed. E-60 found the "
              "imagery date 16 d off the station on median, both ways. Run 2026-10-30 "
-             "(docs/results/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves "
+             "(docs/results/P6/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves "
              "median DC +7.0 %, AUC DC +0.015 [-0.008, +0.040], FWI +0.002 [-0.009, "
              "+0.013]: the falsifier fires. VNIR only moves DC -20.2 % and loses skill "
              "(FWI -0.042 [-0.086, -0.007], DMC -0.126). The ERA5 rule stays; SAFARI is "
@@ -642,7 +642,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "3 and 7 (no new ERA5 pass: the sidecars held it), run_slots scores one "
              "model at each lag (--score-lags), and r2_age7 trains on weather that "
              "is all 7 days old."
-             " lags_v1 2026-11-05 (docs/results/p7d_weather_age, 35/35 fits): between "
+             " lags_v1 2026-11-05 (docs/results/P7/p7d_weather_age, 35/35 fits): between "
              "patches R2 loses -0.023 [-0.056, +0.012] at 2 days, -0.055 [-0.075, -0.034] "
              "at 3 and -0.051 [-0.091, -0.011] at 7; R0 HFI -0.044, -0.093, -0.061. Within "
              "patches flat (<= 0.007). r2_age7 is worse than r2 at every age (within "
@@ -673,7 +673,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "2010 are now held for all 292 patches, and the R0 re-score "
                 "with them is deferred until after P6",
         gap="G2 fuel-type layer is a fixed vintage",
-        note="P2 (docs/results/p2_r0): inventory half done under R0. "
+        note="P2 (docs/results/P2/p2_r0): inventory half done under R0. "
              "Within-patch HFI AUC moves -0.005 per decade of SCANFI age "
              "[-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 "
              "y). No staleness cost to recover on this sample, so the "
@@ -714,11 +714,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "12 bands with B12, SCANFI v2 2020 labels. The WRONG IF clause was "
              "added 2026-10-28, after submission and before any E-22 "
              "result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were "
-             "already known. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): "
+             "already known. Run on Nibi 2026-10-29 (docs/results/P6/p6a_ecology): "
              "SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 "
              "27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included "
              "(Q35); the family target's D class is 82 % open ground (P6a-M1). eco_v3 on "
-             "the corrected labels, 2026-11-04 (docs/results/p6a_ecology_v3): SUPPORTED "
+             "the corrected labels, 2026-11-04 (docs/results/P6/p6a_ecology_v3): SUPPORTED "
              "again, first SWIR at step 1 in 11/15 (B12), median 1.",
         tags=("primary",),
     ),
@@ -892,7 +892,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="James (2026-11-03): start the simulation-trained retrieval of brief Phases "
              "1-4 and compare it with LFMC from Sentinel-2's bands, while CWFIS is asked "
              "about field LFMC. Globe-LFMC holds LFMC only, not Cw or Cm, so H1 is read "
-             "through LFMC error. Run 2026-11-04 (docs/results/p6f_lfmc): SUPPORTED, "
+             "through LFMC error. Run 2026-11-04 (docs/results/P6/p6f_lfmc): SUPPORTED, "
              "weakly. Without B12 the simulation GP is +1.7 [+0.4, +3.2] worse on jack and "
              "red pine, in spring and summer, but that retrieval is biased +31 and worse "
              "than a constant.",
@@ -953,7 +953,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="legacy 30-June design only; P3 re-dates the weather to each "
                 "fire's start",
-        note="P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire "
+        note="P2, legacy design (docs/results/P2/p2_r0): SUPPORTED. Within fire "
              "patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 "
              "on CWFIS 2019; half that margin is water and non-fuel (land only: "
              "0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; "
@@ -982,7 +982,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         blocker="the SCANFI v1 adapter is not written; SCANFI 2005 is held "
                 "(292/292), its R0 re-score deferred until after P6",
         gap="G2 fuel-type layer is a fixed vintage",
-        note="P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire "
+        note="P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire "
              "inventories are not equal: SCANFI through the CFS tree beats "
              "CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC "
              "(+0.031 on land only; resolution alone adds nothing once water is "
@@ -1009,7 +1009,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts "
-             "as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 "
+             "as R0 by construction. P7 (docs/results/P7/p7_slots): MIXED. R1 - R0 "
              "within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 "
              "[-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI "
              "CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between "
@@ -1169,7 +1169,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_spread_r0.py",
         blocker="the frozen test fires are read in P10",
-        note="Development fires, 2026-11-03 (docs/results/p8a_spread, A-46): rho 0.54 "
+        note="Development fires, 2026-11-03 (docs/results/P8/p8a_spread, A-46): rho 0.54 "
              "[0.49, 0.59], and 0.39 [0.34, 0.44] on days with spread.",
     ),
     Experiment(
@@ -1194,7 +1194,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="the learned date-only classifier waits for P5 (training is Narval only)",
         tags=("control",),
-        note="P3 (docs/results/p3_dated): SUPPORTED. Day of year 0.55 [0.50, "
+        note="P3 (docs/results/P3/p3_dated): SUPPORTED. Day of year 0.55 [0.50, "
              "0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the "
              "year (0.87), not the pseudo-dates.",
     ),
@@ -1244,7 +1244,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "12 min of reading per fit)",
         blocker="the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be "
                 "sent to scratch, and the FW commit pulled",
-        note="ignition_v1 partial 2026-11-05 (docs/results/p9b_ignition_rungs, 36/100 "
+        note="ignition_v1 partial 2026-11-05 (docs/results/P9/p9b_ignition_rungs, 36/100 "
              "fits): r1 - r0_scanfi +0.052 [+0.033, +0.072] on 1,292 sets; r2 - r0 +0.056 "
              "[+0.038, +0.075] on folds 0-3, so prediction 2 fails provisionally; r4, "
              "r4_shuffled and r2_leaf_ablated not yet in. "
@@ -1270,15 +1270,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "pros and cons for James to choose (A-49).",
         state="RUNNABLE",
         runner="Statistics scripts/make_band_options.py (consensus, grid, provisional table); "
-               "then on Nibi docs/results/p12_bands/rescore_commands.md (8 sweep_eco_arch "
+               "then on Nibi docs/results/P12/p12_bands/rescore_commands.md (8 sweep_eco_arch "
                "runs and one sweep_hs references run), then make_band_options.py "
                "--eco-rescore --hs-rescore",
         blocker="the consensus re-scores (cluster); E-35 for the fuel-type slot's value",
-        note="2026-11-05 (A-49, docs/results/p12_weights): under six head-weighting "
+        note="2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting "
              "schemes the equal-weight search's best set is tied (paired, one SE) "
              "with the overall best under five; only maximin separates them, by "
              "0.009 +- 0.009. The best sets are 7-8 bands under every scheme."
-             " Consensus 2026-11-05 (docs/results/p12_bands): Sentinel-2 stable at k=1 (B12) "
+             " Consensus 2026-11-05 (docs/results/P12/p12_bands): Sentinel-2 stable at k=1 (B12) "
              "and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no "
              "AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot).",
     ),
@@ -1320,7 +1320,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="NEEDS_PACK",
         blocker="E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 "
                 "from 91 s; then lowest power)",
-        note="Conversion pre-check 2026-11-05 (docs/results/p12_convert), untrained "
+        note="Conversion pre-check 2026-11-05 (docs/results/P12/p12_convert), untrained "
              "P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 "
              "E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but "
              "only 4x1 at tile 16-32 comes near the Q8 (84-91 % BRAM; 8x2 258 %). "
@@ -1359,7 +1359,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="needs the same chain on the frozen test set (P10)",
-        note="P3 (docs/results/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 "
+        note="P3 (docs/results/P3/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 "
              "-> 0.799, ISI 0.701 -> 0.781, but BUI 0.765 -> 0.878 and DC 0.828 "
              "-> 0.830. Year alone scores 0.87, and within a year the fast "
              "codes do not gain (FFMC 0.730 -> 0.717) while the slow ones do "
@@ -1391,7 +1391,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "every patch here. FWI2025's sunrise-to-sunset hourly DMC changes "
              "far more than day length and may not feed FBP1992. DC's monthly "
              "factor is a seasonal adjustment, not a day length, and is left. "
-             "P3 (docs/results/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / "
+             "P3 (docs/results/P3/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / "
              "+6.4 by band; AUC moves by 0.006 or less: a calibration gap, not "
              "a skill gap, under R0.",
     ),
@@ -1417,7 +1417,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="needs the frozen test set (P10)",
         gap="G4 snow-off keyed by regional rule",
-        note="P3 (docs/results/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 "
+        note="P3 (docs/results/P3/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 "
              "by band (grows north), DC AUC 0.77 -> 0.91 at >=60 N (19 fires); "
              "DMC shift -1.3 / -2.0 / -1.4 (flat).",
     ),
@@ -1442,7 +1442,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="2019 station file now held; needs the frozen test set (P10)",
         gap="G3 station density",
-        note="P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, "
+        note="P3 (docs/results/P3/p3_dated): REFUTED. rho(|ERA5 - station|, "
              "distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 "
              "km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC "
              "0.78 vs 0.83. P7: under R2, station weather -0.017 [-0.034, "
@@ -1464,7 +1464,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
         blocker="needs the frozen test set (P10)",
         gap="G7 CFFDRS assumes same-day observations",
-        note="P3 (docs/results/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC "
+        note="P3 (docs/results/P3/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC "
              "-0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 "
              "and DMC -0.12, as fast as FFMC.",
     ),
@@ -1491,7 +1491,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         runner="Fire_Risk_Model/scripts/python/build_prefire.py",
         blocker="the v1 band searches have to be re-run on the v2 pack to see "
                 "what their results were worth",
-        note="P4 (docs/results/p4_prefire): MIXED. As registered, early fires "
+        note="P4 (docs/results/P4/p4_prefire): MIXED. As registered, early fires "
              "show the drop (-0.061 [-0.081, -0.041], 83 % negative, n=54), but "
              "late fires show it too (-0.082, n=29) and it does not grow with "
              "overlap (rho +0.05 [-0.20, +0.30]). A control added after "
@@ -1534,7 +1534,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "between patches only: an operational map cannot rank pixels "
              "inside a 5 km patch. Whether the archive is as issued or "
              "reprocessed is not documented (Q30). P7b "
-             "(docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: "
+             "(docs/results/P7/p7b_operational, 2026-10-26): MIXED. 181 patches: "
              "AUC ISSUED by CWFIS 0.860 vs ours (ERA5) 0.851 (-0.009 [-0.073, +0.057], "
              "within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI "
              "lower (median); 10 of 19 large misses are ERA5 light rain the "
@@ -1565,7 +1565,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                 "not yet compared",
         note="Registered with E-55, before any grid value was scored. Runs on both "
              "2024 and 2025 under either training regime (E-63): no learning is "
-             "involved in the comparison. 2024 half, 2026-10-30 (docs/results/p6b_cohort): "
+             "involved in the comparison. 2024 half, 2026-10-30 (docs/results/P6/p6b_cohort): "
              "PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 "
              "[-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen "
              "and waits for P10 (A-42).",
@@ -1631,7 +1631,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "GPU 25 %, 1.5 GB peak; A-35)",
         note="The warm start keeps R2's physics weights at their usual start "
              "and copies only R1's network into the residual, so R2 begins as "
-             "physics + R1. P7c (docs/results/p7c_slots_v3, 2026-10-27): "
+             "physics + R1. P7c (docs/results/P7/p7c_slots_v3, 2026-10-27): "
              "REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x "
              "-0.056 [-0.075, -0.038]; the gap is the cost of the physics "
              "anchor. Warm start best between patches (0.892; ISSUED by CWFIS "
@@ -1667,11 +1667,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="Indices are inputs only, never labels (rule 3). ECVs are not inputs "
              "unless one is shown worthwhile. Runs inside E-22's sweep (A-38): "
              "every evaluated set in raw / indices / raw + indices, noisy and "
-             "noise-free. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): MIXED. "
+             "noise-free. Run on Nibi 2026-10-29 (docs/results/P6/p6a_ecology): MIXED. "
              "Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined "
              "skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small "
              "k'. Indices alone are worse at every k they form. eco_v3, 2026-11-04 "
-             "(docs/results/p6a_ecology_v3): MIXED again, +0.0030 [+0.0006, +0.0057] at k = 8 "
+             "(docs/results/P6/p6a_ecology_v3): MIXED again, +0.0030 [+0.0006, +0.0057] at k = 8 "
              "only; maps per input mode show the same structure.",
     ),
     Experiment(
@@ -1703,7 +1703,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "gridded analysis, so the station truth is ECCC climate-station observed "
              "snow on ground. P6c (A-39): packed as "
              "data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test "
-             "122 station-years). Run on Nibi 2026-10-29 (docs/results/p6c_snow): "
+             "122 station-years). Run on Nibi 2026-10-29 (docs/results/P6/p6c_snow): "
              "REFUTED. VNIR-only best 19.5 d (with noise); +3.8 d [+2.0, +5.6] worse "
              "than SWIR allowed (15.7 d), 5/5 folds. The 7 d clause sat below the "
              "sampling floor (a perfect classifier: 7.5 d), unattainable for any camera; "
@@ -1738,16 +1738,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid "
              "applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and "
              "1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. "
-             "Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional). "
+             "Provisional sweep 2026-10-29: VOID (docs/results/P6/p6a_hs_provisional). "
              "Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks "
-             "and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional). "
-             "Full sweep hs_v3, 2026-11-02 (docs/results/p6a_hs_v3): the falsifier does not "
+             "and extended InGaAs on two folds only (docs/results/P6/p6a_hs_v2_provisional). "
+             "Full sweep hs_v3, 2026-11-02 (docs/results/P6/p6a_hs_v3): the falsifier does not "
              "fire (extra from extended: conifer -0.24, closure +0.06, height +0.04, all CIs "
              "reach 0), but the searches are unstable and a hand-set 1610 + 2190 nm pair "
              "beats them on height. Full sweep hs_v4 on the final labels, 2026-11-03 "
-             "(docs/results/p6a_hs_v4): REFUTED on height only, +0.09 m [+0.01, +0.23] "
+             "(docs/results/P6/p6a_hs_v4): REFUTED on height only, +0.09 m [+0.01, +0.23] "
              "against a standard gain of -0.01 m, so the 10 % threshold is degenerate. Lidar "
-             "height (docs/results/p6a_external_labels_v2) does not reproduce it: extended "
+             "height (docs/results/P6/p6a_external_labels_v2) does not reproduce it: extended "
              "minus standard +0.05 m worse [-0.00, +0.11].",
     ),
     Experiment(
@@ -1773,19 +1773,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="The VNIR arm searches the camera alone (no SWIR band), the question "
              "E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references "
              "(A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/"
-             "p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, "
+             "P6/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, "
              "but without B5-B7 the k = 6 error is within 5 % on percent conifer "
              "(+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only "
              "camera question waits for the AVIRIS-NG search; the provisional sweep "
-             "of 2026-10-29 is VOID (docs/results/p6a_hs_provisional). Partial sweep on "
+             "of 2026-10-29 is VOID (docs/results/P6/p6a_hs_provisional). Partial sweep on "
              "the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold "
-             "(docs/results/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 "
-             "(docs/results/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on "
+             "(docs/results/P6/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 "
+             "(docs/results/P6/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on "
              "percent conifer (-1.2 %) and closure (+2.2 %), though 12/15 best sets keep a "
-             "700-760 nm band. Full sweep hs_v4, 2026-11-03 (docs/results/p6a_hs_v4): REFUTED "
+             "700-760 nm band. Full sweep hs_v4, 2026-11-03 (docs/results/P6/p6a_hs_v4): REFUTED "
              "again. Red edge is in 15/15 best sets, but without it conifer is -1.1 % "
              "[-2.1, -0.3] and closure +2.1 % [+0.9, +3.3]. Sentinel-2 half on eco_v3, "
-             "2026-11-04 (docs/results/p6a_ecology_v3): REFUTED. Red edge in 15/15 best "
+             "2026-11-04 (docs/results/P6/p6a_ecology_v3): REFUTED. Red edge in 15/15 best "
              "6-band sets; without it at k = 6 conifer +0.7 % [-2.0, +2.9], closure -0.9 % "
              "[-2.0, +0.5].",
     ),
@@ -1822,7 +1822,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "the out-of-time test; regime B excludes both. Regime B makes no use of any "
              "choice regime A made with 2024 in view, and its 2024 test is scored before "
              "regime A's 2024 training results are looked at. Pack and regimes built "
-             "2026-10-30 (A-42). Both regimes ran 2026-11-02 (docs/results/p6e_out_of_time). "
+             "2026-10-30 (A-42). Both regimes ran 2026-11-02 (docs/results/P6/p6e_out_of_time). "
              "On 2024, (a) is AT RISK: R1 and R2 fall 0.06-0.11, no CI excludes 0.05, and R1 "
              "- R0 between patches is -0.035 [-0.095, +0.021]. R0 itself falls 0.05-0.06. "
              "(b) waits for 2025.",
@@ -1864,7 +1864,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "aspen is reported, not tested. A 15 % of sites, seeded, is frozen for P10. "
              "Placeholders (A-47): +/- 5-day pairing, 4SAIL turbid medium for every fuel, "
              "soil-only backgrounds, an atmospheric-correction residual as extra noise. Run "
-             "2026-11-04 (docs/results/p6f_lfmc): REFUTED. Conifer RMSE minus the equation "
+             "2026-11-04 (docs/results/P6/p6f_lfmc): REFUTED. Conifer RMSE minus the equation "
              "(14.0): simulation GP +26.0 [+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]; "
              "simulation minus empirical +25.5. Conifer LFMC SD is 15.2.",
     ),
@@ -1897,12 +1897,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         resources="--time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed "
                   "(v1 took 5 min per seed; the fold arms add about 120 GP fits)",
         gap="G1 foliar moisture is computed, never observed",
-        note="Step 1 of the fix (docs/results/p6f_reference): PROSPECT-D + 4SAIL match "
+        note="Step 1 of the fix (docs/results/P6/p6f_reference): PROSPECT-D + 4SAIL match "
              "Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is "
              "not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) "
              "is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the "
              "training fold enters the prior; the frozen LFMC test sites stay unread."
-             " lfmc_v2 2026-11-06 (docs/results/p6f_lfmc_v2): MIXED. Conifers: narrowed GP "
+             " lfmc_v2 2026-11-06 (docs/results/P6/p6f_lfmc_v2): MIXED. Conifers: narrowed GP "
              "RMSE 13.2, bias +4.2 (1 holds); minus the stratum mean +1.09 [+0.59, +1.60] "
              "(2 fails: no spectral skill beyond the prior); minus FBP -0.80 [-1.66, -0.01] "
              "(3 holds), but the stratum mean beats FBP by -1.89; no B12 +0.07 (4 fails).",
@@ -1940,7 +1940,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR "
              "beyond the placeholder model and misregistration are reported beside the "
              "scores, not modelled."
-             " sensors_v1 2026-11-06 (docs/results/p12_sensors), 75/75: MIXED. (2), (3), (5) "
+             " sensors_v1 2026-11-06 (docs/results/P12/p12_sensors), 75/75: MIXED. (2), (3), (5) "
              "hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed "
              "configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. "
              "Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).",

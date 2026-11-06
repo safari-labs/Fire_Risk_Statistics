@@ -44,7 +44,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-42** | Spread slot value | Fuel-side imagery slots improve per-fire-day spread prediction. WRONG IF only weather-side inputs move it. | slot sources, as in E-35 to E-40, on the spread target | paired change in Spearman rho per fire-day | Needs a pack | *none yet* |
 | **E-44** | Ignition R0 | P(sustained flaming) x P(lightning holdover) ranks lightning starts above matched controls. WRONG IF at chance. | none learned: the published ignition relationships | AUC and calibration, starts vs matched controls | Partial result | `Fire_Risk_Model build_ignition_dataset.py --stage weather / scanfi / filter, then eval_ignition_r0.py (CPU, no fitting)` |
 | **E-45** | Ignition slot value | Closure, green-up and fuel-type slots improve ignition ranking. WRONG IF the shuffled twins gain as much. | slot sources on the ignition target | paired AUC change | Runnable now | `Fire_Risk_FW SUBMIT=1 bash scripts/shell/sweep_ignition.sh (run_ignition.py; 8 configs x 5 folds x 3 seeds, R0 at seed 0: 100 fits)` |
-| **E-46** | Band and index decision | The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence. | per-slot nested rankings weighted by slot value (A-29) | the chosen band and index sets, with their margins | Runnable now | `Statistics scripts/make_band_options.py (consensus, grid, provisional table); then on Nibi docs/results/p12_bands/rescore_commands.md (8 sweep_eco_arch runs and one sweep_hs references run), then make_band_options.py --eco-rescore --hs-rescore` |
+| **E-46** | Band and index decision | The combined ranking keeps at least one red-edge band and B11 within the Mantis k=6 / k=4 sets. WRONG IF SWIR never earns a slot on any process's weighted evidence. | per-slot nested rankings weighted by slot value (A-29) | the chosen band and index sets, with their margins | Runnable now | `Statistics scripts/make_band_options.py (consensus, grid, provisional table); then on Nibi docs/results/P12/p12_bands/rescore_commands.md (8 sweep_eco_arch runs and one sweep_hs references run), then make_band_options.py --eco-rescore --hs-rescore` |
 | **E-47** | Architecture decision | Restated 2026-11-05, before any result (A-49): the onboard model is the ecology estimator (A-41), not the fire network. At E-46's bands, TinyEcologyUNet at the size the bands were ranked with (base_ch 8, depth 2) is within one paired SE of the best rung on the equal-weight combined skill, with sensor noise. WRONG IF only a larger rung (base_ch >= 16 or depth 3) reaches it: then the onboard model is bigger than the band search assumed and E-48 must size for it. | TinyEcologyUNet base_ch 4/8/16/32 x depth 1/2/3 at the chosen bands (raw + indices), with sensor noise | combined and per-head skill on the outer fold, paired by fold and seed with eco_v3; parameters and MACs per pixel and per 1000 x 1000 px scene | Runnable now | `Fire_Risk_FW BANDS=<E-46 set> SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh (run_eco_arch.py)` |
 | **E-49** | Dating the weather (R0) | Moving R0's weather from the legacy 30-June daily aggregates to each patch's D-1 at 13:00 LDT RAISES the between-patch AUC of the fast codes (FFMC, ISI) and LOWERS that of the slow codes (DC, BUI): the fast codes will describe the day before the fire rather than 30 June, and part of the slow codes' legacy 0.83 (DC) came from reading the fire year's drought after most fires had started. WRONG IF the fast and slow codes move in the same direction, or no code moves outside its CI. | weather design, as a chain on the same patches: legacy -> dated (daily aggregates, flat spin-up) -> dated at 13:00 LDT -> dated with the Appendix C-2 start-up and overwintered DC (the P3 design) | between-patch AUC and paired fire-vs-own-confuser win rate per FWI code; within-patch HFI AUC, reported | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-52** | Weather source: station vs ERA5 (R0) | The nearest CWFIS station's reported codes at D-1 rank fire above non-fire patches at least as well as ERA5-Land at 13:00 LDT (they are what CFFDRS actually runs on), and the ERA5-to-station disagreement in the codes grows with distance to the station. WRONG IF the disagreement is flat with distance: E-17's mechanism (weather error grows away from stations) would then have no support in the codes. | weather source for the same patches and date: ERA5-Land at the patch centre vs the nearest CWFIS station's reported observation and codes | between-patch AUC per code and source; \|ERA5 - station\| per code against station distance (Spearman) | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
@@ -152,7 +152,7 @@ The hypotheses are written to be capable of being wrong. `CLAUDE.md` is explicit
 
 The non-learned reference every imagery slot is measured against -- CFFDRS itself, not a model trained on its inputs.
 
-*Note:* P2, legacy design (docs/results/p2_r0): SUPPORTED. Within fire patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 on CWFIS 2019; half that margin is water and non-fuel (land only: 0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; fire beats its own confuser on DC in 88 % of 68 pairs. P(sustained flaming) is ~0.5 within patches: NBAC is not an ignition outcome (Stage C is). P3, dated design: SUPPORTED. Within HFI 0.681 (SCANFI), dated minus legacy +0.005 [-0.002, +0.012]; between: patch-mean HFI 0.863, BUI 0.878, FWI 0.841.
+*Note:* P2, legacy design (docs/results/P2/p2_r0): SUPPORTED. Within fire patches, FBP HFI AUC 0.676 [0.65, 0.70] on pre-fire SCANFI, 0.623 on CWFIS 2019; half that margin is water and non-fuel (land only: 0.589, 0.558). Between patches FWI 0.738, BUI 0.765, DC 0.828; fire beats its own confuser on DC in 88 % of 68 pairs. P(sustained flaming) is ~0.5 within patches: NBAC is not an ignition outcome (Stage C is). P3, dated design: SUPPORTED. Within HFI 0.681 (SCANFI), dated minus legacy +0.005 [-0.002, +0.012]; between: patch-mean HFI 0.863, BUI 0.878, FWI 0.841.
 
 *Blocked on:* legacy 30-June design only; P3 re-dates the weather to each fire's start
 
@@ -162,7 +162,7 @@ The non-learned reference every imagery slot is measured against -- CFFDRS itsel
 
 Which operational fuel input is honest on burned ground, and how much a post-fire inventory would flatter a result.
 
-*Note:* P2 (docs/results/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land.
+*Note:* P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land.
 
 *Blocked on:* the SCANFI v1 adapter is not written; SCANFI 2005 is held (292/292), its R0 re-score deferred until after P6
 
@@ -174,7 +174,7 @@ Which operational fuel input is honest on burned ground, and how much a post-fir
 
 The learned baseline the imagery slots are added to, and whether the physics layer costs or buys anything.
 
-*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between patches, every CI spanning 0. Q29.3: whether R2's within-patch gap to R1 closes is E-58.
+*Note:* P5: SlotNet R0-R2 written (Fire_Risk_FW cffdrs_net.py); R2 starts as R0 by construction. P7 (docs/results/P7/p7_slots): MIXED. R1 - R0 within +0.051 [+0.034, +0.068], 5/5 folds; R2 - R1 within -0.025 [-0.034, -0.015], between -0.006 (CI spans 0). Against the FWI CWFIS issued (P7b): R1 +0.042, R2 +0.035, R4 +0.035 between patches, every CI spanning 0. Q29.3: whether R2's within-patch gap to R1 closes is E-58.
 
 **E-35 — Fuel-type slot**
 
@@ -238,7 +238,7 @@ Whether the imager should own the leaf-state switch FBP applies to aspen and mix
 
 Stage B's floor. CFSDS v1.1 (90 m, fires > 500 ha, 2002-2024) covers all 99 fire patches: 82 fires, 7,835 fire-days.
 
-*Note:* Development fires, 2026-11-03 (docs/results/p8a_spread, A-46): rho 0.54 [0.49, 0.59], and 0.39 [0.34, 0.44] on days with spread.
+*Note:* Development fires, 2026-11-03 (docs/results/P8/p8a_spread, A-46): rho 0.54 [0.49, 0.59], and 0.39 [0.34, 0.44] on days with spread.
 
 *Blocked on:* the frozen test fires are read in P10
 
@@ -266,7 +266,7 @@ Stage C's floor: ignition receptivity, not occurrence (A-28).
 
 Imagery's value on the ignition process.
 
-*Note:* ignition_v1 partial 2026-11-05 (docs/results/p9b_ignition_rungs, 36/100 fits): r1 - r0_scanfi +0.052 [+0.033, +0.072] on 1,292 sets; r2 - r0 +0.056 [+0.038, +0.075] on folds 0-3, so prediction 2 fails provisionally; r4, r4_shuffled and r2_leaf_ablated not yet in. A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any band claim); epoch chosen on the inner 15 % of training groups (rule 5, confirmed). Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within +-0.005 of r2. Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a 15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form needs eco sidecars for the points; closure waits for Q26.
+*Note:* ignition_v1 partial 2026-11-05 (docs/results/P9/p9b_ignition_rungs, 36/100 fits): r1 - r0_scanfi +0.052 [+0.033, +0.072] on 1,292 sets; r2 - r0 +0.056 [+0.038, +0.075] on folds 0-3, so prediction 2 fails provisionally; r4, r4_shuffled and r2_leaf_ablated not yet in. A-48 approved by James 2026-11-05: noise-free for now (rule 6 caveat on any band claim); epoch chosen on the inner 15 % of training groups (rule 5, confirmed). Predictions registered 2026-11-05 before any fit: r4 beats r4_shuffled with the paired CI above 0; r2 within +-0.01 of r0; r2_leaf_ablated within +-0.005 of r2. Design 2026-11-04 (A-48), before any fit: conditional logistic loss over each matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a 15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form needs eco sidecars for the points; closure waits for Q26.
 
 *Blocked on:* the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be sent to scratch, and the FW commit pulled
 
@@ -276,7 +276,7 @@ Imagery's value on the ignition process.
 
 The CubeSat's bands and indices, presented as options with pros and cons for James to choose (A-49).
 
-*Note:* 2026-11-05 (A-49, docs/results/p12_weights): under six head-weighting schemes the equal-weight search's best set is tied (paired, one SE) with the overall best under five; only maximin separates them, by 0.009 +- 0.009. The best sets are 7-8 bands under every scheme. Consensus 2026-11-05 (docs/results/p12_bands): Sentinel-2 stable at k=1 (B12) and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot).
+*Note:* 2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting schemes the equal-weight search's best set is tied (paired, one SE) with the overall best under five; only maximin separates them, by 0.009 +- 0.009. The best sets are 7-8 bands under every scheme. Consensus 2026-11-05 (docs/results/P12/p12_bands): Sentinel-2 stable at k=1 (B12) and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot).
 
 *Blocked on:* the consensus re-scores (cluster); E-35 for the fuel-type slot's value
 
@@ -294,7 +294,7 @@ The onboard model, as options (each rung within one SE of the best, with its siz
 
 Whether the legacy design flattered or hid CFFDRS, and what each design step moves -- the baseline every later delta is read against.
 
-*Note:* P3 (docs/results/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 -> 0.799, ISI 0.701 -> 0.781, but BUI 0.765 -> 0.878 and DC 0.828 -> 0.830. Year alone scores 0.87, and within a year the fast codes do not gain (FFMC 0.730 -> 0.717) while the slow ones do (DMC 0.673 -> 0.839, BUI 0.691 -> 0.845, DC 0.743 -> 0.827). Dating helps through the slow codes; the prediction had them backwards.
+*Note:* P3 (docs/results/P3/p3_dated): REFUTED. Legacy -> dated: FFMC 0.695 -> 0.799, ISI 0.701 -> 0.781, but BUI 0.765 -> 0.878 and DC 0.828 -> 0.830. Year alone scores 0.87, and within a year the fast codes do not gain (FFMC 0.730 -> 0.717) while the slow ones do (DMC 0.673 -> 0.839, BUI 0.691 -> 0.845, DC 0.743 -> 0.827). Dating helps through the slow codes; the prediction had them backwards.
 
 *Blocked on:* needs the same chain on the frozen test set (P10)
 
@@ -304,7 +304,7 @@ Whether the legacy design flattered or hid CFFDRS, and what each design step mov
 
 How far the reanalysis we use stands from operational CFFDRS input, and whether station distance is a real stratifier for E-17.
 
-*Note:* P3 (docs/results/p3_dated): REFUTED. rho(|ERA5 - station|, distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC 0.78 vs 0.83. P7: under R2, station weather -0.017 [-0.034, -0.001] within and +0.024 [-0.027, +0.076] between, relative to ERA5.
+*Note:* P3 (docs/results/P3/p3_dated): REFUTED. rho(|ERA5 - station|, distance) -0.03 to +0.05, all CIs span 0 (195 patches, median 56 km). AUC station vs ERA5: FFMC 0.81 vs 0.80, BUI 0.87 vs 0.88, DC 0.78 vs 0.83. P7: under R2, station weather -0.017 [-0.034, -0.001] within and +0.024 [-0.027, +0.076] between, relative to ERA5.
 
 *Blocked on:* 2019 station file now held; needs the frozen test set (P10)
 
@@ -316,7 +316,7 @@ How far the reanalysis we use stands from operational CFFDRS input, and whether 
 
 Whether R0 can stand in for operational CFFDRS when imagery deltas are reported, and how far it is from it where it cannot.
 
-*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30). P7b (docs/results/p7b_operational, 2026-10-26): MIXED. 181 patches: AUC ISSUED by CWFIS 0.860 vs ours (ERA5) 0.851 (-0.009 [-0.073, +0.057], within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI lower (median); 10 of 19 large misses are ERA5 light rain the station did not see, 4 a later snow start-up. Same-year pairs: operational 0.744, ERA5 0.799.
+*Note:* Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, BUI and every FBP output start 2024-01-01 (GetCapabilities, 2026-10-26). All CWFIS grids are 2 km, so the comparison is between patches only: an operational map cannot rank pixels inside a 5 km patch. Whether the archive is as issued or reprocessed is not documented (Q30). P7b (docs/results/P7/p7b_operational, 2026-10-26): MIXED. 181 patches: AUC ISSUED by CWFIS 0.860 vs ours (ERA5) 0.851 (-0.009 [-0.073, +0.057], within 0.03); rho 0.76 [0.63, 0.85] (< 0.8). ERA5 runs 3.6 FWI lower (median); 10 of 19 large misses are ERA5 light rain the station did not see, 4 a later snow start-up. Same-year pairs: operational 0.744, ERA5 0.799.
 
 **E-56 — Operational FBP outputs on a 2024-2025 cohort**
 
@@ -324,7 +324,7 @@ Whether R0 can stand in for operational CFFDRS when imagery deltas are reported,
 
 The first comparison against what operational FBP actually reported. The cohort is also an out-of-time test for every model trained on 2019-2023.
 
-*Note:* Registered with E-55, before any grid value was scored. Runs on both 2024 and 2025 under either training regime (E-63): no learning is involved in the comparison. 2024 half, 2026-10-30 (docs/results/p6b_cohort): PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 [-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen and waits for P10 (A-42).
+*Note:* Registered with E-55, before any grid value was scored. Runs on both 2024 and 2025 under either training regime (E-63): no learning is involved in the comparison. 2024 half, 2026-10-30 (docs/results/P6/p6b_cohort): PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 [-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen and waits for P10 (A-42).
 
 *Blocked on:* 2025 half waits for P10 (A-42); share-of-area fuel agreement and FMC not yet compared
 
@@ -342,7 +342,7 @@ Whether the correct form can carry spatial imagery information at all, before th
 
 Whether the physics-anchored model (R2-R4) carries a real accuracy cost, which the P12 architecture rule weighs. Q29.3 (James, 2026-10-26).
 
-*Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1. P7c (docs/results/p7c_slots_v3, 2026-10-27): REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x -0.056 [-0.075, -0.038]; the gap is the cost of the physics anchor. Warm start best between patches (0.892; ISSUED by CWFIS 0.857).
+*Note:* The warm start keeps R2's physics weights at their usual start and copies only R1's network into the residual, so R2 begins as physics + R1. P7c (docs/results/P7/p7c_slots_v3, 2026-10-27): REFUTED. Within patches vs R1: warm -0.033 [-0.048, -0.019], 10x -0.056 [-0.075, -0.038]; the gap is the cost of the physics anchor. Warm start best between patches (0.892; ISSUED by CWFIS 0.857).
 
 **E-63 — Out-of-time generalisation, two training regimes**
 
@@ -350,7 +350,7 @@ Whether the physics-anchored model (R2-R4) carries a real accuracy cost, which t
 
 Whether the models hold up in a year they never saw -- the condition an operational satellite always predicts in -- and what one more training year buys. 2025 is frozen in both regimes and read once, in P10.
 
-*Note:* James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as the out-of-time test; regime B excludes both. Regime B makes no use of any choice regime A made with 2024 in view, and its 2024 test is scored before regime A's 2024 training results are looked at. Pack and regimes built 2026-10-30 (A-42). Both regimes ran 2026-11-02 (docs/results/p6e_out_of_time). On 2024, (a) is AT RISK: R1 and R2 fall 0.06-0.11, no CI excludes 0.05, and R1 - R0 between patches is -0.035 [-0.095, +0.021]. R0 itself falls 0.05-0.06. (b) waits for 2025.
+*Note:* James (2026-10-29): 2024 joins training in regime A; 2025 stays frozen as the out-of-time test; regime B excludes both. Regime B makes no use of any choice regime A made with 2024 in view, and its 2024 test is scored before regime A's 2024 training results are looked at. Pack and regimes built 2026-10-30 (A-42). Both regimes ran 2026-11-02 (docs/results/P6/p6e_out_of_time). On 2024, (a) is AT RISK: R1 and R2 fall 0.06-0.11, no CI excludes 0.05, and R1 - R0 between patches is -0.035 [-0.095, +0.021]. R0 itself falls 0.05-0.06. (b) waits for 2025.
 
 *Blocked on:* 2025 is read once, in P10
 
@@ -456,7 +456,7 @@ Conditioning on ignition removes the component a reflectance spectrum structural
 
 Guards the fire-date design (A-24).
 
-*Note:* P3 (docs/results/p3_dated): SUPPORTED. Day of year 0.55 [0.50, 0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the year (0.87), not the pseudo-dates.
+*Note:* P3 (docs/results/P3/p3_dated): SUPPORTED. Day of year 0.55 [0.50, 0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the year (0.87), not the pseudo-dates.
 
 *Blocked on:* the learned date-only classifier waits for P5 (training is Narval only)
 
@@ -466,7 +466,7 @@ Guards the fire-date design (A-24).
 
 How much the v1 band searches (E-1 to E-14) could have read the burn itself, and so which of their results survive P4.
 
-*Note:* P4 (docs/results/p4_prefire): MIXED. As registered, early fires show the drop (-0.061 [-0.081, -0.041], 83 % negative, n=54), but late fires show it too (-0.082, n=29) and it does not grow with overlap (rho +0.05 [-0.20, +0.30]). A control added after registration -- the same pixels at the same place in the confuser year -- takes both to about 0 (early -0.005 [-0.033, +0.023], late +0.005): the drop is the seasonal change of what later burns, not the burn. At most a weak leak in the longest overlaps (41+ days: -0.029). The legacy imagery's fault is snow and season, not a visible burn.
+*Note:* P4 (docs/results/P4/p4_prefire): MIXED. As registered, early fires show the drop (-0.061 [-0.081, -0.041], 83 % negative, n=54), but late fires show it too (-0.082, n=29) and it does not grow with overlap (rho +0.05 [-0.20, +0.30]). A control added after registration -- the same pixels at the same place in the confuser year -- takes both to about 0 (early -0.005 [-0.033, +0.023], late +0.005): the drop is the seasonal change of what later burns, not the burn. At most a weak leak in the longest overlaps (41+ days: -0.029). The legacy imagery's fault is snow and season, not a visible burn.
 
 *Blocked on:* the v1 band searches have to be re-run on the v2 pack to see what their results were worth
 
@@ -494,7 +494,7 @@ If the learned model beats every index family by a wide margin, the recommendati
 
 Whether the on-board model should compute indices before the network, which changes both the band value (a band is worth the indices it unlocks) and the compute budget (P12).
 
-*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile. Runs inside E-22's sweep (A-38): every evaluated set in raw / indices / raw + indices, noisy and noise-free. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): MIXED. Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small k'. Indices alone are worse at every k they form. eco_v3, 2026-11-04 (docs/results/p6a_ecology_v3): MIXED again, +0.0030 [+0.0006, +0.0057] at k = 8 only; maps per input mode show the same structure.
+*Note:* Indices are inputs only, never labels (rule 3). ECVs are not inputs unless one is shown worthwhile. Runs inside E-22's sweep (A-38): every evaluated set in raw / indices / raw + indices, noisy and noise-free. Run on Nibi 2026-10-29 (docs/results/P6/p6a_ecology): MIXED. Raw + indices beats raw only at k = 5-8 (+0.006 to +0.007 combined skill, CIs above 0); nothing at k <= 4, the opposite of 'most at small k'. Indices alone are worse at every k they form. eco_v3, 2026-11-04 (docs/results/P6/p6a_ecology_v3): MIXED again, +0.0030 [+0.0006, +0.0057] at k = 8 only; maps per input mode show the same structure.
 
 ### Covariates
 
@@ -554,7 +554,7 @@ CFS names thin station density as a limit on model accuracy (GLC-X-42 7.2). Fuel
 
 Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is frozen and snow-covered, so the recursion accumulates weeks of spurious drying and the error scales with latitude. Then it tests whether an imagery snow-off date beats the regional rule.
 
-*Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix. AMENDED 2026-10-29, before any patch snow-off date existed: the imagery date comes from the E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 rule as well as the flat spinup. The falsifier in the hypothesis was added at the same time, before any date existed. E-60 found the imagery date 16 d off the station on median, both ways. Run 2026-10-30 (docs/results/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves median DC +7.0 %, AUC DC +0.015 [-0.008, +0.040], FWI +0.002 [-0.009, +0.013]: the falsifier fires. VNIR only moves DC -20.2 % and loses skill (FWI -0.042 [-0.086, -0.007], DMC -0.126). The ERA5 rule stays; SAFARI is not asked for this date (A-41).
+*Note:* P3 (E-51): the operational start-up moves DC by +38 at >=60 N and lifts DC AUC 0.77 -> 0.91 there; ERA5 melts snow late, which is the error an S2 snow-off date could fix. AMENDED 2026-10-29, before any patch snow-off date existed: the imagery date comes from the E-60 classifier (median over 25 points per patch, Sentinel-2 to D-1), not a per-pixel NDSI threshold, and it is compared with the ERA5 C-2 rule as well as the flat spinup. The falsifier in the hypothesis was added at the same time, before any date existed. E-60 found the imagery date 16 d off the station on median, both ways. Run 2026-10-30 (docs/results/P6/p6d_startup): REFUTED. Above 55 N the SWIR-allowed date moves median DC +7.0 %, AUC DC +0.015 [-0.008, +0.040], FWI +0.002 [-0.009, +0.013]: the falsifier fires. VNIR only moves DC -20.2 % and loses skill (FWI -0.042 [-0.086, -0.007], DMC -0.126). The ERA5 rule stays; SAFARI is not asked for this date (A-41).
 
 *CFFDRS gap:* G4 snow-off keyed by regional rule
 
@@ -574,7 +574,7 @@ DMC and DC day-length factors are tabulated for ~46 N while Canada spans 42-83. 
 
 Every FWI code is defined on a same-day noon observation and a daily uplink cannot supply one. The input drift is already measured (DC 8.2% over three days against ISI's 89.9%) and fwi.py reasons from it to a recommendation -- BUI best, FWI worst. Drift in a feature is not loss in a prediction, and this measures the half nobody has.
 
-*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 on 7-day-old codes; the train-once-score-at-each-lag design still needs a scoring mode in run_slots. P7: r2_lag7 within -0.024 [-0.039, -0.011], between -0.052 [-0.101, -0.010]: decay is not flat (PARTIAL; per-code ordering and score-at-lag not run). 2026-11-05 (A-50): r2_lag7 aged the codes only; wind and humidity stayed at D-1. The pack now carries all 13:00 weather at lags 1, 2, 3 and 7 (no new ERA5 pass: the sidecars held it), run_slots scores one model at each lag (--score-lags), and r2_age7 trains on weather that is all 7 days old. lags_v1 2026-11-05 (docs/results/p7d_weather_age, 35/35 fits): between patches R2 loses -0.023 [-0.056, +0.012] at 2 days, -0.055 [-0.075, -0.034] at 3 and -0.051 [-0.091, -0.011] at 7; R0 HFI -0.044, -0.093, -0.061. Within patches flat (<= 0.007). r2_age7 is worse than r2 at every age (within -0.018 to -0.022, 5/5 folds). PARTIAL: decay is not flat; the per-code ordering half was not run.
+*Note:* Train once, score at each lag: one model, five scores. The leakage guard makes an earlier target date strictly safer. P3 (E-53, no learning): FFMC and ISI lose about 0.10 AUC from D-1 to D-7 with ERA5, DC and BUI about 0.03-0.04. P5: r2_lag7 trains R2 on 7-day-old codes; the train-once-score-at-each-lag design still needs a scoring mode in run_slots. P7: r2_lag7 within -0.024 [-0.039, -0.011], between -0.052 [-0.101, -0.010]: decay is not flat (PARTIAL; per-code ordering and score-at-lag not run). 2026-11-05 (A-50): r2_lag7 aged the codes only; wind and humidity stayed at D-1. The pack now carries all 13:00 weather at lags 1, 2, 3 and 7 (no new ERA5 pass: the sidecars held it), run_slots scores one model at each lag (--score-lags), and r2_age7 trains on weather that is all 7 days old. lags_v1 2026-11-05 (docs/results/P7/p7d_weather_age, 35/35 fits): between patches R2 loses -0.023 [-0.056, +0.012] at 2 days, -0.055 [-0.075, -0.034] at 3 and -0.051 [-0.091, -0.011] at 7; R0 HFI -0.044, -0.093, -0.061. Within patches flat (<= 0.007). r2_age7 is worse than r2 at every age (within -0.018 to -0.022, 5/5 folds). PARTIAL: decay is not flat; the per-code ordering half was not run.
 
 *Blocked on:* the per-code ordering half needs per-code weather arms (not built)
 
@@ -586,7 +586,7 @@ Every FWI code is defined on a same-day noon observation and a daily uplink cann
 
 FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, insects, fire and regrowth. The slope is the estimator because at gap 0 our estimate is a noisy copy of its own training target and would lose on noise alone.
 
-*Note:* P2 (docs/results/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade.
+*Note:* P2 (docs/results/P2/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade.
 
 *Blocked on:* the refreshed-estimate half needs E-22; SCANFI 2005 and 2010 are now held for all 292 patches, and the R0 re-score with them is deferred until after P6
 
@@ -598,7 +598,7 @@ FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, ins
 
 THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome per patch, so it has orders of magnitude more signal per scene than the fire arm and measures what the bands actually retrieve rather than what correlates with ignition.
 
-*Note:* P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 tiles; frozen test 45 patches, splits/ecology_test_v1.json), 12 bands with B12, SCANFI v2 2020 labels. The WRONG IF clause was added 2026-10-28, after submission and before any E-22 result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were already known. Run on Nibi 2026-10-29 (docs/results/p6a_ecology): SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included (Q35); the family target's D class is 82 % open ground (P6a-M1). eco_v3 on the corrected labels, 2026-11-04 (docs/results/p6a_ecology_v3): SUPPORTED again, first SWIR at step 1 in 11/15 (B12), median 1.
+*Note:* P6a (A-38): packed as data/ecology_v2 (dev 226 patches / 904 tiles; frozen test 45 patches, splits/ecology_test_v1.json), 12 bands with B12, SCANFI v2 2020 labels. The WRONG IF clause was added 2026-10-28, after submission and before any E-22 result existed; E-2's rungs (never, 3, 2, 5, 2, 7) were already known. Run on Nibi 2026-10-29 (docs/results/P6/p6a_ecology): SUPPORTED. First SWIR band at step 1 in 13/15 runs (B12 60 %, B11 27 %), median 1. Caveats: SCANFI is Landsat-mapped, SWIR included (Q35); the family target's D class is 82 % open ground (P6a-M1). eco_v3 on the corrected labels, 2026-11-04 (docs/results/P6/p6a_ecology_v3): SUPPORTED again, first SWIR at step 1 in 11/15 (B12), median 1.
 
 **E-50 — Latitude-correct day length (R0)**
 
@@ -606,7 +606,7 @@ THE PRIMARY BAND RANKING. Dense per-pixel labels rather than one sparse outcome 
 
 Whether the fixed 46 N day length (gap G5) costs CFFDRS skill where Canada burns most.
 
-*Note:* cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only changes the factors at or south of 30 N, so it is a no-op for every patch here. FWI2025's sunrise-to-sunset hourly DMC changes far more than day length and may not feed FBP1992. DC's monthly factor is a seasonal adjustment, not a day length, and is left. P3 (docs/results/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / +6.4 by band; AUC moves by 0.006 or less: a calibration gap, not a skill gap, under R0.
+*Note:* cffdrs lat.adjust is NOT the variant: in cffdrs 1.9.2 it only changes the factors at or south of 30 N, so it is a no-op for every patch here. FWI2025's sunrise-to-sunset hourly DMC changes far more than day length and may not feed FBP1992. DC's monthly factor is a seasonal adjustment, not a day length, and is left. P3 (docs/results/P3/p3_dated): SUPPORTED. DMC shift +1.4 / +3.8 / +6.4 by band; AUC moves by 0.006 or less: a calibration gap, not a skill gap, under R0.
 
 *Blocked on:* needs the frozen test set (P10)
 
@@ -618,7 +618,7 @@ Whether the fixed 46 N day length (gap G5) costs CFFDRS skill where Canada burns
 
 How much the operational start-up matters before imagery tries to improve on it (G4).
 
-*Note:* P3 (docs/results/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 by band (grows north), DC AUC 0.77 -> 0.91 at >=60 N (19 fires); DMC shift -1.3 / -2.0 / -1.4 (flat).
+*Note:* P3 (docs/results/P3/p3_dated): MIXED. DC shift -19.8 / +30.1 / +38.4 by band (grows north), DC AUC 0.77 -> 0.91 at >=60 N (19 fires); DMC shift -1.3 / -2.0 / -1.4 (flat).
 
 *Blocked on:* needs the frozen test set (P10)
 
@@ -630,7 +630,7 @@ How much the operational start-up matters before imagery tries to improve on it 
 
 How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard product (A-29 rule 2).
 
-*Note:* P3 (docs/results/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC -0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 and DMC -0.12, as fast as FFMC.
+*Note:* P3 (docs/results/P3/p3_dated): SUPPORTED with ERA5: D-1 -> D-7, FFMC -0.10, ISI -0.11, DC -0.03, BUI -0.04. Station series: BUI -0.11 and DMC -0.12, as fast as FFMC.
 
 *Blocked on:* needs the frozen test set (P10)
 
@@ -642,7 +642,7 @@ How stale CFFDRS's own inputs can get -- the bar for a weather-dependent onboard
 
 Whether a VNIR-only camera can supply the start-up date.
 
-*Note:* AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): the reference was the NDSI-based date, an index threshold used as truth, which rule 3 forbids. It is now the station-measured snow on ground; NDSI is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is ECCC climate-station observed snow on ground. P6c (A-39): packed as data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test 122 station-years). Run on Nibi 2026-10-29 (docs/results/p6c_snow): REFUTED. VNIR-only best 19.5 d (with noise); +3.8 d [+2.0, +5.6] worse than SWIR allowed (15.7 d), 5/5 folds. The 7 d clause sat below the sampling floor (a perfect classifier: 7.5 d), unattainable for any camera; SWIR1 is worth about 4 days here.
+*Note:* AMENDED 2026-10-27, before any snow-off data or code existed (Q32, James): the reference was the NDSI-based date, an index threshold used as truth, which rule 3 forbids. It is now the station-measured snow on ground; NDSI is a candidate like any other. Q33 (James, same day, still before any snow-off data): the CWFIS fwi_obs snow on ground proved to be mostly a gridded analysis, so the station truth is ECCC climate-station observed snow on ground. P6c (A-39): packed as data/snow_v1 (dev 915 station-years, 21,291 observations; frozen test 122 station-years). Run on Nibi 2026-10-29 (docs/results/P6/p6c_snow): REFUTED. VNIR-only best 19.5 d (with noise); +3.8 d [+2.0, +5.6] worse than SWIR allowed (15.7 d), 5/5 folds. The 7 d clause sat below the sampling floor (a perfect classifier: 7.5 d), unattainable for any camera; SWIR1 is worth about 4 days here.
 
 **E-64 — LFMC: simulation-trained, Sentinel-2 empirical, FBP equation**
 
@@ -650,7 +650,7 @@ Whether a VNIR-only camera can supply the start-up date.
 
 Whether an observed foliar moisture beats the computed one (G1's strong claim), and whether a retrieval trained on physics transfers to real data with no local calibration -- the condition SAFARI faces in Canada, which has no LFMC sites. The winner becomes the measured-FMC sidecar that unblocks E-16.
 
-*Note:* FBP's equation describes conifer foliage, so (a) is scored on conifers; aspen is reported, not tested. A 15 % of sites, seeded, is frozen for P10. Placeholders (A-47): +/- 5-day pairing, 4SAIL turbid medium for every fuel, soil-only backgrounds, an atmospheric-correction residual as extra noise. Run 2026-11-04 (docs/results/p6f_lfmc): REFUTED. Conifer RMSE minus the equation (14.0): simulation GP +26.0 [+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]; simulation minus empirical +25.5. Conifer LFMC SD is 15.2.
+*Note:* FBP's equation describes conifer foliage, so (a) is scored on conifers; aspen is reported, not tested. A 15 % of sites, seeded, is frozen for P10. Placeholders (A-47): +/- 5-day pairing, 4SAIL turbid medium for every fuel, soil-only backgrounds, an atmospheric-correction residual as extra noise. Run 2026-11-04 (docs/results/P6/p6f_lfmc): REFUTED. Conifer RMSE minus the equation (14.0): simulation GP +26.0 [+22.4, +29.3], best empirical +0.6 [-0.1, +1.2]; simulation minus empirical +25.5. Conifer LFMC SD is 15.2.
 
 *CFFDRS gap:* G1 foliar moisture is computed, never observed
 
@@ -660,7 +660,7 @@ Whether an observed foliar moisture beats the computed one (G1's strong claim), 
 
 Whether the +31 bias was the prior, and whether the spectra then carry LFMC beyond the prior's mean. If (b) fails, the simulation route on Sentinel-2 bands has no spectral skill on conifers even with a right-sized prior, and steps 3-4 (backgrounds, a discontinuous canopy) are the remaining physics to try.
 
-*Note:* Step 1 of the fix (docs/results/p6f_reference): PROSPECT-D + 4SAIL match Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the training fold enters the prior; the frozen LFMC test sites stay unread. lfmc_v2 2026-11-06 (docs/results/p6f_lfmc_v2): MIXED. Conifers: narrowed GP RMSE 13.2, bias +4.2 (1 holds); minus the stratum mean +1.09 [+0.59, +1.60] (2 fails: no spectral skill beyond the prior); minus FBP -0.80 [-1.66, -0.01] (3 holds), but the stratum mean beats FBP by -1.89; no B12 +0.07 (4 fails).
+*Note:* Step 1 of the fix (docs/results/P6/p6f_reference): PROSPECT-D + 4SAIL match Feret's R packages to 5e-15 with the same leaf-angle classes, so the code is not the cause of E-64's bias. The leaf-angle binning (13 against 18 classes) is at most 0.1 sigma of the atmospheric residual. Only the LFMC range of the training fold enters the prior; the frozen LFMC test sites stay unread. lfmc_v2 2026-11-06 (docs/results/P6/p6f_lfmc_v2): MIXED. Conifers: narrowed GP RMSE 13.2, bias +4.2 (1 holds); minus the stratum mean +1.09 [+0.59, +1.60] (2 fails: no spectral skill beyond the prior); minus FBP -0.80 [-1.66, -0.01] (3 holds), but the stratum mean beats FBP by -1.89; no B12 +0.07 (4 fails).
 
 *Blocked on:* the FW commit must be pushed and pulled
 
@@ -700,7 +700,7 @@ What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked
 
 Which SWIR placements, and which detector, the structure targets need; feeds E-46 and the SWIR chain choice.
 
-*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. Provisional sweep 2026-10-29: VOID (docs/results/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks and extended InGaAs on two folds only (docs/results/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 (docs/results/p6a_hs_v3): the falsifier does not fire (extra from extended: conifer -0.24, closure +0.06, height +0.04, all CIs reach 0), but the searches are unstable and a hand-set 1610 + 2190 nm pair beats them on height. Full sweep hs_v4 on the final labels, 2026-11-03 (docs/results/p6a_hs_v4): REFUTED on height only, +0.09 m [+0.01, +0.23] against a standard gain of -0.01 m, so the 10 % threshold is degenerate. Lidar height (docs/results/p6a_external_labels_v2) does not reproduce it: extended minus standard +0.05 m worse [-0.00, +0.11].
+*Note:* Broadens E-23 (which stays as registered) beyond 1750 nm and adds vendor reference points. DFA L5 (1348/64) has ~28 % of its response inside the 1364-1408 nm water-vapour gap (A-22). A-40 / Q34: the grid applies rule 7, which also removes 1262-1288, 1330-1359, 1414-1490 and 1970-1980 nm, and the standard InGaAs placeholder stops at 1700 nm. Provisional sweep 2026-10-29: VOID (docs/results/P6/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: no verdict, 51 of 75 tasks and extended InGaAs on two folds only (docs/results/P6/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 (docs/results/P6/p6a_hs_v3): the falsifier does not fire (extra from extended: conifer -0.24, closure +0.06, height +0.04, all CIs reach 0), but the searches are unstable and a hand-set 1610 + 2190 nm pair beats them on height. Full sweep hs_v4 on the final labels, 2026-11-03 (docs/results/P6/p6a_hs_v4): REFUTED on height only, +0.09 m [+0.01, +0.23] against a standard gain of -0.01 m, so the 10 % threshold is degenerate. Lidar height (docs/results/P6/p6a_external_labels_v2) does not reproduce it: extended minus standard +0.05 m worse [-0.00, +0.11].
 
 *Blocked on:* the held-out AVIRIS test lines wait for P10
 
@@ -710,7 +710,7 @@ Which SWIR placements, and which detector, the structure targets need; feeds E-4
 
 Whether a VNIR camera without red edge (as some standard filter sets are) gives up structure skill, and which placements win.
 
-*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search; the provisional sweep of 2026-10-29 is VOID (docs/results/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold (docs/results/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 (docs/results/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on percent conifer (-1.2 %) and closure (+2.2 %), though 12/15 best sets keep a 700-760 nm band. Full sweep hs_v4, 2026-11-03 (docs/results/p6a_hs_v4): REFUTED again. Red edge is in 15/15 best sets, but without it conifer is -1.1 % [-2.1, -0.3] and closure +2.1 % [+0.9, +3.3]. Sentinel-2 half on eco_v3, 2026-11-04 (docs/results/p6a_ecology_v3): REFUTED. Red edge in 15/15 best 6-band sets; without it at k = 6 conifer +0.7 % [-2.0, +2.9], closure -0.9 % [-2.0, +0.5].
+*Note:* The VNIR arm searches the camera alone (no SWIR band), the question E-62 asks; Sentinel-2's bands and DFA's standard 6 enter as references (A-40). Sentinel-2 half, run on Nibi 2026-10-29 (docs/results/P6/p6a_ecology): AT RISK. Red edge (B5/B6) is in 13/15 best 6-band sets, but without B5-B7 the k = 6 error is within 5 % on percent conifer (+0.9 %) and closure (-0.2 %), because SWIR substitutes. The VNIR-only camera question waits for the AVIRIS-NG search; the provisional sweep of 2026-10-29 is VOID (docs/results/P6/p6a_hs_provisional). Partial sweep on the corrected pack, 2026-11-01: not tested, the two VNIR arms share no fold (docs/results/P6/p6a_hs_v2_provisional). Full sweep hs_v3, 2026-11-02 (docs/results/P6/p6a_hs_v3): the falsifier fires. No red edge is within 5 % on percent conifer (-1.2 %) and closure (+2.2 %), though 12/15 best sets keep a 700-760 nm band. Full sweep hs_v4, 2026-11-03 (docs/results/P6/p6a_hs_v4): REFUTED again. Red edge is in 15/15 best sets, but without it conifer is -1.1 % [-2.1, -0.3] and closure +2.1 % [+0.9, +3.3]. Sentinel-2 half on eco_v3, 2026-11-04 (docs/results/P6/p6a_ecology_v3): REFUTED. Red edge in 15/15 best 6-band sets; without it at k = 6 conifer +0.7 % [-2.0, +2.9], closure -0.9 % [-2.0, +0.5].
 
 *Blocked on:* the held-out AVIRIS test lines wait for P10
 
@@ -736,7 +736,7 @@ A number for the requirements table. The dichroic makes misregistration small, n
 
 The onboard hardware.
 
-*Note:* Conversion pre-check 2026-11-05 (docs/results/p12_convert), untrained P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but only 4x1 at tile 16-32 comes near the Q8 (84-91 % BRAM; 8x2 258 %). DPU (Q8): every rung is one DPU subgraph, only fix2float on the CPU, at most 0.28 s per scene at peak. FINN (estimate only, BRAM a floor with FIFOs unsized): all 24 builds convert; 23 fit the Q8 and 20 the Q7 at <= 80 %, and base_ch 4-16 meet 43 s at minimal folding (8x2 W4A4: 24 % of the Q7, 8.6 s). Next: FIFO sizing (Vivado on Linux) before the Q7 is an option. The index front end divides and is in none of these graphs.
+*Note:* Conversion pre-check 2026-11-05 (docs/results/P12/p12_convert), untrained P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but only 4x1 at tile 16-32 comes near the Q8 (84-91 % BRAM; 8x2 258 %). DPU (Q8): every rung is one DPU subgraph, only fix2float on the CPU, at most 0.28 s per scene at peak. FINN (estimate only, BRAM a floor with FIFOs unsized): all 24 builds convert; 23 fit the Q8 and 20 the Q7 at <= 80 %, and base_ch 4-16 meet 43 s at minimal folding (8x2 W4A4: 24 % of the Q7, 8.6 s). Next: FIFO sizing (Vivado on Linux) before the Q7 is an option. The index front end divides and is in none of these graphs.
 
 *Blocked on:* E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 from 91 s; then lowest power)
 
@@ -746,7 +746,7 @@ The onboard hardware.
 
 P12's sensor option table: what each Mantis mode would deliver, with GSD, swath, power, size and TRL from DFA's datasheet beside it (A-41: cost never ranks).
 
-*Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled. sensors_v1 2026-11-06 (docs/results/p12_sensors), 75/75: MIXED. (2), (3), (5) hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).
+*Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled. sensors_v1 2026-11-06 (docs/results/P12/p12_sensors), 75/75: MIXED. (2), (3), (5) hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).
 
 ### Out of reach
 
@@ -756,7 +756,7 @@ P12's sensor option table: what each Mantis mode would deliver, with GSD, swath,
 
 Would make G1's STRONG claim testable -- that a spectral estimate beats the FBP equation -- and unblock E-16. Globe-LFMC 2.0 is fetched and measured: 2,884 usable records at 83 sites, no Canadian ones, and C-2 black spruce has 51. It carries no spectra, so each record must be paired with a Sentinel-2 acquisition. Also the first moisture evidence for SWIR2 as A-41's tie-breaker.
 
-*Note:* James (2026-11-03): start the simulation-trained retrieval of brief Phases 1-4 and compare it with LFMC from Sentinel-2's bands, while CWFIS is asked about field LFMC. Globe-LFMC holds LFMC only, not Cw or Cm, so H1 is read through LFMC error. Run 2026-11-04 (docs/results/p6f_lfmc): SUPPORTED, weakly. Without B12 the simulation GP is +1.7 [+0.4, +3.2] worse on jack and red pine, in spring and summer, but that retrieval is biased +31 and worse than a constant.
+*Note:* James (2026-11-03): start the simulation-trained retrieval of brief Phases 1-4 and compare it with LFMC from Sentinel-2's bands, while CWFIS is asked about field LFMC. Globe-LFMC holds LFMC only, not Cw or Cm, so H1 is read through LFMC error. Run 2026-11-04 (docs/results/P6/p6f_lfmc): SUPPORTED, weakly. Without B12 the simulation GP is +1.7 [+0.4, +3.2] worse on jack and red pine, in spring and summer, but that retrieval is biased +31 and worse than a constant.
 
 *CFFDRS gap:* G1 strong form
 
@@ -815,7 +815,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-43** | Date-only control | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-44** | Ignition R0 | `Fire_Risk_Model build_ignition_dataset.py --stage weather / scanfi / filter, then eval_ignition_r0.py (CPU, no fitting)` | -- |
 | **E-45** | Ignition slot value | `Fire_Risk_FW SUBMIT=1 bash scripts/shell/sweep_ignition.sh (run_ignition.py; 8 configs x 5 folds x 3 seeds, R0 at seed 0: 100 fits)` | --time=3:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per task of 6 fits, 17 tasks (a first guess: tiles read at 242/s locally, about 12 min of reading per fit) |
-| **E-46** | Band and index decision | `Statistics scripts/make_band_options.py (consensus, grid, provisional table); then on Nibi docs/results/p12_bands/rescore_commands.md (8 sweep_eco_arch runs and one sweep_hs references run), then make_band_options.py --eco-rescore --hs-rescore` | -- |
+| **E-46** | Band and index decision | `Statistics scripts/make_band_options.py (consensus, grid, provisional table); then on Nibi docs/results/P12/p12_bands/rescore_commands.md (8 sweep_eco_arch runs and one sweep_hs references run), then make_band_options.py --eco-rescore --hs-rescore` | -- |
 | **E-47** | Architecture decision | `Fire_Risk_FW BANDS=<E-46 set> SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh (run_eco_arch.py)` | --time=1:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G; 15 tasks (5 folds x 3 seeds), 3 per job, 12 rungs each (a first guess from eco_v3's 14 s per 8x2 fit) |
 | **E-49** | Dating the weather (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-50** | Latitude-correct day length (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |

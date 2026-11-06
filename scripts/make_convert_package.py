@@ -9,7 +9,7 @@ Reads what Fire_Risk_FW wrote locally (nothing here trains or synthesises):
 - FINN: `hls_projects/_finn/eco_<size>_w<b>a<b>/report/` from
   `scripts/export_eco_qonnx.py` + `finn_flow/build_finn.py` (estimate only).
 
-Writes `docs/results/p12_convert/`: T_convert.csv, convert.png, summary.json.
+Writes `docs/results/P12/p12_convert/`: T_convert.csv, convert.png, summary.json.
 
     python scripts/make_convert_package.py --fw ../Fire_Risk_FW
 """
@@ -193,7 +193,7 @@ def figure(rows: list[dict], out: Path) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--fw", type=Path, default=ROOT.parent / "Fire_Risk_FW")
-    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "p12_convert")
+    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_convert")
     args = ap.parse_args(argv)
     rows = load(args.fw)
     if not rows:

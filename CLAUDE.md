@@ -25,7 +25,7 @@ These come from the planning discussion (reasons in section 8 of the brief). Do 
 - Before starting any phase, write a short plan (approach, files, validation, open questions) and wait for approval.
 - Record assumptions in `docs/ASSUMPTIONS.md` and questions for James in `docs/OPEN_QUESTIONS.md`. Use clearly labelled placeholder values rather than blocking.
 - Keep established results separate from hypotheses. The brief marks hypotheses; the study's job is to test them, not to confirm them.
-- After each phase, write a short results note in `docs/results/`.
+- After each phase, write a short results note in `docs/results/P<n>/<folder>/` (packages are grouped by phase number, e.g. `docs/results/P7/p7d_weather_age/`; `figures/` and the indexes stay at the top).
 
 ## Conventions
 

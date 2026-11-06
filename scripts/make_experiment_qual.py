@@ -22,7 +22,7 @@ patches are read: every stem comes from a run's per_patch.csv or samples.npz.
     python scripts/make_experiment_qual.py --only E-61 E-62 \
         --hs-run narval_results/hs_v3/<run> \
         --hs-pack ../Fire_Risk_Model/data/aviris_v3/dev.npz \
-        --hs-out docs/results/p6a_hs_v3
+        --hs-out docs/results/P6/p6a_hs_v3
 """
 from __future__ import annotations
 
@@ -51,12 +51,12 @@ LAGS_V1 = ROOT / "narval_results" / "lags_v1" / "20261105-1625"
 IGN_V1 = ROOT / "narval_results" / "ignition_v1" / "20261105-1625"
 HS_RUN = ROOT / "narval_results" / "hs_v2_provisional" / "20261030-1755"
 HS_PACK = ROOT.parent / "Fire_Risk_Model" / "data" / "aviris_v2" / "dev.npz"
-HS_OUT = RESULTS / "p6a_hs_v2_provisional"
+HS_OUT = RESULTS / "P6/p6a_hs_v2_provisional"
 E63_B = ROOT / "narval_results" / "e63_regime_b" / "20261101-2054"
 PLOTS_RUN = ROOT / "narval_results" / "hs_plots" / "20261101-2024"
 LIDAR_RUN = ROOT / "narval_results" / "hs_lidar" / "20261101-2024"
 LIDAR_PACK = ROOT.parent / "Fire_Risk_Model" / "data" / "aviris_lidar_v1" / "dev.npz"
-EXT_OUT = RESULTS / "p6a_external_labels"
+EXT_OUT = RESULTS / "P6/p6a_external_labels"
 
 HS_FAMILIES = ("C", "D", "M", "O", "S", "NF", "WA")
 STRIP = (200, 36)       # bins along and across a line
@@ -969,48 +969,48 @@ def p9b_map(out: Path):
 
 SV2, SV3 = SLOTS_V2, SLOTS_V3
 BUILD = {
-    "E-32": lambda: e32_tiles(RESULTS / "p2_r0"),
-    "E-33": lambda: e33_tiles(RESULTS / "p2_r0"),
-    "E-21": lambda: e21_tiles(RESULTS / "p3_dated"),
-    "E-49": lambda: e49_tiles(RESULTS / "p3_dated"),
-    "E-50": lambda: e50_map(RESULTS / "p3_dated"),
-    "E-51": lambda: e51_map(RESULTS / "p3_dated"),
-    "E-52": lambda: e52_map(RESULTS / "p3_dated"),
-    "E-53": lambda: e53_map(RESULTS / "p3_dated"),
-    "E-55": lambda: e55_map(RESULTS / "p7b_operational"),
-    "E-18": lambda: e18_map(RESULTS / "p6d_startup"),
-    "E-56": lambda: (e56_map(RESULTS / "p6b_cohort"), e56_tiles(RESULTS / "p6b_cohort")),
-    "E-63": lambda: e63_map(RESULTS / "p6e_out_of_time"),
-    "P0-3": lambda: p0_inventory(RESULTS / "p0_verify"),
-    "P1-3": lambda: p1_slots(RESULTS / "p1_physics"),
-    "E-41": lambda: p8a_progression(RESULTS / "p8a_spread"),
-    "E-44": lambda: p9_sets(RESULTS / "p9_ignition"),
-    "E-45": lambda: p9b_map(RESULTS / "p9b_ignition_rungs"),
+    "E-32": lambda: e32_tiles(RESULTS / "P2/p2_r0"),
+    "E-33": lambda: e33_tiles(RESULTS / "P2/p2_r0"),
+    "E-21": lambda: e21_tiles(RESULTS / "P3/p3_dated"),
+    "E-49": lambda: e49_tiles(RESULTS / "P3/p3_dated"),
+    "E-50": lambda: e50_map(RESULTS / "P3/p3_dated"),
+    "E-51": lambda: e51_map(RESULTS / "P3/p3_dated"),
+    "E-52": lambda: e52_map(RESULTS / "P3/p3_dated"),
+    "E-53": lambda: e53_map(RESULTS / "P3/p3_dated"),
+    "E-55": lambda: e55_map(RESULTS / "P7/p7b_operational"),
+    "E-18": lambda: e18_map(RESULTS / "P6/p6d_startup"),
+    "E-56": lambda: (e56_map(RESULTS / "P6/p6b_cohort"), e56_tiles(RESULTS / "P6/p6b_cohort")),
+    "E-63": lambda: e63_map(RESULTS / "P6/p6e_out_of_time"),
+    "P0-3": lambda: p0_inventory(RESULTS / "P0/p0_verify"),
+    "P1-3": lambda: p1_slots(RESULTS / "P1/p1_physics"),
+    "E-41": lambda: p8a_progression(RESULTS / "P8/p8a_spread"),
+    "E-44": lambda: p9_sets(RESULTS / "P9/p9_ignition"),
+    "E-45": lambda: p9b_map(RESULTS / "P9/p9b_ignition_rungs"),
     "E-22": lambda: (e22_plots_map(EXT_OUT), lidar_tracks(EXT_OUT)),
     "E-36": lambda: slot_tiles(
         SV2, [("r2:pred", "R2"), ("r3_pc:pred", "R3 PC"), ("r3_pc:delta_pc", "PC correction"),
-              ("r3_pc_shuffled:delta_pc", "twin's correction")], RESULTS / "p7_slots",
+              ("r3_pc_shuffled:delta_pc", "twin's correction")], RESULTS / "P7/p7_slots",
         "qual_E-36_pc.png", "E-36  Percent-conifer slot: one held-out tile per fold (seed 0)",
         "Flat orange is real: the correction sits pinned at its -30 bound (see corrections.png). "
         "The twin's imagery is shuffled, so it learns only that constant.",
         delta_label="correction (points)"),
     "E-37": lambda: slot_tiles(
         SV2, [("r2:pred", "R2"), ("r3_cbh:pred", "R3 CBH"), ("r3_cbh:delta_cbh", "CBH correction"),
-              ("r3_cbh_shuffled:delta_cbh", "twin's correction")], RESULTS / "p7_slots",
+              ("r3_cbh_shuffled:delta_cbh", "twin's correction")], RESULTS / "P7/p7_slots",
         "qual_E-37_cbh.png", "E-37  Crown-base-height slot: one held-out tile per fold (seed 0)",
         "The flat blue is real: the correction sits pinned at its +0.7 bound on most tiles (see "
         "corrections.png). The twin's imagery is shuffled, so it learns only that constant.",
         delta_max=0.7, delta_label="correction (log factor)"),
     "E-20": lambda: (slot_tiles(
         SV2, [("r2:pred", "R2, 1-day codes"), ("r2_lag7:pred", "R2, 7-day codes"),
-              ("r2_lag7:pred-r2:pred", "change in rank")], RESULTS / "p7_slots",
+              ("r2_lag7:pred-r2:pred", "change in rank")], RESULTS / "P7/p7_slots",
         "qual_E-20_staleness.png", "E-20  Staleness: fresh and week-old codes (seed 0)",
         "Last column: within-tile rank with 7-day codes minus 1-day codes.",
         delta_label="change in percentile"),
         slot_tiles(
         LAGS_V1, [("r2:pred", "R2, trained on D-1 weather"),
                   ("r2_age7:pred", "R2, trained 7 days stale"),
-                  ("r2_age7:pred-r2:pred", "change in rank")], RESULTS / "p7d_weather_age",
+                  ("r2_age7:pred-r2:pred", "change in rank")], RESULTS / "P7/p7d_weather_age",
         "qual_E-20_trained_stale.png", "E-20  Training on week-old weather (seed 0)",
         "Both scored with the weather they were trained on (lag 1 and lag 7). Weather is one "
         "value per tile, so within a tile only the learned fuel and slot terms move the rank.",
@@ -1019,7 +1019,7 @@ BUILD = {
         SV3, [("r2_cwfis:pred", "R2, CWFIS fuel"), ("r3_curing_cwfis:pred", "R3 curing"),
               ("r3_curing_cwfis:delta_curing", "curing correction"),
               ("r3_curing_cwfis_shuffled:delta_curing", "twin's correction")],
-        RESULTS / "p7c_slots_v3", "qual_E-38_curing.png",
+        RESULTS / "P7/p7c_slots_v3", "qual_E-38_curing.png",
         "E-38  Curing slot: one held-out tile per fold (seed 0)",
         "Both score columns use CWFIS fuel, so the blocks are that layer's coarse cells. Curing "
         "acts on O-1 grass only, and these tiles hold little of it.",
@@ -1027,87 +1027,87 @@ BUILD = {
     "E-57": lambda: slot_tiles(
         SV3, [("r2:pred", "R2"), ("r3_pc_offset:pred", "R3 PC, offset"),
               ("r3_pc_offset:delta_pc", "PC: imagery part"),
-              ("r3_pc_offset_shuffled:delta_pc", "twin's part")], RESULTS / "p7c_slots_v3",
+              ("r3_pc_offset_shuffled:delta_pc", "twin's part")], RESULTS / "P7/p7c_slots_v3",
         "qual_E-57_pc_offset.png", "E-57  PC correction with an imagery-free offset (seed 0)",
         "The PC columns show only the imagery part, without the learned offset.",
         delta_label="imagery part of the PC correction (points)"),
     "E-58": lambda: slot_tiles(
         SV3, [("r1:pred", "R1"), ("r2:pred", "R2 zero start"), ("r2_warm:pred", "R2 from R1"),
-              ("r2_lr10:pred", "R2 10x rate")], RESULTS / "p7c_slots_v3",
+              ("r2_lr10:pred", "R2 10x rate")], RESULTS / "P7/p7c_slots_v3",
         "qual_E-58_r2_gap.png", "E-58  Closing R2's gap to R1 (seed 0)",
         "All maps are our models."),
 }
 
 #: (experiment, folder, kind, files or reason). "none" states why nothing exists.
 QUAL = [
-    ("E-32", "p2_r0", "tiles", ["qual_E-32_r0.png", "tiles.png"]),
-    ("E-33", "p2_r0", "tiles", ["qual_E-33_inventories.png"]),
-    ("E-21", "p3_dated", "tiles", ["qual_E-21_inventory_age.png"]),
-    ("E-49", "p3_dated", "tiles", ["qual_E-49_weather_date.png"]),
-    ("E-50", "p3_dated", "patch map", ["qual_E-50_patch_map.png"]),
-    ("E-51", "p3_dated", "patch map", ["qual_E-51_patch_map.png"]),
-    ("E-52", "p3_dated", "patch map", ["qual_E-52_patch_map.png"]),
-    ("E-53", "p3_dated", "patch map", ["qual_E-53_patch_map.png"]),
-    ("E-43", "p3_dated", "none", "Control on date features alone: it uses no imagery and "
+    ("E-32", "P2/p2_r0", "tiles", ["qual_E-32_r0.png", "tiles.png"]),
+    ("E-33", "P2/p2_r0", "tiles", ["qual_E-33_inventories.png"]),
+    ("E-21", "P3/p3_dated", "tiles", ["qual_E-21_inventory_age.png"]),
+    ("E-49", "P3/p3_dated", "tiles", ["qual_E-49_weather_date.png"]),
+    ("E-50", "P3/p3_dated", "patch map", ["qual_E-50_patch_map.png"]),
+    ("E-51", "P3/p3_dated", "patch map", ["qual_E-51_patch_map.png"]),
+    ("E-52", "P3/p3_dated", "patch map", ["qual_E-52_patch_map.png"]),
+    ("E-53", "P3/p3_dated", "patch map", ["qual_E-53_patch_map.png"]),
+    ("E-43", "P3/p3_dated", "none", "Control on date features alone: it uses no imagery and "
      "produces no per-pixel or per-location output to view."),
-    ("E-54", "p4_prefire", "tiles", ["composite_tiles.png"]),
-    ("E-34", "p7_slots", "tiles", ["tiles.png"]),
-    ("E-36", "p7_slots", "tiles", ["qual_E-36_pc.png"]),
-    ("E-37", "p7_slots", "tiles", ["qual_E-37_cbh.png"]),
-    ("E-20", "p7_slots", "tiles", ["qual_E-20_staleness.png"]),
-    ("E-55", "p7b_operational", "patch map", ["qual_E-55_patch_map.png"]),
-    ("E-58", "p7c_slots_v3", "tiles", ["qual_E-58_r2_gap.png"]),
-    ("E-57", "p7c_slots_v3", "tiles", ["qual_E-57_pc_offset.png"]),
-    ("E-38", "p7c_slots_v3", "tiles", ["qual_E-38_curing.png"]),
-    ("E-22", "p6a_ecology", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
+    ("E-54", "P4/p4_prefire", "tiles", ["composite_tiles.png"]),
+    ("E-34", "P7/p7_slots", "tiles", ["tiles.png"]),
+    ("E-36", "P7/p7_slots", "tiles", ["qual_E-36_pc.png"]),
+    ("E-37", "P7/p7_slots", "tiles", ["qual_E-37_cbh.png"]),
+    ("E-20", "P7/p7_slots", "tiles", ["qual_E-20_staleness.png"]),
+    ("E-55", "P7/p7b_operational", "patch map", ["qual_E-55_patch_map.png"]),
+    ("E-58", "P7/p7c_slots_v3", "tiles", ["qual_E-58_r2_gap.png"]),
+    ("E-57", "P7/p7c_slots_v3", "tiles", ["qual_E-57_pc_offset.png"]),
+    ("E-38", "P7/p7c_slots_v3", "tiles", ["qual_E-38_curing.png"]),
+    ("E-22", "P6/p6a_ecology", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
                                       "maps_family.png", "tiles.png"]),
-    ("E-59", "p6a_ecology", "none", "NEEDS A JOB: the saved maps use one input mode (raw + "
+    ("E-59", "P6/p6a_ecology", "none", "NEEDS A JOB: the saved maps use one input mode (raw + "
      "indices). Maps per mode come with eco_v3 (sweep_eco_maps.sh MODE=raw and MODE=indices), "
      "and the package draws them from maps_raw and maps_indices."),
-    ("E-22", "p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
+    ("E-22", "P6/p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png", "maps_height.png",
                                          "maps_family.png", "tiles.png"]),
-    ("E-59", "p6a_ecology_v3", "tiles", [f"maps_{t}_{m}.png" for m in ("raw", "indices")
+    ("E-59", "P6/p6a_ecology_v3", "tiles", [f"maps_{t}_{m}.png" for m in ("raw", "indices")
                                          for t in ("pc", "closure", "height", "family")]),
-    ("E-62", "p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png"]),
-    ("E-61", "p6a_hs_v4", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-62", "p6a_hs_v4", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-22", "p6a_external_labels_v2", "cell map and lidar tracks",
+    ("E-62", "P6/p6a_ecology_v3", "tiles", ["maps_pc.png", "maps_closure.png"]),
+    ("E-61", "P6/p6a_hs_v4", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-62", "P6/p6a_hs_v4", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-22", "P6/p6a_external_labels_v2", "cell map and lidar tracks",
      ["qual_E-22_plots_map.png", "qual_lidar_tracks.png"]),
-    ("E-62", "p6a_ecology", "tiles", ["maps_family.png"]),
-    ("E-60", "p6c_snow", "station map", ["series_map.png", "series.png"]),
-    ("E-61", "p6a_hs_v3", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-62", "p6a_hs_v3", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-22", "p6a_external_labels", "cell map and lidar tracks",
+    ("E-62", "P6/p6a_ecology", "tiles", ["maps_family.png"]),
+    ("E-60", "P6/p6c_snow", "station map", ["series_map.png", "series.png"]),
+    ("E-61", "P6/p6a_hs_v3", "line strips", [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-62", "P6/p6a_hs_v3", "line strips", [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
+    ("E-22", "P6/p6a_external_labels", "cell map and lidar tracks",
      ["qual_E-22_plots_map.png", "qual_lidar_tracks.png"]),
-    ("E-61", "p6a_hs_v2_provisional", "line strips",
+    ("E-61", "P6/p6a_hs_v2_provisional", "line strips",
      [f"qual_E-61_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-62", "p6a_hs_v2_provisional", "line strips",
+    ("E-62", "P6/p6a_hs_v2_provisional", "line strips",
      [f"qual_E-62_{t[0]}.png" for t in HS_TARGETS]),
-    ("E-61", "p6a_hs_provisional", "none", "Void run: its labels came from the wrong ground (A-40 "
+    ("E-61", "P6/p6a_hs_provisional", "none", "Void run: its labels came from the wrong ground (A-40 "
      "amendment), so a map would only show that error."),
-    ("E-62", "p6a_hs_provisional", "none", "Void run, as E-61 here."),
-    ("E-56", "p6b_cohort", "tiles and patch map", ["qual_E-56_cohort_tiles.png",
+    ("E-62", "P6/p6a_hs_provisional", "none", "Void run, as E-61 here."),
+    ("E-56", "P6/p6b_cohort", "tiles and patch map", ["qual_E-56_cohort_tiles.png",
                                                    "qual_E-56_patch_map.png"]),
-    ("E-63", "p6e_out_of_time", "patch map", ["qual_E-63_patch_map.png"]),
-    ("E-18", "p6d_startup", "patch map", ["qual_E-18_patch_map.png"]),
-    ("E-41", "p8a_spread", "fire progression", ["qual_E-41_progression.png"]),
-    ("E-44", "p9_ignition", "matched sets", ["qual_E-44_sets.png"]),
-    ("E-45", "p9b_ignition_rungs", "set map", ["qual_E-45_sets_map.png"]),
-    ("E-20", "p7d_weather_age", "tiles", ["qual_E-20_trained_stale.png"]),
-    ("E-46", "p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
-    ("P6f-C2", "p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
-    ("E-65", "p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),
-    ("E-66", "p12_sensors", "band placement", ["qual_E-66_sensor_bands.png"]),
-    ("P0-3", "p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
-    ("P1-3", "p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
-    ("P5-M1", "p5_slotnet", "existing", ["tiles.png"]),
-    ("P6hs-C1", "p6a_hs_provisional", "existing", ["placement.png"]),
-    ("E-35", "p7e_fuel_slot", "none", "PENDING: eco_v3 is done; needs sweep_eco_fire's "
+    ("E-63", "P6/p6e_out_of_time", "patch map", ["qual_E-63_patch_map.png"]),
+    ("E-18", "P6/p6d_startup", "patch map", ["qual_E-18_patch_map.png"]),
+    ("E-41", "P8/p8a_spread", "fire progression", ["qual_E-41_progression.png"]),
+    ("E-44", "P9/p9_ignition", "matched sets", ["qual_E-44_sets.png"]),
+    ("E-45", "P9/p9b_ignition_rungs", "set map", ["qual_E-45_sets_map.png"]),
+    ("E-20", "P7/p7d_weather_age", "tiles", ["qual_E-20_trained_stale.png"]),
+    ("E-46", "P12/p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
+    ("P6f-C2", "P6/p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
+    ("E-65", "P6/p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),
+    ("E-66", "P12/p12_sensors", "band placement", ["qual_E-66_sensor_bands.png"]),
+    ("P0-3", "P0/p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
+    ("P1-3", "P1/p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
+    ("P5-M1", "P5/p5_slotnet", "existing", ["tiles.png"]),
+    ("P6hs-C1", "P6/p6a_hs_provisional", "existing", ["placement.png"]),
+    ("E-35", "P7/p7e_fuel_slot", "none", "PENDING: eco_v3 is done; needs sweep_eco_fire's "
      "sidecars and the slot sweep. The runs save fuel_used and fuel_inventory in samples.npz "
      "for the tiles."),
-    ("E-64", "p6f_lfmc", "site series", ["qual_E-64_series.png", "lfmc_scatter.png"]),
-    ("E-29", "p6f_lfmc", "site series", ["qual_E-64_series.png"]),
-    ("E-45", "p9_ignition", "none", "PENDING: the ignition sweep has not run (A-48). The view "
+    ("E-64", "P6/p6f_lfmc", "site series", ["qual_E-64_series.png", "lfmc_scatter.png"]),
+    ("E-29", "P6/p6f_lfmc", "site series", ["qual_E-64_series.png"]),
+    ("E-45", "P9/p9_ignition", "none", "PENDING: the ignition sweep has not run (A-48). The view "
      "will be E-44's matched sets with the R4 map and its shuffled twin's."),
 ]
 

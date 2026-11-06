@@ -200,7 +200,7 @@ def summary():
          "Q8 (Zynq UltraScale+) with its DPU runs every size within budget. The Q7 with "
          "FINN is possible if its buffers fit once sized. hls4ml is ruled out.",
          "Provisional: power figures and FINN buffer sizing are owed.",
-         "E-48 conversion check (p12_convert)"],
+         "E-48 conversion check (P12/p12_convert)"],
     ]
     return [
         P("1. Summary: the current answers", "h1"),
@@ -288,7 +288,7 @@ def method():
             "Each P12 decision is a table of options with pros and cons, and James chooses "
             "(A-49).",
             "The four structure targets weigh equally. Six other weightings were tried; under "
-            "five of them the choice did not change (p12_weights).",
+            "five of them the choice did not change (P12/p12_weights).",
             "Ties are paired: same fold and seed, one standard error of the difference.",
             "A band set counts as stable when every spectral region in it is chosen by at "
             "least 10 of the 15 searches (5 folds x 3 seeds), and the exact consensus set is "
@@ -314,7 +314,7 @@ def cffdrs():
           "Scores are AUC for burned pixels: within a patch (which pixels burn) and between "
           "patches (which patches burn). 300 fits: 5 folds x 3 seeds."),
         table(ladder, [0.5, 0.25, 0.25]),
-        P("The P7 ladder (p7_slots). Between patches, none of our rungs separates from the FWI "
+        P("The P7 ladder (P7/p7_slots). Between patches, none of our rungs separates from the FWI "
           "CWFIS issued.", "caption"),
         *bullets([
             "<b>Learning on the CFFDRS inputs beats the physics</b> (R1 - R0 +0.051 within "
@@ -333,7 +333,7 @@ def cffdrs():
           "one value per patch. Training on 7-day-old weather is worse at every age. "
           "<b>Established for the decay (PARTIAL: the per-code half was not run).</b> This "
           "is why the fire model is placed on the ground (section 6)."),
-        *figure(RES / "p7d_weather_age" / "weather_age.png",
+        *figure(RES / "P7/p7d_weather_age" / "weather_age.png",
                 "Figure 2. Skill against the age of all the weather (E-20)."),
         P("Ignition (E-44, E-45, partial)", "h2"),
         P("NFDB lightning starts, each matched with up to five controls on the same day under "
@@ -341,7 +341,7 @@ def cffdrs():
           "Learning on the CFFDRS inputs alone (fuel, structure slots, leaf state) reaches "
           "0.586 (+0.052 [+0.033, +0.072]). The imagery rungs are still running, so whether "
           "imagery adds to ignition is not yet known. <b>Provisional (36 of 100 fits).</b>"),
-        *figure(RES / "p9b_ignition_rungs" / "ignition_rungs.png",
+        *figure(RES / "P9/p9b_ignition_rungs" / "ignition_rungs.png",
                 "Figure 3. Ignition: matched-set AUC per rung, and paired differences."),
         PageBreak(),
     ]
@@ -380,7 +380,7 @@ def bands():
             "at 8 bands, by 0.003.",
             "<b>Fuel family is the weak head:</b> conifer recall 0.79, deciduous 0.38, "
             "mixedwood 0.30. Deciduous and mixed stands are mostly called conifer."]),
-        *figure(RES / "p6a_ecology_v3" / "curves.png",
+        *figure(RES / "P6/p6a_ecology_v3" / "curves.png",
                 "Figure 4. Sentinel-2: skill by nested band count, per search."),
         P("4.2 Labels that owe nothing to Landsat", "h2"),
         P("SCANFI is mapped from Landsat, SWIR included, so SWIR ranking first could be the "
@@ -394,7 +394,7 @@ def bands():
           "the six VNIR bands fixed, and fixed reference sets, all paired with the fixed VNIR "
           "on the same folds:"),
         table(hs, [0.5, 0.18, 0.32]),
-        P("hs_v4 (p6a_hs_v4). Twelve options tie within one SE of the best.", "caption"),
+        P("hs_v4 (P6/p6a_hs_v4). Twelve options tie within one SE of the best.", "caption"),
         *bullets([
             "SWIR improves closure in every set (CIs below 0) and height on both SCANFI and "
             "lidar. It does not help percent conifer on SCANFI labels, although it does on "
@@ -419,9 +419,9 @@ def bands():
           "overall best. The 15 searches rarely agree on a whole set, so the sets were counted "
           "by spectral region (Q38). Two Sentinel-2 consensus sets are stable:"),
         table(cons, [0.06, 0.5, 0.22, 0.22], shade=[(1, DONE_BG), (3, DONE_BG)]),
-        P("Consensus by region (p12_bands). Each set is being re-scored as a fixed set on the "
+        P("Consensus by region (P12/p12_bands). Each set is being re-scored as a fixed set on the "
           "same folds (E-46).", "caption"),
-        *figure(RES / "p12_bands" / "qual_E-46_band_placement.png",
+        *figure(RES / "P12/p12_bands" / "qual_E-46_band_placement.png",
                 "Figure 5. Where each consensus set's bands sit, against a conifer canopy "
                 "spectrum; grey: forbidden atmospheric regions.", width=0.78),
         KeepTogether([
@@ -535,7 +535,7 @@ def model():
         P("All 12 sizes, 22 inputs (8 bands with indices), untrained. Budget: 43 s per scene. "
           "The index step divides, so it runs as a separate pointwise stage, as the existing "
           "ratios front end does (0 memory, 6 % of the Q8's logic).", "caption"),
-        *figure(RES / "p12_convert" / "convert.png",
+        *figure(RES / "P12/p12_convert" / "convert.png",
                 "Figure 6. Memory share of the Q8 and seconds per scene, by network size and "
                 "flow."),
         box("<b>Hardware options (provisional):</b> the <b>Q8 with its DPU</b> is safe on time "

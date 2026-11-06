@@ -2,7 +2,7 @@
 
 E-66, P12b: what each Dragonfly Mantis mode would offer (PLAN_NEXT section 6).
 
-Reads the sensors_v1 run (Fire_Risk_FW sweep_hs.sh on the p12_sensors grid) and
+Reads the sensors_v1 run (Fire_Risk_FW sweep_hs.sh on the P12/p12_sensors grid) and
 hs_v4, which ran on the same pack, folds and seeds, so every row pairs with
 every other by (outer fold, seed). Rows from sensors_v1 are preferred; until
 its references arm lands, hs_v4's scores of the same band sets stand in,
@@ -11,7 +11,7 @@ tasks it holds, and a paired contrast uses only the tasks both rows hold.
 
     python scripts/make_sensor_options.py --run narval_results/sensors_v1/<id>
 
-Writes docs/results/p12_sensors/: T_sensors.csv, T_predictions.csv,
+Writes docs/results/P12/p12_sensors/: T_sensors.csv, T_predictions.csv,
 sensors.png, qual_E-66_sensor_bands.png, summary.json.
 """
 from __future__ import annotations
@@ -243,7 +243,7 @@ def figure_bands(res, out: Path):
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--run", type=Path, required=True)
-    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "p12_sensors")
+    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_sensors")
     args = ap.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
     res = build(args.run)

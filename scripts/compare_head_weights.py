@@ -218,7 +218,7 @@ def write_csv(path: Path, rows: list[dict]) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--run", type=Path, required=True)
-    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "p12_weights")
+    ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_weights")
     args = ap.parse_args(argv)
     tasks = load(args.run)
     if not tasks:

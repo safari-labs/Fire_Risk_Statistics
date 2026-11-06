@@ -84,8 +84,8 @@ class Phase:
 
 PHASES: tuple[Phase, ...] = (
     Phase(
-        "P0", "Verify and freeze", "2026-10-23", "p0_verify",
-        "../phase0_cffdrs_mirror.md",
+        "P0", "Verify and freeze", "2026-10-23", "P0/p0_verify",
+        "../../phase0_cffdrs_mirror.md",
         "Checked the data every later phase stands on, fixed what failed, "
         "and froze the test set. Nothing was trained or scored.",
         (
@@ -157,7 +157,7 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
-        "P1", "Physics port", "2026-10-23", "p1_physics", "README.md",
+        "P1", "Physics port", "2026-10-23", "P1/p1_physics", "README.md",
         "Ported FBP1992 and corrected the FWI code, both validated against the "
         "CFS reference implementation (cffdrs 1.9.2), and measured how far each "
         "imagery-replaceable input moves the physics.",
@@ -200,7 +200,7 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
-        "P2", "R0: CFFDRS as is, every fuel inventory", "2026-10-24", "p2_r0",
+        "P2", "R0: CFFDRS as is, every fuel inventory", "2026-10-24", "P2/p2_r0",
         "README.md",
         "Scored the non-learned CFFDRS reference (FBP1992 + Beverly & Wotton "
         "2007) per pixel for every fuel inventory, on 196 development patches "
@@ -285,7 +285,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P3", "Dated design: dates, 13:00 LDT weather, start-up", "2026-10-24",
-        "p3_dated", "README.md",
+        "P3/p3_dated", "README.md",
         "Dated every patch, rebuilt the weather the way CFFDRS defines it "
         "(ERA5-Land at 13:00 LDT on D-1, Appendix C-2 start-up, overwintered "
         "DC), read leaf state on D from the CWFIS green-up product, added the "
@@ -402,7 +402,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P4", "Pre-fire imagery, dated labels, the v2 pack", "2026-10-25",
-        "p4_prefire", "README.md",
+        "P4/p4_prefire", "README.md",
         "Rebuilt every patch's imagery to end the day before D, re-labelled NBAC "
         "by fire start, and packed the CFFDRS-mirror dataset (v2) for Narval. "
         "E-54 was registered before any composite was downloaded. Measurements "
@@ -473,7 +473,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P5", "The CFFDRS-structured network", "2026-10-25",
-        "p5_slotnet", "README.md",
+        "P5/p5_slotnet", "README.md",
         "Built the R0-R4 ladder in Fire_Risk_FW: torch copies of the FBP and "
         "ignition ports, slot configurations, the network and its Narval sweep. "
         "Nothing was trained beyond smoke tests; the registered experiments are "
@@ -578,7 +578,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P7", "Stage A slot experiments, first sweep (slots_v2)", "2026-10-26",
-        "p7_slots", "README.md",
+        "P7/p7_slots", "README.md",
         "The P5 ladder trained on Narval: 20 configurations x 5 fire-aware folds x 3 "
         "seeds (300 fits). Every development patch is scored by the fold model that "
         "never saw it; contrasts are paired by fire (83 fires, 94 fire/block groups) "
@@ -676,7 +676,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P7b", "Against what CWFIS actually issued (E-55)", "2026-10-26",
-        "p7b_operational", "README.md",
+        "P7/p7b_operational", "README.md",
         "Fetched the FWI and fire danger grids CWFIS actually ISSUED for each "
         "development patch's D-1 (GeoServer WCS, archived from 2018, 2 km) and set them against "
         "our reconstruction and against every rung of the slots_v2 sweep. E-55 was "
@@ -738,7 +738,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P7c", "Second slot sweep: the Q29 arms (slots_v3)", "2026-10-27",
-        "p7c_slots_v3", "README.md",
+        "P7/p7c_slots_v3", "README.md",
         "The arms James approved after P7 (Q29), trained on Narval: R2's residual "
         "warm-started from R1 or at 10x the rate (E-58), percent conifer with an "
         "imagery-free offset (E-57), curing on CWFIS fuel, which has O-1 (E-38). 9 "
@@ -799,7 +799,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a", "Ecology estimator band searches on Sentinel-2", "2026-10-29",
-        "p6a_ecology", "README.md",
+        "P6/p6a_ecology", "README.md",
         "Nested Sentinel-2 band searches for the on-chip ecology estimator (percent conifer, "
         "closure, height, fuel family; SCANFI v2 2020 labels): 226 development patches, 5 "
         "outer folds of 1-degree blocks x 3 seeds, searched inside training folds and scored "
@@ -866,7 +866,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6c", "Snow-off without SWIR (E-60)", "2026-10-29",
-        "p6c_snow", "README.md",
+        "P6/p6c_snow", "README.md",
         "Nested band searches for a per-observation snow classifier whose last snow date "
         "gives the snow-off date, judged against ECCC climate-station snow on ground (Q33): "
         "915 development station-years, 5 outer folds of 1-degree station blocks x 3 seeds, "
@@ -937,7 +937,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-HS-prov", "AVIRIS-NG band searches, provisional run (void)", "2026-10-30",
-        "p6a_hs_provisional", "README.md",
+        "P6/p6a_hs_provisional", "README.md",
         "Nested band searches on 21 of 42 AVIRIS-NG lines: VNIR, VNIR without red edge, and "
         "SWIR on standard and extended InGaAs, 5 folds of line groups x 3 seeds, on Nibi. "
         "No band set beat the training mean, which led to a fault in our ingest: every label "
@@ -981,7 +981,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-HS-v2", "AVIRIS-NG band searches, corrected pack, partial sweep", "2026-11-01",
-        "p6a_hs_v2_provisional", "README.md",
+        "P6/p6a_hs_v2_provisional", "README.md",
         "The same search on the rotated pack: 31 of 42 lines, SCANFI labels. 51 of 75 tasks "
         "finished, and arms finished different folds, so arms are compared only on folds they "
         "share. A first look, not the final sweep.",
@@ -1021,7 +1021,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6b", "The 2024-2025 cohort and what CWFIS issued", "2026-10-30",
-        "p6b_cohort", "README.md",
+        "P6/p6b_cohort", "README.md",
         "240 patches, 60 fire and 60 unburned per year, with imagery, labels, weather, fuel, "
         "the CWFIS issued grids and the leaf state from the issued green-up. E-56 compares the "
         "FBP outputs ISSUED by CWFIS with Reconstructed (ours) on 2024, with no training. 2025 "
@@ -1054,7 +1054,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6d", "The FWI start-up from Sentinel-2 snow-off (E-18)", "2026-10-30",
-        "p6d_startup", "README.md",
+        "P6/p6d_startup", "README.md",
         "The E-60 snow classifiers, fitted on station truth and applied on Nibi to Sentinel-2 "
         "at the fire patches, date the snow-off per patch (median of 25 points, to D-1). "
         "The codes are recomputed with the Appendix C-2 start-up from that date and scored "
@@ -1088,7 +1088,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6e", "Out-of-time generalisation on 2024 (E-63)", "2026-11-02",
-        "p6e_out_of_time", "README.md",
+        "P6/p6e_out_of_time", "README.md",
         "Regime B trains and selects on 2019-2023 and scores 2024, 60 fires and 60 unburned "
         "patches it never saw. Regime A adds 2024 to training. 60 fits, none truncated. All "
         "values Reconstructed (ours). 2025 is frozen and was not opened, so hypothesis (b) and "
@@ -1151,7 +1151,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-ext", "Band rankings on labels that owe nothing to Landsat", "2026-11-02",
-        "p6a_external_labels", "README.md",
+        "P6/p6a_external_labels", "README.md",
         "The same search against labels not mapped from Landsat: 14,232 ground plots with "
         "Sentinel-2 bands, and 98,586 pixels of ATL08 lidar height with AVIRIS-NG bands. All "
         "tasks finished. No hypothesis was registered for this test (Q35, A-44), so these are "
@@ -1190,7 +1190,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-HS-v3", "AVIRIS-NG band searches, all lines and folds", "2026-11-02",
-        "p6a_hs_v3", "README.md",
+        "P6/p6a_hs_v3", "README.md",
         "The full sweep on aviris_v3: 42 lines, 75 of 75 tasks, SCANFI labels, with noise. "
         "aviris_v4 changes only 1.62 % of family labels and none of the three targets E-61 and "
         "E-62 are registered on, so these readings stand until hs_v4 confirms them.",
@@ -1223,7 +1223,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-HS-v4", "AVIRIS-NG band searches on the final labels", "2026-11-03",
-        "p6a_hs_v4", "README.md",
+        "P6/p6a_hs_v4", "README.md",
         "The full sweep on aviris_v4, the A-44 family labels: 42 lines, 75 of 75 tasks, SCANFI "
         "labels, with noise. Replaces hs_v3 as the reading of E-61 and E-62.",
         (
@@ -1257,7 +1257,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-ext-v2", "Labels that owe nothing to Landsat, full lidar", "2026-11-03",
-        "p6a_external_labels_v2", "README.md",
+        "P6/p6a_external_labels_v2", "README.md",
         "P6a-ext with aviris_lidar_v2: 139,848 lidar pixels in 14 groups from 35 of 37 lines. "
         "Ground plots unchanged. No hypothesis registered (Q35, A-44), so measurements.",
         (
@@ -1285,7 +1285,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6a-v3", "Ecology band searches on the corrected family labels (eco_v3)", "2026-11-04",
-        "p6a_ecology_v3", "README.md",
+        "P6/p6a_ecology_v3", "README.md",
         "eco_v2 repeated on ecology_v3 (A-44: open ground is grass, non-fuel, water or slash, "
         "not D). 15 of 15 tasks, with noise, maps in all three input modes. Replaces eco_v2 as "
         "the Sentinel-2 reading of E-22, E-59 and E-62.",
@@ -1323,7 +1323,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6f", "LFMC from Sentinel-2 against FBP's equation (E-64, E-29)", "2026-11-04",
-        "p6f_lfmc", "README.md",
+        "P6/p6f_lfmc", "README.md",
         "PROSPECT-D + 4SAIL simulation-trained retrievals and empirical index and GP models "
         "against gravimetric LFMC (Globe-LFMC 2017+, development sites: 1,739 records at 37 "
         "sites), 3 seeds, with the placeholder noise model (A-47).",
@@ -1374,7 +1374,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P8a", "Stage B: FBP spread against CFSDS (E-41)", "2026-11-03",
-        "p8a_spread", "README.md",
+        "P8/p8a_spread", "README.md",
         "CFSDS fire-days of the development fires, each with FBP ROS from its own weather and "
         "the fuel at its position. Physics only, nothing trained. Frozen fires were not opened.",
         (
@@ -1395,7 +1395,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P9", "Stage C: CFFDRS ignition R0 on lightning starts (E-44)", "2026-11-04",
-        "p9_ignition", "README.md",
+        "P9/p9_ignition", "README.md",
         "NFDB lightning starts of 2017-2024 against controls drawn on the same day near "
         "them and given the start's own weather, so only fuel and leaf state differ inside "
         "a set. Physics only, nothing trained. Development blocks only. A first pass on "
@@ -1450,7 +1450,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6f-v2", "Fixing the LFMC forward model, step 1: the reference check", "2026-11-05",
-        "p6f_reference", "README.md",
+        "P6/p6f_reference", "README.md",
         "James chose to try to fix the forward model behind E-64's +31 bias (A-51). Step 1 "
         "checks our PROSPECT-D + 4SAIL against Feret's R packages on 128 cases from the "
         "lfmc_v1 priors. Step 2, priors narrowed inside each outer fold, is on the cluster "
@@ -1471,7 +1471,7 @@ PHASES: tuple[Phase, ...] = (
                              "error. The suspects left are the priors (E-65), needles as "
                              "broadleaves, soil-only backgrounds and the turbid canopy."),
             Entry("E-65", "experiment", "MIXED",
-                  result="lfmc_v2 (3 seeds, results in p6f_lfmc_v2): narrowed GP RMSE 13.2, "
+                  result="lfmc_v2 (3 seeds, results in P6/p6f_lfmc_v2): narrowed GP RMSE 13.2, "
                          "bias +4.2 on conifers; worse than the stratum mean by +1.09 "
                          "[+0.59, +1.60]; better than FBP by -0.80 [-1.66, -0.01].",
                   conclusion="The bias was the prior; the spectra add nothing beyond it."),
@@ -1479,7 +1479,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P7d", "Weather age: one model scored with stale weather (lags_v1)", "2026-11-05",
-        "p7d_weather_age", "README.md",
+        "P7/p7d_weather_age", "README.md",
         "E-20 with the rebuilt pack (A-50): every trained fit scored with ALL its 13:00 "
         "weather 1, 2, 3 and 7 days old, and R2 also trained on 7-day-old weather. "
         "r0_scanfi, r2, r2_age7: 35 of 35 fits. Every number is our reconstruction.",
@@ -1502,7 +1502,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P9b", "Ignition learned rungs, partial (ignition_v1)", "2026-11-05",
-        "p9b_ignition_rungs", "README.md",
+        "P9/p9b_ignition_rungs", "README.md",
         "E-45's first fits: 36 of 100 (r0 x2 complete, r1 15/15, r2 10/15 on folds 0-3, "
         "r2_cwfis 1/15; r2_leaf_ablated, r4 and r4_shuffled not yet in). Matched sets of "
         "NFDB natural-cause starts and same-day controls, conditional logistic loss, "
@@ -1521,7 +1521,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P12a", "Band options: the consensus sets (E-46, Q38)", "2026-11-05",
-        "p12_bands", "README.md",
+        "P12/p12_bands", "README.md",
         "The 15 searches per k counted by region (Q38 option 1): Sentinel-2 regions by band "
         "role, AVIRIS-NG SWIR by 50 nm bins. The consensus sets go to the cluster as fixed "
         "sets; until they return, the option table carries the search scores.",
@@ -1537,7 +1537,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P6f2", "LFMC with priors narrowed inside each fold (lfmc_v2)", "2026-11-06",
-        "p6f_lfmc_v2", "README.md",
+        "P6/p6f_lfmc_v2", "README.md",
         "E-65 (A-51, step 2 of fixing the forward model): the lfmc_v1 simulation pool cut, in "
         "each outer site fold, to the training records' LFMC range by species and season; the "
         "training stratum mean as the control. 3 seeds, complete; every v1 arm reran and "
@@ -1558,7 +1558,7 @@ PHASES: tuple[Phase, ...] = (
     ),
     Phase(
         "P12b", "What each Dragonfly Mantis mode would offer (sensors_v1)", "2026-11-06",
-        "p12_sensors", "README.md",
+        "P12/p12_sensors", "README.md",
         "E-66 on AVIRIS-NG (aviris_v4), hs_v4's folds and seeds: RGB, the MS standard block "
         "(as published, Q39) and its clean subset, the custom block, all 81 HS channels and 6 "
         "chosen in orbit, SWIR alone (4 of DFA's 10 usable filters), and each MS block with 4 "

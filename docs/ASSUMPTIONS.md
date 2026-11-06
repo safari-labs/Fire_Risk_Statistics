@@ -1324,7 +1324,7 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Indices.** A band takes an index role when its centre falls in that role's window: blue 450–520, green 530–590, red 630–690, red edge 695–715 / 730–750 / 775–795, NIR 840–885, SWIR1 1550–1700, SWIR2 2080–2350. Where several bands fall in one window, the one nearest the middle wins. A set then gets every catalogue index its bands can form.
 - **Noise.** The A-37 placeholder instrument, on each candidate's own detector, added before any index is formed.
 
-**Amendment (2026-10-30): every line is placed with its map-info rotation; pack v1 is void.** AVIRIS-NG orthocorrected products are rotated rasters: the ENVI map info ends in `rotation=<deg>`, the flight heading in whole degrees (−78 to +86 on our lines). The first ingest ignored it and stored north-up positions, up to tens of kilometres off along a line. So every label in `data/aviris_v1` came from the wrong ground, and the sweep `hs_v1_provisional/20261029-1705` says nothing about bands (`docs/results/p6a_hs_provisional`). Its groups and frozen split are unaffected, because they come from the manifest's boxes.
+**Amendment (2026-10-30): every line is placed with its map-info rotation; pack v1 is void.** AVIRIS-NG orthocorrected products are rotated rasters: the ENVI map info ends in `rotation=<deg>`, the flight heading in whole degrees (−78 to +86 on our lines). The first ingest ignored it and stored north-up positions, up to tens of kilometres off along a line. So every label in `data/aviris_v1` came from the wrong ground, and the sweep `hs_v1_provisional/20261029-1705` says nothing about bands (`docs/results/P6/p6a_hs_provisional`). Its groups and frozen split are unaffected, because they come from the manifest's boxes.
 
 - **Ingest.** `ingest_aviris.py` reads the rotation and reference pixel, places blocks with GDAL's reading of the field (`line_affine`), and stores `rotation_deg` and `origin_ul` in the table.
 - **Tables already ingested** (`georef_aviris_tables.py`; the archives are gone).
@@ -1520,7 +1520,7 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 - **Ties are paired.** "Within one SE of the best" means the paired difference to the best is at most one SE of that difference, SE over the 5 outer folds, with seeds averaged within a fold. Seeds share their blocks, so they are not independent.
 - **How the two searches merge.**
   - Sentinel-2 (eco_v3) decides the VNIR bands and whether SWIR is in.
-  - AVIRIS-NG (hs_v4 on SCANFI, checked on lidar in `p6a_external_labels_v2`) decides the SWIR centres and widths.
+  - AVIRIS-NG (hs_v4 on SCANFI, checked on lidar in `P6/p6a_external_labels_v2`) decides the SWIR centres and widths.
   - Sentinel-2 cannot place SWIR, and AVIRIS-NG covers too little of the land to rank VNIR against Sentinel-2's 904 tiles.
 - **Stability clause (Q38, James 2026-11-05: option 1).** It replaces A-29's "4 of 6 folds" per band.
   - At each k, the consensus set takes the k spectral regions chosen most often across the 15 searches, with the most-chosen band within each region. Sentinel-2 regions: blue, green, red, red edge, NIR, SWIR1, SWIR2. AVIRIS-NG regions: the A-40 windows.
@@ -1534,11 +1534,11 @@ SCANFI cannot feed the tree everything it expects. The deviations:
     - The consensus is not forced to nest across k; each k's set is re-scored as a fixed set.
     - Sentinel-2 sets are re-scored with `run_eco_arch.py` at 8x2, on eco_v3's folds, seeds and hyperparameters. AVIRIS-NG sets are re-scored as fixed references through `sweep_hs.sh ARMS=references` with `configs/noise/p12_consensus_grid.json`, which also holds the config_c/VNIR, config_a and config_c anchors.
     - Ties in the option table are paired (as above). The search-procedure rows stay in the table, labelled as such.
-  - **First counting (docs/results/p12_bands):**
+  - **First counting (docs/results/P12/p12_bands):**
     - Sentinel-2 consensus sets are stable at k = 1 (B12) and k = 5 (B4, B5, B8A, B11, B12), and reach 6-9 of 15 at the other k.
     - No AVIRIS-NG SWIR set is stable (4-8 of 15).
 
-**First reading (2026-11-05, `docs/results/p12_weights/`).** All on eco_v3's searched sets, raw + indices, with placeholder noise.
+**First reading (2026-11-05, `docs/results/P12/p12_weights/`).** All on eco_v3's searched sets, raw + indices, with placeholder noise.
 - **Under five of six schemes, the equal-weight search's best set is tied with the overall best.** The overall best is the percent-conifer search's 8-band set under every scheme except "fuel type first", where it is the equal-weight search's own.
 - **Only maximin separates them:** the percent-conifer search's 8-band set leads by 0.009 ± 0.009 (borderline).
 - **The best sets are 7–8 bands under every scheme.** Under equal weights, the equal-weight search's k = 7 set is tied with the best. Its k = 5 and 6 sets are about 0.008 below (about two paired SEs), and its k = 4 set 0.0115 ± 0.0007 below.
@@ -1568,7 +1568,7 @@ SCANFI cannot feed the tree everything it expects. The deviations:
 
 **Decision (James, 2026-11-05: "try and fix the forward model", option a of PLAN_NEXT section 3, steps 1-2). Written before any v2 result.**
 
-**Step 1, the reference check A-47 owed: done** (`docs/results/p6f_reference`).
+**Step 1, the reference check A-47 owed: done** (`docs/results/P6/p6f_reference`).
 - PROSPECT-D + 4SAIL as we run them agree with Féret's R `prospect` 2.0.1 and `prosail` 3.2.0 to 5e-15 once both use the same leaf-angle classes, on 128 cases from the `lfmc_v1` priors. R's current PROSPECT coefficients are the same as ours.
 - The one structural difference is the leaf-angle binning: 13 classes in the original 4SAIL and R, 18 equal ones in Python `prosail`. It is at most 0.1 of the atmospheric-residual sigma and about 0.3 LFMC points through B11. It is kept, and recorded.
 - So the implementation is not the cause of E-64's +31 bias. Phase 1's reference criterion is met for PROSPECT-D + 4SAIL.
