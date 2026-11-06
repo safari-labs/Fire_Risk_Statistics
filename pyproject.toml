@@ -34,6 +34,11 @@ analysis = [
     "matplotlib>=3.8",
     "h5py>=3.10",          # reads the P6 ecology pack for the results package's map panels
 ]
+# The interim report PDF (scripts/make_report.py).
+report = [
+    "reportlab>=4.0",
+    "pypdf>=4.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
