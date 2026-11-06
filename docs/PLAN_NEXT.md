@@ -77,7 +77,9 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 - **The PROSPECT/4SAIL reference check** (A-47) is still owed before P6f's simulation arm is read as Phase 1 "done".
 - **Stage B.** E-42 needs imagery chips for the CFSDS fire-days off our patches (805 of 4,925 on a patch). Not scheduled; it would need a plan of its own.
 
-## 6. Sensor comparison: what each Dragonfly camera would offer (E-66), plan for approval
+## 6. Sensor comparison: what each Dragonfly Mantis mode would offer (E-66)
+
+**Approved (James, 2026-11-06)** without Chameleon and Caiman; the standard MS block is scored as published (Q39). Built, and ready to launch on Narval (command at the end of this section).
 
 **Question (James, 2026-11-06).** For each Dragonfly sensor in the inventory, what retrieval performance would it offer, alone and in combination? The vendor data is in A-52 and `config/vendors/dragonfly.yaml`.
 
@@ -94,7 +96,6 @@ SUBMIT=1 EXP_NAME=slots_e35 ECO_DATA=$HOME/scratch/eco_fire_v1   CONFIGS=r2,r3_f
 | 3 | Mantis MS, custom block | 490, 560, 665, 705, 740, 865 (`sensor_mantis_vnir6`) |
 | 4 | Mantis or Chameleon HS, all channels | the 470-900 nm channels at AVIRIS-NG's 5 nm (about 87; the camera's 96 at 4.5 nm is slightly finer) |
 | 5 | Mantis HS, 6 chosen in orbit | best k <= 6 searched from the 470-900 nm channels |
-| 6 | Chameleon or Caiman MS 11 | **placeholder** until DFA answers Q40: Sentinel-2's ten VNIR bands |
 | 7 | Mantis SWIR alone | best k <= 4 of DFA's 11 rule-7-clean filters (L5 excluded), no VNIR |
 | 8 | Mantis MS custom + SWIR | best k <= 4 DFA filters with row 3 fixed (one head, simultaneous; A-20) |
 | 9 | Mantis MS standard + SWIR | the same with row 2 fixed |
@@ -133,3 +134,9 @@ The result is P12's sensor option table, with pros and cons. Cost never ranks (A
 **Open before running:**
 - Q39: score the standard block as published?
 - Q40: DFA confirmations. Without them, row 6 stays a placeholder and is labelled so.
+
+**Launch** (Narval, in `Fire_Risk_FW` after `git pull`; `aviris_v4` on scratch):
+
+```bash
+ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select"   GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4   EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh
+```

@@ -1904,33 +1904,38 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "training fold enters the prior; the frozen LFMC test sites stay unread.",
     ),
     Experiment(
-        "E-66", "What each Dragonfly sensor would offer", "Hardware",
-        hypothesis="PROPOSED 2026-11-06, to be registered on James's approval (PLAN_NEXT "
-                   "section 6). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS "
-                   "block (490, 560, 665, 705, 740, 865) beats DFA's standard block; (2) MS "
-                   "custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all "
-                   "HS channels 470-900 nm are within one paired SE of MS custom; (4) MS "
-                   "custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB "
-                   "scores below every MS set. WRONG IF, for (1), (2) and (4), the paired "
-                   "CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties "
-                   "an MS set.",
-        independent="sensor band set: RGB, Mantis MS standard and custom, HS (all; 6 "
-                    "chosen), Chameleon/Caiman MS 11 (placeholder), Mantis SWIR (4 of 12 "
-                    "DFA filters), MS + SWIR",
+        "E-66", "What each Dragonfly Mantis mode would offer", "Hardware",
+        hypothesis="Registered 2026-11-06 on James's approval, before any result (PLAN_NEXT "
+                   "section 6; Chameleon and Caiman left out). On AVIRIS-NG with hs_v4's "
+                   "folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) "
+                   "beats DFA's standard block as published; (2) MS custom alone beats "
+                   "Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels "
+                   "470-900 nm are within one paired SE of MS custom; (4) MS custom + the "
+                   "best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below "
+                   "every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; "
+                   "for (3), HS leads by more than one SE; for (5), RGB ties an MS set.",
+        independent="Mantis band set: RGB, MS standard (as published; rule-7-clean subset), "
+                    "MS custom, HS (all 81 surface channels; 6 chosen in orbit), SWIR (4 of "
+                    "DFA's 10 usable filters), MS + SWIR",
         dependent="combined skill and RMSE per head on SCANFI labels, paired by fold and "
                   "seed with hs_v4; lidar height for the leading rows",
-        conclusion="P12's sensor option table: what each camera DFA sells would deliver, "
-                   "with size, power, TRL, GSD and swath beside it (A-41: cost never "
-                   "ranks).",
-        state="NEEDS_CODE",
-        blocker="James's approval of the plan; Q39 (standard block as published) and Q40 "
-                "(Chameleon and Caiman bands) before rows 2 and 6 are final",
-        runner="Fire_Risk_FW ARMS=... GRID=configs/noise/p12_sensors_grid.json "
-               "SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 bash "
-               "scripts/shell/sweep_hs.sh (after the code in PLAN_NEXT section 6)",
-        note="Vendor data in config/vendors/dragonfly.yaml (A-52). Spectral comparison "
-             "only: GSD, swath, SNR beyond the placeholder model and misregistration are "
-             "reported beside the scores, not modelled.",
+        conclusion="P12's sensor option table: what each Mantis mode would deliver, with "
+                   "GSD, swath, power, size and TRL from DFA's datasheet beside it (A-41: "
+                   "cost never ranks).",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW ARMS=\"references dfa_swir_alone dfa_swir_on_custom "
+               "dfa_swir_on_standard dfa_hs_select\" GRID=configs/noise/p12_sensors_grid.json "
+               "SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash "
+               "scripts/shell/sweep_hs.sh",
+        resources="as sweep_hs.sh: --time=6:00:00 --gpus=a100:1, 75 tasks (5 arms x 5 folds "
+                  "x 3 seeds), 6 per job",
+        note="Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). "
+             "Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is "
+             "recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule "
+             "7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR "
+             "beyond the placeholder model and misregistration are reported beside the "
+             "scores, not modelled.",
     ),
 )
 

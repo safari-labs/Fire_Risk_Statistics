@@ -112,4 +112,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-63 Out-of-time generalisation, two training regimes | Partial result | P6b PENDING, P6e AT RISK | [p6b_cohort](p6b_cohort/), [p6e_out_of_time](p6e_out_of_time/) | [patch_map](p6e_out_of_time/qual_E-63_patch_map.png) |
 | E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [p6f_lfmc](p6f_lfmc/) | [series](p6f_lfmc/qual_E-64_series.png) |
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 PENDING | [p6f_reference](p6f_reference/) | - |
-| E-66 What each Dragonfly sensor would offer | Needs code | - | - | - |
+| E-66 What each Dragonfly Mantis mode would offer | Runnable now | - | - | - |

@@ -75,3 +75,36 @@ def test_cli_writes_the_table(tmp_path, capsys):
     t = json.loads(out.read_text(encoding="utf-8"))
     assert t["placeholder"] is True and "statistics_commit" in t
     assert set(t["arms"]) == {"vnir", "vnir_no_red_edge", "swir_std", "swir_ext"}
+
+
+@pytest.fixture(scope="module")
+def sensors():
+    c = load_study_config()
+    return build_table(load_grid("p12_sensors"), c.detectors, c.optics, c.orbit, c.windows)
+
+
+def test_the_standard_mantis_block_is_scored_as_published_with_its_exception(sensors):
+    # Q39 (James, 2026-11-06): pan and NIR1 kept, and the exception recorded.
+    assert sensors["references"]["dfa_ms_standard"] == [
+        "480/69", "545/70", "660/60", "625/350", "780/20", "900/20"]
+    assert "dfa_ms_standard" in sensors["rule7_exceptions"]
+    assert sensors["references"]["dfa_ms_standard_clean"] == [
+        "480/69", "545/70", "660/60", "900/20"]
+
+
+def test_swir_arms_hold_dfa_filters_that_pass_rule_7_and_the_detector(sensors):
+    ids = sensors["arms"]["dfa_swir_alone"]
+    assert len(ids) == 10
+    assert "1348/64@std" not in ids            # L5, inside water vapour 1330-1490
+    assert "1702/87@std" not in ids            # L12, past standard InGaAs (A-19)
+    assert sensors["fixed"]["dfa_swir_on_standard"] == sensors["references"]["dfa_ms_standard"]
+
+
+def test_hs_reference_and_search_share_the_same_surface_bands(sensors, windows):
+    hs = sensors["references"]["dfa_hs_all"]
+    assert sorted(hs) == sorted(sensors["arms"]["dfa_hs_select"])
+    for i in hs:
+        b = sensors["bands"][i]
+        lo, hi = b["centre_nm"] - b["fwhm_nm"] / 2, b["centre_nm"] + b["fwhm_nm"] / 2
+        assert 470 <= lo and hi <= 900
+        assert not any(r.overlaps(lo, hi) for r in windows.forbidden_regions)

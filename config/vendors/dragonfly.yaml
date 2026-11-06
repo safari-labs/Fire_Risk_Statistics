@@ -86,3 +86,25 @@ rule7:
   skirt_warnings: "L3, L4 (o2_1270) and L12 (water_vapour_1900) reach a forbidden region
                    only at 2x FWHM: a warning, as for Sentinel-2's own SWIR bands"
   others: "clear of every forbidden region at 2x FWHM"
+
+# Mantis datasheet (DFA, sent by James 2026-11-06). No SWIR column on the
+# sheet, and no SNR: radiometry stays the placeholder model (A-37, Q2-Q4).
+mantis_datasheet:
+  physical_size: "1U (65 mm x 90 mm x 107 mm)"
+  integrated_storage_gb: 128
+  compression: "RAW or J2K lossless or lossy"
+  data_interface: "LVDS, SpaceWire"
+  tmtc_interface: "SPI, I2C, CAN, RS422, RS485"
+  power_w: {imaging_max: 6, readout_max: 4}
+  power_supply: "5 V DC"
+  operating_c: [10, 30]
+  survival_c: [-20, 55]
+  trl: 9
+  modes:
+    rgb:           {gsd_m_at_500km: 16, swath_km_at_500km: 32, mass_kg_max: 0.5,
+                    bands: "standard RGB", imager: snapshot, bits: [8, 10]}
+    multispectral: {gsd_m_at_500km: {pan: 16, ms: 32}, swath_km_at_500km: 32,
+                    mass_kg_max: 0.5, bands: "6 x MS", imager: pushbroom, bits: [10, 12]}
+    hyperspectral: {gsd_m_at_500km: 32, swath_km_at_500km: 32, mass_kg_max: 0.5,
+                    bands: "96 x HS available", imager: pushbroom, bits: [8, 10],
+                    note: "the sheet's GSD cell spans MS and HS: 32 m read for HS"}

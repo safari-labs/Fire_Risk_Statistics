@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-66 experiments. **52 can run today** on data already packed and staged.
+66 experiments. **53 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,9 +16,9 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 29 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-29, E-34, E-35, E-36, E-37, E-38, E-45, E-46, E-47, E-55, E-57, E-58, E-59, E-60, E-64, E-65 |
+| **Runnable now** | 30 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-29, E-34, E-35, E-36, E-37, E-38, E-45, E-46, E-47, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66 |
 | **Partial result** | 23 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-20, E-21, E-32, E-33, E-41, E-43, E-44, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
-| **Needs code** | 4 | no new data; a runner or a flag has to be written | E-17, E-39, E-40, E-66 |
+| **Needs code** | 3 | no new data; a runner or a flag has to be written | E-17, E-39, E-40 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
 | **Needs new data** | 4 | free to obtain, not yet held | E-9, E-23, E-24, E-25 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
@@ -128,7 +128,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-27** | Cost per input channel | BRAM scales roughly linearly with input channel count, so 96 channels are infeasible on the target part and 11 are affordable. Stream BRAM is ceil(width/18) x ceil(depth/1024) and width never stops paying. WRONG IF scaling is sub-linear because the first convolution dominates, which would make a wide input cheaper than the marginal-cost argument assumes. | input channel count: 3 / 6 / 10 / 11 / 96 | BRAM, DSP, LUT and latency from a real conversion | Runnable now | `sweep_architecture.py --widths` |
 | **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `sweep_axes.sh SETS=shift` |
 | **E-48** | Hardware decision | The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does. | board (Q7, Q8, Q9) x model x input channels | BRAM / DSP / LUT, latency, power (A-29) | Needs a pack | *none yet* |
-| **E-66** | What each Dragonfly sensor would offer | PROPOSED 2026-11-06, to be registered on James's approval (PLAN_NEXT section 6). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set. | sensor band set: RGB, Mantis MS standard and custom, HS (all; 6 chosen), Chameleon/Caiman MS 11 (placeholder), Mantis SWIR (4 of 12 DFA filters), MS + SWIR | combined skill and RMSE per head on SCANFI labels, paired by fold and seed with hs_v4; lidar height for the leading rows | Needs code | `Fire_Risk_FW ARMS=... GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 bash scripts/shell/sweep_hs.sh (after the code in PLAN_NEXT section 6)` |
+| **E-66** | What each Dragonfly Mantis mode would offer | Registered 2026-11-06 on James's approval, before any result (PLAN_NEXT section 6; Chameleon and Caiman left out). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block as published; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set. | Mantis band set: RGB, MS standard (as published; rule-7-clean subset), MS custom, HS (all 81 surface channels; 6 chosen in orbit), SWIR (4 of DFA's 10 usable filters), MS + SWIR | combined skill and RMSE per head on SCANFI labels, paired by fold and seed with hs_v4; lidar height for the leading rows | Runnable now | `Fire_Risk_FW ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select" GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh` |
 
 ### Out of reach
 
@@ -740,15 +740,13 @@ The onboard hardware.
 
 *Blocked on:* E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 from 91 s; then lowest power)
 
-**E-66 — What each Dragonfly sensor would offer**
+**E-66 — What each Dragonfly Mantis mode would offer**
 
-*Hypothesis:* PROPOSED 2026-11-06, to be registered on James's approval (PLAN_NEXT section 6). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set.
+*Hypothesis:* Registered 2026-11-06 on James's approval, before any result (PLAN_NEXT section 6; Chameleon and Caiman left out). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block as published; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set.
 
-P12's sensor option table: what each camera DFA sells would deliver, with size, power, TRL, GSD and swath beside it (A-41: cost never ranks).
+P12's sensor option table: what each Mantis mode would deliver, with GSD, swath, power, size and TRL from DFA's datasheet beside it (A-41: cost never ranks).
 
-*Note:* Vendor data in config/vendors/dragonfly.yaml (A-52). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled.
-
-*Blocked on:* James's approval of the plan; Q39 (standard block as published) and Q40 (Chameleon and Caiman bands) before rows 2 and 6 are final
+*Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled.
 
 ### Out of reach
 
@@ -836,6 +834,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-63** | Out-of-time generalisation, two training regimes | `Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a first guess here, since regime A adds 1,080 training tiles and regime B a scoring pass |
 | **E-64** | LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | `P6f: Statistics scripts/simulate_lfmc.py and Model pair_globe_lfmc.py (both run, bundle lfmc_v1); then on Nibi Fire_Risk_FW SEEDS="0 1 2" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (FW 2544d00)` | --time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed (a first guess; 3 seeds) |
 | **E-65** | LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | `Fire_Risk_FW EXP_NAME=lfmc_v2 SEEDS="0 1 2" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (run_lfmc.py; same lfmc_v1 bundle, v1 arms rerun beside the new ones)` | --time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed (v1 took 5 min per seed; the fold arms add about 120 GP fits) |
+| **E-66** | What each Dragonfly Mantis mode would offer | `Fire_Risk_FW ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select" GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh` | as sweep_hs.sh: --time=6:00:00 --gpus=a100:1, 75 tasks (5 arms x 5 folds x 3 seeds), 6 per job |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

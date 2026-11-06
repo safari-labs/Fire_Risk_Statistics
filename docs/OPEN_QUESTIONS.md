@@ -925,7 +925,7 @@ Options 1 and 4 combine naturally: a background mapping mode plus tasked targets
 
 ### Q39 — Score DFA's standard Mantis bands as published, though two break rule 7?
 
-**Status:** OPEN (raised 2026-11-06, for E-66)
+**Status:** ANSWERED 2026-11-06: option 1 (raised the same day, for E-66)
 **Blocks:** whether E-66 scores the vendor's standard MS block with all six bands.
 
 DFA's pan (625/350, 450-800 nm) crosses the O2-A band, and NIR1 (780/20, 770-790 nm) reaches 2 nm into it. Rule 7 makes both errors in a band set (`validate`), and rule 7 is not relaxed without asking.
@@ -940,13 +940,13 @@ DFA's pan (625/350, 450-800 nm) crosses the O2-A band, and NIR1 (780/20, 770-790
 3. **Move the O2-A edge again**, as was done for B7 (783/20).
    - *Con:* 780/20 needs 770, and the O2-A lines run to about 771. The edge would then sit inside the feature.
 
-**Answer:**
+**Answer (James, 2026-11-06):** option 1. The standard block is scored as published, as a labelled vendor-product exception (recorded in the grid as `rule7_exception`), alongside its rule-7-clean subset.
 
 ---
 
 ### Q40 — What to ask Dragonfly to confirm
 
-**Status:** OPEN (raised 2026-11-06)
+**Status:** PARTLY ANSWERED 2026-11-06 (raised the same day)
 **Blocks:** the Chameleon and Caiman arms of E-66 (they use placeholder bands until answered), and the hardware columns of P12's option table.
 
 1. **Band centres and widths of the Chameleon and Caiman MS blocks** (11 bands, 400-1000 nm). Are custom blocks possible, as for Mantis?
@@ -955,4 +955,7 @@ DFA's pan (625/350, 450-800 nm) crosses the O2-A band, and NIR1 (780/20, 770-790
 4. **SWIR throughput near the dichroic crossover (~1000 nm):** are L1 and L2 (1059 and 1068 nm) usable at full response?
 5. **Can a custom 6-band MS block carry 490, 560, 665, 705, 740 and 865 nm?** That is the set the band searches point to (A-52).
 
-**Answer:**
+**Answer (James, 2026-11-06, partial):**
+- Chameleon and Caiman are left out of E-66, so items 1 and 2 no longer block it.
+- The Mantis datasheet answers item 3 for GSD and swath: RGB 16 m; MS 16 m pan and 32 m MS; HS 32 m; swath 32 km for every mode at 500 km. It also gives 8-12 bit depth, power under 6 W imaging and under 4 W readout, and 1U. It gives no SNR and no SWIR column.
+- **Still open:** per-band SNR or a radiometric model; SWIR GSD and swath (A-20 has them equal to MS); items 4 and 5.

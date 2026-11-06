@@ -1,0 +1,80 @@
+# E-66: what each Dragonfly Mantis mode would offer (PLAN_NEXT section 6,
+# approved by James 2026-11-06; Chameleon and Caiman left out).
+#
+# Scored on AVIRIS-NG (aviris_v4) through Fire_Risk_FW run_hs_search.py, on
+# hs_v4's folds and seeds, so every row pairs with hs_v4 and with each other.
+# Export: safari-bands hs-grid --grid p12_sensors
+#           --json ../Fire_Risk_FW/configs/noise/p12_sensors_grid.json
+#
+# Bands come from DFA's catalogue (config/vendors/dragonfly.yaml, A-52) where
+# the camera fixes them, and are searched where DFA lets them be chosen (the
+# 4 SWIR filters; the HS bands in orbit). Noise is the same placeholder model
+# for every row (A-37), so the comparison is spectral.
+
+name: p12_sensors
+step_nm: 10.0
+
+references:
+  # Anchors: hs_v4 scored these, so the two runs can be read together.
+  - config_c/VNIR
+  - config_a
+  - sentinel2_p6_12band
+  # Mantis MS with the custom block the band searches point to.
+  - sensor_mantis_vnir6
+  # Mantis RGB snapshot. DFA states "standard RGB" (Bayer); its filter curves
+  # are not published, so DFA's MS blue, green and red stand in for it.
+  - {name: dfa_rgb, vendor: dragonfly, list: mantis_ms_standard_bands,
+     include: [blue, green, red], detector: silicon_cmos}
+  # Mantis MS, DFA's standard block AS PUBLISHED (James, Q39, 2026-11-06).
+  - {name: dfa_ms_standard, vendor: dragonfly, list: mantis_ms_standard_bands,
+     detector: silicon_cmos,
+     rule7_exception: "Q39 (James, 2026-11-06): scored as published, an evaluation of
+       DFA's shipped block, not a band design; pan and NIR1 overlap O2-A"}
+  # The same block with only its rule-7-clean bands.
+  - {name: dfa_ms_standard_clean, vendor: dragonfly, list: mantis_ms_standard_bands,
+     include: [blue, green, red, nir2], detector: silicon_cmos}
+  # Mantis HS, every band: centres 475-895 nm at AVIRIS-NG's 5 nm, so each
+  # band's extent sits inside the camera's 470-900 (its 96 at ~4.5 nm is
+  # slightly finer). The O2-A channels are atmospheric (A-18), so rule 7 drops
+  # them, leaving the surface bands; the same 81 the dfa_hs_select arm searches.
+  - {name: dfa_hs_all, range_nm: [475.0, 895.0], step_nm: 5.0, fwhm_nm: 5.0,
+     detector: silicon_cmos}
+
+arms:
+  # Mantis SWIR alone: best k <= 4 of DFA's filters (L5 fails rule 7; L12 runs
+  # past the standard-InGaAs range, A-19).
+  dfa_swir_alone:
+    candidates: {vendor: dragonfly, list: mantis_swir_filter_catalogue}
+    detector: ingaas_std
+    k_max: 4
+    fixed: []
+  # MS + SWIR on one head (A-20): the 4 filters chosen with each MS block fixed.
+  dfa_swir_on_custom:
+    candidates: {vendor: dragonfly, list: mantis_swir_filter_catalogue}
+    detector: ingaas_std
+    k_max: 4
+    fixed: [sensor_mantis_vnir6]
+  dfa_swir_on_standard:
+    candidates: {vendor: dragonfly, list: mantis_swir_filter_catalogue}
+    detector: ingaas_std
+    k_max: 4
+    fixed: [dfa_ms_standard]
+  # Mantis HS, 6 bands chosen in orbit: best k <= 6 of the 470-900 nm channels.
+  dfa_hs_select:
+    range_nm: [470.0, 900.0]   # every band's extent inside the camera's range
+    fwhm_nm: [5.0]
+    step_nm: 5.0
+    detector: silicon_cmos
+    k_max: 6
+    fixed: []
+
+role_windows_nm:
+  BLUE: [450.0, 520.0]
+  GREEN: [530.0, 590.0]
+  RED: [630.0, 690.0]
+  RED_EDGE1: [695.0, 715.0]
+  RED_EDGE2: [730.0, 750.0]
+  RED_EDGE3: [775.0, 795.0]
+  NIR: [840.0, 885.0]
+  SWIR1: [1550.0, 1700.0]
+  SWIR2: [2080.0, 2350.0]

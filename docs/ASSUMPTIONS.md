@@ -1611,3 +1611,14 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - whether Chameleon SWIR uses the Mantis filter catalogue;
   - the GSD and swath of the Chameleon and Caiman variants;
   - per-band SNR.
+
+- **Mantis datasheet (James, 2026-11-06), in `config/vendors/dragonfly.yaml`:**
+  - RGB snapshot: 16 m GSD, 8 or 10 bit.
+  - MS pushbroom: 16 m pan and 32 m MS, 10 or 12 bit.
+  - HS pushbroom: 32 m (the sheet's GSD cell spans MS and HS), 8 or 10 bit.
+  - Every mode: 32 km swath at 500 km, under 0.5 kg, 1U (65 x 90 x 107 mm), under 6 W imaging and under 4 W readout, 5 V, operating 10-30 C, TRL 9.
+  - No SNR, and no SWIR column, so radiometry stays the placeholder model (A-37).
+- **E-66 approved (James, 2026-11-06)** without Chameleon and Caiman. The standard MS block is scored as published (Q39).
+  - The grid `config/grids/p12_sensors.yaml` takes references from the vendor catalogue and records the exception.
+  - The SWIR arms search DFA's 10 usable filters: L5 fails rule 7, and L12 (1658-1745 nm) runs past standard InGaAs's 1700 nm (A-19).
+  - The HS rows use 81 surface channels at 5 nm, 475-895 nm, with the O2-A channels dropped (A-18).
