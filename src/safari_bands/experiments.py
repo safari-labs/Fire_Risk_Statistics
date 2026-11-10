@@ -1305,7 +1305,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "best, with its size, pros and cons). The onboard/ground split "
                    "follows A-41: structure maps onboard, weather-dependent products "
                    "on the ground, bounded by E-20.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="Fire_Risk_FW BANDS=<E-46 set> SUBMIT=1 bash "
                "scripts/shell/sweep_eco_arch.sh (run_eco_arch.py)",
         resources="--time=1:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G; 15 tasks "
@@ -1313,6 +1313,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "eco_v3's 14 s per 8x2 fit)",
         blocker="the band set: E-46 (a run at a candidate set before then is "
                 "provisional); the FW code must be committed and pulled",
+        note="2026-11-09 (docs/results/P12/p12_arch): at B2 B3 B4 B7 B8A, the Mantis "
+             "standard-block stand-in, REFUTED: best rung 32x1 (0.413); 8x2 0.011 +- "
+             "0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. 32x1 needs the "
+             "Q8 (0.1 s) or a wider FINN fold on the Q7 (138 s at minimal folding); "
+             "16x1 fits the Q7 (35 s).",
     ),
     Experiment(
         "E-48", "Hardware decision", "Hardware",

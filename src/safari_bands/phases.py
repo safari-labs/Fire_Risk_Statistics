@@ -1540,6 +1540,24 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P12c", "The onboard model's size (E-47, arch_mantis_std)", "2026-11-09",
+        "P12/p12_arch", "README.md",
+        "TinyEcologyUNet's 12 rungs (base_ch 4-32 x depth 1-3) at B2 B3 B4 B7 B8A, a "
+        "Sentinel-2 stand-in for the Mantis standard block CUBICS flies; raw + indices with "
+        "noise, eco_v3's folds and seeds, 15 of 15 tasks.",
+        (
+            Entry("E-47", "experiment", "REFUTED",
+                  result="Best rung 32x1 (0.413, 107k params, 65 GMAC/scene); 8x2 is 0.011 +- "
+                         "0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. Per head "
+                         "8x2 -> 32x1: conifer RMSE 23.7 -> 23.2, closure 13.8 -> 13.5, "
+                         "height 4.54 -> 4.44 m. Stand-in 8x2 is 0.004 +- 0.002 below E-46's "
+                         "stable SWIR set.",
+                  conclusion="Size and board are one decision: 32x1 runs in 0.1 s on the Q8 "
+                             "but 138 s on the Q7 at minimal folding; 16x1 fits the Q7 in 35 s. "
+                             "Options for James (A-49)."),
+        ),
+    ),
+    Phase(
         "P6f2", "LFMC with priors narrowed inside each fold (lfmc_v2)", "2026-11-06",
         "P6/p6f_lfmc_v2", "README.md",
         "E-65 (A-51, step 2 of fixing the forward model): the lfmc_v1 simulation pool cut, in "
