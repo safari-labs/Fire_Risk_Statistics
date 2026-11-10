@@ -1268,19 +1268,23 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="the chosen band and index sets, with their margins",
         conclusion="The CubeSat's bands and indices, presented as options with "
                    "pros and cons for James to choose (A-49).",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="Statistics scripts/make_band_options.py (consensus, grid, provisional table); "
                "then on Nibi docs/results/P12/p12_bands/rescore_commands.md (8 sweep_eco_arch "
                "runs and one sweep_hs references run), then make_band_options.py "
                "--eco-rescore --hs-rescore",
-        blocker="the consensus re-scores (cluster); E-35 for the fuel-type slot's value",
+        blocker="James's choice between stable k=5 and tied k=8 (A-49); "
+                "E-35 for the fuel-type slot's value",
         note="2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting "
              "schemes the equal-weight search's best set is tied (paired, one SE) "
              "with the overall best under five; only maximin separates them, by "
              "0.009 +- 0.009. The best sets are 7-8 bands under every scheme."
              " Consensus 2026-11-05 (docs/results/P12/p12_bands): Sentinel-2 stable at k=1 (B12) "
              "and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no "
-             "AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot).",
+             "AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot)."
+             " Re-scores 2026-11-09 (bands_consensus k=1, bands_consensus_v2 k=2-8, all 15/15): "
+             "each fixed set within ~2 SE of its search; stable k=5 0.4055, 0.010 +- 0.003 below "
+             "the best; k=8 consensus ties (0.4157). SUPPORTED: B5 and B11 in the stable set.",
     ),
     Experiment(
         "E-47", "Architecture decision", "CFFDRS mirror",
@@ -1943,7 +1947,11 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              " sensors_v1 2026-11-06 (docs/results/P12/p12_sensors), 75/75: MIXED. (2), (3), (5) "
              "hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed "
              "configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. "
-             "Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml).",
+             "Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml)."
+             " sensors_fixed 2026-11-09 (15/15; anchors reproduce exactly): four fixed DFA "
+             "filters (L4 L6 L9 L11) add +0.025 [+0.006, +0.045] to the standard block and "
+             "+0.015 [+0.005, +0.024] to the custom; with SWIR the blocks tie (+0.002); DFA's "
+             "filters match the configured slots (-0.002). Standard + 4 filters 0.282, S2 0.286.",
     ),
 )
 

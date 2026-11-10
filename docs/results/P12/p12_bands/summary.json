@@ -1,7 +1,10 @@
 {
  "eco": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Statistics\\narval_results\\eco_v3\\20261102-1959",
  "hs": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Statistics\\narval_results\\hs_v4\\20261102-1959",
- "eco_rescore": "narval_results\\bands_consensus",
+ "eco_rescore": [
+  "narval_results\\bands_consensus",
+  "narval_results\\bands_consensus_v2"
+ ],
  "hs_rescore": "narval_results\\hs_consensus\\20261106-1202",
  "consensus": [
   {
@@ -640,15 +643,7 @@
  "best_s2": "pc search, k=8",
  "best_swir": "consensus swir_ext, k=4",
  "pending": {
-  "s2": [
-   2,
-   3,
-   4,
-   5,
-   6,
-   7,
-   8
-  ],
+  "s2": [],
   "swir": []
  }
 }

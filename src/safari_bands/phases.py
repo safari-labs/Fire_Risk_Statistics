@@ -1523,16 +1523,20 @@ PHASES: tuple[Phase, ...] = (
         "P12a", "Band options: the consensus sets (E-46, Q38)", "2026-11-05",
         "P12/p12_bands", "README.md",
         "The 15 searches per k counted by region (Q38 option 1): Sentinel-2 regions by band "
-        "role, AVIRIS-NG SWIR by 50 nm bins. The consensus sets go to the cluster as fixed "
-        "sets; until they return, the option table carries the search scores.",
+        "role, AVIRIS-NG SWIR by 50 nm bins. Every consensus set re-scored as a fixed set on "
+        "the same folds and seeds (bands_consensus + bands_consensus_v2; hs_consensus).",
         (
-            Entry("E-46", "experiment", "PENDING",
+            Entry("E-46", "experiment", "SUPPORTED",
                   result="Sentinel-2 consensus stable at k=1 (B12, 11 of 15) and k=5 (B4, B5, "
                          "B8A, B11, B12; weakest region 10 of 15); 6-9 of 15 at the other k. "
-                         "AVIRIS-NG SWIR: no consensus set is stable (weakest 50 nm slot 4-8 "
-                         "of 15).",
-                  conclusion="The re-scores decide which sets enter the option table with a "
-                             "measured score."),
+                         "Re-scored as fixed sets (2026-11-09, all 8 k, 15/15 each): each is "
+                         "within ~2 SE of its own search; stable k=5 is 0.010 +- 0.003 below "
+                         "the best (0.4158), only the unstable k=8 ties. AVIRIS-NG: no SWIR "
+                         "consensus is stable; the configured standard-InGaAs slots lead every "
+                         "standard placement.",
+                  conclusion="Red edge (B5) and B11 hold their slots in the stable k=5 set and "
+                             "in k=6, so the hypothesis stands. The choice between stable k=5 "
+                             "and tied k=8 is James's (A-49)."),
         ),
     ),
     Phase(
@@ -1562,7 +1566,8 @@ PHASES: tuple[Phase, ...] = (
         "E-66 on AVIRIS-NG (aviris_v4), hs_v4's folds and seeds: RGB, the MS standard block "
         "(as published, Q39) and its clean subset, the custom block, all 81 HS channels and 6 "
         "chosen in orbit, SWIR alone (4 of DFA's 10 usable filters), and each MS block with 4 "
-        "searched filters. 75 of 75 tasks; spectral only (no SNR published).",
+        "searched filters. 75 of 75 tasks; spectral only (no SNR published). Follow-up "
+        "sensors_fixed: DFA's filters as fixed sets, 15 of 15.",
         (
             Entry("E-66", "experiment", "MIXED",
                   result="(1) custom - standard MS +0.013 [-0.003, +0.029] REFUTED as "
@@ -1574,8 +1579,9 @@ PHASES: tuple[Phase, ...] = (
                          "+0.016 [+0.004, +0.029].",
                   conclusion="MS over SWIR if only one; 6 well-placed bands match 81 HS "
                              "channels; SWIR adds at a fixed filter set but searched per fold "
-                             "it loses its gain to search noise. DFA's filters as fixed sets "
-                             "(p12_sensors_fixed) decide the SWIR block."),
+                             "it loses its gain to search noise. sensors_fixed (2026-11-09): "
+                             "DFA's L4 L6 L9 L11 add +0.025 [+0.006, +0.045] to the standard "
+                             "block, which then ties the custom block and nears Sentinel-2."),
         ),
     ),
 )

@@ -1,11 +1,11 @@
 # P12a: band options, the consensus sets (E-46, Q38)
 
-The first stage of P12's band decision. Each band search runs inside a training fold, so eco_v3 (Sentinel-2) and hs_v4 (AVIRIS-NG) return 15 sets per k (5 outer folds × 3 seeds), and the sets differ. Q38 (James, 2026-11-05, option 1): count them by region, form the consensus set, and score that exact set on the same folds. **The re-scores are not run yet.** Until they are, the option table carries the search scores, labelled as such. All values are Reconstructed (ours).
+The first stage of P12's band decision. Each band search runs inside a training fold, so eco_v3 (Sentinel-2) and hs_v4 (AVIRIS-NG) return 15 sets per k (5 outer folds × 3 seeds), and the sets differ. Q38 (James, 2026-11-05, option 1): count them by region, form the consensus set, and score that exact set on the same folds. **Both re-scores are in** (2026-11-09): every consensus set is scored as a fixed set on the same folds and seeds, beside the search scores. All values are Reconstructed (ours).
 
 **At a glance:** [experiments.md](experiments.md). Generated tables: [options.md](options.md), [T_consensus.csv](T_consensus.csv), [T_options_s2.csv](T_options_s2.csv), [T_options_swir.csv](T_options_swir.csv). Re-score commands: [rescore_commands.md](rescore_commands.md).
 
 ```bash
-python scripts/make_band_options.py      # now; add --eco-rescore / --hs-rescore when they return
+python scripts/make_band_options.py --eco-rescore narval_results/bands_consensus narval_results/bands_consensus_v2 \n    --hs-rescore narval_results/hs_consensus/20261106-1202
 python scripts/make_phase_docs.py --phase P12a
 ```
 
@@ -56,12 +56,32 @@ python scripts/make_phase_docs.py --phase P12a
 - **Sentinel-2:** the best option is still the percent-conifer search at k = 8 (0.4158). The equal-weight search at k = 7–8 ties with it, and k = 5–6 sit about 0.008 below. All of these are *search procedure* scores: each fold scored its own set, which no single fixed set reproduces. Each row says so under its cons.
 - **The consensus sets are listed below each table with no score.** They enter the option table, with pros and cons, only once re-scored.
 
-## The first re-score (2026-11-06)
+## The Sentinel-2 re-score (2026-11-06 to 2026-11-09)
 
-`narval_results/bands_consensus`, 8 × 15 tasks, completed on Narval. **Only k = 1 is valid.**
-- `sweep_eco_arch.sh` passed `BANDS` inside sbatch's comma-separated `--export` list, so `BANDS=B4,B12` reached the jobs as `BANDS=B4`. Every k ≥ 2 run trained on its first band only. The combiner rejects them because their bands don't match the consensus.
-- Fixed in FW `6b1499a`, with a test. The k = 2–8 sets are rerun as `bands_consensus_v2`.
-- **k = 1 (B12 alone), scored as a fixed set:** 0.2693 ± 0.0104. That is 0.009 above the equal-weight search's own k = 1 procedure score (0.2602), because 4 of the 15 searches chose another band first.
+All eight Sentinel-2 consensus sets, scored as fixed sets with `run_eco_arch` at 8×2, paired with eco_v3 by fold and seed (15 of 15 tasks each):
+- k = 1 from `narval_results/bands_consensus`.
+- k = 2–8 from `narval_results/bands_consensus_v2`, the rerun after the first run's k ≥ 2 tasks passed only their first band (`sbatch --export` split `BANDS` at its commas; fixed in FW `6b1499a`). The combiner rejects the invalid first-run tasks by their band lists.
+
+| k | consensus set | stable (Q38) | fixed-set score | consensus − search at the same k (paired) | gap to the best option (paired) |
+|---|---|---|---|---|---|
+| 1 | B12 | yes | 0.2693 | +0.009 ± 0.008 | 0.146 ± 0.007 |
+| 2 | B4 B12 | no | 0.3618 | −0.010 ± 0.005 | 0.054 ± 0.005 |
+| 3 | B4 B11 B12 | no | 0.3943 | −0.001 ± 0.003 | 0.021 ± 0.003 |
+| 4 | B4 B6 B8A B12 | no | 0.3983 | −0.006 ± 0.003 | 0.017 ± 0.003 |
+| 5 | B4 B5 B8A B11 B12 | **yes** | 0.4055 | −0.003 ± 0.004 | 0.010 ± 0.003 |
+| 6 | B4 B5 B6 B8A B11 B12 | no | 0.4114 | +0.003 ± 0.003 | 0.004 ± 0.003 |
+| 7 | B4 B8 B5 B3 B6 B11 B12 | no | 0.4082 | −0.006 ± 0.003 | 0.008 ± 0.003 |
+| 8 | B4 B8 B5 B3 B6 B8A B11 B12 | no | 0.4157 | +0.001 ± 0.002 | **tied** (0.000 ± 0.002) |
+
+The best option is the percent-conifer-weighted search at k = 8 (0.4158).
+
+- **Fixing the set neither gains nor loses on Sentinel-2.** At every k, the consensus set is within about two SE of the search procedure that produced it. Unlike AVIRIS-NG, where fixed placements beat the per-fold searches, the Sentinel-2 searches pick nearly the same bands each time, so there is little search noise to remove.
+- **Neither stable set ties the best.** The stable k = 5 set (red, two red edges, narrow NIR, both SWIR) is 0.010 ± 0.003 below the best and 0.010 ± 0.003 below the k = 8 consensus. Only k = 8, unstable in its weakest slot, ties.
+- **For the decision (A-49, James's).** Two options:
+  - Take the stable k = 5 set and accept 0.010.
+  - Take k = 8, which ties the best but whose weakest slot is held by 9 of 15 searches.
+
+  Both carry SWIR1 and SWIR2. The VNIR-only Mantis configuration chosen for CUBICS sits outside this Sentinel-2 ladder; its score is in [P12/p12_sensors](../p12_sensors/README.md).
 
 ## The AVIRIS-NG re-score (2026-11-06)
 
@@ -72,9 +92,8 @@ python scripts/make_phase_docs.py --phase P12a
 
 ## Next
 
-1. **Re-score k = 2–8 on Narval** ([rescore_commands.md](rescore_commands.md), now `EXP_NAME=bands_consensus_v2`). The 8 AVIRIS-NG sets run in one `sweep_hs.sh` references job with `configs/noise/p12_consensus_grid.json` (running as `hs_consensus`).
-2. Rerun `make_band_options.py` with both re-scores. The option table then puts each fixed set's own paired score beside the search scores, and James chooses (A-49).
-3. E-47's size ladder at the chosen set.
+1. James chooses between the stable k = 5 set and the tied k = 8 set (A-49), or records that the VNIR-only CUBICS configuration supersedes the Sentinel-2 ladder.
+2. E-47's size ladder at the chosen set (or at the Mantis standard block).
 
 ## Limits
 

@@ -561,7 +561,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--eco", type=Path, default=ECO)
     ap.add_argument("--hs", type=Path, default=HS)
-    ap.add_argument("--eco-rescore", type=Path, default=None)
+    ap.add_argument("--eco-rescore", type=Path, nargs="+", default=None,
+                    help="one or more sweep_eco_arch runs (k<N>/ folders); later runs "
+                         "replace earlier ones task by task")
     ap.add_argument("--hs-rescore", type=Path, default=None)
     ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_bands")
     ap.add_argument("--no-grid", action="store_true", help="do not write the FW grid")
@@ -574,8 +576,10 @@ def main(argv=None) -> int:
     hsc = hs_consensus(hs)
     if not args.no_grid:
         write_grid(hsc)
-    rescore = (load_eco_rescore(args.eco_rescore, {r["k"]: r["bands"] for r in s2c})
-               if args.eco_rescore else {})
+    rescore: dict[int, dict] = {}
+    for root in args.eco_rescore or []:
+        for k, per in load_eco_rescore(root, {r["k"]: r["bands"] for r in s2c}).items():
+            rescore.setdefault(k, {}).update(per)
     hs_rescore = {}
     if args.hs_rescore:
         rs = load_hs(args.hs_rescore)
@@ -618,7 +622,8 @@ def main(argv=None) -> int:
     (args.out / "options.md").write_text("\n".join(md), encoding="utf-8")
     (args.out / "rescore_commands.md").write_text("\n".join(commands(s2c, hsc)) + "\n",
                                                   encoding="utf-8")
-    summary = {"eco": str(args.eco), "hs": str(args.hs), "eco_rescore": str(args.eco_rescore),
+    summary = {"eco": str(args.eco), "hs": str(args.hs),
+               "eco_rescore": [str(r) for r in args.eco_rescore or []],
                "hs_rescore": str(args.hs_rescore),
                "consensus": [{k: v for k, v in r.items() if k != "region_of"}
                              for r in s2c + hsc],

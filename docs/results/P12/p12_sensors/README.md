@@ -1,11 +1,11 @@
 # P12b: what each Dragonfly Mantis mode would offer (E-66)
 
-Run on Narval: `narval_results/sensors_v1/20261106-1218`, 75 of 75 tasks (5 arms × 5 folds × 3 seeds), on `aviris_v4`. The pack, folds and seeds are hs_v4's, and every task's pixels match hs_v4's, so all rows pair by fold and seed. Labels are SCANFI (percent conifer, closure, height, fuel family). Inputs are raw + indices with placeholder sensor noise (A-37). Mantis publishes no SNR, so this compares spectral content only. All values are Reconstructed (ours).
+Run on Narval: `narval_results/sensors_v1/20261106-1218`, 75 of 75 tasks (5 arms × 5 folds × 3 seeds), on `aviris_v4`. The pack, folds and seeds are hs_v4's, and every task's pixels match hs_v4's, so all rows pair by fold and seed. The follow-up `narval_results/sensors_fixed/20261106-1645` (15 of 15 tasks, same pack, folds and seeds) scores DFA's SWIR filters as fixed sets. Labels are SCANFI (percent conifer, closure, height, fuel family). Inputs are raw + indices with placeholder sensor noise (A-37). Mantis publishes no SNR, so this compares spectral content only. All values are Reconstructed (ours).
 
-**At a glance:** [experiments.md](experiments.md). Tables: [T_sensors.csv](T_sensors.csv) (rows, with the datasheet columns), [T_predictions.csv](T_predictions.csv), [T_filters.csv](T_filters.csv) (which filters the searches chose).
+**At a glance:** [experiments.md](experiments.md). Tables: [T_sensors.csv](T_sensors.csv) (rows, with the datasheet columns), [T_predictions.csv](T_predictions.csv), [T_filters.csv](T_filters.csv) (which filters the searches chose), [T_fixed_filters.csv](T_fixed_filters.csv) (the fixed-filter contrasts).
 
 ```bash
-python scripts/make_sensor_options.py --run narval_results/sensors_v1/20261106-1218
+python scripts/make_sensor_options.py --run narval_results/sensors_v1/20261106-1218 \n    --fixed narval_results/sensors_fixed/20261106-1645
 python scripts/make_phase_docs.py --phase P12b
 ```
 
@@ -45,22 +45,35 @@ python scripts/make_phase_docs.py --phase P12b
 - **SWIR does add to MS, at a fixed filter set.** Prediction 4 fails with *searched* filters, where each fold picks its own four and search noise costs about what SWIR gains (the same issue Q38 settled for bands). At the fixed configured slots, SWIR adds +0.016 [+0.004, +0.029] over MS custom. That set (1240/20, 1550/40, 1610/40, 1680/40) is also the best standard-InGaAs option in the AVIRIS-NG consensus re-score ([P12/p12_bands](../p12_bands/README.md)). It is 0.004 below the extended-InGaAs best, and ahead of every searched or consensus standard placement.
 - **Which DFA filters.** On the custom block, L6 (1557/45), L9 (1599/43) and L11 (1674/39) are each in 10 of 15 searches. The fourth slot varies: L2 or L1 near 1060, or L3 near 1190. DFA's nearest filters to the configured slots are L4 (1213/83), L6, L9 and L11.
 
-## Next: score DFA's filters as fixed sets
+## DFA's SWIR filters as fixed sets (sensors_fixed, 2026-11-09)
 
-`config/grids/p12_sensors_fixed.yaml` holds the follow-up, ready to launch (Narval, in `Fire_Risk_FW` after `git pull`):
+Each block plus DFA's four filters nearest the configured slots (L4 1213/83, L6 1557/45, L9 1599/43, L11 1674/39), scored as one fixed set. The three anchors rerun here (the custom block, the standard block and the configured MS + SWIR set) reproduce their sensors_v1 and hs_v4 scores exactly on every task, so the rows pair cleanly.
 
-```bash
-ARMS=references GRID=configs/noise/p12_sensors_fixed_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 \
-  EXP_NAME=sensors_fixed SUBMIT=1 bash scripts/shell/sweep_hs.sh
-```
+| Mantis configuration | Combined skill |
+|---|---|
+| MS standard block alone | 0.256 |
+| MS standard + L4 L6 L9 L11 | **0.282** |
+| MS custom + L4 L6 L9 L11 | 0.284 |
+| MS custom + L2 L6 L9 L11 (the searches' consensus) | 0.282 |
+| MS custom + the configured slots 1240, 1550, 1610, 1680 | 0.285 |
+| L4 L6 L9 L11 alone | 0.217 |
+| Sentinel-2, 12 bands (anchor) | 0.286 |
 
-It scores each set fixed, on the same folds:
-- the custom block with L4, L6, L9 and L11 (the nearest to the configured slots);
-- the custom block with the consensus filters L2, L6, L9 and L11;
-- the standard block with L4, L6, L9 and L11;
-- L4, L6, L9 and L11 alone.
+| Contrast (paired, fold and seed) | Difference [95 % CI] |
+|---|---|
+| SWIR on the standard block | **+0.025 [+0.006, +0.045]** |
+| SWIR on the custom block | +0.015 [+0.005, +0.024] |
+| Custom against standard block, both with SWIR | +0.002 [−0.004, +0.008] |
+| DFA's nearest filters against the configured slots | −0.002 [−0.005, +0.002] |
+| Consensus filters (L2) against nearest (L4) | −0.002 [−0.005, +0.002] |
+| Fixed against searched filters, custom block | +0.006 [+0.001, +0.012] |
+| Fixed against searched filters, standard block | +0.008 [−0.002, +0.017] |
+| Standard MS alone against the four filters alone | +0.040 [+0.012, +0.067] |
 
-The configured set and both MS blocks run alongside as anchors. It is one references task per fold and seed (15 tasks), about 30 minutes each.
+- **SWIR helps once its filters are fixed.** Four DFA filters add 0.025 to the standard block and 0.015 to the custom one. Searched per fold (sensors_v1), the same gain was lost to search noise. Fixing the filters recovers 0.006–0.008 of it.
+- **With SWIR, the filter block stops mattering.** Custom and standard blocks are within 0.002 of each other. SWIR supplies what the custom block's red edge added, so the standard block plus four filters reaches the Sentinel-2 12-band skill (0.282 against 0.286).
+- **DFA's off-the-shelf filters are as good as the configured slots.** L4/L6/L9/L11 is within 0.002 of the ideal 1240/1550/1610/1680 set, and swapping L4 for the consensus L2 changes nothing. No custom SWIR filter is needed.
+- **For CUBICS (VNIR-only, standard block):** the SWIR mode is worth 0.025 combined skill, about 10 % of the standard block's score. That is the cost of leaving it out, set against the second Mantis chain (≈6 W, 0.5 kg, 1U and a co-registration task). It is an option for James, not a recommendation (A-49).
 
 ## Limits
 

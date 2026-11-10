@@ -12,7 +12,7 @@ tasks it holds, and a paired contrast uses only the tasks both rows hold.
     python scripts/make_sensor_options.py --run narval_results/sensors_v1/<id>
 
 Writes docs/results/P12/p12_sensors/: T_sensors.csv, T_predictions.csv,
-sensors.png, qual_E-66_sensor_bands.png, summary.json.
+T_fixed_filters.csv (with --fixed), sensors.png, qual_E-66_sensor_bands.png, summary.json.
 """
 from __future__ import annotations
 
@@ -61,6 +61,14 @@ ROWS = [
      [("s", "dfa_swir_on_standard", "k4")]),
     ("ms_custom_swir_cfg", "MS custom + SWIR at configured slots (1240-1680)",
      "multispectral+swir", BLUE, [("h", "references", "sensor_mantis_ms_plus_swir")]),
+    ("std_nearest", "MS standard + DFA L4 L6 L9 L11 (fixed)", "multispectral+swir", AMBER,
+     [("f", "references", "dfa_standard_nearest")]),
+    ("custom_nearest", "MS custom + DFA L4 L6 L9 L11 (fixed)", "multispectral+swir", BLUE,
+     [("f", "references", "dfa_custom_nearest")]),
+    ("custom_consensus", "MS custom + DFA L2 L6 L9 L11 (fixed)", "multispectral+swir", BLUE,
+     [("f", "references", "dfa_custom_consensus")]),
+    ("swir_nearest_alone", "DFA L4 L6 L9 L11 alone (fixed)", "swir", GREEN,
+     [("f", "references", "dfa_swir_nearest_alone")]),
     ("fixed_vnir", "anchor: fixed six VNIR bands", None, MUTED,
      [("s", "references", "config_c/VNIR"), ("h", "references", "config_c/VNIR")]),
     ("s2", "anchor: Sentinel-2, 12 bands", None, MUTED,
@@ -69,6 +77,19 @@ ROWS = [
 
 #: E-66's registered predictions (2026-11-06): (a, b, kind). "above": a - b CI
 #: above 0; "within": |a - b| within one paired SE (HS no better than MS).
+#: The follow-up's contrasts (sensors_fixed, 2026-11-06): DFA's SWIR filters as FIXED sets.
+#: Not registered predictions; reported with their paired 95 % CI.
+FOLLOWUP = [
+    ("SWIR on the standard block", "std_nearest", "ms_std"),
+    ("SWIR on the custom block", "custom_nearest", "ms_custom"),
+    ("DFA nearest filters vs the configured slots", "custom_nearest", "ms_custom_swir_cfg"),
+    ("consensus filters vs nearest filters", "custom_consensus", "custom_nearest"),
+    ("custom vs standard block, both with SWIR", "custom_nearest", "std_nearest"),
+    ("fixed vs searched filters, custom block", "custom_nearest", "ms_custom_swir"),
+    ("fixed vs searched filters, standard block", "std_nearest", "ms_std_swir"),
+    ("MS standard alone vs fixed SWIR alone", "ms_std", "swir_nearest_alone"),
+]
+
 PREDICTIONS = [
     ("1 custom MS beats standard MS", "ms_custom", "ms_std", "above"),
     ("2 MS custom beats SWIR alone", "ms_custom", "swir_alone", "above"),
@@ -99,15 +120,21 @@ def _datasheet(mode):
             "simultaneous": "MS + SWIR on one head (A-20)" if "+" in mode else ""}
 
 
-def build(run: Path) -> dict:
+SOURCE = {"s": "sensors_v1", "h": "hs_v4", "f": "sensors_fixed"}
+
+
+def build(run: Path, fixed: Path | None = None) -> dict:
     runs = {"s": load_hs(run), "h": load_hs(HS)}
-    bad = {t for t, px in runs["s"].get("pixels", {}).items()
-           if px != runs["h"].get("pixels", {}).get(t)}
-    if bad:
-        print(f"  {len(bad)} sensors_v1 tasks ran on other pixels than hs_v4, dropped: "
-              f"{sorted(bad)}")
-        runs["s"]["sets"] = {k: {t: v for t, v in d.items() if t not in bad}
-                             for k, d in runs["s"]["sets"].items()}
+    if fixed is not None:
+        runs["f"] = load_hs(fixed)
+    for key in [k for k in runs if k != "h"]:
+        bad = {t for t, px in runs[key].get("pixels", {}).items()
+               if px != runs["h"].get("pixels", {}).get(t)}
+        if bad:
+            print(f"  {len(bad)} {SOURCE[key]} tasks ran on other pixels than hs_v4, "
+                  f"dropped: {sorted(bad)}")
+            runs[key]["sets"] = {k: {t: v for t, v in d.items() if t not in bad}
+                                 for k, d in runs[key]["sets"].items()}
     rows = []
     for key, label, mode, col, sources in ROWS:
         per, src, bands = _row_data(sources, runs)
@@ -119,7 +146,7 @@ def build(run: Path) -> dict:
         rows.append({"key": key, "label": label + (" (hs_v4)" if src == "h" else ""),
                      "n_tasks": len(per), "folds": sorted({f for f, _ in per}),
                      "mean": m, "se": se, "bands": bands, "colour": col,
-                     "source": "sensors_v1" if src == "s" else "hs_v4", "per": per,
+                     "source": SOURCE[src], "per": per,
                      **_datasheet(mode)})
     by = {r["key"]: r for r in rows}
     preds = []
@@ -145,7 +172,25 @@ def build(run: Path) -> dict:
             v += f" (provisional: {nf} of 5 folds)"
         preds.append({"prediction": text, "a": a, "b": b, "d": d, "se": se,
                       "ci": [lo, hi], "n_pairs": n, "n_folds": nf, "verdict": v})
-    return {"rows": rows, "predictions": preds}
+    follow = []
+    for text, a, b in FOLLOWUP:
+        if by[a].get("per") and by[b].get("per"):
+            d, se, n = paired(by[a]["per"], by[b]["per"])
+            follow.append({"contrast": text, "a": a, "b": b, "d": d, "se": se,
+                           "ci": [d - 1.96 * se, d + 1.96 * se], "n_pairs": n})
+    repro = []
+    if "f" in runs:
+        for name in ("sensor_mantis_vnir6", "dfa_ms_standard", "sensor_mantis_ms_plus_swir"):
+            new = runs["f"]["sets"].get(("references", name))
+            old = (runs["s"]["sets"].get(("references", name))
+                   or runs["h"]["sets"].get(("references", name)))
+            if new and old:
+                a = {t: v for t, (v, _) in new.items()}
+                b = {t: v for t, (v, _) in old.items()}
+                d, se, n = paired(a, b)
+                repro.append({"set": name, "d": d, "max_abs": max(abs(a[t] - b[t]) for t in
+                              set(a) & set(b)), "n_pairs": n})
+    return {"rows": rows, "predictions": preds, "followup": follow, "repro": repro}
 
 
 def filter_choices(run: Path) -> dict:
@@ -243,10 +288,12 @@ def figure_bands(res, out: Path):
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--run", type=Path, required=True)
+    ap.add_argument("--fixed", type=Path, default=None,
+                    help="the sensors_fixed run (DFA filters as fixed sets)")
     ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12/p12_sensors")
     args = ap.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
-    res = build(args.run)
+    res = build(args.run, args.fixed)
     figure(res, args.out / "sensors.png")
     figure_bands(res, args.out / "qual_E-66_sensor_bands.png")
     keys = ["key", "label", "source", "n_tasks", "mean", "se", "gsd_m", "swath_km",
@@ -264,7 +311,13 @@ def main(argv=None) -> int:
     summ = {"run": str(args.run), "hs_v4": str(HS),
             "rows": [{k: v for k, v in r.items() if k not in ("per", "colour")}
                      for r in res["rows"]],
-            "predictions": res["predictions"], "choices": filter_choices(args.run)}
+            "predictions": res["predictions"], "followup": res["followup"],
+            "fixed_run": str(args.fixed) if args.fixed else None,
+            "anchor_reproduction": res["repro"], "choices": filter_choices(args.run)}
+    with (args.out / "T_fixed_filters.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=["contrast", "a", "b", "d", "se", "ci", "n_pairs"])
+        w.writeheader()
+        w.writerows(res["followup"])
     with (args.out / "T_filters.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["arm", "band", "searches_holding_it", "searches", "chosen_first"])
@@ -276,6 +329,10 @@ def main(argv=None) -> int:
     for r in res["rows"]:
         print(f"  {r['label'][:52]:52s} {r['n_tasks']:>2} tasks "
               + (f"{r['mean']:.4f} +- {r['se']:.4f}" if r.get("per") else "pending"))
+    for f in res["followup"]:
+        print(f"  {f['contrast']}: {f['d']:+.4f} [{f['ci'][0]:+.4f}, {f['ci'][1]:+.4f}]")
+    for r in res["repro"]:
+        print(f"  anchor {r['set']}: rerun - original {r['d']:+.5f}, max |diff| {r['max_abs']:.5f}")
     for p in res["predictions"]:
         extra = (f" d {p['d']:+.4f} [{p['ci'][0]:+.4f}, {p['ci'][1]:+.4f}], {p['n_pairs']} "
                  f"pairs" if "d" in p else "")
