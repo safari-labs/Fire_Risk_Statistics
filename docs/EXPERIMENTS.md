@@ -164,9 +164,9 @@ The non-learned reference every imagery slot is measured against -- CFFDRS itsel
 
 Which operational fuel input is honest on burned ground, and how much a post-fire inventory would flatter a result.
 
-*Note:* P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land.
+*Note:* P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 within-patch HFI AUC (83 fire patches each).
 
-*Blocked on:* the SCANFI v1 adapter is not written; SCANFI 2005 is held (292/292), its R0 re-score deferred until after P6
+*Blocked on:* the SCANFI v1 2020 adapter is not written (the v1 rasters are not held); every SCANFI v2 step is scored
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -334,9 +334,9 @@ Whether R0 can stand in for operational CFFDRS when imagery deltas are reported,
 
 The first comparison against what operational FBP actually reported. The cohort is also an out-of-time test for every model trained on 2019-2023.
 
-*Note:* Registered with E-55, before any grid value was scored. Runs on both 2024 and 2025 under either training regime (E-63): no learning is involved in the comparison. 2024 half, 2026-10-30 (docs/results/P6/p6b_cohort): PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 [-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen and waits for P10 (A-42).
+*Note:* Registered with E-55, before any grid value was scored. Runs on both 2024 and 2025 under either training regime (E-63): no learning is involved in the comparison. 2024 half, 2026-10-30 (docs/results/P6/p6b_cohort): PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 [-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen and waits for P10 (A-42). 2026-11-10 (eval_e56_fire_type_fmc.py): FMC ISSUED vs ours median difference 0.00, MAE 0.83 points, rho 0.99 (101 patches). The archived 'ft' layer is FBP fire type (splits at CFB 0.1/0.9), not fuel type: no issued fuel-type grid exists, so the registered share-of-area fuel agreement cannot be measured. Substitutes: fire type agrees on 0.703 [0.646, 0.757] of the burnable area (ours calls less intermittent crown, 18 % vs 28 %); fuel/non-fuel 0.89. The earlier 79/111 family agreement was an artefact (every issued code mapped to conifer) and is withdrawn.
 
-*Blocked on:* 2025 half waits for P10 (A-42); share-of-area fuel agreement and FMC not yet compared
+*Blocked on:* 2025 half waits for P10 (A-42)
 
 **E-57 — Percent-conifer correction with an imagery-free offset**
 
@@ -596,9 +596,9 @@ Every FWI code is defined on a same-day noon observation and a daily uplink cann
 
 FBP consumes a fixed-vintage fuel grid while fuel type changes with harvest, insects, fire and regrowth. The slope is the estimator because at gap 0 our estimate is a noisy copy of its own training target and would lose on noise alone.
 
-*Note:* P2 (docs/results/P2/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade.
+*Note:* P2 (docs/results/P2/p2_r0): inventory half done under R0. Within-patch HFI AUC moves -0.005 per decade of SCANFI age [-0.015, +0.007] (patch fixed effects, 79 fire patches, ages 1-13 y). No staleness cost to recover on this sample, so the prediction is at risk before E-22 runs. Pre-fire steps only: the 2020 step already shows the 2019-2020 fires (A-25). P3, dated design: -0.009 per decade [-0.017, +0.001]; a cost of age of at most about 0.02 AUC per decade. Re-scored 2026-11-10 with SCANFI 2005 (ages 1-18 y, 83 patches): legacy -0.006 [-0.013, +0.001], dated -0.006 [-0.013, +0.000]. The cost of age is at most about 0.013 AUC per decade.
 
-*Blocked on:* the refreshed-estimate half needs E-22; SCANFI 2005 and 2010 are now held for all 292 patches, and the R0 re-score with them is deferred until after P6
+*Blocked on:* the refreshed-estimate half needs E-35's eco_fire sidecars (ecology-model fuel on the fire patches), still on the cluster
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 

@@ -1,25 +1,26 @@
 {
- "run": "runs\\20261024-p3_cffdrs_r0_dated",
- "legacy_run": "runs\\20261024-1430_cffdrs_r0",
+ "run": "runs\\20261110-e21_cffdrs_r0_dated",
+ "legacy_run": "runs\\20261110-e21_cffdrs_r0",
  "station_run": "runs\\20261024-p3_cffdrs_r0_station",
  "git": {
-  "Fire_Risk_Model": "b0492f81d8f2cab66f9827f89c26123fcd92c99f",
+  "Fire_Risk_Model": "a5d6f49dc16aec5faec1ff4d9d7004c1588403b2",
   "freeze_sha256": "3e65e310a9604a3cb8627f79a76dd162b12553bec0da9ddbaeab4065a1078c10"
  },
- "written": "2026-10-24T15:28:07",
+ "written": "2026-11-10T09:16:24",
  "config": {
   "patch_dir": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\data\\stage2_fire\\patches_11band",
   "freeze": "C:\\Users\\james\\ETS\\Maitrise\\SAFARI\\Fire_Risk_Model\\splits\\test_groups_v1.json",
-  "out": "..\\Fire_Risk_Statistics\\runs\\20261024-p3_cffdrs_r0_dated",
+  "out": "..\\Fire_Risk_Statistics\\runs\\20261110-e21_cffdrs_r0_dated",
   "stride": 2,
   "px_per_patch": 4000,
   "n_qual": 4,
-  "workers": 5,
+  "workers": 6,
   "seed": 0,
   "design": "dated",
   "weather": "era5",
   "variant": "c2",
   "lag": 1,
+  "cohort": false,
   "qual_stems": [
    "-112.674_60.020_2023_fire",
    "-119.992_61.008_2023_fire",

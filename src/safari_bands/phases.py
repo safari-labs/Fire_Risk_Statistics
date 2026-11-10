@@ -219,17 +219,20 @@ PHASES: tuple[Phase, ...] = (
                   result="Pre-fire layers are not equal: SCANFI through the CFS "
                          "tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] "
                          "(+0.031 on land). Post-fire layers DEFLATE R0: CWFIS "
-                         "2024 0.21, SCANFI 2025 0.49.",
+                         "2024 0.21, SCANFI 2025 0.49. Re-scored 2026-11-10 with SCANFI "
+                         "2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each).",
                   conclusion="Use SCANFI through the CFS tree as the pre-fire "
                              "fuel reference. The post-fire leak is large (+0.41) "
                              "but unlearned physics reads it backwards; a learner "
                              "would not, so post-fire layers stay excluded."),
             Entry("E-21", "experiment", "AT RISK",
-                  result="Inventory half only: -0.005 AUC per decade of SCANFI "
-                         "age [-0.015, +0.007], 79 fire patches, ages 1-13 y.",
+                  result="Inventory half only, re-scored 2026-11-10 with SCANFI "
+                         "2005: -0.006 AUC per decade of SCANFI age [-0.013, +0.001], "
+                         "83 fire patches, ages 1-18 y (first run: -0.005 [-0.015, "
+                         "+0.007], 79 patches, 1-13 y).",
                   conclusion="No staleness cost to recover on this sample, so the "
                              "refresh prediction is at risk before its learned "
-                             "half (E-22) runs. 2005 and half of 2010 pending."),
+                             "half runs on E-35's eco_fire sidecars."),
             Entry("P2-C1", "control", "MEASURED",
                   title="Land-mask control",
                   question="Is R0's within-patch skill ranking fuel, or mapping "
@@ -357,9 +360,11 @@ PHASES: tuple[Phase, ...] = (
                              "patch skill is insensitive to dating; between-"
                              "patch skill is not."),
             Entry("E-21", "experiment", "AT RISK",
-                  result="Dated design: -0.009 AUC per decade of SCANFI age "
-                         "[-0.017, +0.001] (legacy: -0.005).",
-                  conclusion="A cost of inventory age of at most about 0.02 AUC "
+                  result="Dated design, re-scored 2026-11-10 with SCANFI 2005 "
+                         "(83 fire patches, ages 1-18 y): -0.006 AUC per decade "
+                         "[-0.013, +0.000] (first run -0.009 [-0.017, +0.001]; "
+                         "legacy now -0.006).",
+                  conclusion="A cost of inventory age of at most about 0.013 AUC "
                              "per decade: still too small for a refreshed fuel "
                              "map to pay through recency alone."),
             Entry("P3-C1", "control", "MEASURED",
@@ -1035,7 +1040,12 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="On 2024 the falsifier does not fire and rho clears 0.7: our "
                              "reconstruction ranks as operational FBP does. The CI is wider "
                              "than 0.03, and R0 shares CWFIS fuel and green-up, so part of the "
-                             "agreement is built in. 2025 waits for P10."),
+                             "agreement is built in. 2025 waits for P10. Added 2026-11-10: FMC "
+                             "matches (median difference 0.00, MAE 0.83 points, rho 0.99, 101 "
+                             "patches); the archived 'ft' grid is fire type, not fuel type, so "
+                             "the fuel-type share of area cannot be measured; fire type agrees "
+                             "on 70 % of the area [65, 76 %], fuel/non-fuel on 89 %. The "
+                             "earlier 79/111 family agreement was an artefact and is withdrawn."),
             Entry("E-63", "experiment", "PENDING",
                   result="Pack and regimes built here. Run and read in P6e.",
                   conclusion="Regime B first: its 2024 test is scored before regime A's "

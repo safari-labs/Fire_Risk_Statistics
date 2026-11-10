@@ -674,9 +674,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "on noise alone.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the refreshed-estimate half needs E-22; SCANFI 2005 and "
-                "2010 are now held for all 292 patches, and the R0 re-score "
-                "with them is deferred until after P6",
+        blocker="the refreshed-estimate half needs E-35's eco_fire sidecars "
+                "(ecology-model fuel on the fire patches), still on the cluster",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/P2/p2_r0): inventory half done under R0. "
              "Within-patch HFI AUC moves -0.005 per decade of SCANFI age "
@@ -685,7 +684,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "prediction is at risk before E-22 runs. Pre-fire steps only: the "
              "2020 step already shows the 2019-2020 fires (A-25). P3, dated "
              "design: -0.009 per decade [-0.017, +0.001]; a cost of age of at "
-             "most about 0.02 AUC per decade.",
+             "most about 0.02 AUC per decade. Re-scored 2026-11-10 with SCANFI 2005 "
+             "(ages 1-18 y, 83 patches): legacy -0.006 [-0.013, +0.001], dated "
+             "-0.006 [-0.013, +0.000]. The cost of age is at most about 0.013 AUC per "
+             "decade.",
     ),
     Experiment(
         "E-22", "Ecology arm", "CFFDRS gaps",
@@ -984,8 +986,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "and how much a post-fire inventory would flatter a result.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the SCANFI v1 adapter is not written; SCANFI 2005 is held "
-                "(292/292), its R0 re-score deferred until after P6",
+        blocker="the SCANFI v1 2020 adapter is not written (the v1 rasters are "
+                "not held); every SCANFI v2 step is scored",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire "
              "inventories are not equal: SCANFI through the CFS tree beats "
@@ -994,7 +996,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, "
              "SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but "
              "unlearned physics reads it backwards; a learner would not. The "
-             "CFS tree beats the A-11 rules by +0.081 on land.",
+             "CFS tree beats the A-11 rules by +0.081 on land. Re-scored "
+             "2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 within-patch "
+             "HFI AUC (83 fire patches each).",
     ),
     Experiment(
         "E-34", "Learned CFFDRS (R1/R2)", "CFFDRS mirror",
@@ -1584,14 +1588,20 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "trained on 2019-2023.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py --cohort",
-        blocker="2025 half waits for P10 (A-42); share-of-area fuel agreement and FMC "
-                "not yet compared",
+        blocker="2025 half waits for P10 (A-42)",
         note="Registered with E-55, before any grid value was scored. Runs on both "
              "2024 and 2025 under either training regime (E-63): no learning is "
              "involved in the comparison. 2024 half, 2026-10-30 (docs/results/P6/p6b_cohort): "
              "PARTIAL. HFI AUC 0.834 ISSUED, 0.837 ours (CWFIS 2024 fuel), gap -0.003 "
              "[-0.060, +0.057], rho 0.82; SCANFI 2020 fuel +0.005, rho 0.84. 2025 is frozen "
-             "and waits for P10 (A-42).",
+             "and waits for P10 (A-42). 2026-11-10 (eval_e56_fire_type_fmc.py): FMC ISSUED vs "
+             "ours median difference 0.00, MAE 0.83 points, rho 0.99 (101 patches). The "
+             "archived 'ft' layer is FBP fire type (splits at CFB 0.1/0.9), not fuel type: "
+             "no issued fuel-type grid exists, so the registered share-of-area fuel agreement "
+             "cannot be measured. Substitutes: fire type agrees on 0.703 [0.646, 0.757] of "
+             "the burnable area (ours calls less intermittent crown, 18 % vs 28 %); "
+             "fuel/non-fuel 0.89. The earlier 79/111 family agreement was an artefact "
+             "(every issued code mapped to conifer) and is withdrawn.",
     ),
     # E-57 and E-58 were registered on 2026-10-26, after the first sweep
     # (slots_v2) and before any fit of these arms ran on Narval. The only

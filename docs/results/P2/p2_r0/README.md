@@ -1,4 +1,4 @@
-# P2: R0, CFFDRS as-is without learning (2026-10-24)
+# P2: R0, CFFDRS as-is without learning (2026-10-24; re-scored 2026-11-10 with SCANFI 2005)
 
 R0 is the non-learned CFFDRS reference that every later imagery result is measured against. It runs FBP1992 spread and intensity and Beverly & Wotton (2007) ignition per pixel, using operational inputs only, for every fuel inventory we hold. Outputs are scored against NBAC burned area.
 
@@ -88,13 +88,22 @@ A post-fire layer knows where the fire went: CWFIS 2024 calls 69 % of burned pix
 
 ### 5. Inventory age costs nothing measurable (E-21, inventory half)
 
-Within-patch AUC changes by **−0.005 per decade** of inventory age [−0.015, +0.007] for HFI, and the same for ROS. This uses patch fixed effects over 79 fire patches seen at two or more pre-fire SCANFI steps, at ages 1 to 13 years.
+Within-patch AUC changes by **−0.006 per decade** of inventory age [−0.013, +0.001] for HFI, and −0.005 [−0.012, +0.002] for ROS. This uses patch fixed effects over 83 fire patches seen at two or more pre-fire SCANFI steps, at ages 1 to 18 years (SCANFI v2 2005 to 2020).
+
+| Pre-fire step | Fire patches | Within-patch HFI AUC [95 % CI] |
+|---|---|---|
+| SCANFI v2 2005 | 83 | 0.668 [0.65, 0.69] |
+| SCANFI v2 2010 | 83 | 0.671 [0.65, 0.70] |
+| SCANFI v2 2015 | 83 | 0.675 [0.65, 0.70] |
+| latest pre-fire step | 83 | 0.675 [0.65, 0.70] |
+
+The 2005 step (added 2026-11-10) narrows the CI but does not move the conclusion: the cost of age is at most about 0.013 AUC per decade, and the point estimate is half that.
 
 ![vintage](vintage.png)
 
 E-21 predicts that a refreshed estimate gains more the staler the inventory. That needs a staleness cost to recover, and on this sample there is none to detect. The prediction is therefore at risk before its learned half (E-22) runs.
 
-**Caveat.** Consecutive SCANFI steps share a model and inputs, so they may understate real change. The 2010 step covers 44 fires so far and the 2005 step none (the fetch is still running).
+**Caveat.** Consecutive SCANFI steps share a model and inputs, so they may understate real change. The 2005 and 2010 steps now cover all 83 fire patches (the first run had 2010 on 44 and no 2005).
 
 ### 6. Ignition: R0 has nothing to say inside a patch
 
@@ -118,17 +127,16 @@ NBAC burned area is a spread-and-consumption outcome, not an ignition one, so th
 ## Not done in P2
 
 - The SCANFI v1 2020 adapter (E-33's version comparison).
-- The 2005 step, and 2010 for the remaining fires. The fetch is running; rerunning R0 takes about 15 minutes.
 - The dated design (P3).
 
 ## Reproduce
 
-Run from Fire_Risk_Model at commit `6485f95`:
+Run from Fire_Risk_Model at commit `a5d6f49` (the first run, `20261024-1430_cffdrs_r0` at `6485f95`, lacked the 2005 step; every other row is unchanged):
 
 ```bash
-python scripts/python/eval_cffdrs_reference.py --out ../../Fire_Risk_Statistics/runs/20261024-1430_cffdrs_r0
+python scripts/python/eval_cffdrs_reference.py --out ../../Fire_Risk_Statistics/runs/20261110-e21_cffdrs_r0
 # then, in Fire_Risk_Statistics:
-python scripts/make_results_package.py --phase P2 --run runs/20261024-1430_cffdrs_r0
+python scripts/make_results_package.py --phase P2 --run runs/20261110-e21_cffdrs_r0
 ```
 
 The run directory is git-ignored. `run.json` here records its config, the qualitative tile stems (fixed by seed before scoring) and the freeze hash.

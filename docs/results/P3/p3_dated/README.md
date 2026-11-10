@@ -134,7 +134,7 @@ Within-patch FBP intensity is unchanged by the dated design:
 
 Leaf state now varies per pixel, which lifts P(sustained flaming) within patches slightly (0.53 → 0.56) but not the spread or intensity ranking. Every P2 conclusion about the fuel inventories stands.
 
-The E-21 slope under the dated design is −0.009 AUC per decade of age [−0.017, +0.001]. Inventory age costs at most about 0.02 per decade.
+The E-21 slope under the dated design is −0.006 AUC per decade of age [−0.013, +0.000], over 83 fire patches at ages 1 to 18 years (re-scored 2026-11-10 with the SCANFI 2005 step; the first run, without it, gave −0.009 [−0.017, +0.001] on 80). Inventory age costs at most about 0.013 per decade.
 
 ![tiles](tiles.png)
 
@@ -159,12 +159,12 @@ Fire_Risk_Model at commit `b0492f8`:
 ```bash
 python scripts/python/build_dated_weather.py --workers 6
 python scripts/python/eval_cffdrs_reference.py --design dated --weather era5 --variant c2 --lag 1 \
-    --out ../../Fire_Risk_Statistics/runs/20261024-p3_cffdrs_r0_dated
+    --out ../../Fire_Risk_Statistics/runs/20261110-e21_cffdrs_r0_dated
 python scripts/python/eval_cffdrs_reference.py --design dated --weather station --lag 1 \
     --out ../../Fire_Risk_Statistics/runs/20261024-p3_cffdrs_r0_station
 # in Fire_Risk_Statistics:
-python scripts/make_results_package.py --phase P3 --run runs/20261024-p3_cffdrs_r0_dated \
-    --legacy-run runs/20261024-1430_cffdrs_r0 --station-run runs/20261024-p3_cffdrs_r0_station
+python scripts/make_results_package.py --phase P3 --run runs/20261110-e21_cffdrs_r0_dated \
+    --legacy-run runs/20261110-e21_cffdrs_r0 --station-run runs/20261024-p3_cffdrs_r0_station
 python scripts/make_phase_docs.py --phase P3
 ```
 

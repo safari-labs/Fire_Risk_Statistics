@@ -90,9 +90,9 @@ Dated every patch, rebuilt the weather the way CFFDRS defines it (ERA5-Land at 1
 | Hypothesis (registered) | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) |
 | Varied (independent) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year |
 | Measured (dependent) | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level |
-| Result | Dated design: -0.009 AUC per decade of SCANFI age [-0.017, +0.001] (legacy: -0.005). |
+| Result | Dated design, re-scored 2026-11-10 with SCANFI 2005 (83 fire patches, ages 1-18 y): -0.006 AUC per decade [-0.013, +0.000] (first run -0.009 [-0.017, +0.001]; legacy now -0.006). |
 | Verdict | **AT RISK**: the half that could run removes what the prediction needs |
-| Conclusion | A cost of inventory age of at most about 0.02 AUC per decade: still too small for a refreshed fuel map to pay through recency alone. |
+| Conclusion | A cost of inventory age of at most about 0.013 AUC per decade: still too small for a refreshed fuel map to pay through recency alone. |
 
 ## P3-C1: Year-stratified scoring (control): **MEASURED**
 

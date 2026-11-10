@@ -24,7 +24,7 @@ Scored the non-learned CFFDRS reference (FBP1992 + Beverly & Wotton 2007) per pi
 | Hypothesis (registered) | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. |
 | Varied (independent) | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 |
 | Measured (dependent) | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories |
-| Result | Pre-fire layers are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] (+0.031 on land). Post-fire layers DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. |
+| Result | Pre-fire layers are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] (+0.031 on land). Post-fire layers DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each). |
 | Verdict | **REFUTED**: the registered prediction failed |
 | Conclusion | Use SCANFI through the CFS tree as the pre-fire fuel reference. The post-fire leak is large (+0.41) but unlearned physics reads it backwards; a learner would not, so post-fire layers stay excluded. |
 
@@ -35,9 +35,9 @@ Scored the non-learned CFFDRS reference (FBP1992 + Beverly & Wotton 2007) per pi
 | Hypothesis (registered) | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) |
 | Varied (independent) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year |
 | Measured (dependent) | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level |
-| Result | Inventory half only: -0.005 AUC per decade of SCANFI age [-0.015, +0.007], 79 fire patches, ages 1-13 y. |
+| Result | Inventory half only, re-scored 2026-11-10 with SCANFI 2005: -0.006 AUC per decade of SCANFI age [-0.013, +0.001], 83 fire patches, ages 1-18 y (first run: -0.005 [-0.015, +0.007], 79 patches, 1-13 y). |
 | Verdict | **AT RISK**: the half that could run removes what the prediction needs |
-| Conclusion | No staleness cost to recover on this sample, so the refresh prediction is at risk before its learned half (E-22) runs. 2005 and half of 2010 pending. |
+| Conclusion | No staleness cost to recover on this sample, so the refresh prediction is at risk before its learned half runs on E-35's eco_fire sidecars. |
 
 ## P2-C1: Land-mask control (control): **MEASURED**
 

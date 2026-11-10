@@ -3809,12 +3809,6 @@ E56_R0 = (("cwfis_2024", "Reconstructed (ours), CWFIS 2024 fuel", BLUE),
           ("scanfi_tree_prefire", "Reconstructed (ours), SCANFI 2020 fuel", GREEN))
 
 
-def _fuel_family(code) -> str:
-    c = int(code)
-    return ("C" if c <= 7 else "D" if c <= 13 else "O" if c == 31 else
-            "M" if c >= 400 else "non-fuel")
-
-
 def _e56_rows(run: Path) -> list[dict]:
     """One record per scored patch: ISSUED layers and each R0 variant's means."""
     by = {}
@@ -3828,11 +3822,6 @@ def _e56_rows(run: Path) -> list[dict]:
         rec["issued"] = {o: float("nan") if (L.get(o) or {}).get("mean") is None
                          else L[o]["mean"] for o, _ in E56_OUT}
         rec["issued_days_back"] = max((L.get(o) or {}).get("days_back") or 0 for o, _ in E56_OUT)
-        ft = (L.get("ft") or {}).get("majority")
-        ours = np.load(COHORT / f"{rec['stem']}_fbpfuel.npy")
-        u, n = np.unique(ours, return_counts=True)
-        rec["fuel_issued"] = None if ft is None else _fuel_family(ft)
-        rec["fuel_ours"] = _fuel_family(u[n.argmax()])
     return sorted(by.values(), key=lambda r: r["stem"])
 
 
@@ -3901,7 +3890,98 @@ def p6b_figures(rows, cmp, out):
     _save(fig, out, "issued_vs_r0.png")
 
 
-def p6b_tables(rows, cmp, out, run):
+def p6b_ft_fmc(run: Path, rows) -> dict:
+    """E-56's fire type (share of area) and FMC, from eval_e56_fire_type_fmc.py."""
+    group = {r["stem"]: r["group"] for r in rows}
+    fire = {r["stem"]: r["fire"] for r in rows}
+    R = []
+    for r in _read_csv(run / "per_patch.csv"):
+        if r["stem"] not in group:
+            continue
+        q = {"stem": r["stem"], "group": group[r["stem"]], "fire": fire[r["stem"]]}
+        for k, v in r.items():
+            if k not in q and k not in ("kind", "fmc_date"):
+                try:
+                    q[k] = float(v) if v not in ("", None) else float("nan")
+                except ValueError:
+                    q[k] = v
+        R.append(q)
+    out = {"n": len(R), "fire_type": [], "fmc": {}}
+    for v, vlab, _ in E56_R0:
+        use = [r for r in R if r.get(f"{v}_n_both", 0) > 0
+               and np.isfinite(r.get(f"{v}_ft_agree", np.nan))]
+
+        def wmean(rs, key, v=v):
+            w = np.array([r[f"{v}_n_both"] for r in rs])
+            x = np.array([r[key] for r in rs])
+            return float((w * x).sum() / w.sum())
+
+        row = {"r0": v, "r0_label": vlab, "n": len(use),
+               "agree": wmean(use, f"{v}_ft_agree"),
+               "agree_ci": _boot_groups(use, lambda rs, v=v: wmean(rs, f"{v}_ft_agree"))}
+        for lab in ("surface", "intermittent", "crown"):
+            row[f"{lab}_ours"] = wmean(use, f"{v}_share_{lab}_ours")
+            row[f"{lab}_issued"] = wmean(use, f"{v}_share_{lab}_issued")
+        a = [r[f"{v}_share_intermittent_issued"] + r[f"{v}_share_crown_issued"] for r in use]
+        b = [r[f"{v}_share_intermittent_ours"] + r[f"{v}_share_crown_ours"] for r in use]
+        row["crowning_rho"] = _spearman(a, b)
+        row["crowning_rho_ci"] = _boot_groups(use, lambda rs, v=v: _spearman(
+            [r[f"{v}_share_intermittent_issued"] + r[f"{v}_share_crown_issued"] for r in rs],
+            [r[f"{v}_share_intermittent_ours"] + r[f"{v}_share_crown_ours"] for r in rs]))
+        fn = [r for r in R if np.isfinite(r.get(f"{v}_fuel_nonfuel_agree", np.nan))]
+        row["fuel_nonfuel_agree"] = float(np.mean([r[f"{v}_fuel_nonfuel_agree"] for r in fn]))
+        row["nonfuel_ours"] = float(np.mean([r[f"{v}_nonfuel_ours"] for r in fn]))
+        row["nonfuel_issued"] = float(np.mean([r[f"{v}_nonfuel_issued"] for r in fn]))
+        out["fire_type"].append(row)
+    f = [r for r in R if np.isfinite(r.get("fmc_issued_centre", np.nan))
+         and np.isfinite(r.get("fmc_ours_issued_day", np.nan))]
+    d = np.array([r["fmc_issued_centre"] - r["fmc_ours_issued_day"] for r in f])
+    d0 = np.array([r["fmc_issued_centre"] - r["fmc_ours_r0_day"] for r in f])
+    out["fmc"] = {
+        "n": len(f), "median_diff": float(np.median(d)), "bias": float(d.mean()),
+        "mae": float(np.abs(d).mean()), "max_abs": float(np.abs(d).max()),
+        "p5_p95": [float(x) for x in np.percentile(d, [5, 95])],
+        "exact_share": float((np.abs(d) < 0.05).mean()),
+        "rho": _spearman([r["fmc_issued_centre"] for r in f],
+                         [r["fmc_ours_issued_day"] for r in f]),
+        "mae_r0_day": float(np.abs(d0).mean()),
+        "issued_range": [float(min(r["fmc_issued_centre"] for r in f)),
+                         float(max(r["fmc_issued_centre"] for r in f))],
+    }
+    return out
+
+
+def p6b_ft_fmc_tables(S, out) -> list[str]:
+    _csv(out / "T_e56_fire_type.csv", S["fire_type"])
+    L = ["", "## Fire type, share of area (the issued `ft` grid is fire type, not fuel type)\n",
+         "Over pixels burnable in both: the issued 2 km cell at each 40 m pixel centre against "
+         "our R0's fire type (CFB < 0.1 surface, 0.1-0.9 intermittent crown, > 0.9 crown).\n",
+         "| R0 fuel | n | agreement, share of area [95 % CI] | surface ours / issued | "
+         "intermittent ours / issued | crown ours / issued | crowning share, Spearman rho "
+         "[95 % CI] | fuel/non-fuel agreement | non-fuel ours / issued |",
+         "|---|---|---|---|---|---|---|---|---|"]
+    for c in S["fire_type"]:
+        L.append(f"| {c['r0_label'].split(', ')[1]} | {c['n']} | {c['agree']:.3f} "
+                 f"{_ci(c['agree_ci'], 3)} | {c['surface_ours']:.3f} / {c['surface_issued']:.3f} | "
+                 f"{c['intermittent_ours']:.3f} / {c['intermittent_issued']:.3f} | "
+                 f"{c['crown_ours']:.3f} / {c['crown_issued']:.3f} | {c['crowning_rho']:.2f} "
+                 f"{_ci(c['crowning_rho_ci'])} | {c['fuel_nonfuel_agree']:.3f} | "
+                 f"{c['nonfuel_ours']:.3f} / {c['nonfuel_issued']:.3f} |")
+    m = S["fmc"]
+    L += ["", "## FMC: ISSUED by CWFIS against Reconstructed (ours)\n",
+          f"{m['n']} patches with an issued FMC at the patch centre (range "
+          f"{m['issued_range'][0]:.0f}-{m['issued_range'][1]:.0f} %). Ours is FBP eqs 1-8 at the "
+          "patch centre and its elevation, on the issued day.\n",
+          "| median difference | mean (bias) | MAE | 5th-95th percentile | max abs | "
+          "within 0.05 points | Spearman rho | MAE at R0's day (D) |",
+          "|---|---|---|---|---|---|---|---|",
+          f"| {m['median_diff']:+.2f} | {m['bias']:+.2f} | {m['mae']:.2f} | "
+          f"{m['p5_p95'][0]:+.2f} to {m['p5_p95'][1]:+.2f} | {m['max_abs']:.2f} | "
+          f"{m['exact_share']:.0%} | {m['rho']:.3f} | {m['mae_r0_day']:.2f} |"]
+    return L
+
+
+def p6b_tables(rows, cmp, out, run, ft_fmc=None):
     L = ["# P6b tables: what CWFIS issued against our R0, 2024 (E-56)\n",
          f"Run: `{_rel(run)}`. {len(rows)} patches of 2024 ({sum(r['fire'] for r in rows)} fire). "
          "2025 is frozen (splits/time_test_v1.json) and was not opened.\n",
@@ -3913,26 +3993,26 @@ def p6b_tables(rows, cmp, out, run):
                  f"{c['auc_issued']:.3f} | {c['auc_r0']:.3f} | {c['gap']:+.3f} "
                  f"{_ci(c['gap_ci'], 3)} | {c['rho']:.2f} {_ci(c['rho_ci'])} |")
     _csv(out / "T_e56.csv", cmp)
-    fam = [r for r in rows if r["fuel_issued"]]
-    same = sum(r["fuel_issued"] == r["fuel_ours"] for r in fam)
-    L += ["", "## Fuel: majority family per patch\n",
-          f"The 2 km grid CWFIS issued and the 30 m CWFIS 2024 layer agree on the majority family "
-          f"on {same} of {len(fam)} patches ({same / len(fam):.0%}). This compares families by "
-          "majority, not the registered share of area, which needs the issued rasters.",
-          "", f"Patches using an earlier issued day: "
+    L += ["", f"Patches using an earlier issued day: "
           f"{sum(r['issued_days_back'] > 0 for r in rows)} of {len(rows)}."]
+    if ft_fmc:
+        L += p6b_ft_fmc_tables(ft_fmc, out)
     (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"  wrote {_rel(out / 'tables.md')}")
 
 
-def p6b(run: Path, out: Path):
+def p6b(run: Path, out: Path, ft_fmc: Path | None = None):
     out.mkdir(parents=True, exist_ok=True)
     rows = _e56_rows(run)
     cmp = p6b_compare(rows)
+    S2 = p6b_ft_fmc(ft_fmc, rows) if ft_fmc else None
     p6b_figures(rows, cmp, out)
-    p6b_tables(rows, cmp, out, run)
-    (out / "summary.json").write_text(json.dumps({"e56_2024": cmp}, indent=1, default=float))
-    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+    p6b_tables(rows, cmp, out, run, S2)
+    (out / "summary.json").write_text(json.dumps({"e56_2024": cmp, "e56_fire_type_fmc": S2},
+                                                 indent=1, default=float))
+    (out / "run.json").write_text(json.dumps(
+        {"run": str(_rel(run)), "fire_type_fmc_run": str(_rel(ft_fmc)) if ft_fmc else None},
+        indent=1))
 
 
 # ── P6d: the FWI start-up from Sentinel-2 snow-off (E-18) ───────────────────
@@ -5854,6 +5934,8 @@ def main(argv=None) -> int:
     ap.add_argument("--void", default="", help="P6hs: why this run says nothing about bands")
     ap.add_argument("--regime-a", type=Path, default=None, help="P6e: the regime A run")
     ap.add_argument("--lidar-run", type=Path, default=None, help="P6x: the hs_lidar run")
+    ap.add_argument("--ft-fmc-run", type=Path, default=None,
+                    help="P6b: eval_e56_fire_type_fmc.py output")
     ap.add_argument("--scanfi-run", type=Path, default=None,
                     help="P6x: the AVIRIS sweep on SCANFI labels")
     args = ap.parse_args(argv)
@@ -5876,6 +5958,8 @@ def main(argv=None) -> int:
         extra = {"diag": resolve(args.diag), "void": args.void}
     elif args.phase == "P6e":
         extra = {"regime_a": resolve(args.regime_a)}
+    elif args.phase == "P6b":
+        extra = {"ft_fmc": resolve(args.ft_fmc_run)}
     elif args.phase == "P6x":
         extra = {"lidar": resolve(args.lidar_run), "scanfi": resolve(args.scanfi_run)}
     fn(resolve(args.run), args.out or _ROOT / "docs" / "results" / sub, **extra)
