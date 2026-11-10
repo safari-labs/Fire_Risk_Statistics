@@ -49,7 +49,7 @@ def test_every_field_is_populated(e: Experiment):
 @pytest.mark.parametrize("e", EXPERIMENTS, ids=lambda e: e.eid)
 def test_an_unrunnable_experiment_names_its_blocker(e: Experiment):
     """Otherwise "not runnable" is a shrug rather than a to-do."""
-    if not e.runnable:
+    if not e.runnable and e.state != "CONCLUDED":
         assert e.blocker, (
             f"{e.eid} is {e.state} but names no blocker, so nothing says "
             f"what would unblock it")
@@ -214,3 +214,11 @@ def test_nothing_runnable_rests_on_the_circular_pack():
         pytest.skip("Fire_Risk_FW not checked out alongside")
     text = sh.read_text(encoding="utf-8")
     assert "stage2_fire_11band_nbac" in text
+
+
+@pytest.mark.parametrize("e", [x for x in EXPERIMENTS if x.state == "CONCLUDED"],
+                         ids=lambda e: e.eid)
+def test_a_concluded_experiment_has_a_verdict_in_a_phase_sheet(e: Experiment):
+    from safari_bands.phases import PHASES
+    verdicts = [x.verdict for p in PHASES for x in p.entries if x.ref == e.eid]
+    assert any(v not in ("PENDING",) for v in verdicts), f"{e.eid} has no verdict"

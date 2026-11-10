@@ -34,6 +34,11 @@ from dataclasses import dataclass, field
 #: Feasibility states, in the order a reader should care about them.
 #: `label` is for the table, `colour` for the figure.
 STATES: dict[str, dict[str, str]] = {
+    "CONCLUDED": {
+        "label": "Concluded",
+        "detail": "every registered part has run; the verdict is in the phase sheets",
+        "colour": "#5b7fa6",
+    },
     "RUNNABLE": {
         "label": "Runnable now",
         "detail": "data packed and staged; nothing missing",
@@ -558,7 +563,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "recursion accumulates weeks of spurious drying and the "
                    "error scales with latitude. Then it tests whether an "
                    "imagery snow-off date beats the regional rule.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_Model/scripts/python/build_s2_startup.py",
         blocker="",
         gap="G4 snow-off keyed by regional rule",
@@ -703,7 +708,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "magnitude more signal per scene than the fire arm and "
                    "measures what the bands actually retrieve rather than "
                    "what correlates with ignition.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
         blocker="",
         resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
@@ -884,7 +889,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "spruce has 51. It carries no spectra, so each record "
                    "must be paired with a Sentinel-2 acquisition. Also the first "
                    "moisture evidence for SWIR2 as A-41's tie-breaker.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="P6f (E-64's runs): the no_b12 arm of Fire_Risk_FW/scripts/shell/sweep_lfmc.sh",
         blocker="",
         resources="as E-64",
@@ -1001,7 +1006,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired within/between-patch AUC per process",
         conclusion="The learned baseline the imagery slots are added to, and "
                    "whether the physics layer costs or buys anything.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         blocker="",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis",
@@ -1050,8 +1055,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="percent-conifer source for M-1/M-2: inventory vs imagery",
         dependent="paired delta on M-1/M-2 pixels",
         conclusion="Brief target T4 as a CFFDRS input rather than a map.",
-        state="RUNNABLE",
-        blocker="",
+        state="PARTIAL",
+        blocker="the registered replace form (imagery-estimated percent conifer) runs in "
+                "slots_e35 (r3_pc_replace), after E-35's eco_fire step",
         gap="G2 fuel-type layer is a fixed vintage",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_pc,r3_pc_shuffled",
@@ -1075,8 +1081,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired delta in the intensity branch",
         conclusion="Whether stand height from orbit belongs in FBP's crown "
                    "fire initiation.",
-        state="RUNNABLE",
-        blocker="",
+        state="PARTIAL",
+        blocker="the registered replace form (CBH from the imagery height head) needs an "
+                "r3_cbh_replace config on the eco_fire sidecars",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r3_cbh,r3_cbh_shuffled",
         resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
@@ -1097,8 +1104,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                     "time-of-year default vs S2 curing",
         dependent="ignition and spread on O-1 pixels",
         conclusion="The FWI2025 curing input, tested where grass exists.",
-        state="RUNNABLE",
-        blocker="",
+        state="PARTIAL",
+        blocker="the registered comparison is with the CWFIS curing product, which is not held",
         gap="curing",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2_cwfis,r3_curing_cwfis,r3_curing_cwfis_shuffled",
@@ -1321,7 +1328,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "standard-block stand-in, REFUTED: best rung 32x1 (0.413); 8x2 0.011 +- "
              "0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. 32x1 needs the "
              "Q8 (0.1 s) or a wider FINN fold on the Q7 (138 s at minimal folding); "
-             "16x1 fits the Q7 (35 s).",
+             "16x1 fits the Q7 (35 s). Ladders at E-46's options and the stand-in + B11 "
+             "(2026-11-10, docs/results/P12/p12_arch): width 32 is best for every band set; "
+             "8x2 is 0.011-0.022 below, 16x1 0.005-0.008. k=8 best 0.438, k=5 0.426, "
+             "stand-in + B11 0.427, stand-in 0.413.",
     ),
     Experiment(
         "E-48", "Hardware decision", "Hardware",
@@ -1538,7 +1548,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "median difference, operational vs ERA5 and vs station",
         conclusion="Whether R0 can stand in for operational CFFDRS when imagery "
                    "deltas are reported, and how far it is from it where it cannot.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_Model/scripts/python/fetch_cwfis_grids.py",
         blocker="",
         note="Only the FWI itself is archived before 2024: FFMC, DMC, DC, ISI, "
@@ -1605,7 +1615,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the correct form can carry spatial imagery information at "
                    "all, before the replace form (E-22) exists. Q29.2 (James, "
                    "2026-10-26): added alongside E-36's arms, not replacing them.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
                "CONFIGS=r2,r3_pc_offset,r3_pc_offset_shuffled",
         resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
@@ -1637,7 +1647,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the physics-anchored model (R2-R4) carries a real accuracy "
                    "cost, which the P12 architecture rule weighs. Q29.3 (James, "
                    "2026-10-26).",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r1,r2,r2_warm,r2_lr10",
         resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
                   "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
@@ -1671,7 +1681,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the on-board model should compute indices before the "
                    "network, which changes both the band value (a band is worth the "
                    "indices it unlocks) and the compute budget (P12).",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW/scripts/shell/sweep_eco.sh",
         blocker="",
         resources="--time=3:00:00 --gpus=a100:1 --mem=32G per task (one outer "
@@ -1703,7 +1713,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "station-year; per-observation snow accuracy against the station's "
                   "snow on ground that day; downstream, the FWI start-up change (E-18)",
         conclusion="Whether a VNIR-only camera can supply the start-up date.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW/scripts/shell/sweep_snow.sh",
         blocker="",
         resources="--time=1:00:00 --cpus-per-task=8 --mem=16G for all 15 tasks, CPU only "
@@ -1865,7 +1875,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "real data with no local calibration -- the condition SAFARI faces in "
                    "Canada, which has no LFMC sites. The winner becomes the measured-FMC "
                    "sidecar that unblocks E-16.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="P6f: Statistics scripts/simulate_lfmc.py and Model pair_globe_lfmc.py (both "
                "run, bundle lfmc_v1); then on Nibi Fire_Risk_FW "
                "SEEDS=\"0 1 2\" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (FW 2544d00)",
@@ -1902,7 +1912,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "Sentinel-2 bands has no spectral skill on conifers even with a right-"
                    "sized prior, and steps 3-4 (backgrounds, a discontinuous canopy) are "
                    "the remaining physics to try.",
-        state="RUNNABLE",
+        state="CONCLUDED",
         runner="Fire_Risk_FW EXP_NAME=lfmc_v2 SEEDS=\"0 1 2\" SUBMIT=1 bash "
                "scripts/shell/sweep_lfmc.sh (run_lfmc.py; same lfmc_v1 bundle, v1 arms "
                "rerun beside the new ones)",
@@ -1939,7 +1949,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="P12's sensor option table: what each Mantis mode would deliver, with "
                    "GSD, swath, power, size and TRL from DFA's datasheet beside it (A-41: "
                    "cost never ranks).",
-        state="RUNNABLE",
+        state="CONCLUDED",
         blocker="",
         runner="Fire_Risk_FW ARMS=\"references dfa_swir_alone dfa_swir_on_custom "
                "dfa_swir_on_standard dfa_hs_select\" GRID=configs/noise/p12_sensors_grid.json "
@@ -1980,7 +1990,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "eco_v3; parameters and MACs per pixel",
         conclusion="Whether the VNIR-against-SWIR ranking and the SWIR gain hold at every "
                    "model size, for P12's camera options (A-49).",
-        state="RUNNABLE",
+        state="CONCLUDED",
         blocker="",
         runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch SUBMIT=1 "
                "bash scripts/shell/sweep_hs_arch.sh (run_hs_arch.py); and BANDS=B2,B3,B4,B7,"
@@ -1990,7 +2000,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         note="The SWIR camera's filters (1213-1674 nm) have one Sentinel-2 counterpart (B11), "
              "so the SWIR-only model is compared on AVIRIS-NG only; Sentinel-2 adds B11 to the "
              "VNIR stand-in for the U-Net. 64x2 is the size every band search used, so its rows "
-             "must reproduce sensors_fixed exactly (anchor check).",
+             "must reproduce sensors_fixed exactly (anchor check)."
+             " hs_arch + arch_mantis_both 2026-11-10 (docs/results/P12/p12_vnir_swir), 15/15 "
+             "each, anchor exact: MIXED. (1) VNIR beats SWIR at every size, lowest CI bound "
+             "+0.001: SUPPORTED. (2) VNIR+SWIR - VNIR at 256x3 +0.032 [-0.002, +0.066]: "
+             "REFUTED narrowly (+0.025 to +0.033 at every size). (3) VNIR +0.002, SWIR +0.004, "
+             "both +0.007 from 64x2: REFUTED by the combined camera. (4) +B11 on Sentinel-2, "
+             "best rung vs best rung +0.013 [+0.010, +0.016]: SUPPORTED (+0.004 at 8x2).",
     ),
 )
 

@@ -189,13 +189,105 @@ def figure_confusion(res, out: Path):
     plt.close(fig)
 
 
+def ladders(runs: dict[str, Path], primary: str) -> dict:
+    """Every band set's ladder, and each set's best rung and same-size rungs against the
+    primary set's (paired by fold and seed: all ladders share eco_v3's folds)."""
+    per = {}
+    for name, root in runs.items():
+        arch, meta = load(root)
+        per[name] = {"bands": meta["bands"],
+                     "sizes": {s: {t: skill(r) for t, r in d.items()} for s, d in arch.items()},
+                     "gmacs": {s: next(iter(d.values()))["gmacs_per_scene"]
+                               for s, d in arch.items()},
+                     "depth": {s: next(iter(d.values()))["depth"] for s, d in arch.items()}}
+    rows, contrasts = [], []
+    p = per[primary]
+    p_best = max(p["sizes"], key=lambda s: mean_se(p["sizes"][s])[0])
+    for name, d in per.items():
+        best = max(d["sizes"], key=lambda s: mean_se(d["sizes"][s])[0])
+        for s, v in d["sizes"].items():
+            m, se = mean_se(v)
+            g, gse, _ = paired(v, d["sizes"][best])
+            rows.append({"band_set": name, "bands": " ".join(d["bands"]), "size": s,
+                         "gmacs_per_scene": d["gmacs"][s], "skill": m, "se": se,
+                         "gap_to_own_best": g, "gap_se": gse, "best": s == best})
+        if name == primary:
+            continue
+        for label, a, b in (("best rung vs best rung", best, p_best), ("at 8x2", "8x2", "8x2"),
+                            ("at 16x1", "16x1", "16x1"), ("at 32x1", "32x1", "32x1")):
+            dd, se, n = paired(d["sizes"][a], p["sizes"][b])
+            contrasts.append({"band_set": name, "against": primary, "comparison": label,
+                              "a_size": a, "b_size": b, "d": dd, "se": se,
+                              "ci": [dd - 1.96 * se, dd + 1.96 * se], "n_pairs": n})
+    return {"per": per, "rows": rows, "contrasts": contrasts}
+
+
+def figure_ladders(L, out: Path):
+    """Skill against compute for every band set: width-only (depth 1) rungs joined."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    cols = [BLUE, ORANGE, GREEN, "#c98500", "#d55181"]
+    fig, ax = plt.subplots(figsize=(10, 5.2), facecolor=FIG_BG)
+    _axes(ax)
+    ax.grid(True, color=SPINE, lw=0.6, alpha=0.6)
+    for (name, d), c in zip(L["per"].items(), cols, strict=False):
+        xs, ys = [], []
+        for s, v in d["sizes"].items():
+            m, se = mean_se(v)
+            ax.plot(d["gmacs"][s], m, "o", color=c, ms=5, alpha=0.9)
+            if d["depth"][s] == 1:
+                xs.append(d["gmacs"][s])
+                ys.append(m)
+        o = np.argsort(xs)
+        ax.plot(np.array(xs)[o], np.array(ys)[o], "-", color=c, lw=1.6,
+                label=f"{name}: {' '.join(d['bands'])}")
+    ax.set_xscale("log")
+    ax.set_xlabel("GMAC per 1000 x 1000 px scene (log); line joins the depth-1 rungs",
+                  color=INK, fontsize=9)
+    ax.set_ylabel("combined skill (with noise)", color=INK, fontsize=9)
+    ax.legend(facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK, fontsize=8, loc="lower right")
+    ax.set_title("E-47 / E-67  Size ladders by band set (Sentinel-2, eco_v3 folds)",
+                 color=INK_BRIGHT, fontsize=10.5, loc="left")
+    fig.text(0.01, -0.02, "Each point: mean over 5 folds x 3 seeds. Paired contrasts in "
+             "T_bandsets.csv. Reconstructed (ours).", color=MUTED, fontsize=8.5, ha="left",
+             va="top")
+    fig.tight_layout()
+    fig.savefig(out, dpi=150, facecolor=FIG_BG, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--run", type=Path, required=True)
+    ap.add_argument("--others", nargs="*", default=[],
+                    help="NAME=PATH: further sweep_eco_arch runs at other band sets, "
+                         "compared with --run")
     ap.add_argument("--out", type=Path, default=ROOT / "docs" / "results" / "P12" / "p12_arch")
     args = ap.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
     res = build(args.run)
+    if args.others:
+        runs = {"mantis_std": args.run}
+        runs.update(dict(o.split("=", 1) for o in args.others))
+        runs = {k: Path(v) for k, v in runs.items()}
+        L = ladders(runs, "mantis_std")
+        figure_ladders(L, args.out / "ladders.png")
+        with (args.out / "T_ladders.csv").open("w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(L["rows"][0]))
+            w.writeheader()
+            w.writerows(L["rows"])
+        with (args.out / "T_bandsets.csv").open("w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(L["contrasts"][0]))
+            w.writeheader()
+            w.writerows(L["contrasts"])
+        res["ladders"] = {"runs": {k: str(v) for k, v in runs.items()},
+                          "contrasts": L["contrasts"],
+                          "best": {k: max(d["sizes"], key=lambda s, d=d: mean_se(d["sizes"][s])[0])
+                                   for k, d in L["per"].items()}}
+        for c in L["contrasts"]:
+            print(f"  {c['band_set']} {c['comparison']}: {c['d']:+.4f} "
+                  f"[{c['ci'][0]:+.4f}, {c['ci'][1]:+.4f}]")
     figure(res, args.out / "arch.png")
     figure_confusion(res, args.out / "qual_E-47_family_confusion.png")
     with (args.out / "T_arch.csv").open("w", newline="", encoding="utf-8") as fh:
@@ -208,7 +300,8 @@ def main(argv=None) -> int:
         w.writerows(res["compare"])
     (args.out / "summary.json").write_text(json.dumps(
         {"run": str(args.run), "meta": res["meta"], "best": res["best"], "rows": res["rows"],
-         "compare": res["compare"]}, indent=1, default=str), encoding="utf-8")
+         "compare": res["compare"], "ladders": res.get("ladders")}, indent=1, default=str),
+        encoding="utf-8")
     for r in res["rows"]:
         print(f"  {r['size']:5s} {r['params']:8d} p {r['gmacs_per_scene']:7.2f} GMAC "
               f"{r['skill']:.4f}  gap {r['gap']:+.4f} +- {r['gap_se']:.4f}"

@@ -1,0 +1,5 @@
+prediction,result,verdict
+1. VNIR beats SWIR alone at every size,lowest CI bound over sizes +0.0006,SUPPORTED
+2. VNIR + SWIR beats VNIR at the largest size (256x3),"+0.0319 [-0.0018, +0.0656]",REFUTED
+3. each camera's best size within 0.005 of 64x2,VNIR (standard block): best 64x3 +0.0024; SWIR (L4 L6 L9 L11): best 128x2 +0.0037; VNIR + SWIR: best 256x2 +0.0067,REFUTED
+4. adding B11 to the Sentinel-2 VNIR stand-in raises the best rung's skill,"+0.0133 [+0.0102, +0.0164] (32x2 vs 32x1)",SUPPORTED

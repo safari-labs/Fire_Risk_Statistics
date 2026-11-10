@@ -291,5 +291,189 @@
    "se": 0.0018209008051980533,
    "n_pairs": 15
   }
- ]
+ ],
+ "ladders": {
+  "runs": {
+   "mantis_std": "narval_results\\arch_mantis_std\\20261109-2051",
+   "mantis_both": "narval_results\\arch_mantis_both\\20261109-2213",
+   "k5": "narval_results\\arch_k5\\20261109-2213",
+   "k8": "narval_results\\arch_k8\\20261109-2213"
+  },
+  "contrasts": [
+   {
+    "band_set": "mantis_both",
+    "against": "mantis_std",
+    "comparison": "best rung vs best rung",
+    "a_size": "32x2",
+    "b_size": "32x1",
+    "d": 0.01329463826808357,
+    "se": 0.001603984933357147,
+    "ci": [
+     0.010150827798703563,
+     0.016438448737463578
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "mantis_both",
+    "against": "mantis_std",
+    "comparison": "at 8x2",
+    "a_size": "8x2",
+    "b_size": "8x2",
+    "d": 0.004024711928015638,
+    "se": 0.002429860705068801,
+    "ci": [
+     -0.0007378150539192121,
+     0.008787238909950488
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "mantis_both",
+    "against": "mantis_std",
+    "comparison": "at 16x1",
+    "a_size": "16x1",
+    "b_size": "16x1",
+    "d": 0.011196757925073601,
+    "se": 0.0013834726977674362,
+    "ci": [
+     0.008485151437449425,
+     0.013908364412697776
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "mantis_both",
+    "against": "mantis_std",
+    "comparison": "at 32x1",
+    "a_size": "32x1",
+    "b_size": "32x1",
+    "d": 0.013139541839570175,
+    "se": 0.0013985617560435602,
+    "ci": [
+     0.010398360797724797,
+     0.01588072288141555
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k5",
+    "against": "mantis_std",
+    "comparison": "best rung vs best rung",
+    "a_size": "32x3",
+    "b_size": "32x1",
+    "d": 0.012993501601131496,
+    "se": 0.0027805382105217957,
+    "ci": [
+     0.007543646708508777,
+     0.018443356493754216
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k5",
+    "against": "mantis_std",
+    "comparison": "at 8x2",
+    "a_size": "8x2",
+    "b_size": "8x2",
+    "d": 0.00347665726048173,
+    "se": 0.002243211463986284,
+    "ci": [
+     -0.0009200372089313864,
+     0.007873351729894847
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k5",
+    "against": "mantis_std",
+    "comparison": "at 16x1",
+    "a_size": "16x1",
+    "b_size": "16x1",
+    "d": 0.009563488519526646,
+    "se": 0.0024308615948739802,
+    "ci": [
+     0.004798999793573644,
+     0.014327977245479647
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k5",
+    "against": "mantis_std",
+    "comparison": "at 32x1",
+    "a_size": "32x1",
+    "b_size": "32x1",
+    "d": 0.010316703630740871,
+    "se": 0.003123646788066831,
+    "ci": [
+     0.004194355926129882,
+     0.01643905133535186
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k8",
+    "against": "mantis_std",
+    "comparison": "best rung vs best rung",
+    "a_size": "32x1",
+    "b_size": "32x1",
+    "d": 0.02447408289673665,
+    "se": 0.002705158618451949,
+    "ci": [
+     0.019171972004570832,
+     0.02977619378890247
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k8",
+    "against": "mantis_std",
+    "comparison": "at 8x2",
+    "a_size": "8x2",
+    "b_size": "8x2",
+    "d": 0.013742411514493699,
+    "se": 0.0018209008051980533,
+    "ci": [
+     0.010173445936305515,
+     0.017311377092681882
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k8",
+    "against": "mantis_std",
+    "comparison": "at 16x1",
+    "a_size": "16x1",
+    "b_size": "16x1",
+    "d": 0.021853498738800492,
+    "se": 0.0020728011330105405,
+    "ci": [
+     0.017790808518099832,
+     0.025916188959501152
+    ],
+    "n_pairs": 15
+   },
+   {
+    "band_set": "k8",
+    "against": "mantis_std",
+    "comparison": "at 32x1",
+    "a_size": "32x1",
+    "b_size": "32x1",
+    "d": 0.02447408289673665,
+    "se": 0.002705158618451949,
+    "ci": [
+     0.019171972004570832,
+     0.02977619378890247
+    ],
+    "n_pairs": 15
+   }
+  ],
+  "best": {
+   "mantis_std": "32x1",
+   "mantis_both": "32x2",
+   "k5": "32x3",
+   "k8": "32x1"
+  }
+ }
 }

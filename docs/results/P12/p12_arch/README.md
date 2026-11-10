@@ -10,10 +10,12 @@ The bands are B2, B3, B4, B7 and B8A in raw + indices: a Sentinel-2 stand-in for
 
 The pack, folds and seeds are eco_v3's (same freeze hash), so every rung pairs with eco_v3 and with E-46's consensus re-scores. Labels are SCANFI v2 2020 and the sensor noise is a placeholder (A-37). All values are Reconstructed (ours).
 
-**At a glance:** [experiments.md](experiments.md). Tables: [T_arch.csv](T_arch.csv) (every rung: size, cost, skill, per-head errors, FPGA time from [P12/p12_convert](../p12_convert/README.md)), [T_compare.csv](T_compare.csv) (the stand-in against E-46's sets).
+**At a glance:** [experiments.md](experiments.md). Tables: [T_arch.csv](T_arch.csv) (every rung: size, cost, skill, per-head errors, FPGA time from [P12/p12_convert](../p12_convert/README.md)), [T_compare.csv](T_compare.csv) (the stand-in against E-46's sets at 8×2), [T_ladders.csv](T_ladders.csv) and [T_bandsets.csv](T_bandsets.csv) (four band sets' ladders and their paired contrasts).
 
 ```bash
-python scripts/make_arch_package.py --run narval_results/arch_mantis_std/20261109-2051
+python scripts/make_arch_package.py --run narval_results/arch_mantis_std/20261109-2051 \
+    --others mantis_both=narval_results/arch_mantis_both/20261109-2213 \
+    k5=narval_results/arch_k5/20261109-2213 k8=narval_results/arch_k8/20261109-2213
 python scripts/make_phase_docs.py --phase P12c
 ```
 
@@ -33,7 +35,26 @@ The full ladder is in [T_arch.csv](T_arch.csv). FPGA times come from the convers
 - **E-47: REFUTED.** The hypothesis was that the 8×2 rung the bands were ranked with is within one paired SE of the best. It is 0.011 ± 0.002 below. Only base_ch 32 ties the best, the case the hypothesis named as wrong. Width matters more than depth: at base_ch 16 and 32, extra depth adds nothing.
 - **The differences are small in the products.** From 8×2 to 32×1, percent-conifer RMSE goes from 23.7 to 23.2 points, closure from 13.8 to 13.5, height from 4.54 to 4.44 m, and fuel-family balanced accuracy from 0.528 to 0.532. The family confusion barely changes after 8×2 ([qual_E-47_family_confusion.png](qual_E-47_family_confusion.png)). Mixedwood is read as conifer at every size.
 - **Size and board are one decision.** The best rung runs in about 0.1 s on the Q8's AI engine. On the Q7 at minimal folding it needs 138 s, about 3.2 times the budget. FINN can fold it more widely, at more logic, but whether that still fits the Q7 is unmeasured. 16×1, 0.005 below the best, fits the Q7 in 35 s with 19 % of its logic.
-- **VNIR-only costs little on Sentinel-2.** At 8×2, the Mantis stand-in is 0.004 ± 0.002 below E-46's stable SWIR set (B4 B5 B8A B11 B12) and 0.014 ± 0.002 below the 8-band consensus. This is a stand-in without the panchromatic band, so the real Mantis block may differ either way.
+- **VNIR-only costs little on Sentinel-2 at 8×2, but not at the best size** (see the four ladders below: 0.013 at width 32). At 8×2, the Mantis stand-in is 0.004 ± 0.002 below E-46's stable SWIR set (B4 B5 B8A B11 B12) and 0.014 ± 0.002 below the 8-band consensus. This is a stand-in without the panchromatic band, so the real Mantis block may differ either way.
+
+## Four band sets, four ladders (2026-11-10)
+
+Three more ladders ran on the same folds and seeds, 15 of 15 tasks each (`20261109-2213`):
+- `arch_mantis_both`: the stand-in plus B11, E-67's Sentinel-2 half;
+- `arch_k5` and `arch_k8`: E-46's two band options.
+
+![ladders](ladders.png)
+
+| Band set | Best rung | Best skill | 8×2 below its best | 16×1 below its best | Best minus the VNIR stand-in's best (paired) |
+|---|---|---|---|---|---|
+| VNIR stand-in (B2 B3 B4 B7 B8A) | 32×1 | 0.413 | 0.011 | 0.005 | – |
+| + B11 | 32×2 | 0.427 | 0.021 | 0.007 | **+0.013 [+0.010, +0.016]** |
+| k = 5 (B4 B5 B8A B11 B12) | 32×3 | 0.426 | 0.021 | 0.008 | +0.013 [+0.008, +0.018] |
+| k = 8 (B4 B8 B5 B3 B6 B8A B11 B12) | 32×1 | **0.438** | 0.022 | 0.007 | +0.025 [+0.019, +0.030] |
+
+- **Width 32 is best for every band set.** 8×2 is 0.011–0.022 below the best and 16×1 0.005–0.008 below. The more bands there are, the more a larger network gains, so E-46's band scores at 8×2 understate the SWIR sets.
+- **SWIR's value on Sentinel-2 grows with model size.** Adding B11 to the VNIR stand-in gains +0.004 at 8×2 (not significant), +0.011 at 16×1 and +0.013 at 32×1. The 8×2 comparison above, 0.004 below the stable SWIR set, undersold SWIR.
+- **The stand-in plus B11 ties the stable k = 5 set** (−0.000 [−0.008, +0.007]). The 8-band set leads every other set by 0.011 or more.
 
 ## Options (A-49: James chooses)
 

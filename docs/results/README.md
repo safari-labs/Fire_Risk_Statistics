@@ -43,10 +43,11 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P12b](P12/p12_sensors/README.md) | 2026-11-06 | What each Dragonfly Mantis mode would offer (sensors_v1) | 1 MIXED |
 | [P6f2](P6/p6f_lfmc_v2/README.md) | 2026-11-06 | LFMC with priors narrowed inside each fold (lfmc_v2) | 1 MIXED |
 | [P12c](P12/p12_arch/README.md) | 2026-11-09 | The onboard model's size (E-47, arch_mantis_std) | 1 REFUTED |
+| [P12d](P12/p12_vnir_swir/README.md) | 2026-11-10 | VNIR against SWIR: the Mantis cameras' models at every size (hs_arch) | 1 MIXED |
 
 ## Experiments
 
-41 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+42 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -67,27 +68,27 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-15 Imagery vs the FBP formula | Runnable now | - | - | - |
 | E-16 FMC arms | No label exists | - | - | - |
 | E-17 Station-density stratification | Needs code | - | - | - |
-| E-18 Snow-off startup | Runnable now | P6d REFUTED | [P6/p6d_startup](P6/p6d_startup/) | [patch_map](P6/p6d_startup/qual_E-18_patch_map.png) |
+| E-18 Snow-off startup | Concluded | P6d REFUTED | [P6/p6d_startup](P6/p6d_startup/) | [patch_map](P6/p6d_startup/qual_E-18_patch_map.png) |
 | E-19 Latitude-banded weather | Runnable now | - | - | - |
 | E-20 Weather staleness | Partial result | P7 PARTIAL, P7d PARTIAL | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
 | E-21 Fuel-layer refresh | Partial result | P2 AT RISK, P3 AT RISK | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [inventory_age](P3/p3_dated/qual_E-21_inventory_age.png) |
-| E-22 Ecology arm | Runnable now | P6a SUPPORTED, P6a-v3 SUPPORTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
+| E-22 Ecology arm | Concluded | P6a SUPPORTED, P6a-v3 SUPPORTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
 | E-23 SWIR band placement | Needs new data | - | - | - |
 | E-24 1209 vs 1240 nm | Needs new data | - | - | - |
 | E-25 Spectral resolution: HS vs MS | Needs new data | - | - | - |
 | E-26 Within-fire burn pattern | Runnable now | - | - | - |
 | E-27 Cost per input channel | Runnable now | - | - | - |
 | E-28 Co-registration tolerance | Runnable now | - | - | - |
-| E-29 T1 live foliar moisture | Runnable now | P6f SUPPORTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | - |
+| E-29 T1 live foliar moisture | Concluded | P6f SUPPORTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | - |
 | E-30 T2 curing / NPV fraction | No label exists | - | - | - |
 | E-31 Fire occurrence prediction | No label exists | - | - | - |
 | E-32 CFFDRS as is (R0) | Partial result | P2 SUPPORTED, P3 SUPPORTED | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [r0](P2/p2_r0/qual_E-32_r0.png) |
 | E-33 Fuel inventory comparison | Partial result | P2 REFUTED | [P2/p2_r0](P2/p2_r0/) | [inventories](P2/p2_r0/qual_E-33_inventories.png) |
-| E-34 Learned CFFDRS (R1/R2) | Runnable now | P5 PENDING, P7 MIXED | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | - |
+| E-34 Learned CFFDRS (R1/R2) | Concluded | P5 PENDING, P7 MIXED | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | - |
 | E-35 Fuel-type slot | Runnable now | - | - | - |
-| E-36 Percent-conifer slot | Runnable now | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [pc](P7/p7_slots/qual_E-36_pc.png) |
-| E-37 Crown-base-height slot | Runnable now | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [cbh](P7/p7_slots/qual_E-37_cbh.png) |
-| E-38 Curing slot | Runnable now | P5 PENDING, P7 PENDING, P7c PARTIAL | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/), [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [curing](P7/p7c_slots_v3/qual_E-38_curing.png) |
+| E-36 Percent-conifer slot | Partial result | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [pc](P7/p7_slots/qual_E-36_pc.png) |
+| E-37 Crown-base-height slot | Partial result | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [cbh](P7/p7_slots/qual_E-37_cbh.png) |
+| E-38 Curing slot | Partial result | P5 PENDING, P7 PENDING, P7c PARTIAL | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/), [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [curing](P7/p7c_slots_v3/qual_E-38_curing.png) |
 | E-39 Canopy closure to in-stand moisture | Needs code | - | - | - |
 | E-40 Green-up slot | Needs code | - | - | - |
 | E-41 Spread R0 (CFSDS) | Partial result | P8a PARTIAL | [P8/p8a_spread](P8/p8a_spread/) | [progression](P8/p8a_spread/qual_E-41_progression.png) |
@@ -104,16 +105,16 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-52 Weather source: station vs ERA5 (R0) | Partial result | P3 REFUTED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-52_patch_map.png) |
 | E-53 Weather staleness under R0 | Partial result | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-53_patch_map.png) |
 | E-54 Legacy composite leakage | Partial result | P4 MIXED | [P4/p4_prefire](P4/p4_prefire/) | - |
-| E-55 Operational FWI grid vs the reconstruction | Runnable now | P7b MIXED | [P7/p7b_operational](P7/p7b_operational/) | [patch_map](P7/p7b_operational/qual_E-55_patch_map.png) |
+| E-55 Operational FWI grid vs the reconstruction | Concluded | P7b MIXED | [P7/p7b_operational](P7/p7b_operational/) | [patch_map](P7/p7b_operational/qual_E-55_patch_map.png) |
 | E-56 Operational FBP outputs on a 2024-2025 cohort | Partial result | P6b PARTIAL | [P6/p6b_cohort](P6/p6b_cohort/) | [cohort_tiles](P6/p6b_cohort/qual_E-56_cohort_tiles.png), [patch_map](P6/p6b_cohort/qual_E-56_patch_map.png) |
-| E-57 Percent-conifer correction with an imagery-free offset | Runnable now | P7c SUPPORTED | [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [pc_offset](P7/p7c_slots_v3/qual_E-57_pc_offset.png) |
-| E-58 Closing R2's within-patch gap to R1 | Runnable now | P7c REFUTED | [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [r2_gap](P7/p7c_slots_v3/qual_E-58_r2_gap.png) |
-| E-59 Indices as model inputs | Runnable now | P6a MIXED, P6a-v3 MIXED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
-| E-60 Snow-off without SWIR | Runnable now | P6c REFUTED | [P6/p6c_snow](P6/p6c_snow/) | - |
+| E-57 Percent-conifer correction with an imagery-free offset | Concluded | P7c SUPPORTED | [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [pc_offset](P7/p7c_slots_v3/qual_E-57_pc_offset.png) |
+| E-58 Closing R2's within-patch gap to R1 | Concluded | P7c REFUTED | [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [r2_gap](P7/p7c_slots_v3/qual_E-58_r2_gap.png) |
+| E-59 Indices as model inputs | Concluded | P6a MIXED, P6a-v3 MIXED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
+| E-60 Snow-off without SWIR | Concluded | P6c REFUTED | [P6/p6c_snow](P6/p6c_snow/) | - |
 | E-61 Best SWIR bands, searched broadly | Partial result | P6a-HS-prov PENDING, P6a-HS-v2 PENDING, P6a-HS-v3 PARTIAL, P6a-HS-v4 REFUTED | [P6/p6a_hs_provisional](P6/p6a_hs_provisional/), [P6/p6a_hs_v2_provisional](P6/p6a_hs_v2_provisional/), [P6/p6a_hs_v3](P6/p6a_hs_v3/), [P6/p6a_hs_v4](P6/p6a_hs_v4/), [P6/p6a_external_labels_v2](P6/p6a_external_labels_v2/) | [closure](P6/p6a_hs_v2_provisional/qual_E-61_closure.png), [family](P6/p6a_hs_v2_provisional/qual_E-61_family.png), [height](P6/p6a_hs_v2_provisional/qual_E-61_height.png), [pc](P6/p6a_hs_v2_provisional/qual_E-61_pc.png), [closure](P6/p6a_hs_v3/qual_E-61_closure.png), [family](P6/p6a_hs_v3/qual_E-61_family.png), [height](P6/p6a_hs_v3/qual_E-61_height.png), [pc](P6/p6a_hs_v3/qual_E-61_pc.png), [closure](P6/p6a_hs_v4/qual_E-61_closure.png), [family](P6/p6a_hs_v4/qual_E-61_family.png), [height](P6/p6a_hs_v4/qual_E-61_height.png), [pc](P6/p6a_hs_v4/qual_E-61_pc.png) |
 | E-62 Best VNIR bands, searched broadly | Partial result | P6a AT RISK, P6a-HS-prov PENDING, P6a-HS-v2 PENDING, P6a-HS-v3 PARTIAL, P6a-HS-v4 REFUTED, P6a-v3 REFUTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_hs_provisional](P6/p6a_hs_provisional/), [P6/p6a_hs_v2_provisional](P6/p6a_hs_v2_provisional/), [P6/p6a_hs_v3](P6/p6a_hs_v3/), [P6/p6a_hs_v4](P6/p6a_hs_v4/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | [closure](P6/p6a_hs_v2_provisional/qual_E-62_closure.png), [family](P6/p6a_hs_v2_provisional/qual_E-62_family.png), [height](P6/p6a_hs_v2_provisional/qual_E-62_height.png), [pc](P6/p6a_hs_v2_provisional/qual_E-62_pc.png), [closure](P6/p6a_hs_v3/qual_E-62_closure.png), [family](P6/p6a_hs_v3/qual_E-62_family.png), [height](P6/p6a_hs_v3/qual_E-62_height.png), [pc](P6/p6a_hs_v3/qual_E-62_pc.png), [closure](P6/p6a_hs_v4/qual_E-62_closure.png), [family](P6/p6a_hs_v4/qual_E-62_family.png), [height](P6/p6a_hs_v4/qual_E-62_height.png), [pc](P6/p6a_hs_v4/qual_E-62_pc.png) |
 | E-63 Out-of-time generalisation, two training regimes | Partial result | P6b PENDING, P6e AT RISK | [P6/p6b_cohort](P6/p6b_cohort/), [P6/p6e_out_of_time](P6/p6e_out_of_time/) | [patch_map](P6/p6e_out_of_time/qual_E-63_patch_map.png) |
-| E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | [series](P6/p6f_lfmc/qual_E-64_series.png) |
-| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
-| E-66 What each Dragonfly Mantis mode would offer | Runnable now | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
-| E-67 VNIR against SWIR: the Mantis cameras' models at every size | Runnable now | - | - | - |
+| E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Concluded | P6f REFUTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | [series](P6/p6f_lfmc/qual_E-64_series.png) |
+| E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Concluded | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
+| E-66 What each Dragonfly Mantis mode would offer | Concluded | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
+| E-67 VNIR against SWIR: the Mantis cameras' models at every size | Concluded | P12d MIXED | [P12/p12_vnir_swir](P12/p12_vnir_swir/) | [family_confusion](P12/p12_vnir_swir/qual_E-67_family_confusion.png) |

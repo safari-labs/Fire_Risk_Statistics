@@ -1099,6 +1099,7 @@ QUAL = [
     ("E-65", "P6/p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),
     ("E-66", "P12/p12_sensors", "band placement", ["qual_E-66_sensor_bands.png"]),
     ("E-47", "P12/p12_arch", "family confusion", ["qual_E-47_family_confusion.png"]),
+    ("E-67", "P12/p12_vnir_swir", "family confusion", ["qual_E-67_family_confusion.png"]),
     ("P0-3", "P0/p0_verify", "tiles", ["qual_P0_inventory_vintage.png"]),
     ("P1-3", "P1/p1_physics", "patch map", ["qual_P1_slot_maps.png"]),
     ("P5-M1", "P5/p5_slotnet", "existing", ["tiles.png"]),

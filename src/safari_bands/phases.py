@@ -1543,7 +1543,8 @@ PHASES: tuple[Phase, ...] = (
         "P12/p12_arch", "README.md",
         "TinyEcologyUNet's 12 rungs (base_ch 4-32 x depth 1-3) at B2 B3 B4 B7 B8A, a "
         "Sentinel-2 stand-in for the Mantis standard block CUBICS flies; raw + indices with "
-        "noise, eco_v3's folds and seeds, 15 of 15 tasks.",
+        "noise, eco_v3's folds and seeds, 15 of 15 tasks. Then the same ladder at the "
+        "stand-in + B11 and at E-46's k=5 and k=8 sets (15/15 each).",
         (
             Entry("E-47", "experiment", "REFUTED",
                   result="Best rung 32x1 (0.413, 107k params, 65 GMAC/scene); 8x2 is 0.011 +- "
@@ -1554,6 +1555,25 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="Size and board are one decision: 32x1 runs in 0.1 s on the Q8 "
                              "but 138 s on the Q7 at minimal folding; 16x1 fits the Q7 in 35 s. "
                              "Options for James (A-49)."),
+        ),
+    ),
+    Phase(
+        "P12d", "VNIR against SWIR: the Mantis cameras' models at every size (hs_arch)",
+        "2026-11-10", "P12/p12_vnir_swir", "README.md",
+        "E-67 on AVIRIS-NG (hs_v4's folds and seeds): the VNIR standard block, DFA's SWIR "
+        "filters L4 L6 L9 L11, and both, each at seven per-pixel model sizes (16x2-256x3), with "
+        "noise; 15 of 15 tasks, 64x2 reproducing sensors_fixed exactly. The Sentinel-2 half "
+        "(stand-in + B11) is in P12c.",
+        (
+            Entry("E-67", "experiment", "MIXED",
+                  result="(1) VNIR - SWIR +0.032 to +0.042 at every size, lowest CI bound "
+                         "+0.001: SUPPORTED. (2) VNIR+SWIR - VNIR at 256x3 +0.032 [-0.002, "
+                         "+0.066]: REFUTED narrowly. (3) best minus 64x2: VNIR +0.002, SWIR "
+                         "+0.004, both +0.007: REFUTED. (4) Sentinel-2 + B11, best vs best "
+                         "+0.013 [+0.010, +0.016]: SUPPORTED.",
+                  conclusion="VNIR beats SWIR at every size; SWIR adds +0.025 to +0.033 to VNIR "
+                             "at every size; model size changes little on the pixel model. "
+                             "SWIR alone is not an option; VNIR or VNIR + SWIR are (A-49)."),
         ),
     ),
     Phase(

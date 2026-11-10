@@ -1,0 +1,652 @@
+{
+ "run": "narval_results\\hs_arch\\20261109-2213",
+ "sizes": [
+  "16x2",
+  "32x2",
+  "64x2",
+  "64x3",
+  "128x2",
+  "256x2",
+  "256x3"
+ ],
+ "ladder": [
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "16x2",
+   "params": 584,
+   "macs_per_px": 528,
+   "in_channels": 7,
+   "skill": 0.24613088041797296,
+   "se": 0.024608038231448092,
+   "skill_noise_free": 0.24753249179570547,
+   "vs_64x2": -0.010144692122841194,
+   "vs_64x2_se": 0.006188023892518878,
+   "best": false,
+   "rmse_pc": 24.608613840738933,
+   "rmse_closure": 16.650284576416016,
+   "rmse_height": 4.050507577260335,
+   "family_ba": 0.4694699522308549
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "32x2",
+   "params": 1656,
+   "macs_per_px": 1568,
+   "in_channels": 7,
+   "skill": 0.25007593950598334,
+   "se": 0.026699028757480592,
+   "skill_noise_free": 0.25135532370518565,
+   "vs_64x2": -0.006199633034830761,
+   "vs_64x2_se": 0.0032993440828644614,
+   "best": false,
+   "rmse_pc": 24.458878580729166,
+   "rmse_closure": 16.578825187683105,
+   "rmse_height": 4.012091557184855,
+   "family_ba": 0.47006885090006806
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "64x2",
+   "params": 5336,
+   "macs_per_px": 5184,
+   "in_channels": 7,
+   "skill": 0.2562755725408142,
+   "se": 0.02952512008803814,
+   "skill_noise_free": 0.2571445639859954,
+   "vs_64x2": 0.0,
+   "vs_64x2_se": 0.0,
+   "best": false,
+   "rmse_pc": 24.256136830647787,
+   "rmse_closure": 16.420173263549806,
+   "rmse_height": 3.9731504599253338,
+   "family_ba": 0.4733355778259297
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "64x3",
+   "params": 9496,
+   "macs_per_px": 9280,
+   "in_channels": 7,
+   "skill": 0.2586755055546528,
+   "se": 0.02932815099486247,
+   "skill_noise_free": 0.26233418620495175,
+   "vs_64x2": 0.002399933013838638,
+   "vs_64x2_se": 0.000863731978237468,
+   "best": true,
+   "rmse_pc": 24.24674784342448,
+   "rmse_closure": 16.31131140391032,
+   "rmse_height": 3.9661510467529295,
+   "family_ba": 0.4765011263725156
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "128x2",
+   "params": 18840,
+   "macs_per_px": 18560,
+   "in_channels": 7,
+   "skill": 0.2550771394979924,
+   "se": 0.03221867962187985,
+   "skill_noise_free": 0.2585648899719855,
+   "vs_64x2": -0.001198433042821793,
+   "vs_64x2_se": 0.0035410292458714966,
+   "best": false,
+   "rmse_pc": 24.27155532836914,
+   "rmse_closure": 16.369680468241373,
+   "rmse_height": 4.000087610880533,
+   "family_ba": 0.4743411193357408
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "256x2",
+   "params": 70424,
+   "macs_per_px": 69888,
+   "in_channels": 7,
+   "skill": 0.2572572442711131,
+   "se": 0.031384132359645475,
+   "skill_noise_free": 0.2612846444573708,
+   "vs_64x2": 0.0009816717302989627,
+   "vs_64x2_se": 0.0027771386125075848,
+   "best": false,
+   "rmse_pc": 24.26119384765625,
+   "rmse_closure": 16.276949183146158,
+   "rmse_height": 3.9852824370066324,
+   "family_ba": 0.4753465953027916
+  },
+  {
+   "camera": "VNIR (standard block)",
+   "set": "dfa_ms_standard",
+   "size": "256x3",
+   "params": 136216,
+   "macs_per_px": 135424,
+   "in_channels": 7,
+   "skill": 0.25437800526670373,
+   "se": 0.03317383635611526,
+   "skill_noise_free": 0.2596424658019659,
+   "vs_64x2": -0.0018975672741103806,
+   "vs_64x2_se": 0.005136093585870889,
+   "best": false,
+   "rmse_pc": 24.249390029907225,
+   "rmse_closure": 16.413531239827474,
+   "rmse_height": 4.011154699325561,
+   "family_ba": 0.4758631126682976
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "16x2",
+   "params": 530,
+   "macs_per_px": 480,
+   "in_channels": 4,
+   "skill": 0.21273048828880695,
+   "se": 0.023052056302562365,
+   "skill_noise_free": 0.21178434204156754,
+   "vs_64x2": -0.004070662803332496,
+   "vs_64x2_se": 0.002132282062243569,
+   "best": false,
+   "rmse_pc": 25.939274978637695,
+   "rmse_closure": 17.614120483398438,
+   "rmse_height": 4.120978355407715,
+   "family_ba": 0.4365766517593142
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "32x2",
+   "params": 1554,
+   "macs_per_px": 1472,
+   "in_channels": 4,
+   "skill": 0.21796347181022124,
+   "se": 0.023003366565195773,
+   "skill_noise_free": 0.21885630174338272,
+   "vs_64x2": 0.0011623207180818606,
+   "vs_64x2_se": 0.0018650929276509442,
+   "best": false,
+   "rmse_pc": 26.09248441060384,
+   "rmse_closure": 17.343710899353027,
+   "rmse_height": 4.0617023468017575,
+   "family_ba": 0.43812431816660174
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "64x2",
+   "params": 5138,
+   "macs_per_px": 4992,
+   "in_channels": 4,
+   "skill": 0.21680115109213943,
+   "se": 0.02248561818299637,
+   "skill_noise_free": 0.21823011127918884,
+   "vs_64x2": 0.0,
+   "vs_64x2_se": 0.0,
+   "best": false,
+   "rmse_pc": 26.17669334411621,
+   "rmse_closure": 17.385204633076984,
+   "rmse_height": 4.063496462504069,
+   "family_ba": 0.4387803878030141
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "64x3",
+   "params": 9298,
+   "macs_per_px": 9088,
+   "in_channels": 4,
+   "skill": 0.21720884452226,
+   "se": 0.02164650659299903,
+   "skill_noise_free": 0.21643165298132014,
+   "vs_64x2": 0.0004076934301205148,
+   "vs_64x2_se": 0.0016362073299480164,
+   "best": false,
+   "rmse_pc": 26.274032211303712,
+   "rmse_closure": 17.34413948059082,
+   "rmse_height": 4.058544905980428,
+   "family_ba": 0.4397326505178977
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "128x2",
+   "params": 18450,
+   "macs_per_px": 18176,
+   "in_channels": 4,
+   "skill": 0.2204770577725264,
+   "se": 0.0207780982436751,
+   "skill_noise_free": 0.2233989062161374,
+   "vs_64x2": 0.0036759066803869643,
+   "vs_64x2_se": 0.001730428962024081,
+   "best": true,
+   "rmse_pc": 25.998444747924804,
+   "rmse_closure": 17.333513577779133,
+   "rmse_height": 4.046772813796997,
+   "family_ba": 0.44084125850491834
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "256x2",
+   "params": 69650,
+   "macs_per_px": 69120,
+   "in_channels": 4,
+   "skill": 0.21966607083789466,
+   "se": 0.02040136723319932,
+   "skill_noise_free": 0.22422255556302512,
+   "vs_64x2": 0.002864919745755214,
+   "vs_64x2_se": 0.0032866538374662128,
+   "best": false,
+   "rmse_pc": 25.971979904174805,
+   "rmse_closure": 17.30808296203613,
+   "rmse_height": 4.066878604888916,
+   "family_ba": 0.43955112519967815
+  },
+  {
+   "camera": "SWIR (L4 L6 L9 L11)",
+   "set": "dfa_swir_nearest_alone",
+   "size": "256x3",
+   "params": 135442,
+   "macs_per_px": 134656,
+   "in_channels": 4,
+   "skill": 0.21777268472782949,
+   "se": 0.020392104025263896,
+   "skill_noise_free": 0.22006668689134454,
+   "vs_64x2": 0.0009715336356900324,
+   "vs_64x2_se": 0.006379759728376001,
+   "best": false,
+   "rmse_pc": 26.0051882425944,
+   "rmse_closure": 17.356886609395346,
+   "rmse_height": 4.081832869847616,
+   "family_ba": 0.4383126868382042
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "16x2",
+   "params": 674,
+   "macs_per_px": 608,
+   "in_channels": 12,
+   "skill": 0.27609815945816274,
+   "se": 0.018839548909323118,
+   "skill_noise_free": 0.2790054251660372,
+   "vs_64x2": -0.005578382215672345,
+   "vs_64x2_se": 0.003982657169093246,
+   "best": false,
+   "rmse_pc": 24.160322189331055,
+   "rmse_closure": 15.651938565572102,
+   "rmse_height": 3.875910441080729,
+   "family_ba": 0.4872653586418434
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "32x2",
+   "params": 1826,
+   "macs_per_px": 1728,
+   "in_channels": 12,
+   "skill": 0.2829914043662981,
+   "se": 0.018960175742691075,
+   "skill_noise_free": 0.28572218906154345,
+   "vs_64x2": 0.001314862692462961,
+   "vs_64x2_se": 0.0045960017879528555,
+   "best": false,
+   "rmse_pc": 24.123098373413086,
+   "rmse_closure": 15.33262996673584,
+   "rmse_height": 3.8010414918263753,
+   "family_ba": 0.4859179880839131
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "64x2",
+   "params": 5666,
+   "macs_per_px": 5504,
+   "in_channels": 12,
+   "skill": 0.2816765416738352,
+   "se": 0.020332553608087015,
+   "skill_noise_free": 0.28482307104294863,
+   "vs_64x2": 0.0,
+   "vs_64x2_se": 0.0,
+   "best": false,
+   "rmse_pc": 24.246941375732423,
+   "rmse_closure": 15.376643562316895,
+   "rmse_height": 3.789008903503418,
+   "family_ba": 0.4866700301253817
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "64x3",
+   "params": 9826,
+   "macs_per_px": 9600,
+   "in_channels": 12,
+   "skill": 0.2835075571620926,
+   "se": 0.01815638063877884,
+   "skill_noise_free": 0.2880941318233961,
+   "vs_64x2": 0.0018310154882573723,
+   "vs_64x2_se": 0.003779841190915623,
+   "best": false,
+   "rmse_pc": 24.11338653564453,
+   "rmse_closure": 15.30182704925537,
+   "rmse_height": 3.78926952679952,
+   "family_ba": 0.4858289247928966
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "128x2",
+   "params": 19490,
+   "macs_per_px": 19200,
+   "in_channels": 12,
+   "skill": 0.284438755756644,
+   "se": 0.021042233085075794,
+   "skill_noise_free": 0.29015047838924884,
+   "vs_64x2": 0.0027622140828089154,
+   "vs_64x2_se": 0.0008070663283304614,
+   "best": false,
+   "rmse_pc": 24.144542185465493,
+   "rmse_closure": 15.30807991027832,
+   "rmse_height": 3.770577049255371,
+   "family_ba": 0.48699814506882266
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "256x2",
+   "params": 71714,
+   "macs_per_px": 71168,
+   "in_channels": 12,
+   "skill": 0.28834936640791614,
+   "se": 0.018380633345070195,
+   "skill_noise_free": 0.2929990549231309,
+   "vs_64x2": 0.006672824734081017,
+   "vs_64x2_se": 0.0031220757805763533,
+   "best": true,
+   "rmse_pc": 24.03180923461914,
+   "rmse_closure": 15.161055755615234,
+   "rmse_height": 3.7658263206481934,
+   "family_ba": 0.4892122846552018
+  },
+  {
+   "camera": "VNIR + SWIR",
+   "set": "dfa_standard_nearest",
+   "size": "256x3",
+   "params": 137506,
+   "macs_per_px": 136704,
+   "in_channels": 12,
+   "skill": 0.2862644841377741,
+   "se": 0.018147585672963207,
+   "skill_noise_free": 0.29041434746824063,
+   "vs_64x2": 0.004587942463938928,
+   "vs_64x2_se": 0.003220386023156248,
+   "best": false,
+   "rmse_pc": 23.902260462443035,
+   "rmse_closure": 15.310859489440919,
+   "rmse_height": 3.8010515054066976,
+   "family_ba": 0.4904830492212581
+  }
+ ],
+ "contrasts": [
+  {
+   "size": "16x2",
+   "contrast": "VNIR - SWIR",
+   "d": 0.033400392129166005,
+   "se": 0.008513026579466086,
+   "ci": [
+    0.016714860033412476,
+    0.05008592422491953
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "16x2",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.029967279040189847,
+   "se": 0.008773752070342037,
+   "ci": [
+    0.012770724982319456,
+    0.04716383309806024
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "16x2",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.06336767116935585,
+   "se": 0.007651477845663642,
+   "ci": [
+    0.04837077459185511,
+    0.07836456774685659
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "32x2",
+   "contrast": "VNIR - SWIR",
+   "d": 0.03211246769576207,
+   "se": 0.0123267075841438,
+   "ci": [
+    0.007952120830840223,
+    0.05627281456068392
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "32x2",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.03291546486031472,
+   "se": 0.011523692135328245,
+   "ci": [
+    0.010329028275071359,
+    0.05550190144555808
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "32x2",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.06502793255607679,
+   "se": 0.00865670526794776,
+   "ci": [
+    0.04806079023089918,
+    0.0819950748812544
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x2",
+   "contrast": "VNIR - SWIR",
+   "d": 0.0394744214486747,
+   "se": 0.014147920916857614,
+   "ci": [
+    0.011744496451633776,
+    0.06720434644571562
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x2",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.025400969133020992,
+   "se": 0.010150580459326595,
+   "ci": [
+    0.005505831432740867,
+    0.04529610683330112
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x2",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.0648753905816957,
+   "se": 0.009760268658795455,
+   "ci": [
+    0.0457452640104566,
+    0.08400551715293479
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x3",
+   "contrast": "VNIR - SWIR",
+   "d": 0.041466661032392826,
+   "se": 0.015035803635044314,
+   "ci": [
+    0.01199648590770597,
+    0.07093683615707969
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x3",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.02483205160743973,
+   "se": 0.013067579757196269,
+   "ci": [
+    -0.000780404716664955,
+    0.05044450793154442
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "64x3",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.06629871263983254,
+   "se": 0.00948806563739697,
+   "ci": [
+    0.04770210399053448,
+    0.0848953212891306
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "128x2",
+   "contrast": "VNIR - SWIR",
+   "d": 0.03460008172546594,
+   "se": 0.017342859075762673,
+   "ci": [
+    0.0006080779369711034,
+    0.06859208551396079
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "128x2",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.029361616258651704,
+   "se": 0.012798738728316408,
+   "ci": [
+    0.004276088351151546,
+    0.05444714416615186
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "128x2",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.06396169798411763,
+   "se": 0.00919845930056366,
+   "ci": [
+    0.045932717755012856,
+    0.08199067821322241
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x2",
+   "contrast": "VNIR - SWIR",
+   "d": 0.03759117343321846,
+   "se": 0.015111605586695276,
+   "ci": [
+    0.00797242648329572,
+    0.06720992038314119
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x2",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.03109212213680305,
+   "se": 0.015226112486518143,
+   "ci": [
+    0.0012489416632274902,
+    0.06093530261037861
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x2",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.0686832955700215,
+   "se": 0.008057540578708645,
+   "ci": [
+    0.05289051603575255,
+    0.08447607510429044
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x3",
+   "contrast": "VNIR - SWIR",
+   "d": 0.03660532053887429,
+   "se": 0.015632618335935582,
+   "ci": [
+    0.00596538860044055,
+    0.06724525247730803
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x3",
+   "contrast": "VNIR+SWIR - VNIR",
+   "d": 0.03188647887107031,
+   "se": 0.017186310838826758,
+   "ci": [
+    -0.0017986903730301332,
+    0.06557164811517074
+   ],
+   "n_pairs": 15
+  },
+  {
+   "size": "256x3",
+   "contrast": "VNIR+SWIR - SWIR",
+   "d": 0.06849179940994458,
+   "se": 0.006340420625399727,
+   "ci": [
+    0.05606457498416112,
+    0.08091902383572805
+   ],
+   "n_pairs": 15
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": "1. VNIR beats SWIR alone at every size",
+   "result": "lowest CI bound over sizes +0.0006",
+   "verdict": "SUPPORTED"
+  },
+  {
+   "prediction": "2. VNIR + SWIR beats VNIR at the largest size (256x3)",
+   "result": "+0.0319 [-0.0018, +0.0656]",
+   "verdict": "REFUTED"
+  },
+  {
+   "prediction": "3. each camera's best size within 0.005 of 64x2",
+   "result": "VNIR (standard block): best 64x3 +0.0024; SWIR (L4 L6 L9 L11): best 128x2 +0.0037; VNIR + SWIR: best 256x2 +0.0067",
+   "verdict": "REFUTED"
+  },
+  {
+   "prediction": "4. adding B11 to the Sentinel-2 VNIR stand-in raises the best rung's skill",
+   "result": "+0.0133 [+0.0102, +0.0164] (32x2 vs 32x1)",
+   "verdict": "SUPPORTED"
+  }
+ ],
+ "anchor": {
+  "dfa_ms_standard": 0.0,
+  "dfa_swir_nearest_alone": 0.0,
+  "dfa_standard_nearest": 0.0
+ }
+}
