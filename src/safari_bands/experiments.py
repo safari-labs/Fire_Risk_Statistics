@@ -1962,6 +1962,36 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "+0.015 [+0.005, +0.024] to the custom; with SWIR the blocks tie (+0.002); DFA's "
              "filters match the configured slots (-0.002). Standard + 4 filters 0.282, S2 0.286.",
     ),
+    Experiment(
+        "E-67", "VNIR against SWIR: the Mantis cameras' models at every size", "Hardware",
+        hypothesis="Registered 2026-11-10 on James's request, before any result. On AVIRIS-NG "
+                   "with hs_v4's folds and seeds, per-pixel models from 16x2 to 256x3, raw + "
+                   "indices with noise: (1) the VNIR standard block beats SWIR alone (DFA L4 L6 "
+                   "L9 L11) at every size; (2) VNIR + SWIR beats VNIR alone at the largest size "
+                   "(256x3), so SWIR's gain is not a small-model effect; (3) for each camera the "
+                   "best size is within 0.005 of 64x2. On Sentinel-2 (U-Net ladder, E-47's "
+                   "design): (4) adding B11 to the Mantis VNIR stand-in raises the best rung's "
+                   "skill. WRONG IF, for (1), SWIR alone ties or beats VNIR at any size; for (2) "
+                   "and (4), the paired CI reaches 0; for (3), a size beats 64x2 by more than "
+                   "0.005.",
+        independent="camera (VNIR standard block with pan; SWIR 4 filters; both) x model size "
+                    "(hidden units x layers on AVIRIS-NG; base_ch x depth on Sentinel-2)",
+        dependent="combined skill and RMSE per head, paired by fold and seed with hs_v4 / "
+                  "eco_v3; parameters and MACs per pixel",
+        conclusion="Whether the VNIR-against-SWIR ranking and the SWIR gain hold at every "
+                   "model size, for P12's camera options (A-49).",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch SUBMIT=1 "
+               "bash scripts/shell/sweep_hs_arch.sh (run_hs_arch.py); and BANDS=B2,B3,B4,B7,"
+               "B8A,B11 EXP_NAME=arch_mantis_both SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh",
+        resources="sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 42 fits, 3 per 1:30:00 "
+                  "job on one A100; sweep_eco_arch.sh: 15 tasks, as arch_mantis_std",
+        note="The SWIR camera's filters (1213-1674 nm) have one Sentinel-2 counterpart (B11), "
+             "so the SWIR-only model is compared on AVIRIS-NG only; Sentinel-2 adds B11 to the "
+             "VNIR stand-in for the U-Net. 64x2 is the size every band search used, so its rows "
+             "must reproduce sensors_fixed exactly (anchor check).",
+    ),
 )
 
 

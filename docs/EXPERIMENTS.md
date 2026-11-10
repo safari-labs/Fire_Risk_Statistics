@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-66 experiments. **53 can run today** on data already packed and staged.
+67 experiments. **54 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,7 +16,7 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Runnable now** | 27 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-29, E-34, E-35, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66 |
+| **Runnable now** | 28 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-18, E-19, E-22, E-26, E-27, E-28, E-29, E-34, E-35, E-36, E-37, E-38, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
 | **Partial result** | 26 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-20, E-21, E-32, E-33, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
 | **Needs code** | 3 | no new data; a runner or a flag has to be written | E-17, E-39, E-40 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
@@ -129,6 +129,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `sweep_axes.sh SETS=shift` |
 | **E-48** | Hardware decision | The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does. | board (Q7, Q8, Q9) x model x input channels | BRAM / DSP / LUT, latency, power (A-29) | Needs a pack | *none yet* |
 | **E-66** | What each Dragonfly Mantis mode would offer | Registered 2026-11-06 on James's approval, before any result (PLAN_NEXT section 6; Chameleon and Caiman left out). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block as published; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set. | Mantis band set: RGB, MS standard (as published; rule-7-clean subset), MS custom, HS (all 81 surface channels; 6 chosen in orbit), SWIR (4 of DFA's 10 usable filters), MS + SWIR | combined skill and RMSE per head on SCANFI labels, paired by fold and seed with hs_v4; lidar height for the leading rows | Runnable now | `Fire_Risk_FW ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select" GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh` |
+| **E-67** | VNIR against SWIR: the Mantis cameras' models at every size | Registered 2026-11-10 on James's request, before any result. On AVIRIS-NG with hs_v4's folds and seeds, per-pixel models from 16x2 to 256x3, raw + indices with noise: (1) the VNIR standard block beats SWIR alone (DFA L4 L6 L9 L11) at every size; (2) VNIR + SWIR beats VNIR alone at the largest size (256x3), so SWIR's gain is not a small-model effect; (3) for each camera the best size is within 0.005 of 64x2. On Sentinel-2 (U-Net ladder, E-47's design): (4) adding B11 to the Mantis VNIR stand-in raises the best rung's skill. WRONG IF, for (1), SWIR alone ties or beats VNIR at any size; for (2) and (4), the paired CI reaches 0; for (3), a size beats 64x2 by more than 0.005. | camera (VNIR standard block with pan; SWIR 4 filters; both) x model size (hidden units x layers on AVIRIS-NG; base_ch x depth on Sentinel-2) | combined skill and RMSE per head, paired by fold and seed with hs_v4 / eco_v3; parameters and MACs per pixel | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh (run_hs_arch.py); and BANDS=B2,B3,B4,B7,B8A,B11 EXP_NAME=arch_mantis_both SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh` |
 
 ### Out of reach
 
@@ -750,6 +751,14 @@ P12's sensor option table: what each Mantis mode would deliver, with GSD, swath,
 
 *Note:* Vendor data and Mantis datasheet in config/vendors/dragonfly.yaml (A-52). Grid config/grids/p12_sensors.yaml; the standard block's rule-7 exception is recorded in it (Q39). SWIR candidates: DFA's 10 usable filters (L5 fails rule 7; L12 runs past 1700 nm, A-19). Spectral comparison only: GSD, swath, SNR beyond the placeholder model and misregistration are reported beside the scores, not modelled. sensors_v1 2026-11-06 (docs/results/P12/p12_sensors), 75/75: MIXED. (2), (3), (5) hold; (1) +0.013 and (4) +0.008 have CIs reaching 0. SWIR at the fixed configured slots adds +0.016 [+0.004, +0.029]; searched per fold it does not. Next: DFA filters as fixed sets (config/grids/p12_sensors_fixed.yaml). sensors_fixed 2026-11-09 (15/15; anchors reproduce exactly): four fixed DFA filters (L4 L6 L9 L11) add +0.025 [+0.006, +0.045] to the standard block and +0.015 [+0.005, +0.024] to the custom; with SWIR the blocks tie (+0.002); DFA's filters match the configured slots (-0.002). Standard + 4 filters 0.282, S2 0.286.
 
+**E-67 — VNIR against SWIR: the Mantis cameras' models at every size**
+
+*Hypothesis:* Registered 2026-11-10 on James's request, before any result. On AVIRIS-NG with hs_v4's folds and seeds, per-pixel models from 16x2 to 256x3, raw + indices with noise: (1) the VNIR standard block beats SWIR alone (DFA L4 L6 L9 L11) at every size; (2) VNIR + SWIR beats VNIR alone at the largest size (256x3), so SWIR's gain is not a small-model effect; (3) for each camera the best size is within 0.005 of 64x2. On Sentinel-2 (U-Net ladder, E-47's design): (4) adding B11 to the Mantis VNIR stand-in raises the best rung's skill. WRONG IF, for (1), SWIR alone ties or beats VNIR at any size; for (2) and (4), the paired CI reaches 0; for (3), a size beats 64x2 by more than 0.005.
+
+Whether the VNIR-against-SWIR ranking and the SWIR gain hold at every model size, for P12's camera options (A-49).
+
+*Note:* The SWIR camera's filters (1213-1674 nm) have one Sentinel-2 counterpart (B11), so the SWIR-only model is compared on AVIRIS-NG only; Sentinel-2 adds B11 to the VNIR stand-in for the U-Net. 64x2 is the size every band search used, so its rows must reproduce sensors_fixed exactly (anchor check).
+
 ### Out of reach
 
 **E-29 — T1 live foliar moisture**
@@ -837,6 +846,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-64** | LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | `P6f: Statistics scripts/simulate_lfmc.py and Model pair_globe_lfmc.py (both run, bundle lfmc_v1); then on Nibi Fire_Risk_FW SEEDS="0 1 2" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (FW 2544d00)` | --time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed (a first guess; 3 seeds) |
 | **E-65** | LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | `Fire_Risk_FW EXP_NAME=lfmc_v2 SEEDS="0 1 2" SUBMIT=1 bash scripts/shell/sweep_lfmc.sh (run_lfmc.py; same lfmc_v1 bundle, v1 arms rerun beside the new ones)` | --time=2:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per seed (v1 took 5 min per seed; the fold arms add about 120 GP fits) |
 | **E-66** | What each Dragonfly Mantis mode would offer | `Fire_Risk_FW ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select" GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh` | as sweep_hs.sh: --time=6:00:00 --gpus=a100:1, 75 tasks (5 arms x 5 folds x 3 seeds), 6 per job |
+| **E-67** | VNIR against SWIR: the Mantis cameras' models at every size | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh (run_hs_arch.py); and BANDS=B2,B3,B4,B7,B8A,B11 EXP_NAME=arch_mantis_both SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh` | sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 42 fits, 3 per 1:30:00 job on one A100; sweep_eco_arch.sh: 15 tasks, as arch_mantis_std |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

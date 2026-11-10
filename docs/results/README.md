@@ -46,7 +46,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 
 ## Experiments
 
-41 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+41 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -116,3 +116,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-64 LFMC: simulation-trained, Sentinel-2 empirical, FBP equation | Runnable now | P6f REFUTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | [series](P6/p6f_lfmc/qual_E-64_series.png) |
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Runnable now | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
 | E-66 What each Dragonfly Mantis mode would offer | Runnable now | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
+| E-67 VNIR against SWIR: the Mantis cameras' models at every size | Runnable now | - | - | - |
