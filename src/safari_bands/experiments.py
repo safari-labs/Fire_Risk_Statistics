@@ -1236,15 +1236,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="slot sources on the ignition target",
         dependent="paired AUC change",
         conclusion="Imagery's value on the ignition process.",
-        state="RUNNABLE",
+        state="PARTIAL",
         runner="Fire_Risk_FW SUBMIT=1 bash scripts/shell/sweep_ignition.sh (run_ignition.py; "
                "8 configs x 5 folds x 3 seeds, R0 at seed 0: 100 fits)",
         resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per task of "
                   "6 fits, 17 tasks (a first guess: tiles read at 242/s locally, about "
                   "12 min of reading per fit)",
-        blocker="the ignition_v1_pack bundle (rebuilt 2026-11-05 at Model a5d6f49) must be "
-                "sent to scratch, and the FW commit pulled",
-        note="ignition_v1 partial 2026-11-05 (docs/results/P9/p9b_ignition_rungs, 36/100 "
+        blocker="the fuel slot's replace form needs eco sidecars for the points (E-35's "
+                "eco_fire step); closure waits for Q26",
+        note="ignition_v1 complete 2026-11-10 (docs/results/P9/p9b_ignition_rungs, 100/100): "
+             "REFUTED on what ran. r4 - r4_shuffled +0.008 [-0.006, +0.023]; r4 - r2 +0.003; "
+             "r2 - r0 +0.052 [+0.035, +0.068]; r2_leaf_ablated - r2 +0.003 [-0.006, +0.010] "
+             "(inconclusive). Imagery adds no ignition skill beyond the CFFDRS inputs. "
+             "Earlier: ignition_v1 partial 2026-11-05 (36/100 "
              "fits): r1 - r0_scanfi +0.052 [+0.033, +0.072] on 1,292 sets; r2 - r0 +0.056 "
              "[+0.038, +0.075] on folds 0-3, so prediction 2 fails provisionally; r4, "
              "r4_shuffled and r2_leaf_ablated not yet in. "

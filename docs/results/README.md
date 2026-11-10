@@ -39,14 +39,14 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P12a](P12/p12_bands/README.md) | 2026-11-05 | Band options: the consensus sets (E-46, Q38) | 1 SUPPORTED |
 | [P6f-v2](P6/p6f_reference/README.md) | 2026-11-05 | Fixing the LFMC forward model, step 1: the reference check | 1 MIXED, 1 PASS |
 | [P7d](P7/p7d_weather_age/README.md) | 2026-11-05 | Weather age: one model scored with stale weather (lags_v1) | 1 PARTIAL |
-| [P9b](P9/p9b_ignition_rungs/README.md) | 2026-11-05 | Ignition learned rungs, partial (ignition_v1) | 1 PENDING |
+| [P9b](P9/p9b_ignition_rungs/README.md) | 2026-11-05 | Ignition learned rungs (ignition_v1) | 1 REFUTED |
 | [P12b](P12/p12_sensors/README.md) | 2026-11-06 | What each Dragonfly Mantis mode would offer (sensors_v1) | 1 MIXED |
 | [P6f2](P6/p6f_lfmc_v2/README.md) | 2026-11-06 | LFMC with priors narrowed inside each fold (lfmc_v2) | 1 MIXED |
 | [P12c](P12/p12_arch/README.md) | 2026-11-09 | The onboard model's size (E-47, arch_mantis_std) | 1 REFUTED |
 
 ## Experiments
 
-40 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+41 of 66 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -94,7 +94,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-42 Spread slot value | Needs a pack | - | - | - |
 | E-43 Date-only control | Partial result | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | - |
 | E-44 Ignition R0 | Partial result | P9 SUPPORTED | [P9/p9_ignition](P9/p9_ignition/) | [sets](P9/p9_ignition/qual_E-44_sets.png) |
-| E-45 Ignition slot value | Runnable now | P9b PENDING | [P9/p9b_ignition_rungs](P9/p9b_ignition_rungs/) | [sets_map](P9/p9b_ignition_rungs/qual_E-45_sets_map.png) |
+| E-45 Ignition slot value | Partial result | P9b REFUTED | [P9/p9b_ignition_rungs](P9/p9b_ignition_rungs/) | [sets_map](P9/p9b_ignition_rungs/qual_E-45_sets_map.png) |
 | E-46 Band and index decision | Partial result | P12a SUPPORTED | [P12/p12_bands](P12/p12_bands/), [P12/p12_weights](P12/p12_weights/) | [band_placement](P12/p12_bands/qual_E-46_band_placement.png) |
 | E-47 Architecture decision | Partial result | P12c REFUTED | [P12/p12_arch](P12/p12_arch/) | [family_confusion](P12/p12_arch/qual_E-47_family_confusion.png) |
 | E-48 Hardware decision | Needs a pack | - | [P12/p12_convert](P12/p12_convert/) | - |

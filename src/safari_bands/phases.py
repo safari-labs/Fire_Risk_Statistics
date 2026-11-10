@@ -1501,22 +1501,21 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
-        "P9b", "Ignition learned rungs, partial (ignition_v1)", "2026-11-05",
+        "P9b", "Ignition learned rungs (ignition_v1)", "2026-11-05",
         "P9/p9b_ignition_rungs", "README.md",
-        "E-45's first fits: 36 of 100 (r0 x2 complete, r1 15/15, r2 10/15 on folds 0-3, "
-        "r2_cwfis 1/15; r2_leaf_ablated, r4 and r4_shuffled not yet in). Matched sets of "
-        "NFDB natural-cause starts and same-day controls, conditional logistic loss, "
-        "noise-free (A-48).",
+        "E-45: 100 of 100 fits (R0 x2 at seed 0; r1, r2, r2_cwfis, r2_leaf_ablated, r4, "
+        "r4_shuffled 15 each). Matched sets of NFDB natural-cause starts and same-day controls, "
+        "conditional logistic loss, noise-free (A-48).",
         (
-            Entry("E-45", "experiment", "PENDING",
-                  result="Imagery (r4 vs r4_shuffled) not yet in. Registered prediction 2 "
-                         "fails on what has run: r1 - r0 +0.052 [+0.033, +0.072] on all "
-                         "1,292 sets; r2 - r0 +0.056 [+0.038, +0.075] on 1,057 (fold 4 "
-                         "missing); r2 - r1 -0.000.",
-                  conclusion="Learning on the CFFDRS inputs alone (fuel, the SCANFI structure "
-                             "slots, leaf state) lifts ignition ranking from 0.533 to 0.586, "
-                             "so imagery has to beat 0.586, not R0's 0.533. Verdict waits for "
-                             "the complete sweep."),
+            Entry("E-45", "experiment", "REFUTED",
+                  result="r4 - r4_shuffled +0.008 [-0.006, +0.023] (prediction 1 fails); "
+                         "r4 - r2 +0.003 [-0.010, +0.016]; r2 - r0 +0.052 [+0.035, +0.068] "
+                         "(prediction 2 refuted); r2_leaf_ablated - r2 +0.003 [-0.006, +0.010] "
+                         "(prediction 3 inconclusive); r2_cwfis - r2 -0.002. 1,292 sets.",
+                  conclusion="Imagery adds no measurable ignition skill beyond the CFFDRS "
+                             "inputs, and the leaf-state slot carries none. What lifts ignition "
+                             "ranking (0.533 -> 0.586) is learning on fuel and the SCANFI "
+                             "structure slots, not the bands."),
         ),
     ),
     Phase(

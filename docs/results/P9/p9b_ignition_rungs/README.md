@@ -1,6 +1,6 @@
-# P9b: ignition learned rungs (E-45), partial
+# P9b: ignition learned rungs (E-45)
 
-Run on Nibi: `narval_results/ignition_v1/20261105-1625`, **36 of 100 fits so far**. Pack `ignition_v1_pack` (Model `a5d6f49`): 7,194 points in 1,298 matched sets, development blocks only. The ignition freeze (test blocks and 2025) is unread. Imagery is noise-free (A-48). All values are Reconstructed (ours).
+Run on Nibi: `narval_results/ignition_v1/20261105-1625`, **100 of 100 fits**. Pack `ignition_v1_pack` (Model `a5d6f49`): 7,194 points in 1,298 matched sets, development blocks only. The ignition freeze (test blocks and 2025) is unread. Imagery is noise-free (A-48). All values are Reconstructed (ours).
 
 **At a glance:** [experiments.md](experiments.md). Tables: [tables.md](tables.md).
 
@@ -11,39 +11,47 @@ python scripts/make_results_package.py --phase P9b --run narval_results/ignition
 python scripts/make_phase_docs.py --phase P9b
 ```
 
-| configuration | fits | status |
-|---|---|---|
-| r0_scanfi, r0_cwfis | 5 each | complete |
-| r1 | 15 | complete |
-| r2 | 10 | fold 4 missing |
-| r2_cwfis | 1 | fold 0 only |
-| r2_leaf_ablated, r4, r4_shuffled | 0 | not in yet |
+All eight configurations are complete: R0 at seed 0 on 5 folds, every learned rung on 5 folds × 3 seeds, 1,292 matched sets.
 
 ![rungs](ignition_rungs.png)
 
-## What it shows so far
+## What it shows
 
-- **Learning on the CFFDRS inputs alone lifts ignition ranking.**
-  - R0 (P(sustained flaming) by fuel) ranks the start above its own controls at 0.533.
-  - R1, learned on the same inputs with no imagery, reaches 0.586: **+0.052 [+0.033, +0.072]** on all 1,292 sets.
-  - R2 (physics + residual) is at the same level: +0.056 on folds 0–3, and −0.000 against R1.
-- **What R1 can use.** Within a set the weather is shared (A-46), so the gain comes from what differs between the start and its controls:
-  - the fuel code;
-  - the SCANFI structure slots (percent conifer, closure, height);
-  - the leaf state.
-- **Registered prediction 2 fails, provisionally.** It said "r2 within ±0.01 of r0" and the gain is five times that. The verdict waits for R2's fold 4.
-- **The bar for imagery moves.** r4 has to beat r4_shuffled (prediction 1) and, to be worth flying, R1's 0.586, not R0's 0.533.
-- **CWFIS fuel:** one fit only (+0.009 over r2 on fold 0, CI spans 0). It is not read yet.
+| Contrast (paired, same sets) | Difference [95 % CI] |
+|---|---|
+| R1 (learned on the CFFDRS inputs) − R0 | **+0.052 [+0.032, +0.073]** |
+| R2 (physics + residual) − R0 | **+0.052 [+0.035, +0.068]** |
+| R2 − R1 | −0.001 [−0.013, +0.012] |
+| R4 (+ imagery) − R4 with imagery shuffled | +0.008 [−0.006, +0.023] |
+| R4 − R2 | +0.003 [−0.010, +0.016] |
+| R2 with leaf state ablated − R2 | +0.003 [−0.006, +0.010] |
+| R2 with CWFIS fuel − R2 with SCANFI fuel | −0.002 [−0.017, +0.012] |
 
-## Still to come
+**Registered predictions (2026-11-05):**
 
-- r4 against r4_shuffled (prediction 1), and r2_leaf_ablated against r2 (prediction 3).
-- Rerun this package when the sweep completes. The verdicts then lose their "provisional" tag.
+| Prediction | Verdict |
+|---|---|
+| 1. r4 beats r4_shuffled, paired CI above 0 | **failed**: +0.008, the CI spans 0 |
+| 2. r2 within ±0.01 of r0 | **refuted**: +0.052 |
+| 3. r2_leaf_ablated within ±0.005 of r2 | **inconclusive**: +0.003, but the CI reaches ±0.010 |
+
+**E-45: REFUTED on what ran.**
+- **Imagery adds no measurable ignition skill.** Adding the bands to R2 gains +0.003. The real imagery beats shuffled imagery by only +0.008, with a CI spanning 0.
+- **Leaf state carries nothing.** Removing it changes nothing measurable.
+- **The fuel inventory doesn't matter here.** CWFIS and SCANFI fuel give the same R2.
+- **What does lift ignition ranking is learning on the CFFDRS inputs:** fuel and the SCANFI structure slots, from 0.533 to 0.586. Within a matched set the weather is shared, so the gain comes from what differs between the start and its controls.
+- **For the CubeSat:** ignition gives no band requirement. Imagery's value to the fire-danger chain has to come through the fuel-structure slots (fuel type, conifer, closure, height), which SAFARI maps (E-35, P6a), not through ignition directly.
+
+## Not yet tested
+
+- The fuel slot's replace form: imagery-estimated fuel type in place of the inventory. It needs eco sidecars for the points, which is E-35's `eco_fire` step.
+- The canopy-closure slot, which waits for Q26.
 
 ## Limits
 
 - Controls hold the weather and the ERA5 cell fixed but not lightning strike density (A-46).
-- 1-degree block bootstrap: 394 blocks for the complete configurations.
+- Imagery is noise-free (A-48), so the null result for imagery is not a noise artefact.
+- 1-degree block bootstrap over 394 blocks.
 
 <!-- qual:start -->
 ## Qualitative view per experiment
