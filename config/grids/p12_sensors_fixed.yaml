@@ -29,6 +29,16 @@ references:
   # The nearest set alone, for the MS-or-SWIR question at fixed filters.
   - {name: dfa_swir_nearest_alone, vendor: dragonfly, list: mantis_swir_filter_catalogue,
      include: [L4, L6, L9, L11], detector: ingaas_std}
+  # E-24 (2026-11-11): the configured slots with 1210/20 (WorldView-3's centre)
+  # in place of 1240/20 (Gao's NDWI band); 1550, 1610 and 1680 unchanged.
+  - {name: e24_slots_1210, detector: ingaas_std, range_nm: [1210, 1210], step_nm: 10,
+     fwhm_nm: 20, with: [sensor_mantis_vnir6,
+       {detector: ingaas_std, range_nm: [1550, 1610], step_nm: 60, fwhm_nm: 40},
+       {detector: ingaas_std, range_nm: [1680, 1680], step_nm: 10, fwhm_nm: 40}]}
+  # E-25 (2026-11-11): every rule-7-clean 5 nm SWIR channel on standard InGaAs,
+  # with the custom VNIR block: the SWIR hyperspectral endpoint.
+  - {name: e25_vnir6_swir_all, detector: ingaas_std, range_nm: [1005, 1695], step_nm: 5,
+     fwhm_nm: 5, with: [sensor_mantis_vnir6]}
 
 role_windows_nm:
   BLUE: [450.0, 520.0]

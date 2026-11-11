@@ -978,3 +978,39 @@ SCANFI v3 (released 2026-05-28) is annual from 1985 to 2025. It carries land cov
 2. **Record it and leave it.**
    - *Pro:* no new code; E-21's inventory half is already answered (no staleness cost).
    - *Con:* the burn-scar and lichen layers go unused.
+
+---
+
+### Q42 — Close E-9 (the lightning cohort)?
+
+**Status:** OPEN (raised 2026-11-11)
+
+E-9 predicted that restricting the fires to lightning starts keeps the band ranking (human-access signals such as roads would otherwise drive it). The cause is held: NBAC's `FIRECAUS`, already cached per patch, and NFDB. But 76 of the 83 development fire patches are natural-cause and only 7 are human-caused. The restricted cohort is 92 % of the sample.
+
+1. **Close it as uninformative on this sample.**
+   - *Pro:* no cluster time on a test that cannot fail.
+   - *Pro:* the composition itself answers the worry, because human-access signals can act through at most 7 fires.
+   - *Con:* the registered prediction is never formally tested.
+2. **Run it as a post-hoc readout on the v2 band sweeps** (natural fires only), when they return.
+   - *Pro:* cheap; no new training.
+   - *Con:* a near-certain "ranking holds" that says little.
+3. **Extend to a cohort with more human-caused fires** (southern fires, 2024 cohort).
+   - *Pro:* a real test.
+   - *Con:* new patches and a new pack.
+
+---
+
+### Q43 — How should E-8's thermal control enter the pack?
+
+**Status:** OPEN (raised 2026-11-11)
+
+E-8 asks whether the band ranking holds when the label is VIIRS thermal detection instead of NBAC perimeters (rule 3: B11 must not be reading NBR-like information shared with the perimeters). The label now works. It reads the archived VNP14A1 product (A-57) and detects 99 of 99 fire patches, against 6 before. But it is one value per patch, by design: a 375 m detection spans about 19 × 19 pixels of the 20 m grid.
+
+1. **Patch-level control.** Score the band sets on ranking patches by thermal detection, against the same between-patch ranking under NBAC.
+   - *Pro:* no new pack; uses the label as built.
+   - *Con:* it tests the between-patch axis only, where weather dominates (P3); within-patch fuel signal is untouched.
+2. **A 1 km FireMask raster as the pixel label**, nearest-resampled to 20 m in a new pack attribute.
+   - *Pro:* within-patch, like the NBAC sweeps.
+   - *Con:* a 1 km block label on 20 m pixels asserts boundaries the instrument never measured; it rewards coarse spatial smoothness, not bands.
+3. **Close E-8 as answered by design.** The v2 label is NBAC on or after D, which the pre-fire composite cannot contain (A-32).
+   - *Con:* the B11 circularity worry (NBR-like delineation) is not tested directly.

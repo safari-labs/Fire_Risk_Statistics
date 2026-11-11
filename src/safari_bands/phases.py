@@ -1569,6 +1569,16 @@ PHASES: tuple[Phase, ...] = (
                   conclusion="Red edge (B5) and B11 hold their slots in the stable k=5 set and "
                              "in k=6, so the hypothesis stands. The choice between stable k=5 "
                              "and tied k=8 is James's (A-49)."),
+            Entry("E-23", "experiment", "MIXED",
+                  result="Best measured standard-InGaAs 4-band set: the configured 1240, 1550, "
+                         "1610, 1680 nm (0.2853), the predicted placement, ahead of every "
+                         "searched and consensus standard set (best 0.2796); DFA L4 L6 L9 L11 "
+                         "within 0.002. The broad searches converge on 1500-1630 nm instead "
+                         "(8-9 of 15, not stable), with no band near 1240.",
+                  conclusion="The predicted placement holds as the best fixed set; a broad "
+                             "search does not recover it, so SWIR filters must be fixed in "
+                             "advance, not searched (as Q38). Read 2026-11-11 from hs_v4, "
+                             "hs_consensus and sensors_fixed."),
         ),
     ),
     Phase(

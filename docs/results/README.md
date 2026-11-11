@@ -36,7 +36,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P6a-v3](P6/p6a_ecology_v3/README.md) | 2026-11-04 | Ecology band searches on the corrected family labels (eco_v3) | 1 MEASURED, 1 MIXED, 1 REFUTED, 1 SUPPORTED |
 | [P6f](P6/p6f_lfmc/README.md) | 2026-11-04 | LFMC from Sentinel-2 against FBP's equation (E-64, E-29) | 2 MEASURED, 1 PASS, 1 REFUTED, 1 SUPPORTED |
 | [P9](P9/p9_ignition/README.md) | 2026-11-04 | Stage C: CFFDRS ignition R0 on lightning starts (E-44) | 3 MEASURED, 1 PASS, 1 SUPPORTED |
-| [P12a](P12/p12_bands/README.md) | 2026-11-05 | Band options: the consensus sets (E-46, Q38) | 1 SUPPORTED |
+| [P12a](P12/p12_bands/README.md) | 2026-11-05 | Band options: the consensus sets (E-46, Q38) | 1 MIXED, 1 SUPPORTED |
 | [P6f-v2](P6/p6f_reference/README.md) | 2026-11-05 | Fixing the LFMC forward model, step 1: the reference check | 1 MIXED, 1 PASS |
 | [P7d](P7/p7d_weather_age/README.md) | 2026-11-05 | Weather age: one model scored with stale weather (lags_v1) | 1 PARTIAL |
 | [P9b](P9/p9b_ignition_rungs/README.md) | 2026-11-05 | Ignition learned rungs (ignition_v1) | 1 REFUTED |
@@ -48,7 +48,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 
 ## Experiments
 
-37 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+38 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -60,7 +60,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-6 Selection stability | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
 | E-7 Resolution requirement | Runnable now | - | - | - |
 | E-8 Label independence control | Needs a pack | - | - | - |
-| E-9 Lightning cohort | Needs new data | - | - | - |
+| E-9 Lightning cohort | Runnable now | - | - | - |
 | E-10 Negative control | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
 | E-11 Greenness vs moisture indices | Runnable now | - | - | - |
 | E-12 Index baseline vs learned bands | Runnable now | - | - | - |
@@ -74,9 +74,9 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-20 Weather staleness | Runnable now | P7 PARTIAL, P7d PARTIAL | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
 | E-21 Fuel-layer refresh | Partial result | P2 AT RISK, P3 AT RISK | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [inventory_age](P3/p3_dated/qual_E-21_inventory_age.png) |
 | E-22 Ecology arm | Concluded | P6a SUPPORTED, P6a-v3 SUPPORTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
-| E-23 SWIR band placement | Needs new data | - | - | - |
-| E-24 1209 vs 1240 nm | Needs new data | - | - | - |
-| E-25 Spectral resolution: HS vs MS | Needs new data | - | - | - |
+| E-23 SWIR band placement | Concluded | P12a MIXED | [P12/p12_bands](P12/p12_bands/) | - |
+| E-24 1209 vs 1240 nm | Runnable now | - | - | - |
+| E-25 Spectral resolution: HS vs MS | Runnable now | - | - | - |
 | E-26 Within-fire burn pattern | Runnable now | - | - | - |
 | E-27 Cost per input channel | Runnable now | - | - | - |
 | E-28 Co-registration tolerance | Runnable now | - | - | - |

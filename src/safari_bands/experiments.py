@@ -334,16 +334,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "information with 400-1750 nm reflectance.",
         state="NEEDS_PACK",
         runner="--",
-        blocker="the thermal label is BROKEN, not just unpacked: only 6 of "
-                "99 fire patches carry thermal = 1, and n_granules is null "
-                "in every _thermal.json, so the VNP14 fetch never counted a "
-                "granule. Refetch before packing; a control built on it "
-                "would say the fires did not burn",
+        blocker="the label is fixed (2026-11-11): what remains is the pack design, a "
+                "patch-level control or a 1 km FireMask raster (Q43)",
         note="WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, "
              "printed and recorded, and never read: LABEL=vnp14 would have "
              "trained on the packed mask and confirmed its own hypothesis. "
              "sweep_bands.py now refuses any --label that is not the pack's "
-             "declared label_source.",
+             "declared label_source."
+             + " 2026-11-11: root cause found. The label read NASA/LANCE/NOAA20_VIIRS/C2, "
+               "a near-real-time collection whose archive starts 2023-10-08, after every "
+               "development fire season. It now reads the archived NASA/VIIRS/002/VNP14A1 "
+               "(2012 on; FireMask >= 7) and records its granule count. Rebuilt for all 292 "
+               "patches: fire 99/99 detected (was 6/99), confuser 7/108, cloud 2/22, bare, "
+               "unburned and water 0.",
         tags=("control",),
     ),
     Experiment(
@@ -358,13 +361,19 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "a model can read off the imagery instead of the fuel. If "
                    "the ranking holds on lightning fires only, it is about "
                    "fuel.",
-        state="NEEDS_DATA",
-        runner="--",
-        blocker="NFDB is not held -- there is no NFDB directory in "
-                "Fire_Risk_Model/data. labels.is_lightning() exists but has "
-                "nothing to read. Fetch NFDB, attach CAUSE per patch, then "
-                "filter with sweep_bands.py --scenes's machinery",
-        note="Was listed as 'needs code'; the code exists, the data does not.",
+        state="RUNNABLE",
+        runner="post-hoc readout on the v2 band sweeps (sweep_bands_*_v2), natural-cause "
+               "fires only (Q42 option 2), when they return",
+        blocker="cause is held (NBAC FIRECAUS, cached in nbac_fire_dates.json; NFDB "
+                "too): 76 of the 83 development fire patches are natural-cause, so "
+                "the cohort is 92 % of the sample and cannot discriminate. Close or "
+                "keep: James (Q42)",
+        note="Was listed as 'needs code'; the code exists, the data does not."
+             + " 2026-11-11: measured, development fire patches by NBAC cause: "
+               "Natural 76 (2019 5, 2021 10, 2022 3, 2023 58), Human 7 (2019 2, "
+               "2020 2, 2021 3). Human-access signals can act through 7 fires at "
+               "most; a band ranking restricted to the natural cohort shares 92 % "
+                "of its fires with the unrestricted one.",
         tags=("control",),
     ),
     Experiment(
@@ -827,29 +836,54 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="THE SWIR SPECIFICATION. Sentinel-2 has one band in that "
                    "window and the mode carries four: four cannot be chosen "
                    "from one. Only a contiguous source can answer it.",
-        state="NEEDS_DATA",
+        state="CONCLUDED",
         runner="fetch_aviris.py + ingest_aviris.py",
-        blocker="18 of 42 pre-fire lines ingested (2026-10-29); the rest "
-                "are downloading, about 2 h per line. Answered through E-61's "
-                "search (A-40) once they arrive",
+        blocker="",
         note="Grid measured from AVIRIS-NG's own bad-band list (A-22), which "
              "puts the water-vapour gap at 1364-1408 nm -- narrower than "
              "assumed, so 1300-1359 and 1414-1500 were being excluded for "
-             "no reason.",
+             "no reason."
+             + "2026-11-11, read from runs already held (aviris_v4 holds all 42 lines; "
+               "the blocker was stale): MIXED. The best measured standard-InGaAs 4-band "
+               "set is the predicted placement: the configured slots 1240, 1550, 1610, "
+               "1680 nm score 0.2853, ahead of every searched and consensus standard set "
+               "(best consensus k=4 0.2796; hs_consensus, P12/p12_bands), and DFA's "
+               "nearest filters L4 L6 L9 L11 are within 0.002 (P12/p12_sensors). But the "
+               "broad searches do not find it: they converge on 1500-1630 nm (k=4 "
+               "consensus 1500, 1530, 1580, 1630; 8-9 of 15 searches, not stable) and "
+               "never pick a band near 1240 or above 1680 (the standard placeholder "
+               "stops at 1700 nm, A-40). Search noise, not the spectrum, separates the "
+               "two.",
     ),
     Experiment(
         "E-24", "1209 vs 1240 nm", "Hyperspectral",
         hypothesis="1240 nm is slightly better for water sensitivity and 1209 "
                    "slightly better for O2 margin, with the difference small "
                    "enough that the flown WorldView-3 centre is defensible. A "
-                   "large difference either way is the interesting outcome.",
+                   "large difference either way is the interesting outcome. "
+                   "WRONG IF (made testable 2026-11-11, before the run) the "
+                   "paired combined-skill difference has its 95 % CI wholly "
+                   "outside +-0.005.",
         independent="WorldView-3's flown centre against Gao's NDWI band",
         dependent="retrieval error, and O2 absorption margin",
         conclusion="Water sensitivity traded against O2 margin. The "
                    "validator flagged the conflict; nobody has measured it.",
-        state="NEEDS_DATA",
-        runner="ingest_aviris.py --mode both",
-        blocker="same as E-23",
+        state="RUNNABLE",
+        resources="sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 8 fits (4 sets x "
+                  "noise on/off, 64x2 only), 3 per 1:30:00 job on one A100 (hs_arch's "
+                  "42 fits took 20 min)",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 "
+               "SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 "
+               "e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash "
+               "scripts/shell/sweep_hs_arch.sh",
+        blocker="",
+        note="2026-11-11, registered before the run: a clean pair on aviris_v4 at 64x2 "
+             "(the band-search size), e24_slots_1210 against "
+             "sensor_mantis_ms_plus_swir; they differ only in 1210/20 against 1240/20. "
+             "Prediction: the paired combined-skill difference lies within +-0.005. "
+             "WRONG IF its 95 % CI lies wholly outside +-0.005. Evidence so far "
+             "(P12/p12_sensors): DFA L4 (1213/83) with L6 L9 L11 is within 0.002 of "
+             "the configured slots, but every band differs there.",
     ),
     Experiment(
         "E-25", "Spectral resolution: HS vs MS", "Hyperspectral",
@@ -862,9 +896,22 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="What spectral RESOLUTION buys, which decides the Mantis "
                    "HS mode. Cannot be faked: ten Sentinel-2 bands cannot be "
                    "interpolated into ninety-six, and rule 2 forbids trying.",
-        state="NEEDS_DATA",
-        runner="ingest_aviris.py, then sweep_bands.py",
-        blocker="same as E-23",
+        state="RUNNABLE",
+        resources="sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 8 fits (4 sets x "
+                  "noise on/off, 64x2 only), 3 per 1:30:00 job on one A100 (hs_arch's "
+                  "42 fits took 20 min)",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 "
+               "SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 "
+               "e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash "
+               "scripts/shell/sweep_hs_arch.sh",
+        blocker="",
+        note="2026-11-11: the VNIR half is answered by E-66 (all 81 Mantis HS channels "
+             "+0.004 [-0.005, +0.014] over the 6-band custom block). The SWIR half is "
+             "registered before the run: e25_vnir6_swir_all (custom block + every "
+             "rule-7-clean 5 nm channel from 1005 to 1695 nm, 99 SWIR channels) "
+             "against sensor_mantis_ms_plus_swir (4 SWIR bands), at 64x2 on aviris_v4. "
+             "Prediction: within one paired SE. WRONG IF the 99 channels beat the 4 "
+             "bands with a CI excluding 0.",
     ),
     Experiment(
         "E-26", "Within-fire burn pattern", "Controls",

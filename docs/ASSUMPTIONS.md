@@ -1718,3 +1718,24 @@ None of the three has a valid v1 result: E-13 and E-14 never ran on the NBAC pac
 **E-19** (latitude-banded weather) becomes one R2 configuration, `r2_daylat`. It uses latitude-correct day length in DMC and BUI (the `c2_daylat` variant; E-50 measured it at R0), paired with `r2`. DC and FWI keep the 46° N table, because the pack carries `c2_daylat` for DMC and BUI only.
 
 **E-27** (cost per input channel) is an hls4ml memory prediction, not training. P12's conversion check (E-48) has largely superseded it, so it is not part of this re-run.
+
+## A-57: The VIIRS thermal control reads the archived VNP14A1 product (2026-11-11)
+
+**What was wrong.** `labels.thermal_label_for_bbox` read `NASA/LANCE/NOAA20_VIIRS/C2`, LANCE's near-real-time collection. Its archive starts on 2023-10-08 (measured in Earth Engine), after every development fire season. The control therefore read "no fire" for nearly every fire: 6 of 99 were detected. The `n_granules` field that looked like evidence was hard-coded to null.
+
+**What it reads now:** `NASA/VIIRS/002/VNP14A1`, the archived daily VIIRS active-fire grid (1 km, 2012 on).
+- **Detection:** FireMask ≥ 7 (low-, nominal- or high-confidence fire) at any date in 1 April – 31 October of the patch year, reduced at 1 km.
+- **Recorded:** the granule count and the collection name.
+- **Refused:** a season before the archive starts, rather than labelled 0.
+- **Spectral independence:** the detection is thermal (4 and 11 µm); reflectance enters the VIIRS algorithm only in its false-alarm tests.
+
+**Rebuilt 2026-11-11 for all 292 patches:**
+
+| Scene | Detected |
+|---|---|
+| Fire | 99 of 99 |
+| Confuser | 7 of 108 (another fire inside the patch that season) |
+| Cloud | 2 of 22 |
+| Bare, unburned, water | 0 |
+
+The old sidecars fed no result, so they were overwritten. How the label enters a pack is Q43.

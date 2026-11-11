@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-68 experiments. **38 can run today** on data already packed and staged.
+68 experiments. **41 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,12 +16,11 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Concluded** | 15 | every registered part has run; the verdict is in the phase sheets | E-17, E-18, E-22, E-29, E-33, E-34, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
-| **Runnable now** | 18 | data packed and staged; nothing missing | E-1, E-2, E-3, E-4, E-5, E-6, E-7, E-10, E-11, E-12, E-19, E-20, E-26, E-27, E-28, E-35, E-37, E-68 |
+| **Concluded** | 16 | every registered part has run; the verdict is in the phase sheets | E-17, E-18, E-22, E-23, E-29, E-33, E-34, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
+| **Runnable now** | 21 | data packed and staged; nothing missing | E-1, E-2, E-3, E-4, E-5, E-6, E-7, E-9, E-10, E-11, E-12, E-19, E-20, E-24, E-25, E-26, E-27, E-28, E-35, E-37, E-68 |
 | **Partial result** | 20 | some folds or arms have completed; the rest are blocked | E-21, E-32, E-36, E-38, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
 | **Needs code** | 2 | no new data; a runner or a flag has to be written | E-39, E-40 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
-| **Needs new data** | 4 | free to obtain, not yet held | E-9, E-23, E-24, E-25 |
 | **Closed, no result** | 3 | closed without a valid result; the note names what answers it instead | E-13, E-14, E-15 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
@@ -73,7 +72,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
 | **E-8** | Label independence control (control) | The ranking is largely preserved. WRONG IF B11's value collapses specifically -- that would say it was reading NBR-like information shared with the perimeter delineation rather than fuel, which is exactly the circularity rule 3 exists to catch. | the label source: NBAC perimeters vs VIIRS thermal | change in the band ranking and in auc_px, scenario-held-out folds | Needs a pack | *none yet* |
-| **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Needs new data | *none yet* |
+| **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Runnable now | `post-hoc readout on the v2 band sweeps (sweep_bands_*_v2), natural-cause fires only (Q42 option 2), when they return` |
 | **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=neg SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
 | **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=cond SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
 | **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
@@ -117,9 +116,9 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-23** | SWIR band placement | The best four cluster near 1240, 1610 and 1680-1730 nm, with the fourth in the 1500s. From brief hypotheses H1 and H3: resolving a dry-matter change needs two water-sensitive bands with different water-to-dry-matter absorption ratios. | any 4 centres and widths in 1003-1359 and 1414-1749 nm (140 usable channels) | retrieval error per candidate set | Needs new data | `fetch_aviris.py + ingest_aviris.py` |
-| **E-24** | 1209 vs 1240 nm | 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome. | WorldView-3's flown centre against Gao's NDWI band | retrieval error, and O2 absorption margin | Needs new data | `ingest_aviris.py --mode both` |
-| **E-25** | Spectral resolution: HS vs MS | Diminishing returns beyond roughly 10-15 well-placed bands, so the HS mode's 96 channels buy little over a well-chosen MS set. WRONG IF the curve keeps climbing, which would make the HS mode the better instrument and change the payload decision. | 140 SWIR channels at 5 nm vs the best 4-6 broad bands | retrieval error vs channel count | Needs new data | `ingest_aviris.py, then sweep_bands.py` |
+| **E-23** | SWIR band placement | The best four cluster near 1240, 1610 and 1680-1730 nm, with the fourth in the 1500s. From brief hypotheses H1 and H3: resolving a dry-matter change needs two water-sensitive bands with different water-to-dry-matter absorption ratios. | any 4 centres and widths in 1003-1359 and 1414-1749 nm (140 usable channels) | retrieval error per candidate set | Concluded | `fetch_aviris.py + ingest_aviris.py` |
+| **E-24** | 1209 vs 1240 nm | 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome. WRONG IF (made testable 2026-11-11, before the run) the paired combined-skill difference has its 95 % CI wholly outside +-0.005. | WorldView-3's flown centre against Gao's NDWI band | retrieval error, and O2 absorption margin | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh` |
+| **E-25** | Spectral resolution: HS vs MS | Diminishing returns beyond roughly 10-15 well-placed bands, so the HS mode's 96 channels buy little over a well-chosen MS set. WRONG IF the curve keeps climbing, which would make the HS mode the better instrument and change the payload decision. | 140 SWIR channels at 5 nm vs the best 4-6 broad bands | retrieval error vs channel count | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh` |
 | **E-61** | Best SWIR bands, searched broadly | For the ecology targets, the best 4-band SWIR set within standard InGaAs (1000-1750 nm) recovers at least 90 % of the error reduction of the best 4-band set allowed to reach 2000-2400 nm (extended InGaAs), with the VNIR set fixed. WRONG IF allowing 2000-2400 nm improves any target by more than 10 % of its standard-window gain, with a CI excluding 0: then structure retrieval pays for the extended detector. Reported alongside, not predicted: how much of each optimum a vendor filter set (e.g. the best 4 of DFA's 12) recovers. | SWIR band sets from a broad grid (centres every 10 nm, FWHM 20-100 nm, in 1003-1359, 1414-1749 and 1970-2400 nm, A-22), nested k = 1-4, per detector window; vendor sets as reference points | per-target held-out error on AVIRIS-NG (20 m, labels SCANFI v2 2020), spatial-block folds by flight line, under the noise model | Partial result | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'` |
 | **E-62** | Best VNIR bands, searched broadly | The best 6-band VNIR set from a broad grid includes at least one band in 700-760 nm (red edge), and the best 6-band set with no band there is at least 5 % worse on percent conifer and canopy closure. WRONG IF the best set has no red-edge band, or the best no-red-edge set is within 5 % on both targets. | VNIR band sets from a broad grid (centres every 10 nm, FWHM 10-100 nm, 400-1000 nm), nested k = 1-6; the same search with 700-760 nm excluded; vendor sets (e.g. DFA's standard 6) and Sentinel-2's bands as reference points | per-target held-out error on AVIRIS-NG and, for Sentinel-2's bands, on the P6 ecology pack; under the noise model | Partial result | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'` |
 
@@ -428,9 +427,9 @@ How much resolution the retrieval needs -- a mission requirement. The Mantis MS 
 
 A band whose value collapses when the label becomes thermal was exploiting the label, not reading fuel. VNP14 keys off 4 and 11 um emission, so it cannot share information with 400-1750 nm reflectance.
 
-*Note:* WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, printed and recorded, and never read: LABEL=vnp14 would have trained on the packed mask and confirmed its own hypothesis. sweep_bands.py now refuses any --label that is not the pack's declared label_source.
+*Note:* WAS MARKED RUNNABLE AND WAS VACUOUS. --label was validated, printed and recorded, and never read: LABEL=vnp14 would have trained on the packed mask and confirmed its own hypothesis. sweep_bands.py now refuses any --label that is not the pack's declared label_source. 2026-11-11: root cause found. The label read NASA/LANCE/NOAA20_VIIRS/C2, a near-real-time collection whose archive starts 2023-10-08, after every development fire season. It now reads the archived NASA/VIIRS/002/VNP14A1 (2012 on; FireMask >= 7) and records its granule count. Rebuilt for all 292 patches: fire 99/99 detected (was 6/99), confuser 7/108, cloud 2/22, bare, unburned and water 0.
 
-*Blocked on:* the thermal label is BROKEN, not just unpacked: only 6 of 99 fire patches carry thermal = 1, and n_granules is null in every _thermal.json, so the VNP14 fetch never counted a granule. Refetch before packing; a control built on it would say the fires did not burn
+*Blocked on:* the label is fixed (2026-11-11): what remains is the pack design, a patch-level control or a 1 km FireMask raster (Q43)
 
 **E-9 — Lightning cohort**
 
@@ -438,9 +437,9 @@ A band whose value collapses when the label becomes thermal was exploiting the l
 
 Human ignitions carry a roads-and-settlement signal that a model can read off the imagery instead of the fuel. If the ranking holds on lightning fires only, it is about fuel.
 
-*Note:* Was listed as 'needs code'; the code exists, the data does not.
+*Note:* Was listed as 'needs code'; the code exists, the data does not. 2026-11-11: measured, development fire patches by NBAC cause: Natural 76 (2019 5, 2021 10, 2022 3, 2023 58), Human 7 (2019 2, 2020 2, 2021 3). Human-access signals can act through 7 fires at most; a band ranking restricted to the natural cohort shares 92 % of its fires with the unrestricted one.
 
-*Blocked on:* NFDB is not held -- there is no NFDB directory in Fire_Risk_Model/data. labels.is_lightning() exists but has nothing to read. Fetch NFDB, attach CAUSE per patch, then filter with sweep_bands.py --scenes's machinery
+*Blocked on:* cause is held (NBAC FIRECAUS, cached in nbac_fire_dates.json; NFDB too): 76 of the 83 development fire patches are natural-cause, so the cohort is 92 % of the sample and cannot discriminate. Close or keep: James (Q42)
 
 **E-10 — Negative control**
 
@@ -686,17 +685,15 @@ Whether the +31 bias was the prior, and whether the spectra then carry LFMC beyo
 
 THE SWIR SPECIFICATION. Sentinel-2 has one band in that window and the mode carries four: four cannot be chosen from one. Only a contiguous source can answer it.
 
-*Note:* Grid measured from AVIRIS-NG's own bad-band list (A-22), which puts the water-vapour gap at 1364-1408 nm -- narrower than assumed, so 1300-1359 and 1414-1500 were being excluded for no reason.
-
-*Blocked on:* 18 of 42 pre-fire lines ingested (2026-10-29); the rest are downloading, about 2 h per line. Answered through E-61's search (A-40) once they arrive
+*Note:* Grid measured from AVIRIS-NG's own bad-band list (A-22), which puts the water-vapour gap at 1364-1408 nm -- narrower than assumed, so 1300-1359 and 1414-1500 were being excluded for no reason.2026-11-11, read from runs already held (aviris_v4 holds all 42 lines; the blocker was stale): MIXED. The best measured standard-InGaAs 4-band set is the predicted placement: the configured slots 1240, 1550, 1610, 1680 nm score 0.2853, ahead of every searched and consensus standard set (best consensus k=4 0.2796; hs_consensus, P12/p12_bands), and DFA's nearest filters L4 L6 L9 L11 are within 0.002 (P12/p12_sensors). But the broad searches do not find it: they converge on 1500-1630 nm (k=4 consensus 1500, 1530, 1580, 1630; 8-9 of 15 searches, not stable) and never pick a band near 1240 or above 1680 (the standard placeholder stops at 1700 nm, A-40). Search noise, not the spectrum, separates the two.
 
 **E-24 — 1209 vs 1240 nm**
 
-*Hypothesis:* 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome.
+*Hypothesis:* 1240 nm is slightly better for water sensitivity and 1209 slightly better for O2 margin, with the difference small enough that the flown WorldView-3 centre is defensible. A large difference either way is the interesting outcome. WRONG IF (made testable 2026-11-11, before the run) the paired combined-skill difference has its 95 % CI wholly outside +-0.005.
 
 Water sensitivity traded against O2 margin. The validator flagged the conflict; nobody has measured it.
 
-*Blocked on:* same as E-23
+*Note:* 2026-11-11, registered before the run: a clean pair on aviris_v4 at 64x2 (the band-search size), e24_slots_1210 against sensor_mantis_ms_plus_swir; they differ only in 1210/20 against 1240/20. Prediction: the paired combined-skill difference lies within +-0.005. WRONG IF its 95 % CI lies wholly outside +-0.005. Evidence so far (P12/p12_sensors): DFA L4 (1213/83) with L6 L9 L11 is within 0.002 of the configured slots, but every band differs there.
 
 **E-25 — Spectral resolution: HS vs MS**
 
@@ -704,7 +701,7 @@ Water sensitivity traded against O2 margin. The validator flagged the conflict; 
 
 What spectral RESOLUTION buys, which decides the Mantis HS mode. Cannot be faked: ten Sentinel-2 bands cannot be interpolated into ninety-six, and rule 2 forbids trying.
 
-*Blocked on:* same as E-23
+*Note:* 2026-11-11: the VNIR half is answered by E-66 (all 81 Mantis HS channels +0.004 [-0.005, +0.014] over the 6-band custom block). The SWIR half is registered before the run: e25_vnir6_swir_all (custom block + every rule-7-clean 5 nm channel from 1005 to 1695 nm, 99 SWIR channels) against sensor_mantis_ms_plus_swir (4 SWIR bands), at 64x2 on aviris_v4. Prediction: within one paired SE. WRONG IF the 99 channels beat the 4 bands with a CI excluding 0.
 
 **E-61 — Best SWIR bands, searched broadly**
 
@@ -817,12 +814,15 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-5** | Leave-one-out band value | `rides in E-1 to E-4 on v2 (SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_arms.sh)` | no separate job: rides inside E-1 to E-3 |
 | **E-6** | Selection stability | `pool_bands.py over the v2 arms (sweep_bands_*_v2) after E-1 to E-4` | no job: pool_bands.py, minutes, on a login node |
 | **E-7** | Resolution requirement | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=gsd SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 18 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-9** | Lightning cohort | `post-hoc readout on the v2 band sweeps (sweep_bands_*_v2), natural-cause fires only (Q42 option 2), when they return` | -- |
 | **E-10** | Negative control | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=neg SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-11** | Greenness vs moisture indices | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_indices.sh` | 1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-12** | Index baseline vs learned bands | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=raw,both SUBMIT=1 bash scripts/shell/sweep_indices.sh` | shares E-11's runs |
 | **E-19** | Latitude-banded weather | `Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e19 CONFIGS=r2,r2_daylat bash scripts/shell/sweep_slots.sh` | shares E-13's runs; latitude scoring adds seconds |
 | **E-20** | Weather staleness | `Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v2 CONFIGS=r0_scanfi,r2 SCORE_LAGS=1,2,3,7 SCORE_LAG_INPUTS=ffmc,dmc,dc,isi,bui,fwi,wx FITS_PER_TASK=8 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (per-input half; run_slots --score-lag-inputs). First half: Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)` | as the slot sweeps: --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G. lags_v1: 35 fits in 2 tasks of 18, each fit scored four more times (about +1 min). lags_v2: 16 fits in 2 tasks of 8; each fit is also scored 21 more times (7 inputs x 3 ages, about +5 min) |
 | **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
+| **E-24** | 1209 vs 1240 nm | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh` | sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 8 fits (4 sets x noise on/off, 64x2 only), 3 per 1:30:00 job on one A100 (hs_arch's 42 fits took 20 min) |
+| **E-25** | Spectral resolution: HS vs MS | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_e24_e25 SIZES=64x2 SETS='sensor_mantis_ms_plus_swir e24_slots_1210 e25_vnir6_swir_all sensor_mantis_vnir6' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh` | sweep_hs_arch.sh: 15 tasks (5 folds x 3 seeds) of 8 fits (4 sets x noise on/off, 64x2 only), 3 per 1:30:00 job on one A100 (hs_arch's 42 fits took 20 min) |
 | **E-26** | Within-fire burn pattern | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=cond SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
 | **E-28** | Co-registration tolerance | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=shift SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |

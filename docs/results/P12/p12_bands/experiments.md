@@ -16,3 +16,14 @@ The 15 searches per k counted by region (Q38 option 1): Sentinel-2 regions by ba
 | Result | Sentinel-2 consensus stable at k=1 (B12, 11 of 15) and k=5 (B4, B5, B8A, B11, B12; weakest region 10 of 15); 6-9 of 15 at the other k. Re-scored as fixed sets (2026-11-09, all 8 k, 15/15 each): each is within ~2 SE of its own search; stable k=5 is 0.010 +- 0.003 below the best (0.4158), only the unstable k=8 ties. AVIRIS-NG: no SWIR consensus is stable; the configured standard-InGaAs slots lead every standard placement. |
 | Verdict | **SUPPORTED**: the registered prediction held |
 | Conclusion | Red edge (B5) and B11 hold their slots in the stable k=5 set and in k=6, so the hypothesis stands. The choice between stable k=5 and tied k=8 is James's (A-49). |
+
+## E-23: SWIR band placement (experiment): **MIXED**
+
+| | |
+|---|---|
+| Hypothesis (registered) | The best four cluster near 1240, 1610 and 1680-1730 nm, with the fourth in the 1500s. From brief hypotheses H1 and H3: resolving a dry-matter change needs two water-sensitive bands with different water-to-dry-matter absorption ratios. |
+| Varied (independent) | any 4 centres and widths in 1003-1359 and 1414-1749 nm (140 usable channels) |
+| Measured (dependent) | retrieval error per candidate set |
+| Result | Best measured standard-InGaAs 4-band set: the configured 1240, 1550, 1610, 1680 nm (0.2853), the predicted placement, ahead of every searched and consensus standard set (best 0.2796); DFA L4 L6 L9 L11 within 0.002. The broad searches converge on 1500-1630 nm instead (8-9 of 15, not stable), with no band near 1240. |
+| Verdict | **MIXED**: part of the registered prediction held and part failed |
+| Conclusion | The predicted placement holds as the best fixed set; a broad search does not recover it, so SWIR filters must be fixed in advance, not searched (as Q38). Read 2026-11-11 from hs_v4, hs_consensus and sensors_fixed. |
