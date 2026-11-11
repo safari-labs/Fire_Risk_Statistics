@@ -24,7 +24,7 @@ Scored the non-learned CFFDRS reference (FBP1992 + Beverly & Wotton 2007) per pi
 | Hypothesis (registered) | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. |
 | Varied (independent) | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 |
 | Measured (dependent) | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories |
-| Result | Pre-fire layers are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] (+0.031 on land). Post-fire layers DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each). |
+| Result | Pre-fire layers are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] (+0.031 on land). Post-fire layers DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each). 2026-11-11, SCANFI v2 vs v1.2 (both 2020): +0.005 [-0.004, +0.014], though the maps agree on only 49 % of fuel codes. |
 | Verdict | **REFUTED**: the registered prediction failed |
 | Conclusion | Use SCANFI through the CFS tree as the pre-fire fuel reference. The post-fire leak is large (+0.41) but unlearned physics reads it backwards; a learner would not, so post-fire layers stay excluded. |
 

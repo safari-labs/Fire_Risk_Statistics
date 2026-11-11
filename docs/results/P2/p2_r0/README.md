@@ -1,4 +1,4 @@
-# P2: R0, CFFDRS as-is without learning (2026-10-24; re-scored 2026-11-10 with SCANFI 2005)
+# P2: R0, CFFDRS as-is without learning (2026-10-24; re-scored 2026-11-10 with SCANFI 2005, 2026-11-11 with SCANFI v1.2)
 
 R0 is the non-learned CFFDRS reference that every later imagery result is measured against. It runs FBP1992 spread and intensity and Beverly & Wotton (2007) ignition per pixel, using operational inputs only, for every fuel inventory we hold. Outputs are scored against NBAC burned area.
 
@@ -66,12 +66,14 @@ The table gives paired differences in within-patch HFI AUC on the same 83 fire p
 | 30 m vs 250 m, resolution alone | +0.014 [+0.005, +0.024] | **−0.001** [−0.009, +0.008] |
 | CFS tree vs A-11 judgement rules, same SCANFI step | +0.048 | **+0.081** [+0.060, +0.104] |
 | CWFIS 2019 vs 2014b | +0.016 (n.s.) | +0.026 (n.s.) |
+| SCANFI v2 vs v1.2, both 2020: the version alone (added 2026-11-11) | +0.005 [−0.004, +0.014] | +0.003 [−0.008, +0.015] |
 
 ![inventories](inventories.png)
 
 - **SCANFI fed through the CFS tree is a better pre-fire fuel reference than the operational layer.** The advantage survives at 250 m and on land pixels, so it comes from inventory content, not from pixel size.
 - **The 30 m advantage was the water mask.** SCANFI's water comes from 10 m WorldCover. Once lakes are out, FBP fuel types at 30 m and 250 m score the same.
 - **Retire the A-11 thresholds for fuel typing.** On land they carry nothing (0.508). The CFS tree (A-31) is now the SCANFI fuel reference.
+- **The SCANFI version does not matter to R0, though the maps differ.** v1.2 and v2 (both 2020, through the same tree; v1 mapped by A-54) agree on a median 49 % of fuel codes on the 99 fire patches (IQR 41–59 %; 69 % at family level), yet rank the burned pixels equally well: +0.005 [−0.004, +0.014]. What separates inventories here is the operational layer against SCANFI and the rule set, not SCANFI's release.
 
 ### 4. Post-fire inventories invert the physics (E-33 prediction refuted in direction)
 
@@ -126,17 +128,17 @@ NBAC burned area is a spread-and-consumption outcome, not an ignition one, so th
 
 ## Not done in P2
 
-- The SCANFI v1 2020 adapter (E-33's version comparison).
 - The dated design (P3).
 
 ## Reproduce
 
-Run from Fire_Risk_Model at commit `a5d6f49` (the first run, `20261024-1430_cffdrs_r0` at `6485f95`, lacked the 2005 step; every other row is unchanged):
+Run from Fire_Risk_Model at commit `e370450`, after fetching the SCANFI v1.2 sidecars. Earlier runs: `20261110-e21_cffdrs_r0` at `a5d6f49`, identical in every other row (largest change 0.0), and `20261024-1430_cffdrs_r0` at `6485f95`, which lacked the 2005 step.
 
 ```bash
-python scripts/python/eval_cffdrs_reference.py --out ../../Fire_Risk_Statistics/runs/20261110-e21_cffdrs_r0
+python scripts/python/fetch_scanfi_v1.py --patch-dir data/stage2_fire/patches_11band
+python scripts/python/eval_cffdrs_reference.py --out ../../Fire_Risk_Statistics/runs/20261111-e33_cffdrs_r0
 # then, in Fire_Risk_Statistics:
-python scripts/make_results_package.py --phase P2 --run runs/20261110-e21_cffdrs_r0
+python scripts/make_results_package.py --phase P2 --run runs/20261111-e33_cffdrs_r0
 ```
 
 The run directory is git-ignored. `run.json` here records its config, the qualitative tile stems (fixed by seed before scoring) and the freeze hash.

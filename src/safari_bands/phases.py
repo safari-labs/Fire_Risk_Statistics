@@ -220,7 +220,9 @@ PHASES: tuple[Phase, ...] = (
                          "tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] "
                          "(+0.031 on land). Post-fire layers DEFLATE R0: CWFIS "
                          "2024 0.21, SCANFI 2025 0.49. Re-scored 2026-11-10 with SCANFI "
-                         "2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each).",
+                         "2005: 0.668, 2010 0.671, 2015 0.675 (83 fire patches each). "
+                         "2026-11-11, SCANFI v2 vs v1.2 (both 2020): +0.005 [-0.004, "
+                         "+0.014], though the maps agree on only 49 % of fuel codes.",
                   conclusion="Use SCANFI through the CFS tree as the pre-fire "
                              "fuel reference. The post-fire leak is large (+0.41) "
                              "but unlearned physics reads it backwards; a learner "

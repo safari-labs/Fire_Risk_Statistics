@@ -17,6 +17,7 @@ Within-patch AUC (fire patches; fuel and terrain only), mean and 95 % group-boot
 | SCANFI v2 2010 | pre-fire | 83 | 0.006 | 0.671 [0.65, 0.70] | 0.673 [0.65, 0.70] | 0.578 [0.56, 0.60] | 0.675 [0.65, 0.70] | 0.535 [0.51, 0.56] | 0.582 [0.57, 0.60] | 0.751 [0.68, 0.82] | 0.712 |
 | SCANFI v2 2015 | pre-fire | 83 | 0.006 | 0.675 [0.65, 0.70] | 0.677 [0.66, 0.70] | 0.581 [0.56, 0.60] | 0.681 [0.66, 0.71] | 0.538 [0.51, 0.57] | 0.590 [0.57, 0.61] | 0.752 [0.67, 0.82] | 0.713 |
 | SCANFI v2 2020 | post-fire for 2019-20 fires | 83 | 0.006 | 0.654 [0.62, 0.69] | 0.654 [0.62, 0.69] | 0.568 [0.55, 0.59] | 0.657 [0.63, 0.69] | 0.522 [0.49, 0.56] | 0.563 [0.54, 0.59] | 0.749 [0.67, 0.82] | 0.708 |
+| SCANFI v1.2 2020 (A-54) | post-fire for 2019-20 fires | 83 | 0.006 | 0.649 [0.62, 0.68] | 0.650 [0.62, 0.68] | 0.564 [0.54, 0.59] | 0.651 [0.62, 0.68] | 0.525 [0.49, 0.56] | 0.560 [0.53, 0.59] | 0.749 [0.68, 0.82] | 0.709 |
 | SCANFI v2 2025 | post-fire: leakage control | 83 | 0.006 | 0.490 [0.45, 0.54] | 0.488 [0.44, 0.54] | 0.447 [0.42, 0.47] | 0.487 [0.44, 0.54] | 0.453 [0.41, 0.50] | 0.352 [0.32, 0.38] | 0.730 [0.65, 0.80] | 0.630 |
 | CWFIS 2024 (30 m) | post-fire: leakage control | 83 | 0.687 | 0.211 [0.17, 0.26] | 0.211 [0.17, 0.26] | 0.390 [0.37, 0.41] | 0.225 [0.18, 0.28] | 0.454 [0.41, 0.49] | 0.093 [0.07, 0.12] | 0.706 [0.63, 0.78] | 0.354 |
 
@@ -32,7 +33,8 @@ Within-patch HFI AUC, A minus B on the same fire patches; 95 % fire/block-group 
 | CFS tree vs A-11 judgement rules, same SCANFI step | +0.048 | [+0.030, +0.067] | 0.69 | 83 |
 | CWFIS 2019 vs 2014b | +0.016 | [-0.006, +0.036] | 0.52 | 83 |
 | pre-fire vs post-fire SCANFI (leak size) | +0.188 | [+0.160, +0.217] | 0.99 | 83 |
-| pre-fire vs post-fire CWFIS (leak size) | +0.413 | [+0.371, +0.451] | 0.99 | 83 |
+| SCANFI v2 vs v1.2, both 2020: the version alone (E-33) | +0.005 | [-0.004, +0.014] | 0.53 | 83 |
+| pre-fire vs post-fire CWFIS (leak size) | +0.413 | [+0.369, +0.451] | 0.99 | 83 |
 
 ## T-paired-land: what each inventory difference is worth, land pixels only (E-33)
 
@@ -46,7 +48,8 @@ Within-patch HFI AUC, A minus B on the same fire patches; 95 % fire/block-group 
 | CFS tree vs A-11 judgement rules, same SCANFI step | +0.081 | [+0.060, +0.104] | 0.83 | 83 |
 | CWFIS 2019 vs 2014b | +0.026 | [-0.000, +0.053] | 0.54 | 83 |
 | pre-fire vs post-fire SCANFI (leak size) | +0.237 | [+0.211, +0.263] | 0.99 | 83 |
-| pre-fire vs post-fire CWFIS (leak size) | +0.465 | [+0.430, +0.497] | 0.99 | 83 |
+| SCANFI v2 vs v1.2, both 2020: the version alone (E-33) | +0.003 | [-0.008, +0.015] | 0.51 | 83 |
+| pre-fire vs post-fire CWFIS (leak size) | +0.465 | [+0.430, +0.498] | 0.99 | 83 |
 
 ## T-weather: FWI codes between patches (E-32)
 

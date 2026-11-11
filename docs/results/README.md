@@ -84,7 +84,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-30 T2 curing / NPV fraction | No label exists | - | - | - |
 | E-31 Fire occurrence prediction | No label exists | - | - | - |
 | E-32 CFFDRS as is (R0) | Partial result | P2 SUPPORTED, P3 SUPPORTED | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [r0](P2/p2_r0/qual_E-32_r0.png) |
-| E-33 Fuel inventory comparison | Partial result | P2 REFUTED | [P2/p2_r0](P2/p2_r0/) | [inventories](P2/p2_r0/qual_E-33_inventories.png) |
+| E-33 Fuel inventory comparison | Concluded | P2 REFUTED | [P2/p2_r0](P2/p2_r0/) | [inventories](P2/p2_r0/qual_E-33_inventories.png) |
 | E-34 Learned CFFDRS (R1/R2) | Concluded | P5 PENDING, P7 MIXED | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | - |
 | E-35 Fuel-type slot | Runnable now | - | - | - |
 | E-36 Percent-conifer slot | Partial result | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [pc](P7/p7_slots/qual_E-36_pc.png) |

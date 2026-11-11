@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-68 experiments. **39 can run today** on data already packed and staged.
+68 experiments. **38 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -16,9 +16,9 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 
 | State | Count | What it means | Experiments |
 |---|---|---|---|
-| **Concluded** | 14 | every registered part has run; the verdict is in the phase sheets | E-17, E-18, E-22, E-29, E-34, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
+| **Concluded** | 15 | every registered part has run; the verdict is in the phase sheets | E-17, E-18, E-22, E-29, E-33, E-34, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
 | **Runnable now** | 18 | data packed and staged; nothing missing | E-1, E-2, E-3, E-4, E-5, E-6, E-7, E-10, E-11, E-12, E-19, E-20, E-26, E-27, E-28, E-35, E-37, E-68 |
-| **Partial result** | 21 | some folds or arms have completed; the rest are blocked | E-21, E-32, E-33, E-36, E-38, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
+| **Partial result** | 20 | some folds or arms have completed; the rest are blocked | E-21, E-32, E-36, E-38, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
 | **Needs code** | 2 | no new data; a runner or a flag has to be written | E-39, E-40 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
 | **Needs new data** | 4 | free to obtain, not yet held | E-9, E-23, E-24, E-25 |
@@ -34,7 +34,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
 | **E-32** | CFFDRS as is (R0) ★ | FBP head-fire intensity ranks burned pixels above chance within fire patches, and FWI/BUI ranks fire above confuser patches. WRONG IF the physics scores sit at chance on both: then the outcome measures something CFFDRS does not rate, and every imagery delta would be against a meaningless floor. | none learned: FBP ROS / HFI / CFB per pixel and FWI codes per patch, computed from the operational inputs | within-patch and between-patch AUC, per process | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
-| **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
+| **E-33** | Fuel inventory comparison | Pre-fire inventories (CWFIS 2019 and 2014b, the SCANFI v2 pre-fire step) give R0 skill within noise of each other, and the post-fire ones (CWFIS 2024, SCANFI 2025) score far higher. WRONG IF a post-fire inventory does NOT inflate skill: then the leakage measured in A-25 does not reach the outcome. | the fuel inventory feeding R0: CWFIS 2024 / 2019 / 2014b, SCANFI v2 2005-2025, SCANFI v1 2020 | R0 within-patch AUC per process, and the gap between pre- and post-fire inventories | Concluded | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-34** | Learned CFFDRS (R1/R2) | A model given exactly the CFFDRS inputs (R1) beats R0, and physics plus a learned residual (R2) is within noise of R1. WRONG IF R1 does not beat R0, which would say the outcome is already as predictable from CFFDRS inputs as CFFDRS makes it. | R0 vs R1 vs R2 on identical inputs and folds | paired within/between-patch AUC per process | Concluded | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r0_scanfi,r0_cwfis,r1,r2,r2_cwfis` |
 | **E-35** | Fuel-type slot | Imagery-derived fuel type improves within-patch skill over the pre-fire operational layer. WRONG IF the shuffled-imagery twin gains as much, which would make the gain a shortcut. | the fuel-type slot's source: pre-fire inventory vs imagery_replace (ecology model) vs imagery_correct | paired delta in within-patch AUC per process | Runnable now | `Fire_Risk_FW RUN_ID=20261102-1959 SUBMIT=1 bash scripts/shell/sweep_eco_fire.sh (FW 15a705b; done 2026-11-10); then SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=r2,r3_fuel_replace,r3_fuel_replace_shuffled,r3_fuel_pc_replace,r3_fuel_pc_replace_shuffled,r3_pc_replace,r3_pc_replace_shuffled bash scripts/shell/sweep_slots.sh` |
 | **E-36** | Percent-conifer slot | Imagery percent conifer improves M-1/M-2 spread and intensity. WRONG IF no gain survives on mixedwood pixels. | percent-conifer source for M-1/M-2: inventory vs imagery | paired delta on M-1/M-2 pixels | Partial result | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` |
@@ -166,9 +166,7 @@ The non-learned reference every imagery slot is measured against -- CFFDRS itsel
 
 Which operational fuel input is honest on burned ground, and how much a post-fire inventory would flatter a result.
 
-*Note:* P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 within-patch HFI AUC (83 fire patches each).
-
-*Blocked on:* SCANFI v1.2 2020 sidecars being fetched (Fire_Risk_Model fetch_scanfi_v1.py, adapter scanfi_v1.py, A-54); then rerun eval_cffdrs_reference.py, which scores scanfi_v1_tree_2020
+*Note:* P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire inventories are not equal: SCANFI through the CFS tree beats CWFIS 2019 by +0.053 [+0.037, +0.071] within-patch HFI AUC (+0.031 on land only; resolution alone adds nothing once water is masked). Post-fire inventories DEFLATE R0: CWFIS 2024 0.21, SCANFI 2025 0.49. The leak reaches the outcome (+0.41 AUC) but unlearned physics reads it backwards; a learner would not. The CFS tree beats the A-11 rules by +0.081 on land. Re-scored 2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 within-patch HFI AUC (83 fire patches each). 2026-11-11 (runs/20261111-e33_cffdrs_r0, A-54): SCANFI v2 vs v1.2, both 2020, +0.005 [-0.004, +0.014] within-patch HFI AUC (+0.003 on land), though the two maps agree on a median 49 % of fuel codes on the 99 fire patches. Every registered inventory is now scored.
 
 *CFFDRS gap:* G2 fuel-type layer is a fixed vintage
 
@@ -829,7 +827,6 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
 | **E-28** | Co-registration tolerance | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=shift SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-35** | Fuel-type slot | `Fire_Risk_FW RUN_ID=20261102-1959 SUBMIT=1 bash scripts/shell/sweep_eco_fire.sh (FW 15a705b; done 2026-11-10); then SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=r2,r3_fuel_replace,r3_fuel_replace_shuffled,r3_fuel_pc_replace,r3_fuel_pc_replace_shuffled,r3_pc_replace,r3_pc_replace_shuffled bash scripts/shell/sweep_slots.sh` | sweep_eco_fire: --time=1:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=48G per job (a first guess: one eco_v3 fit, about 2 min on an A100, plus forward passes); then the slot sweep as E-36 |
 | **E-36** | Percent-conifer slot | `Fire_Risk_FW/scripts/shell/sweep_slots.sh CONFIGS=r3_pc,r3_pc_shuffled` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |
 | **E-37** | Crown-base-height slot | `Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=...,r3_cbh_replace,r3_cbh_replace_shuffled bash scripts/shell/sweep_slots.sh (correct form: CONFIGS=r3_cbh,r3_cbh_shuffled)` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; GPU 25 %, 1.5 GB peak; A-35) |

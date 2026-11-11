@@ -1076,11 +1076,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                   "pre- and post-fire inventories",
         conclusion="Which operational fuel input is honest on burned ground, "
                    "and how much a post-fire inventory would flatter a result.",
-        state="PARTIAL",
+        state="CONCLUDED",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="SCANFI v1.2 2020 sidecars being fetched (Fire_Risk_Model "
-                "fetch_scanfi_v1.py, adapter scanfi_v1.py, A-54); then rerun "
-                "eval_cffdrs_reference.py, which scores scanfi_v1_tree_2020",
+        blocker="",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire "
              "inventories are not equal: SCANFI through the CFS tree beats "
@@ -1091,7 +1089,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "unlearned physics reads it backwards; a learner would not. The "
              "CFS tree beats the A-11 rules by +0.081 on land. Re-scored "
              "2026-11-10 with SCANFI 2005: 0.668, 2010 0.671, 2015 0.675 within-patch "
-             "HFI AUC (83 fire patches each).",
+             "HFI AUC (83 fire patches each). 2026-11-11 (runs/20261111-e33_cffdrs_r0, "
+             "A-54): SCANFI v2 vs v1.2, both 2020, +0.005 [-0.004, +0.014] within-patch HFI "
+             "AUC (+0.003 on land), though the two maps agree on a median 49 % of fuel codes "
+             "on the 99 fire patches. Every registered inventory is now scored.",
     ),
     Experiment(
         "E-34", "Learned CFFDRS (R1/R2)", "CFFDRS mirror",
