@@ -959,3 +959,22 @@ DFA's pan (625/350, 450-800 nm) crosses the O2-A band, and NIR1 (780/20, 770-790
 - Chameleon and Caiman are left out of E-66, so items 1 and 2 no longer block it.
 - The Mantis datasheet answers item 3 for GSD and swath: RGB 16 m; MS 16 m pan and 32 m MS; HS 32 m; swath 32 km for every mode at 500 km. It also gives 8-12 bit depth, power under 6 W imaging and under 4 W readout, and 1U. It gives no SNR and no SWIR column.
 - **Still open:** per-band SNR or a radiometric model; SWIR GSD and swath (A-20 has them equal to MS); items 4 and 5.
+
+---
+
+### Q41 — Use SCANFI v3's annual land cover?
+
+**Status:** OPEN (raised 2026-11-10)
+**Blocks:** nothing yet. It would extend E-21 (inventory staleness) and E-33 (inventory comparison).
+
+SCANFI v3 (released 2026-05-28) is annual from 1985 to 2025. It carries land cover and fractional cover (treed coniferous and broadleaf; burn scars, lichen, herbaceous, shrubs, rock, soil, water), but no species, closure or height (A-54).
+
+1. **Use it for a fire-year-minus-one conifer/broadleaf/lichen layer:**
+   - **E-21:** a true one-year-old inventory against the 5-year v2 steps.
+   - **Fuel/non-fuel split:** its rock, soil and water fractions would replace post-fire WorldCover (A-31).
+   - **C-1 lichen backgrounds:** a lichen fraction.
+   - *Pro:* every fire gets a pre-fire map one year old.
+   - *Con:* without species, closure and height it cannot run the CFS tree on its own; it would be a hybrid with the nearest v2 step.
+2. **Record it and leave it.**
+   - *Pro:* no new code; E-21's inventory half is already answered (no staleness cost).
+   - *Con:* the burn-scar and lichen layers go unused.

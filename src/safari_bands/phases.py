@@ -1511,6 +1511,27 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P7f", "Station-distance stratification (slots_v2)", "2026-11-10",
+        "P7/p7f_station_distance", "README.md",
+        "E-17 read from the slot sweep already held: R4 and the PC + FMC + CBH slot arm, each "
+        "with its shuffled twin, paired with R2 by fold and seed (15 fits each), stratified "
+        "by the development pack's distance to the nearest CWFIS station. No new training.",
+        (
+            Entry("E-17", "experiment", "REFUTED",
+                  result="R4 - R2 between-patch share against station distance: rho +0.04 "
+                         "[-0.10, +0.17]; by tercile (< 32 / 32-58 / > 58 km) -0.001, +0.004, "
+                         "+0.000. PC + FMC + CBH slots: rho -0.03 [-0.16, +0.09]. Within "
+                         "patches also flat (R4 rho -0.10 [-0.33, +0.14]). Twins within "
+                         "+-0.004. 193 patches, 83 fires.",
+                  conclusion="The imagery increment does not grow with distance from a "
+                             "station, as E-52's flat ERA5-station disagreement foretold. The "
+                             "mission case cannot rest on compensating for sparse stations; "
+                             "it rests on the measured slot and band values (P7, P12). The "
+                             "verdict rule moved from within- to between-patch after the "
+                             "first readout; both are reported."),
+        ),
+    ),
+    Phase(
         "P9b", "Ignition learned rungs (ignition_v1)", "2026-11-05",
         "P9/p9b_ignition_rungs", "README.md",
         "E-45: 100 of 100 fits (R0 x2 at seed 0; r1, r2, r2_cwfis, r2_leaf_ablated, r4, "

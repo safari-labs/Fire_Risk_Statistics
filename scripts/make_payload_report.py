@@ -47,7 +47,7 @@ SENSORS_FIXED = NR / "sensors_fixed" / "20261106-1645"
 OUT = ROOT / "docs" / "report" / "SAFARI_payload_report.pdf"
 FIG_R = ROOT / "docs" / "report" / "figures_payload"
 TITLE = "SAFARI 3U: spectral bands, onboard model and expected product quality"
-DATE = "9 November 2026"
+DATE = "10 November 2026"
 
 SURFACE, INK, MUTED, GRID, AXIS = "#fcfcfb", "#0b0b0b", "#52514e", "#e1e0d9", "#c3c2b7"
 SERIES = ("#2a78d6", "#eb6834", "#1baf7a")          # VNIR, VNIR + SWIR, SWIR (as the RF/EO reports)
@@ -58,7 +58,8 @@ SOURCES = [
     "SAFARI Stage 1 band-design study (this repository): results packages P12/p12_sensors "
     "(Mantis modes, runs sensors_v1 and sensors_fixed), P12/p12_bands (Sentinel-2 and AVIRIS-NG "
     "band "
-    "consensus), P12/p12_arch (onboard model size), P12/p12_convert (FPGA conversion), all run on "
+    "consensus), P12/p12_arch (onboard model size at four band sets), P12/p12_vnir_swir (VNIR "
+    "against SWIR at every model size), P12/p12_convert (FPGA conversion), all run on "
     "the "
     "Digital Research Alliance of Canada clusters (Narval, Nibi), November 2026.",
     "NASA ABoVE airborne campaign, AVIRIS-NG surface reflectance over boreal Canada and Alaska (5 "
@@ -243,6 +244,14 @@ class Data:
         self.arch = json.loads((RES / "p12_arch" / "summary.json").read_text(encoding="utf-8"))
         self.s2 = list(csv.DictReader((RES / "p12_bands" / "T_options_s2.csv").open(
             encoding="utf-8")))
+        # E-67: each Mantis camera's per-pixel model at seven sizes (AVIRIS-NG)
+        self.cam = list(csv.DictReader((RES / "p12_vnir_swir" / "T_ladder.csv").open(
+            encoding="utf-8")))
+        self.cam_c = {(r["size"], r["contrast"]): r for r in csv.DictReader(
+            (RES / "p12_vnir_swir" / "T_contrasts.csv").open(encoding="utf-8"))}
+        # E-47 / E-67: the U-Net size ladder at four Sentinel-2 band sets
+        self.ladders = list(csv.DictReader((RES / "p12_arch" / "T_ladders.csv").open(
+            encoding="utf-8")))
 
     def gap(self, a, b):
         d, se, n = paired(self.rows[a]["per"], self.rows[b]["per"])
@@ -304,6 +313,38 @@ def fig_heads(D: Data):
     return save(fig, "heads.png")
 
 
+CAMERAS = (("VNIR (standard block)", "VNIR standard block", SERIES[0]),
+           ("VNIR + SWIR", "VNIR + 4 SWIR filters", SERIES[1]),
+           ("SWIR (L4 L6 L9 L11)", "SWIR alone, 4 filters", SERIES[2]))
+
+
+def fig_cameras(D: Data):
+    fig, ax = plt.subplots(figsize=(8.6, 3.5))
+    style(ax, "Each Mantis camera's model at every size (AVIRIS-NG, with sensor noise)")
+    for cam, lbl, c in CAMERAS:
+        rows = sorted((r for r in D.cam if r["camera"] == cam), key=lambda r: int(r["params"]))
+        x = [int(r["params"]) for r in rows]
+        y = [float(r["skill"]) for r in rows]
+        ax.plot(x, y, "-", color=c, lw=1.6)
+        for r, xi, yi in zip(rows, x, y, strict=True):
+            best = r["best"] == "True"
+            ax.plot(xi, yi, "o", color=c, ms=7 if best else 5.5, mec=SURFACE, mew=1.2)
+        ax.annotate(lbl, (x[-1], y[-1]), textcoords="offset points", xytext=(6, 0),
+                    fontsize=7.5, color=c, va="center")
+    ax.set_xscale("log")
+    ax.set_xlim(right=max(int(r["params"]) for r in D.cam) * 8)
+    ax.set_xlabel("model parameters (log scale), per-pixel network 16 × 2 to 256 × 3")
+    ax.set_ylabel("combined skill")
+    return save(fig, "cameras.png")
+
+
+SIZES_CAM = ("16x2", "32x2", "64x2", "64x3", "128x2", "256x2", "256x3")
+#: Sentinel-2 band sets of the U-Net ladders: (key, label)
+LADDER_SETS = (("mantis_std", "Mantis VNIR stand-in (B2 B3 B4 B7 B8A)"),
+               ("mantis_both", "stand-in + B11 (one SWIR band)"),
+               ("k5", "stable five-band set (B4 B5 B8A B11 B12)"),
+               ("k8", "eight-band set (tied with the best)"))
+
 #: label offsets (points) that keep the crowded top-right rungs readable
 OFFSET = {"16x1": (-8, 8), "16x2": (-14, -13), "16x3": (-6, 8), "32x1": (-20, 9),
           "32x2": (-14, -13), "32x3": (-24, 9)}
@@ -333,6 +374,14 @@ def fig_ladder(D: Data):
 
 
 # ---------------------------------------------------------------- report
+def _ladder_gain(D: Data) -> str:
+    for c in json.loads((RES / "p12_arch" / "summary.json").read_text(
+            encoding="utf-8"))["ladders"]["contrasts"]:
+        if c["band_set"] == "mantis_both" and c["comparison"] == "best rung vs best rung":
+            return f"{c['d']:+.3f} [{c['ci'][0]:+.3f}, {c['ci'][1]:+.3f}]"
+    return "(not run)"
+
+
 def build():
     D = Data()
     R = D.rows
@@ -525,6 +574,32 @@ def build():
         "of their gain to the search's own noise (Table 2 note), so they must be fixed in "
         "advance."))
 
+    story.append(P("3.2 Does a larger model change the ranking?", "h2"))
+    cc = D.cam_c
+    vs = [float(cc[(z, "VNIR - SWIR")]["d"]) for z in SIZES_CAM]
+    gain = [float(cc[(z, "VNIR+SWIR - VNIR")]["d"]) for z in SIZES_CAM]
+    big = cc[("256x3", "VNIR+SWIR - VNIR")]
+    big_ci = [float(v) for v in big["ci"].strip("[]").split(",")]
+    camb = {c: max((r for r in D.cam if r["camera"] == c), key=lambda r: float(r["skill"]))
+            for c, _, _ in CAMERAS}
+    story.append(P(
+        "The comparison above uses one model size. To check that the ranking is not a property of "
+        "that size, each camera's model was retrained at seven sizes, from 16 × 2 to 256 × 3 "
+        "(hidden units × layers, 500 to 137,000 parameters), on the same folds and seeds. "
+        f"VNIR beats SWIR alone at every size, by {min(vs):+.3f} to {max(vs):+.3f}; the larger "
+        "networks do not let the SWIR camera catch up. Adding SWIR to VNIR gains "
+        f"{min(gain):+.3f} to {max(gain):+.3f} at every size. At the largest size the gain is "
+        f"{float(big['d']):+.3f} [{big_ci[0]:+.3f}, {big_ci[1]:+.3f}], so its interval just "
+        "reaches zero there, while it clears zero at five of the seven sizes. Each camera's best "
+        "size is small: VNIR "
+        f"{camb['VNIR (standard block)']['size'].replace('x', ' × ')}, SWIR "
+        f"{camb['SWIR (L4 L6 L9 L11)']['size'].replace('x', ' × ')} and both together "
+        f"{camb['VNIR + SWIR']['size'].replace('x', ' × ')}, each within 0.007 of the 64 × 2 "
+        "size every band comparison used."))
+    story.append(figure(fig_cameras(D), "Combined skill of each Mantis camera's per-pixel model "
+                        "at seven sizes. Larger dot: that camera's best size. Paired by fold and "
+                        "seed (15 fits per point).", 3.1 * inch))
+
     # ---- 4. bands
     story.append(P("4. Where the bands sit", "h1"))
     k5, k8 = s2["consensus, k=5"], s2["consensus, k=8"]
@@ -614,9 +689,33 @@ def build():
         "timing "
         "margin and real-time capability at 5 W. The Q7 runs a model 0.005 below the best within "
         "the "
-        "budget at 2 W. Adding the SWIR chain widens the model's first layer only, so these "
-        "conclusions "
-        "hold for VNIR + SWIR, to be confirmed by retraining at those bands."))
+        "budget at 2 W."))
+    lad = {}
+    for r in D.ladders:
+        lad.setdefault(r["band_set"], {})[r["size"]] = r
+    rows = []
+    for key, lbl in LADDER_SETS:
+        L = lad.get(key)
+        if not L:
+            continue
+        b = next(r for r in L.values() if r["best"] == "True")
+        rows.append([lbl, b["size"].replace("x", " × "), f"{float(b['skill']):.3f}",
+                     f"−{abs(float(L['16x1']['gap_to_own_best'])):.3f}",
+                     f"−{abs(float(L['8x2']['gap_to_own_best'])):.3f}"])
+    story.append(P(
+        "The same twelve sizes were then trained at three more band sets: the stand-in with B11 "
+        "added (the one Sentinel-2 band inside the SWIR chain's range), and the two consensus "
+        "sets of section 4. Width 32 is the best size at every band set, and 16 × 1 stays within "
+        "0.009 of it, so the size decision does not depend on which bands are flown. Adding B11 "
+        "to the stand-in raises the best size's skill by "
+        f"{_ladder_gain(D):s}, so the SWIR chain's gain holds for the onboard U-Net as well as "
+        "for the per-pixel models of section 3."))
+    story.append(table(
+        ["Band set (Sentinel-2)", "Best size", "Skill", "16 × 1 below best", "8 × 2 below best"],
+        rows, [0.42, 0.12, 0.12, 0.17, 0.17],
+        caption="The onboard U-Net size ladder at four band sets (15 fits per size).",
+        note="Adding SWIR widens only the network's first layer, so the board times above change "
+             "little; the FINN and DPU builds at these exact inputs are still to be run."))
 
     # ---- 6. quality
     story.append(P("6. Expected product quality and its verification", "h1"))
@@ -677,14 +776,17 @@ def build():
         "the cost "
         "of the SWIR chain's power, mass and a possibly narrower swath. (c) SWIR only: not "
         "recommended "
-        f"on this evidence; {abs(g_vnir_vs_swir['d']):.3f} below VNIR alone.", "box"),
+        f"on this evidence; {abs(g_vnir_vs_swir['d']):.3f} below VNIR alone, and behind it at "
+        "every model size tried (section 3.2).", "box"),
         Spacer(1, 4),
         P("<b>Model and board.</b> (a) 32 × 1 on the Q8: best accuracy, real time, 5 W. "
           "(b) 16 × 1 on the Q7: 0.005 below the best, within budget, 2 W. "
           "(c) 8 × 2 on either: the reference size, 0.011 below the best.", "box")]))
     story += bullets([
-        "Retrain the size ladder on AVIRIS-NG at the true Mantis bands for VNIR, SWIR and both, "
-        "including the panchromatic band, to confirm sections 3 and 5 together.",
+        "Done since the first draft: the size ladder at the true Mantis bands for VNIR, SWIR and "
+        "both (section 3.2), and at four Sentinel-2 band sets (section 5). The rankings held.",
+        "Convert the chosen size at the chosen bands through FINN and the DPU (the board times "
+        "above used 22 inputs).",
         "Benchmark the chosen size on Q7 and Q8 engineering models: quantised accuracy, latency, "
         "power.",
         "Confirm with Dragonfly: per-band SNR, the SWIR chain's GSD, swath and TRL, and the "

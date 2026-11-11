@@ -459,6 +459,23 @@ def e56_map(out: Path):
               "factor of 30). Red = our reconstruction is above what CWFIS issued.", clip=1.5)
 
 
+def e17_map(out: Path):
+    W = R._Sweep(SLOTS_V2)
+    km = R.station_km()
+    pos = [{"stem": p, "lon": float(p.split("_")[0]), "lat": float(p.split("_")[1])}
+           for p in W.pat]
+    between = R._between_share(W, "r4") - R._between_share(W, "r2")
+    within = W.within("r4") - W.within("r2")
+    patch_map(pos, [(between, "R4 - R2: share of the between-patch AUC", "share"),
+                    (within, "R4 - R2: within-patch AUC (fire patches)", "AUC")], out,
+              "qual_E-17_patch_map.png",
+              "E-17  Where imagery adds to R2, against where the weather stations are thin",
+              f"Development patches of slots_v2, paired by fold and seed. Distance to the nearest "
+              f"CWFIS station rises northward (median {np.nanmedian(list(km.values())):.0f} km); "
+              "if imagery made up for sparse stations, red would gather in the north. "
+              "Reconstructed (ours).")
+
+
 def e63_map(out: Path):
     Y = R._Year2024(E63_B)
     lonlat = {r["stem"]: (float(r["lon"]), float(r["lat"]))
@@ -981,6 +998,7 @@ BUILD = {
     "E-18": lambda: e18_map(RESULTS / "P6/p6d_startup"),
     "E-56": lambda: (e56_map(RESULTS / "P6/p6b_cohort"), e56_tiles(RESULTS / "P6/p6b_cohort")),
     "E-63": lambda: e63_map(RESULTS / "P6/p6e_out_of_time"),
+    "E-17": lambda: e17_map(RESULTS / "P7/p7f_station_distance"),
     "P0-3": lambda: p0_inventory(RESULTS / "P0/p0_verify"),
     "P1-3": lambda: p1_slots(RESULTS / "P1/p1_physics"),
     "E-41": lambda: p8a_progression(RESULTS / "P8/p8a_spread"),
@@ -1094,6 +1112,7 @@ QUAL = [
     ("E-44", "P9/p9_ignition", "matched sets", ["qual_E-44_sets.png"]),
     ("E-45", "P9/p9b_ignition_rungs", "set map", ["qual_E-45_sets_map.png"]),
     ("E-20", "P7/p7d_weather_age", "tiles", ["qual_E-20_trained_stale.png"]),
+    ("E-17", "P7/p7f_station_distance", "patch map", ["qual_E-17_patch_map.png"]),
     ("E-46", "P12/p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
     ("P6f-C2", "P6/p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
     ("E-65", "P6/p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),

@@ -529,11 +529,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "of weather, so satellite fuel state should be worth most "
                    "where the weather grid is weakest -- the north, which is "
                    "also where most of the area burns.",
-        state="NEEDS_CODE",
-        runner="--",
-        blocker="station data now held (CWFIS fwi_obs: 2020s daily FWI with "
-                "coordinates, station list); stations.py and the stratified "
-                "readout are not written, and 2019 fires need the 2010s file",
+        state="CONCLUDED",
+        runner="Statistics scripts/make_results_package.py --phase P7f --run "
+               "narval_results/slots_v2/7289478 (station_km from the development pack)",
+        blocker="",
         gap="G3 station density",
         note="Measured 2026-10-23: fire patches sit a median 37 km from the "
              "nearest reporting CWFIS station (IQR 23-63, max 191); terciles at "
@@ -541,7 +540,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "export, so true density is higher than this says. P3 (E-52): ERA5 "
              "vs station disagreement does not grow with distance (rho about "
              "0), so the premise is AT RISK before the imagery increment is "
-             "measured.",
+             "measured. 2026-11-10 (docs/results/P7/p7f_station_distance), on "
+             "slots_v2 with the pack's station_km (all 193 development patches, 2019 "
+             "included): REFUTED. R4 - R2 between-patch share against distance rho "
+             "+0.04 [-0.10, +0.17]; by tercile (< 32 / 32-58 / > 58 km) -0.001, "
+             "+0.004, +0.000. The PC + FMC + CBH slot arm rho -0.03 [-0.16, +0.09]. "
+             "Within patches flat as well. The verdict rule moved from the "
+             "within-patch to the between-patch difference after the first readout "
+             "(weather cannot act within a patch); neither shows growth.",
     ),
     Experiment(
         "E-18", "Snow-off startup", "CFFDRS gaps",
@@ -625,14 +631,20 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "recommendation -- BUI best, FWI worst. Drift in a "
                    "feature is not loss in a prediction, and this measures "
                    "the half nobody has.",
-        state="PARTIAL",
-        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 "
-               "SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags "
-               "bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)",
-        resources="as the slot sweeps: 35 fits in 2 tasks of 18, --time=2:30:00 "
-                  "--gpus=a100:1 --cpus-per-task=12 --mem=32G; each trained fit is scored "
-                  "four more times (about +1 min)",
-        blocker="the per-code ordering half needs per-code weather arms (not built)",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v2 CONFIGS=r0_scanfi,r2 "
+               "SCORE_LAGS=1,2,3,7 SCORE_LAG_INPUTS=ffmc,dmc,dc,isi,bui,fwi,wx "
+               "FITS_PER_TASK=8 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags "
+               "bash scripts/shell/sweep_slots.sh (per-input half; run_slots "
+               "--score-lag-inputs). First half: Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 "
+               "CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7 "
+               "SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash "
+               "scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)",
+        resources="as the slot sweeps: --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 "
+                  "--mem=32G. lags_v1: 35 fits in 2 tasks of 18, each fit scored four more "
+                  "times (about +1 min). lags_v2: 16 fits in 2 tasks of 8; each fit is also "
+                  "scored 21 more times (7 inputs x 3 ages, about +5 min)",
+        blocker="",
         gap="G7 CFFDRS assumes same-day observations",
         note="Train once, score at each lag: one model, five scores. The "
              "leakage guard makes an earlier target date strictly safer. P3 "
@@ -652,7 +664,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "at 3 and -0.051 [-0.091, -0.011] at 7; R0 HFI -0.044, -0.093, -0.061. Within "
              "patches flat (<= 0.007). r2_age7 is worse than r2 at every age (within "
              "-0.018 to -0.022, 5/5 folds). PARTIAL: decay is not flat; the per-code "
-             "ordering half was not run.",
+             "ordering half was not run. 2026-11-10, registered before the run: the "
+             "per-input half (lags_v2) trains r2 once per fold and seed and scores it "
+             "with ONE input 2, 3 and 7 days old (each of the six codes, and wind + "
+             "direction + humidity as 'wx'), every other at D-1. Prediction, from "
+             "fwi.py's input drift (DC 8.2 % over three days against ISI 89.9 %): at "
+             "3 and 7 days, ageing FFMC or ISI costs more between-patch AUC than "
+             "ageing DC or BUI. WRONG IF DC or BUI ageing costs as much as FFMC or "
+             "ISI (the paired CI on the difference reaches 0).",
     ),
     Experiment(
         "E-21", "Fuel-layer refresh", "CFFDRS gaps",
@@ -986,8 +1005,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "and how much a post-fire inventory would flatter a result.",
         state="PARTIAL",
         runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the SCANFI v1 2020 adapter is not written (the v1 rasters are "
-                "not held); every SCANFI v2 step is scored",
+        blocker="SCANFI v1.2 2020 sidecars being fetched (Fire_Risk_Model "
+                "fetch_scanfi_v1.py, adapter scanfi_v1.py, A-54); then rerun "
+                "eval_cffdrs_reference.py, which scores scanfi_v1_tree_2020",
         gap="G2 fuel-type layer is a fixed vintage",
         note="P2 (docs/results/P2/p2_r0): REFUTED on both counts. Pre-fire "
              "inventories are not equal: SCANFI through the CFS tree beats "
@@ -1036,8 +1056,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Whether the imager should refresh FBP fuel type.",
         state="RUNNABLE",
         runner="Fire_Risk_FW RUN_ID=20261102-1959 SUBMIT=1 bash "
-               "scripts/shell/sweep_eco_fire.sh (FW 15a705b); read "
-               "~/scratch/eco_fire_v1/agreement.json; then SUBMIT=1 EXP_NAME=slots_e35 "
+               "scripts/shell/sweep_eco_fire.sh (FW 15a705b; done 2026-11-10); then "
+               "SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 "
                "ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=r2,r3_fuel_replace,"
                "r3_fuel_replace_shuffled,r3_fuel_pc_replace,r3_fuel_pc_replace_shuffled,"
                "r3_pc_replace,r3_pc_replace_shuffled bash scripts/shell/sweep_slots.sh",
@@ -1050,7 +1070,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "CWFIS 2019 under R2); the imagery replace form waits for E-22. "
              "P7: CWFIS 2019 vs SCANFI fuel under R2 -0.007 [-0.017, +0.003] "
              "within (under R0 -0.048): learning absorbs most of the inventory "
-             "gap.",
+             "gap. 2026-11-10: eco_fire ran; slots_e35/20261110-1901 came back with "
+             "48 of 105 fits (R2 15/15, each replace config 3-9/15). Tasks 1-5 hit "
+             "the 2:30 limit: the sidecars were auto-chunked across tiles, so a "
+             "replace fit took 21 min instead of 3 (FW fix: one chunk per tile, "
+             "re-chunked while staging). Resubmit with RUN_ID=20261110-1901 "
+             "SKIP_DONE=1.",
     ),
     Experiment(
         "E-36", "Percent-conifer slot", "CFFDRS mirror",
@@ -1085,11 +1110,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired delta in the intensity branch",
         conclusion="Whether stand height from orbit belongs in FBP's crown "
                    "fire initiation.",
-        state="PARTIAL",
-        blocker="the registered replace form (CBH from the imagery height head) needs an "
-                "r3_cbh_replace config on the eco_fire sidecars",
-        runner="Fire_Risk_FW/scripts/shell/sweep_slots.sh "
-               "CONFIGS=r3_cbh,r3_cbh_shuffled",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 "
+               "ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=...,r3_cbh_replace,"
+               "r3_cbh_replace_shuffled bash scripts/shell/sweep_slots.sh (correct form: "
+               "CONFIGS=r3_cbh,r3_cbh_shuffled)",
         resources="--time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per "
                   "task of 18 fits (slots_v3 measured: tasks 10 min median, 17 max; "
                   "GPU 25 %, 1.5 GB peak; A-35)",
@@ -1097,7 +1123,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "tanh(head))); the height-derived replace form waits for P6. P7: "
              "AT RISK. Correct form -0.0005 [-0.003, +0.002], equal to its "
              "twin; CFB > 0 on 47 % of burnable pixels, so the falsifier did "
-             "not fire. Height-derived form waits for P6.",
+             "not fire. Height-derived form waits for P6. 2026-11-10: the replace "
+             "form is built (A-53, PLACEHOLDER ratio: CBH = ST-X-3 default x "
+             "eco height / the fuel's median SCANFI height, bounded 0.25-4) and "
+             "rides with E-35's slots_e35 resubmission on the same sidecars.",
     ),
     Experiment(
         "E-38", "Curing slot", "CFFDRS mirror",

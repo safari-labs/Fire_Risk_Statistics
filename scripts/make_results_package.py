@@ -58,6 +58,7 @@ VARIANTS = [
     ("scanfi_tree_2010", "SCANFI v2 2010", "pre"),
     ("scanfi_tree_2015", "SCANFI v2 2015", "pre"),
     ("scanfi_tree_2020", "SCANFI v2 2020", "mixed"),
+    ("scanfi_v1_tree_2020", "SCANFI v1.2 2020 (A-54)", "mixed"),
     ("scanfi_tree_2025", "SCANFI v2 2025", "post"),
     ("cwfis_2024", "CWFIS 2024 (30 m)", "post"),
 ]
@@ -405,6 +406,8 @@ PAIRS = [("scanfi_tree_prefire", "cwfis_2019", "SCANFI (CFS tree) vs operational
           "CFS tree vs A-11 judgement rules, same SCANFI step"),
          ("cwfis_2019", "cwfis_2014b", "CWFIS 2019 vs 2014b"),
          ("scanfi_tree_prefire", "scanfi_tree_2025", "pre-fire vs post-fire SCANFI (leak size)"),
+         ("scanfi_tree_2020", "scanfi_v1_tree_2020",
+          "SCANFI v2 vs v1.2, both 2020: the version alone (E-33)"),
          ("cwfis_2019", "cwfis_2024", "pre-fire vs post-fire CWFIS (leak size)")]
 
 
@@ -5729,6 +5732,190 @@ def p7d(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── P7f: station-distance stratification (E-17, G3) ────────────────────────
+#: The development pack. Only train.h5 and val.h5 are read: test.h5 is frozen.
+DEV_PACK = _ROOT.parent / "Fire_Risk_Model" / "data" / "stage2_fire_cffdrs_v2"
+#: (imagery arm, its shuffled twin, label). Each is paired with r2 on the same fold and seed.
+E17_ARMS = (("r4", "r4_shuffled", "Free imagery branch (R4)"),
+            ("r3_pc_fmc_cbh", "r3_pc_fmc_cbh_shuffled", "PC + FMC + CBH slots from imagery"))
+
+
+def station_km(pack: Path = DEV_PACK) -> dict[str, float]:
+    """Distance (km) from each development patch to the nearest reporting CWFIS
+    station, as packed (scalar column station_km; P3, E-52)."""
+    import h5py
+    out: dict[str, list[float]] = {}
+    for split in ("train.h5", "val.h5"):
+        with h5py.File(pack / split, "r") as f:
+            names = [n.decode() if isinstance(n, bytes) else str(n)
+                     for n in f.attrs["scalar_names"]]
+            km = f["scalars"][:, names.index("station_km")]
+            for stem, v in zip(f["stems"][:], km, strict=True):
+                stem = stem.decode() if isinstance(stem, bytes) else str(stem)
+                out.setdefault(stem.split("_tile_")[0], []).append(float(v))
+    return {k: (float(np.nanmean(v)) if np.isfinite(v).any() else float("nan"))
+            for k, v in out.items()}
+
+
+def _between_share(W, c) -> np.ndarray:
+    """Each patch's share of the between-patch AUC, within its fold: a fire
+    patch's share of the fold's non-fire patches scored below it, a non-fire
+    patch's share of the fold's fire patches scored above it (ties count 1/2).
+    The fold's AUC is the mean of either set, so it pairs patch by patch."""
+    s, fold, fire = W._score(c)
+    out = np.full(len(s), np.nan)
+    for f in range(5):
+        m = (fold == f) & np.isfinite(s)
+        pos, neg = np.where(m & fire)[0], np.where(m & ~fire)[0]
+        if not len(pos) or not len(neg):
+            continue
+        cmp = (s[pos][:, None] > s[neg][None, :]) + 0.5 * (s[pos][:, None] == s[neg][None, :])
+        out[pos], out[neg] = cmp.mean(axis=1), cmp.mean(axis=0)
+    return out
+
+
+def _e17_verdict(rho, ci) -> str:
+    """The increment must grow with distance: rho's CI above 0. Fixed before the
+    first readout (2026-11-10) but first applied to the within-patch difference;
+    moved to the between-patch share after that readout, because weather is one
+    value per patch and cannot change a within-patch ranking (see the README)."""
+    return "SUPPORTED" if ci[0] > 0 else "REFUTED"
+
+
+def p7f_rows(W, km, arms=E17_ARMS, base="r2") -> dict:
+    d_km = np.array([km.get(p, np.nan) for p in W.pat])
+    _, _, fire = W._score(base)
+    cuts = list(np.nanpercentile(d_km[fire], [100 / 3, 200 / 3]))
+    terc = np.digitize(d_km, cuts)
+    terc[~np.isfinite(d_km)] = -1
+    out = {"cuts_km": cuts, "n_fire": int((fire & np.isfinite(d_km)).sum()),
+           "n_patches": int(np.isfinite(d_km).sum()), "d_km": d_km.tolist(), "arms": []}
+    sb0 = _between_share(W, base)
+
+    def corr(d):
+        ok = np.isfinite(d) & np.isfinite(d_km)
+        reps = [_spearman(d[i][ok[i]], d_km[i][ok[i]]) for i in W.boots if ok[i].sum() > 5]
+        return _spearman(d[ok], d_km[ok]), list(np.nanpercentile(reps, [2.5, 97.5])), ok
+
+    def tmean(d, ok, t):
+        m = (terc == t) & ok
+        ci = np.nanpercentile([np.nanmean(d[i][(terc[i] == t) & ok[i]]) for i in W.boots],
+                              [2.5, 97.5])
+        return float(np.nanmean(d[m])), list(ci), int(m.sum())
+
+    for arm, twin, lab in arms:
+        for c, role in ((arm, "arm"), (twin, "twin")):
+            if c not in W.patch:
+                continue
+            dw = W.within(c) - W.within(base)
+            db = _between_share(W, c) - sb0
+            rho_w, ci_w, ok_w = corr(dw)
+            rho_b, ci_b, ok_b = corr(db)
+            rows = []
+            for t in range(3):
+                w, wci, nw = tmean(dw, ok_w, t)
+                b, bci, nb = tmean(db, ok_b, t)
+                rows.append({"tercile": t, "n_fire": nw, "n_patches": nb,
+                             "d_within": w, "d_within_ci": wci,
+                             "d_between": b, "d_between_ci": bci})
+            out["arms"].append({"config": c, "role": role, "label": lab,
+                                "rho": rho_b, "rho_ci": ci_b,
+                                "verdict": _e17_verdict(rho_b, ci_b),
+                                "rho_within": rho_w, "rho_within_ci": ci_w,
+                                "d": db.tolist(), "terciles": rows,
+                                "n_fits": len(W.fits[c])})
+    return out
+
+
+def p7f_figure(R, out):
+    plt = _plt()
+    d_km = np.array(R["d_km"])
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3.9), facecolor=FIG_BG,
+                             gridspec_kw={"width_ratios": [1.3, 1, 1]})
+    a0 = next(a for a in R["arms"] if a["config"] == "r4")
+    t0 = next((a for a in R["arms"] if a["config"] == "r4_shuffled"), None)
+    ax = axes[0]
+    _axes(ax, "R4 - R2 per patch, between patches",
+          "distance to the nearest CWFIS station (km)", "difference in between-patch share")
+    for a, col, lab in ((t0, ORANGE, "shuffled twin"), (a0, BLUE, "R4")):
+        if a:
+            ax.plot(d_km, a["d"], "o", color=col, ms=4, alpha=0.75,
+                    label=f"{lab}: rho {a['rho']:+.2f} {_ci(a['rho_ci'])}")
+    for c in R["cuts_km"]:
+        ax.axvline(c, color=SPINE, lw=0.8, ls="--")
+    ax.axhline(0, color=INK, lw=0.8)
+    ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    c0, c1 = R["cuts_km"]
+    ticks = [f"near\n< {c0:.0f} km", f"middle\n{c0:.0f}-{c1:.0f} km", f"far\n> {c1:.0f} km"]
+    for ax, key, title in ((axes[1], "d_between", "Between patches, by tercile"),
+                           (axes[2], "d_within", "Within patches, by tercile (control)")):
+        _axes(ax, title, "station-distance tercile", "difference against R2")
+        for j, (a, col) in enumerate(((a0, BLUE), (t0, ORANGE))):
+            if not a:
+                continue
+            x = np.arange(3) + (j - 0.5) * 0.25
+            v = np.array([r[key] for r in a["terciles"]])
+            ci = np.array([r[f"{key}_ci"] for r in a["terciles"]])
+            ax.errorbar(x, v, yerr=[v - ci[:, 0], ci[:, 1] - v], fmt="o", color=col, ms=6,
+                        capsize=3, label="R4" if j == 0 else "shuffled twin")
+        ax.axhline(0, color=INK, lw=0.8)
+        ax.set_xticks(range(3), ticks, color=INK, fontsize=8)
+        ax.legend(fontsize=7.5, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    fig.tight_layout()
+    _caption(fig, f"E-17, {R['n_patches']} development patches ({R['n_fire']} fires); R4 and its "
+             "twin paired with R2 by fold and seed. Between: each patch's share of its fold's "
+             "between-patch AUC. Tercile cuts from the fire patches' distances. 95 % CI by group "
+             "bootstrap over the freeze's location groups. Reconstructed (ours). CWFIS stations "
+             "only: provincial networks are not in the export.", y=-0.04)
+    _save(fig, out, "station_distance.png")
+
+
+def p7f(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    R = p7f_rows(W, station_km())
+    p7f_figure(R, out)
+    c0, c1 = R["cuts_km"]
+    L = ["# P7f tables: station-distance stratification (E-17)\n",
+         f"Run: `{_rel(run)}`. Station distance from the development pack (`station_km`). "
+         f"Terciles over {R['n_fire']} fire patches: < {c0:.0f} km, {c0:.0f}-{c1:.0f} km, "
+         f"> {c1:.0f} km. All values are Reconstructed (ours).\n",
+         "Between: each patch's share of its fold's between-patch AUC (a fire patch: the share "
+         "of the fold's non-fire patches scored below it; a non-fire patch: the share of fire "
+         "patches scored above it), arm minus R2. Within: within-patch AUC, arm minus R2 (fire "
+         "patches only).\n",
+         "Verdict: SUPPORTED if rho (between-patch difference against distance) has its 95 % "
+         "CI above 0, otherwise REFUTED (the phase sheets' vocabulary).\n",
+         "| arm | fits | rho, between [95 % CI] | verdict | rho, within | near: between | "
+         "middle: between | far: between | near: within | middle: within | far: within |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for a in R["arms"]:
+        t = a["terciles"]
+        name = a["label"] if a["role"] == "arm" else f"its twin ({a['config']})"
+        L.append(f"| {name} | {a['n_fits']} | {a['rho']:+.2f} {_ci(a['rho_ci'])} | "
+                 f"{a['verdict'] if a['role'] == 'arm' else '-'} | "
+                 f"{a['rho_within']:+.2f} {_ci(a['rho_within_ci'])} | "
+                 + " | ".join(f"{r['d_between']:+.3f} {_ci(r['d_between_ci'], 3)}" for r in t)
+                 + " | "
+                 + " | ".join(f"{r['d_within']:+.3f} {_ci(r['d_within_ci'], 3)}" for r in t)
+                 + " |")
+    L += ["", "Patches per tercile (all / fire): " + ", ".join(
+        f"{r['n_patches']} / {r['n_fire']}" for r in R["arms"][0]["terciles"]) + "."]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_station_terciles.csv",
+         [{"config": a["config"], "role": a["role"], "tercile": r["tercile"],
+           "n_patches": r["n_patches"], "n_fire": r["n_fire"],
+           "d_between": r["d_between"], "d_between_lo": r["d_between_ci"][0],
+           "d_between_hi": r["d_between_ci"][1], "d_within": r["d_within"],
+           "d_within_lo": r["d_within_ci"][0], "d_within_hi": r["d_within_ci"][1]}
+          for a in R["arms"] for r in a["terciles"]])
+    slim = {k: v for k, v in R.items() if k != "d_km"}
+    slim["arms"] = [{k: v for k, v in a.items() if k != "d"} for a in R["arms"]]
+    (out / "summary.json").write_text(json.dumps(slim, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run)),
+                                              "pack": str(_rel(DEV_PACK))}, indent=1))
+
+
 # ── P9b: ignition learned rungs (E-45, A-48) ────────────────────────────────
 # Each matched set (a start and up to five controls sharing its weather) is
 # held out in one fold. Matched-set AUC = the share of (start, control) pairs
@@ -5910,7 +6097,7 @@ PHASES = {"P2": (p2, "P2/p2_r0"), "P3": (p3, "P3/p3_dated"), "P4": (p4, "P4/p4_p
           "P7b": (p7b, "P7/p7b_operational"), "P7c": (p7c, "P7/p7c_slots_v3"),
           "P7e": (p7e, "P7/p7e_fuel_slot"), "P8a": (p8a, "P8/p8a_spread"),
           "P9": (p9, "P9/p9_ignition"), "P6f": (p6f, "P6/p6f_lfmc"),
-          "P7d": (p7d, "P7/p7d_weather_age"), "P9b": (p9b, "P9/p9b_ignition_rungs"),
+          "P7d": (p7d, "P7/p7d_weather_age"), "P7f": (p7f, "P7/p7f_station_distance"), "P9b": (p9b, "P9/p9b_ignition_rungs"),
           "P6f2": (p6f, "P6/p6f_lfmc_v2")}
 
 

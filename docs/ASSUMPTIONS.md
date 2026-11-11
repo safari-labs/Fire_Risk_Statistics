@@ -1622,3 +1622,49 @@ SCANFI cannot feed the tree everything it expects. The deviations:
   - The grid `config/grids/p12_sensors.yaml` takes references from the vendor catalogue and records the exception.
   - The SWIR arms search DFA's 10 usable filters: L5 fails rule 7, and L12 (1658-1745 nm) runs past standard InGaAs's 1700 nm (A-19).
   - The HS rows use 81 surface channels at 5 nm, 475-895 nm, with the O2-A channels dropped (A-18).
+
+## A-53: E-37's replace form, crown base height from the imagery height estimate (2026-11-10)
+
+**PLACEHOLDER.** No measured height-to-CBH ratio is held (the reason A-45's note left this form unbuilt). The rule makes the imagery move CBH only through stand height, and leaves FBP's default where the estimate agrees with the inventory's typical stand:
+
+- **Rule:** CBH = CBH_default(fuel) × h_eco / h_ref(fuel), the ratio bounded to [0.25, 4]. `h_eco` is the ecology estimator's height (eco_fire sidecars, E-35). It is implemented in `Fire_Risk_FW/src/fire_risk_fw/fbp_torch.py` (`cbh_from_height`).
+- **h_ref** is the median SCANFI v2 height of that fuel's pixels in the development pack (`stage2_fire_cffdrs_v2/train.h5`, computed 2026-11-10). SCANFI is the inventory, not a label, and the frozen test is not read.
+
+  | Fuel | C-1 | C-2 | C-3 | C-4 | C-5 | C-7 | M-1 | M-2 |
+  |---|---|---|---|---|---|---|---|---|
+  | h_ref (m) | 6 | 9 | 12 | 7 | 18 | 7 | 10 | 9 |
+  | ST-X-3 CBH (m) | 2 | 3 | 8 | 4 | 18 | 10 | 6 | 6 |
+
+  C-5 rests on 654 pixels.
+- **Fuels kept at the default** whatever the height:
+  - C-6 and M-3/M-4, which have no pixels in the pack;
+  - fuels with no crown term.
+- **Why bounded:** a zero or noisy height would otherwise set CBH to 0, which makes every fire a crown fire. The bounds are placeholders too.
+- **The residual** sees the estimated height in place of SCANFI's, as for the other replaced slots.
+- **Configs:** `r3_cbh_replace` and `r3_cbh_replace_shuffled`. The shuffled twin permutes the sidecars across the batch (run_slots).
+- **What would replace it:** a measured CBH/height relationship for Canadian fuel types, for example from the ABoVE lidar or a provincial inventory.
+
+## A-54: SCANFI v1.2 (2020) in the v2 sidecar layout, for E-33's version effect (2026-11-10)
+
+**v1.2 is hosted beside v2** at `ftp.maps.canada.ca/pub/nrcan_rncan/Forests_Foret/SCANFI/v1/`, on the same grid (NAD83 Canada Lambert, 30 m, 256-pixel tiles, 255 nodata). It is streamed per patch by `/vsicurl/` like v2, and nothing is downloaded whole. The adapter is `Fire_Risk_Model/src/data/scanfi_v1.py`, the fetch is `scripts/python/fetch_scanfi_v1.py`, and the output is `*_scanfi_v1_2020.npy` (never the legacy or a v2 file).
+
+| What | v1.2 | Mapped to the v2 layout as |
+|---|---|---|
+| Species | each species' **share of crown cover** (%) | share × closure, the v2 spsCC quantity. The CFS tree reads only shares of the species total, so this is exact for the tree; percent conifer (spsCC ÷ closure) recovers the v1 share |
+| Broadleaf | one layer, `prcB` | the Poplar channel (v2's `broadleaf`) |
+| Other conifers | Douglas-fir, lodgepole, ponderosa, `prcC_other` | summed into OtherCon, like v2's four rare-conifer layers |
+| Age (TSD) | **none** | channel 1 = 0. Neither the tree nor the R0 evaluator reads it |
+| Land cover, closure, height, biomass | same classes and units | the v2 normalisation |
+
+The evaluator scores the variant `scanfi_v1_tree_2020` wherever the sidecar exists.
+
+**Smoke check (2 patches at one site):** fuel codes agree with v2 2020 on 36 % of pixels, and mean closure is 0.43 in v1 against 0.50 in v2. A large version effect is plausible; E-33 measures it.
+
+**Also found (2026-11-10): SCANFI v3, released 2026-05-28, sits in `.../SCANFI/v3/`.**
+- It is **annual, 1985–2025** (41 years).
+- It carries land cover plus fractional cover:
+  - treed coniferous and treed broadleaf;
+  - non-treed burn scars, herbaceous, lichen, low shrubs, tall shrubs, rock, soil and water.
+- It has **no species, closure or height**, so it cannot feed the CFS tree alone.
+- It could give every fire a fire-year-minus-one conifer/broadleaf/lichen map. That bears on E-21 (staleness), the C-1 lichen background and the fuel/non-fuel split (A-31).
+- Not used yet (Q41).

@@ -44,10 +44,11 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P6f2](P6/p6f_lfmc_v2/README.md) | 2026-11-06 | LFMC with priors narrowed inside each fold (lfmc_v2) | 1 MIXED |
 | [P12c](P12/p12_arch/README.md) | 2026-11-09 | The onboard model's size (E-47, arch_mantis_std) | 1 REFUTED |
 | [P12d](P12/p12_vnir_swir/README.md) | 2026-11-10 | VNIR against SWIR: the Mantis cameras' models at every size (hs_arch) | 1 MIXED |
+| [P7f](P7/p7f_station_distance/README.md) | 2026-11-10 | Station-distance stratification (slots_v2) | 1 REFUTED |
 
 ## Experiments
 
-42 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+43 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -67,10 +68,10 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-14 Fusion architecture | Runnable now | - | - | - |
 | E-15 Imagery vs the FBP formula | Runnable now | - | - | - |
 | E-16 FMC arms | No label exists | - | - | - |
-| E-17 Station-density stratification | Needs code | - | - | - |
+| E-17 Station-density stratification | Concluded | P7f REFUTED | [P7/p7f_station_distance](P7/p7f_station_distance/) | [patch_map](P7/p7f_station_distance/qual_E-17_patch_map.png) |
 | E-18 Snow-off startup | Concluded | P6d REFUTED | [P6/p6d_startup](P6/p6d_startup/) | [patch_map](P6/p6d_startup/qual_E-18_patch_map.png) |
 | E-19 Latitude-banded weather | Runnable now | - | - | - |
-| E-20 Weather staleness | Partial result | P7 PARTIAL, P7d PARTIAL | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
+| E-20 Weather staleness | Runnable now | P7 PARTIAL, P7d PARTIAL | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
 | E-21 Fuel-layer refresh | Partial result | P2 AT RISK, P3 AT RISK | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [inventory_age](P3/p3_dated/qual_E-21_inventory_age.png) |
 | E-22 Ecology arm | Concluded | P6a SUPPORTED, P6a-v3 SUPPORTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
 | E-23 SWIR band placement | Needs new data | - | - | - |
@@ -87,7 +88,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-34 Learned CFFDRS (R1/R2) | Concluded | P5 PENDING, P7 MIXED | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | - |
 | E-35 Fuel-type slot | Runnable now | - | - | - |
 | E-36 Percent-conifer slot | Partial result | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [pc](P7/p7_slots/qual_E-36_pc.png) |
-| E-37 Crown-base-height slot | Partial result | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [cbh](P7/p7_slots/qual_E-37_cbh.png) |
+| E-37 Crown-base-height slot | Runnable now | P5 PENDING, P7 AT RISK | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/) | [cbh](P7/p7_slots/qual_E-37_cbh.png) |
 | E-38 Curing slot | Partial result | P5 PENDING, P7 PENDING, P7c PARTIAL | [P5/p5_slotnet](P5/p5_slotnet/), [P7/p7_slots](P7/p7_slots/), [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [curing](P7/p7c_slots_v3/qual_E-38_curing.png) |
 | E-39 Canopy closure to in-stand moisture | Needs code | - | - | - |
 | E-40 Green-up slot | Needs code | - | - | - |
