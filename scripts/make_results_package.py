@@ -5732,6 +5732,111 @@ def p7d(run: Path, out: Path):
     (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
 
 
+# ── P7g: weather age, one input at a time (E-20 per-input half) ─────────────
+# run_slots.py --score-lag-inputs: each trained fit scored with ONE input k days
+# old (a code, or "wx" = wind + direction + RH) and every other at D-1. Deltas
+# pair within a fit (input at lag k minus all at lag 1), bootstrap over folds.
+LAG_INPUTS = (("ffmc", "FFMC"), ("isi", "ISI"), ("dmc", "DMC"), ("dc", "DC"), ("bui", "BUI"),
+              ("fwi", "FWI"), ("wx", "wind + RH"))
+FAST, SLOW = ("ffmc", "isi"), ("dc", "bui")
+
+
+def _lag_input_scores(run: Path, c: str) -> dict:
+    """{input: {lag: {(fold, seed): score}}}, plus {"all1": {...}} at lag 1."""
+    out: dict = {"all1": {}}
+    for f in sorted((run / c).glob("f*s*/result.json")):
+        r = json.loads(f.read_text(encoding="utf-8"))
+        key = (r["fold"], r["seed"])
+        base = (r.get("lag_scores") or {}).get("1") or {}
+        sc = base.get("score") or base.get(R0_LAG_OUTPUT)
+        if sc:
+            out["all1"][key] = sc
+        for inp, d in (r.get("lag_input_scores") or {}).items():
+            for lag, v in d.items():
+                s = (v or {}).get("score") or (v or {}).get(R0_LAG_OUTPUT)
+                if s:
+                    out.setdefault(inp, {}).setdefault(lag, {})[key] = s
+    return out
+
+
+def p7g_rows(run: Path):
+    rows, contrasts = [], []
+    for c, lab in (("r2", "R2, trained on D-1 weather"), ("r0_scanfi", "R0 HFI, physics only")):
+        S = _lag_input_scores(run, c)
+        for key, mlab in LAG_METRICS:
+            base = {t: s[key] for t, s in S["all1"].items()}
+            per = {}
+            for inp, _ in LAG_INPUTS:
+                for lag in ("2", "3", "7"):
+                    cur = {t: s[key] for t, s in S.get(inp, {}).get(lag, {}).items()}
+                    d = {t: cur[t] - base[t] for t in set(cur) & set(base)}
+                    per[(inp, lag)] = d
+                    rows.append({"config": c, "label": lab, "metric": mlab, "input": inp,
+                                 "lag": int(lag), **_lag_stat(d)})
+            for lag in ("3", "7"):
+                keys = set.intersection(*(set(per[(i, lag)]) for i in FAST + SLOW))
+                d = {t: np.mean([per[(i, lag)][t] for i in FAST])
+                     - np.mean([per[(i, lag)][t] for i in SLOW]) for t in keys}
+                contrasts.append({"config": c, "label": lab, "metric": mlab, "lag": int(lag),
+                                  "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+                                  **_lag_stat(d)})
+    return rows, contrasts
+
+
+def p7g(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    rows, contrasts = p7g_rows(run)
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.3), facecolor=FIG_BG, sharey=False)
+    names = [lab for _, lab in LAG_INPUTS]
+    for ax, (_k, mlab) in zip(axes, LAG_METRICS, strict=True):
+        _axes(ax, f"R2, AUC {mlab}: one input aged, the rest at D-1",
+              "input aged", "change in AUC against all at D-1")
+        for j, (lag, col) in enumerate((("3", AMBER), ("7", ORANGE))):
+            rr = [next(r for r in rows if r["config"] == "r2" and r["metric"] == mlab
+                       and r["input"] == i and r["lag"] == int(lag)) for i, _ in LAG_INPUTS]
+            x = np.arange(len(rr)) + (j - 0.5) * 0.3
+            m = np.array([r["mean"] for r in rr])
+            ax.errorbar(x, m, yerr=[m - np.array([r["ci"][0] for r in rr]),
+                                    np.array([r["ci"][1] for r in rr]) - m],
+                        fmt="o", color=col, ms=6, capsize=3, label=f"{lag} days old")
+        ax.axhline(0, color=INK, lw=0.8)
+        ax.set_xticks(range(len(names)), names, color=INK, fontsize=8)
+        ax.legend(fontsize=8, facecolor=AX_BG, edgecolor=SPINE, labelcolor=INK)
+    fig.tight_layout()
+    _caption(fig, "E-20 per-input half. Each fit is trained once on D-1 weather and scored with "
+             "one input 3 or 7 days old, the others at D-1. Paired within each fit; 95 % CI by "
+             "bootstrap over the 5 outer folds (seeds averaged within a fold). Development "
+             "patches only. Reconstructed (ours).", y=-0.03)
+    _save(fig, out, "weather_inputs.png")
+
+    def row(r, name):
+        return (f"| {r['label']} | {r['metric']} | {name} | {r['lag']} | {r['mean']:+.4f} "
+                f"[{r['ci'][0]:+.4f}, {r['ci'][1]:+.4f}] | {r['folds_below']}/{r['n_folds']} "
+                f"| {r['n']} |")
+    lab = dict(LAG_INPUTS)
+    L = ["# P7g tables: weather age, one input at a time (E-20)\n",
+         f"Run: `{_rel(run)}`. Reconstructed (ours).\n",
+         "## The registered contrast: fast codes against slow codes\n",
+         "| configuration | metric | contrast | lag | difference [95 % CI] | folds below 0 "
+         "| fits |",
+         "|---|---|---|---|---|---|---|"]
+    L += [row(r, r["contrast"]) for r in contrasts]
+    L += ["", "## Each input aged alone, minus all inputs at D-1\n",
+          "| configuration | metric | input | lag | change [95 % CI] | folds below 0 | fits |",
+          "|---|---|---|---|---|---|---|"]
+    L += [row(r, lab[r["input"]]) for r in rows]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_inputs.csv", rows)
+    _csv(out / "T_fast_slow.csv", contrasts)
+    (out / "summary.json").write_text(json.dumps({"inputs": rows, "fast_slow": contrasts},
+                                                 indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+    for r in contrasts:
+        print(f"{r['config']} {r['metric']} lag {r['lag']}: {r['mean']:+.4f} "
+              f"[{r['ci'][0]:+.4f}, {r['ci'][1]:+.4f}]")
+
+
 # ── P7f: station-distance stratification (E-17, G3) ────────────────────────
 #: The development pack. Only train.h5 and val.h5 are read: test.h5 is frozen.
 DEV_PACK = _ROOT.parent / "Fire_Risk_Model" / "data" / "stage2_fire_cffdrs_v2"
@@ -5916,6 +6021,72 @@ def p7f(run: Path, out: Path):
                                               "pack": str(_rel(DEV_PACK))}, indent=1))
 
 
+# ── P7h: latitude-correct day length under R2 (E-19, A-56) ──────────────────
+LAT_BANDS = (("0-55 N", 0, 55), ("55-60 N", 55, 60), ("60-90 N", 60, 90))
+
+
+def p7h_rows(W, a="r2_daylat", b="r2") -> dict:
+    lat = np.array([float(p.split("_")[1]) for p in W.pat])
+    band = np.select([lat < 55, lat < 60], [0, 1], 2)
+    out = {"overall": W.paired(a, b), "bands": [], "interaction": {}}
+    for key, d in (("between", _between_share(W, a) - _between_share(W, b)),
+                   ("within", W.within(a) - W.within(b))):
+        ok = np.isfinite(d)
+        for j, (lab, _, _) in enumerate(LAT_BANDS):
+            reps = [np.nanmean(d[i][(band[i] == j) & ok[i]]) for i in W.boots]
+            out["bands"].append({"metric": key, "band": lab, "n": int((ok & (band == j)).sum()),
+                                 "d": float(np.nanmean(d[ok & (band == j)])),
+                                 "ci": list(np.nanpercentile(reps, [2.5, 97.5]))})
+        reps = [np.nanmean(d[i][(band[i] == 2) & ok[i]]) - np.nanmean(d[i][(band[i] == 0) & ok[i]])
+                for i in W.boots]
+        pt = float(np.nanmean(d[ok & (band == 2)]) - np.nanmean(d[ok & (band == 0)]))
+        ci = list(np.nanpercentile(reps, [2.5, 97.5]))
+        out["interaction"][key] = {"d": pt, "ci": ci,
+                                   "verdict": "SUPPORTED" if ci[0] > 0 else "REFUTED"}
+    return out
+
+
+def p7h(run: Path, out: Path):
+    out.mkdir(parents=True, exist_ok=True)
+    W = _Sweep(run)
+    R_ = p7h_rows(W)
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.9), facecolor=FIG_BG)
+    for ax, key, title in ((axes[0], "between", "Between patches (share of the AUC)"),
+                           (axes[1], "within", "Within patches (fire patches)")):
+        _axes(ax, title, "latitude band", "r2_daylat - r2")
+        rr = [r for r in R_["bands"] if r["metric"] == key]
+        m = np.array([r["d"] for r in rr])
+        ci = np.array([r["ci"] for r in rr])
+        ax.errorbar(range(3), m, yerr=[m - ci[:, 0], ci[:, 1] - m], fmt="o", color=BLUE, ms=7,
+                    capsize=3)
+        ax.axhline(0, color=INK, lw=0.8)
+        ax.set_xticks(range(3), [f"{r['band']}\n{r['n']} patches" for r in rr], color=INK,
+                      fontsize=8)
+    fig.tight_layout()
+    _caption(fig, "E-19 (re-scoped, A-56). R2 with latitude-correct day length in DMC and BUI "
+             "(c2_daylat) against R2 with the 46 N table, paired by fold and seed (15 fits "
+             "each). 95 % CI by group bootstrap over the freeze's location groups. "
+             "Reconstructed (ours).", y=-0.04)
+    _save(fig, out, "daylat.png")
+    o, it = R_["overall"], R_["interaction"]
+    L = ["# P7h tables: latitude-correct day length under R2 (E-19)\n",
+         f"Run: `{_rel(run)}`. Reconstructed (ours).\n",
+         "| | within | between |", "|---|---|---|",
+         f"| r2_daylat - r2, all development patches | {o['d_within']:+.4f} "
+         f"{_ci(o['d_within_ci'], 4)} | {o['d_between']:+.4f} {_ci(o['d_between_ci'], 4)} |",
+         f"| interaction: (60-90 N) - (0-55 N) | {it['within']['d']:+.4f} "
+         f"{_ci(it['within']['ci'], 4)} | {it['between']['d']:+.4f} "
+         f"{_ci(it['between']['ci'], 4)} |", "",
+         "| metric | band | patches | r2_daylat - r2 [95 % CI] |", "|---|---|---|---|"]
+    L += [f"| {r['metric']} | {r['band']} | {r['n']} | {r['d']:+.4f} {_ci(r['ci'], 4)} |"
+          for r in R_["bands"]]
+    (out / "tables.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    _csv(out / "T_daylat_bands.csv", R_["bands"])
+    (out / "summary.json").write_text(json.dumps(R_, indent=1, default=float))
+    (out / "run.json").write_text(json.dumps({"run": str(_rel(run))}, indent=1))
+
+
 # ── P9b: ignition learned rungs (E-45, A-48) ────────────────────────────────
 # Each matched set (a start and up to five controls sharing its weather) is
 # held out in one fold. Matched-set AUC = the share of (start, control) pairs
@@ -6097,7 +6268,9 @@ PHASES = {"P2": (p2, "P2/p2_r0"), "P3": (p3, "P3/p3_dated"), "P4": (p4, "P4/p4_p
           "P7b": (p7b, "P7/p7b_operational"), "P7c": (p7c, "P7/p7c_slots_v3"),
           "P7e": (p7e, "P7/p7e_fuel_slot"), "P8a": (p8a, "P8/p8a_spread"),
           "P9": (p9, "P9/p9_ignition"), "P6f": (p6f, "P6/p6f_lfmc"),
-          "P7d": (p7d, "P7/p7d_weather_age"), "P7f": (p7f, "P7/p7f_station_distance"), "P9b": (p9b, "P9/p9b_ignition_rungs"),
+          "P7d": (p7d, "P7/p7d_weather_age"),
+          "P7f": (p7f, "P7/p7f_station_distance"), "P7g": (p7g, "P7/p7g_weather_inputs"),
+          "P7h": (p7h, "P7/p7h_daylat"), "P9b": (p9b, "P9/p9b_ignition_rungs"),
           "P6f2": (p6f, "P6/p6f_lfmc_v2")}
 
 

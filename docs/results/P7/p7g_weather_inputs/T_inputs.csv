@@ -1,0 +1,85 @@
+config,label,metric,input,lag,mean,ci,n,folds_below,n_folds
+r2,"R2, trained on D-1 weather",within patches,ffmc,2,-0.0022285099772333763,"[-0.006447491135829253, 0.0019904711813625]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,ffmc,3,-0.0019477953085637934,"[-0.008239124574255787, 0.002859269968295012]",15,2,5
+r2,"R2, trained on D-1 weather",within patches,ffmc,7,0.001140471424606071,"[-0.001978520783305152, 0.004036116504530181]",15,1,5
+r2,"R2, trained on D-1 weather",within patches,isi,2,1.1630000936720582e-05,"[-4.8062054870941695e-05, 8.659968542361617e-05]",15,2,5
+r2,"R2, trained on D-1 weather",within patches,isi,3,5.190621824846531e-06,"[-5.667790820212718e-05, 6.866269454812724e-05]",15,2,5
+r2,"R2, trained on D-1 weather",within patches,isi,7,-8.36780549811067e-05,"[-0.00031850002416959156, 9.119132266322734e-05]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,dmc,2,3.7035818040516884e-05,"[8.324286902124574e-06, 6.574734917890918e-05]",15,1,5
+r2,"R2, trained on D-1 weather",within patches,dmc,3,0.00011421695797815268,"[3.1527595422250104e-05, 0.00019749017598359085]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,dmc,7,0.00015987750155378825,"[8.700847886854805e-05, 0.00023274652423902845]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,dc,2,5.4349695114789634e-11,"[-6.858905295577717e-11, 2.240359749568673e-10]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,dc,3,1.924678712702151e-10,"[5.6327535228698857e-11, 3.448884067225322e-10]",15,1,5
+r2,"R2, trained on D-1 weather",within patches,dc,7,-7.332786230070572e-11,"[-2.871829070845896e-10, 1.8937161468575897e-10]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,bui,2,-0.00018312831186983273,"[-0.0009653551935857596, 0.0005701555117095284]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,bui,3,-0.000424107229273322,"[-0.002149709713769695, 0.0010549490642436008]",15,2,5
+r2,"R2, trained on D-1 weather",within patches,bui,7,-0.0017936325045731097,"[-0.00713357983616328, 0.0024227089622774903]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,fwi,2,0.00021089964840936837,"[-6.113799009286325e-05, 0.0005578162427181047]",15,1,5
+r2,"R2, trained on D-1 weather",within patches,fwi,3,-0.0005557935239143719,"[-0.0011566216012616575, -4.798399269886715e-05]",15,4,5
+r2,"R2, trained on D-1 weather",within patches,fwi,7,-0.0006900524272584363,"[-0.0018152514834832046, 3.344826419843609e-05]",15,4,5
+r2,"R2, trained on D-1 weather",within patches,wx,2,-0.00040094783629344527,"[-0.0018029565489529795, 0.0009370418780422218]",15,3,5
+r2,"R2, trained on D-1 weather",within patches,wx,3,0.0015524275652129215,"[0.0005875286095002949, 0.0028196394499093356]",15,0,5
+r2,"R2, trained on D-1 weather",within patches,wx,7,-0.0010782569723712277,"[-0.002611623671987906, 0.0004195131036280437]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,ffmc,2,-0.01947378488432411,"[-0.0435081439983401, 0.005444130777311357]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,ffmc,3,-0.034859749455337694,"[-0.052009803921568655, -0.02031862745098039]",15,5,5
+r2,"R2, trained on D-1 weather",between patches,ffmc,7,-0.022814672165162354,"[-0.04245007262164123, 0.0026947816163502445]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,isi,2,-0.0038676535428986414,"[-0.007237848843240991, -0.00029489573607221315]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,isi,3,-0.0033341114223467048,"[-0.006967787114845922, 0.002058045440398411]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,isi,7,-0.002692025884427851,"[-0.008198302469135828, 0.002814250700280126]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,dmc,2,0.0006164410208527871,"[-0.0015717398070339192, 0.002804621848739493]",15,2,5
+r2,"R2, trained on D-1 weather",between patches,dmc,3,-0.0024028361344537934,"[-0.0057014472455649235, 0.0006365740740740774]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,dmc,7,0.0033979147214441285,"[-0.0022175536881419078, 0.008064892623716124]",15,1,5
+r2,"R2, trained on D-1 weather",between patches,dc,2,-0.0005366220562299073,"[-0.0016806722689075792, 0.0003322440087145884]",15,2,5
+r2,"R2, trained on D-1 weather",between patches,dc,3,-0.0008973959954352128,"[-0.0016690009337068322, -0.00015432098765431798]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,dc,7,-0.0018526623612407978,"[-0.00262507780890134, -0.0008688660649444957]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,bui,2,0.00062295751633988,"[-0.007529956427015252, 0.008016748366013087]",15,2,5
+r2,"R2, trained on D-1 weather",between patches,bui,3,0.0024953314659197,"[-0.003643790849673205, 0.010084033613445386]",15,2,5
+r2,"R2, trained on D-1 weather",between patches,bui,7,0.00030060172217035347,"[-0.013177196804647772, 0.014249403465089735]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,fwi,2,-0.002575020749040354,"[-0.005112693225438317, -3.734827264239007e-05]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,fwi,3,-0.0038346171802054203,"[-0.009244281045751633, 0.0011723856209150175]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,fwi,7,-0.00432899548708372,"[-0.011671335200746969, 0.0010084033613445343]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,wx,2,0.0007654126465400942,"[-0.0022848583877995705, 0.004636924214130097]",15,3,5
+r2,"R2, trained on D-1 weather",between patches,wx,3,-0.00452581958709409,"[-0.010570987654320978, 0.00299518881626725]",15,4,5
+r2,"R2, trained on D-1 weather",between patches,wx,7,-0.00369112459798735,"[-0.008347338935574228, 0.0006045751633986832]",15,3,5
+r0_scanfi,"R0 HFI, physics only",within patches,ffmc,2,-0.0022374057716535445,"[-0.005318616551837163, 0.0016679270711507988]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,ffmc,3,-0.0039786214396895,"[-0.006608971767631222, -0.0009079129633916772]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,ffmc,7,-0.0028118219437660795,"[-0.0058177525544087505, 0.00019879352254996706]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,isi,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,isi,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,isi,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dmc,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dmc,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dmc,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dc,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dc,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,dc,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,bui,2,-0.0006227307955409378,"[-0.0012850219011464326, -0.00020133709148222322]",5,5,5
+r0_scanfi,"R0 HFI, physics only",within patches,bui,3,-0.0015166393916972165,"[-0.0032260508210792517, 0.00015138293548897508]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,bui,7,-0.00309132091449702,"[-0.010443515075453024, 0.002021549931758734]",5,3,5
+r0_scanfi,"R0 HFI, physics only",within patches,fwi,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,fwi,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,fwi,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",within patches,wx,2,-0.0017106082572341474,"[-0.003141948600089051, -0.00027926791437924423]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,wx,3,0.0002598720746973315,"[-0.0012276836798438052, 0.001656717825208953]",5,2,5
+r0_scanfi,"R0 HFI, physics only",within patches,wx,7,-0.0016302174126207936,"[-0.00448407617975124, 0.001710971350641932]",5,4,5
+r0_scanfi,"R0 HFI, physics only",between patches,ffmc,2,-0.0296290460628696,"[-0.06713935574229693, 0.004751400560224073]",5,4,5
+r0_scanfi,"R0 HFI, physics only",between patches,ffmc,3,-0.07624795751633986,"[-0.0993382352941176, -0.05512663398692812]",5,5,5
+r0_scanfi,"R0 HFI, physics only",between patches,ffmc,7,-0.03593137254901957,"[-0.08751838235294115, 0.01676470588235297]",5,4,5
+r0_scanfi,"R0 HFI, physics only",between patches,isi,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,isi,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,isi,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dmc,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dmc,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dmc,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dc,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dc,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,dc,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,bui,2,0.004481792717086841,"[0.0, 0.009523809523809513]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,bui,3,0.01178513071895424,"[0.0034722222222221878, 0.022160947712418298]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,bui,7,0.0175955104263928,"[-0.0006915266106442442, 0.03578511612978536]",5,1,5
+r0_scanfi,"R0 HFI, physics only",between patches,fwi,2,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,fwi,3,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,fwi,7,0.0,"[0.0, 0.0]",5,0,5
+r0_scanfi,"R0 HFI, physics only",between patches,wx,2,-0.008393635231870533,"[-0.018347338935574185, 0.00017117958294428083]",5,3,5
+r0_scanfi,"R0 HFI, physics only",between patches,wx,3,0.0025086562402738765,"[-0.006179193899782098, 0.01421306022408957]",5,3,5
+r0_scanfi,"R0 HFI, physics only",between patches,wx,7,-0.002609126984126986,"[-0.01426062091503264, 0.011653828197945804]",5,3,5

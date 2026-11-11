@@ -1,0 +1,9 @@
+config,label,metric,lag,contrast,mean,ci,n,folds_below,n_folds
+r2,"R2, trained on D-1 weather",within patches,3,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.000759248824966748,"[-0.004657502612220309, 0.002136448478491944]",15,2,5
+r2,"R2, trained on D-1 weather",within patches,7,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",0.0014252129737629682,"[-0.002160108437712349, 0.00475926958421687]",15,1,5
+r2,"R2, trained on D-1 weather",between patches,3,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.019895898174084443,"[-0.02718513331258431, -0.011723455007002776]",15,5,5
+r2,"R2, trained on D-1 weather",between patches,7,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.01197731870525988,"[-0.02141203703703705, -0.0005261826953003326]",15,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,3,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.001230991023996142,"[-0.002176380275670897, 0.00012901747293867505]",5,4,5
+r0_scanfi,"R0 HFI, physics only",within patches,7,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",0.00013974948536547017,"[-0.0029962711640485694, 0.0031353402968685717]",5,2,5
+r0_scanfi,"R0 HFI, physics only",between patches,3,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.04401654411764705,"[-0.05663398692810456, -0.03281249999999998]",5,5,5
+r0_scanfi,"R0 HFI, physics only",between patches,7,"mean(FFMC, ISI aged) - mean(DC, BUI aged)",-0.026763441487706187,"[-0.04421500544662309, -0.0054598506069094225]",5,4,5

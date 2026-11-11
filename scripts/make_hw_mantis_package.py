@@ -35,6 +35,18 @@ SIZES = ("16x1", "32x1", "32x2")
 #: E-27: 32x1 at each input count, and the build that holds it
 CHANNELS = {3: "e27_in3_32x1", 11: "mantis_std_32x1", 16: "mantis_both_32x1",
             22: "eco_32x1", 96: "e27_in96_32x1"}
+BOARDS = ("Q7", "Q8", "Q9")
+RESOURCES = ("bram18k", "uram", "lut", "dsp", "ff")
+#: The DPU core's OWN footprint (DPUCZDX8G B4096, single core), which the
+#: model does not change. AMD PG338 v3.4 resource tables: default block-RAM
+#: build 53,540 LUT, 105,008 FF, 257 BRAM36 (= 514 BRAM18K), 562 DSP; the
+#: ZCU104 UltraRAM build 52,681 LUT, 104,562 FF, 2 BRAM36, 68 URAM, 562 DSP.
+#: Only the Q8 has a DPU target (Vitis AI 2.5); the platform's own logic
+#: (interconnect, clocking) is not included.
+DPU_B4096 = {"B4096, block RAM build": {"bram18k": 514, "uram": 0, "lut": 53540,
+                                        "dsp": 562, "ff": 105008},
+             "B4096, UltraRAM build": {"bram18k": 4, "uram": 68, "lut": 52681,
+                                       "dsp": 562, "ff": 104562}}
 
 FIG_BG, AX_BG = "#0f1117", "#1a1d27"
 SPINE, INK, INK_BRIGHT, MUTED = "#333344", "#cccccc", "#eeeeee", "#8b8b9a"
@@ -48,8 +60,8 @@ def _finn(name):
     r = json.loads((rep / "estimate_layer_resources.json").read_text())["total"]
     fps = json.loads((rep / "estimate_network_performance.json").read_text())[
         "estimated_throughput_fps"]
-    return {"bram18k": r.get("BRAM_18K"), "lut": r.get("LUT"), "dsp": r.get("DSP"),
-            "s_per_scene": TILES / fps}
+    return {"bram18k": r.get("BRAM_18K"), "uram": r.get("URAM"), "lut": r.get("LUT"),
+            "dsp": r.get("DSP"), "ff": None, "s_per_scene": TILES / fps}
 
 
 def _dpu(name):
@@ -62,16 +74,53 @@ def _dpu(name):
 
 
 def _share(used, cap):
+    """Largest used/capacity over every resource reported. A resource the
+    board does not have (the Q7's UltraRAM) counts as infinite if used --
+    it used to be skipped, which would have passed such a build silently."""
     best = (0.0, "")
     for k, v in used.items():
-        if v is not None and cap.get(k):
-            best = max(best, (v / cap[k], k))
+        if v is None or k not in cap:
+            continue
+        s = float("inf") if (cap[k] == 0 and v > 0) else (v / cap[k] if cap[k] else 0.0)
+        best = max(best, (s, k))
     return best
+
+
+def audit(caps: dict) -> list[dict]:
+    """Every candidate on every board, every resource: share, and whether it
+    passes A-29's 80 % rule and the hard 100 % limit."""
+    out = []
+
+    def add(design, flow, used, boards):
+        for b in boards:
+            for k in RESOURCES:
+                v = used.get(k)
+                c = caps[b][k]
+                if v is None:
+                    out.append({"design": design, "flow": flow, "board": b, "resource": k,
+                                "used": None, "capacity": c, "share": None,
+                                "status": "not estimated"})
+                    continue
+                s = float("inf") if (c == 0 and v > 0) else (v / c if c else 0.0)
+                out.append({"design": design, "flow": flow, "board": b, "resource": k,
+                            "used": v, "capacity": c, "share": s,
+                            "status": "OVER 100 %" if s > 1 else
+                                      ("over 80 %" if s > FIT else "ok")})
+
+    for tag, _, _, inch in TRACKS:
+        for size in SIZES:
+            for suffix, fold in (("", "minimal fold"), ("_fps6", "~6 tiles/s")):
+                f = _finn(f"mantis_{tag}_{size}_w4a4{suffix}")
+                if f is not None:
+                    add(f"{size}, {inch} inputs, {fold}", "FINN W4A4", f, BOARDS)
+    for name, used in DPU_B4096.items():
+        add(name + " (any model)", "Vitis AI DPU", used, ("Q8",))
+    return out
 
 
 def rows() -> list[dict]:
     cap = json.loads((FW / "configs" / "boards.json").read_text())["boards"]
-    cap = {b: cap[b]["capacity"] for b in ("Q7", "Q8")}
+    cap = {b: cap[b]["capacity"] for b in BOARDS}
     lad = {(r["band_set"], r["size"]): r for r in csv.DictReader(
         (ROOT / "docs/results/P12/p12_arch/T_ladders.csv").open(encoding="utf-8"))}
     out = []
@@ -94,8 +143,7 @@ def rows() -> list[dict]:
                     continue
                 row[f"finn_{fold}_s"] = f["s_per_scene"]
                 for b in cap:
-                    s, k = _share({"bram18k": f["bram18k"], "lut": f["lut"],
-                                   "dsp": f["dsp"]}, cap[b])
+                    s, k = _share({kk: f[kk] for kk in RESOURCES}, cap[b])
                     row[f"finn_{fold}_{b}_share"], row[f"finn_{fold}_{b}_binding"] = s, k
             out.append(row)
     return out
@@ -180,11 +228,25 @@ def _csv(path: Path, rows: list[dict]):
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     R, C = rows(), channels()
+    caps = json.loads((FW / "configs" / "boards.json").read_text())["boards"]
+    A = audit({b: caps[b]["capacity"] for b in BOARDS})
+    _csv(OUT / "T_resource_audit.csv", A)
+    bad = [a for a in A if a["status"] == "OVER 100 %"]
+    print(f"audit: {len(A)} rows; over 100 %: {len(bad)}; over 80 %: "
+          f"{sum(a['status'] == 'over 80 %' for a in A)}")
+    for a in A:
+        if a["status"] in ("OVER 100 %", "over 80 %"):
+            print("  ", a["status"], a["design"], a["flow"], a["board"], a["resource"],
+                  f"{a['share'] * 100:.0f} %")
     _csv(OUT / "T_hw_mantis.csv", R)
     _csv(OUT / "T_channels.csv", C)
     figure(R, C, OUT)
-    (OUT / "summary.json").write_text(json.dumps({"candidates": R, "channels": C}, indent=1,
-                                                 default=float), encoding="utf-8")
+    (OUT / "summary.json").write_text(json.dumps(
+        {"candidates": R, "channels": C,
+         "audit": {"rows": len(A), "over_100": len(bad),
+                   "over_80": [f"{a['design']} | {a['flow']} | {a['board']} | {a['resource']}"
+                               for a in A if a["status"] == "over 80 %"]}},
+        indent=1, default=float), encoding="utf-8")
     for r in R:
         print(f"{r['inputs']:3} {r['size']}: skill {r['skill']:.4f} ({r['gap_to_best']:+.4f}) | "
               f"DPU {r['dpu_q8_s']:.3f} s | FINN min {r['finn_min_s']:.1f} s Q7 "

@@ -43,9 +43,11 @@ def _share(used: dict, cap: dict) -> tuple[float | None, str | None]:
     """Largest used/capacity over the resources both report, and which one."""
     best = (None, None)
     for k, v in used.items():
-        if v is None or not cap.get(k):
+        if v is None or k not in cap:
             continue
-        s = v / cap[k]
+        # A resource the board lacks (the Q7's UltraRAM) is infinite if used;
+        # it was skipped before 2026-11-11 (no build here used any).
+        s = float("inf") if (cap[k] == 0 and v > 0) else (v / cap[k] if cap[k] else 0.0)
         if best[0] is None or s > best[0]:
             best = (s, k)
     return best
@@ -100,8 +102,8 @@ def load(fw: Path) -> list[dict]:
                              .read_text(encoding="utf-8")).get("total", {})
             perf = json.loads((rep / "estimate_network_performance.json")
                               .read_text(encoding="utf-8"))
-            used = {"bram18k": res.get("BRAM_18K"), "lut": res.get("LUT"),
-                    "dsp": res.get("DSP")}
+            used = {"bram18k": res.get("BRAM_18K"), "uram": res.get("URAM"),
+                    "lut": res.get("LUT"), "dsp": res.get("DSP")}
             fps = perf.get("estimated_throughput_fps")
             row = {"flow": "FINN", "precision": f"W{b}A{b}", "mode": "raw+indices",
                    "size": size, "params": None, "in_channels": None, "tile": TILE,

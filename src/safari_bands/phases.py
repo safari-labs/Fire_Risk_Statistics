@@ -1534,6 +1534,92 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P7g", "Weather age, one input at a time (lags_v2)", "2026-11-11",
+        "P7/p7g_weather_inputs", "README.md",
+        "E-20's per-input half: R2 trained once on D-1 weather and scored with "
+        "one input (a code, or wind + RH) 2, 3 or 7 days old and every other at "
+        "D-1; 15/15 R2 fits and 5 R0 evaluations.",
+        (
+            Entry("E-20", "experiment", "SUPPORTED",
+                  result="Between patches, mean(FFMC, ISI aged) - mean(DC, BUI aged): -0.020 "
+                         "[-0.027, -0.012] at 3 days, -0.012 [-0.021, -0.001] at 7 (R0: -0.044, "
+                         "-0.027). FFMC alone at 3 days: -0.035.",
+                  conclusion="Staleness is an FFMC problem: the slow codes can be a week old at "
+                             "almost no cost. Only the FFMC-dependent part of a product needs "
+                             "fresh weather (A-41)."),
+        ),
+    ),
+    Phase(
+        "P7h", "Latitude-correct day length under R2 (slots_e19)", "2026-11-11",
+        "P7/p7h_daylat", "README.md",
+        "E-19 re-scoped (A-56): r2_daylat (latitude-correct day length in DMC and "
+        "BUI) against r2, 15 fits each, read by latitude band.",
+        (
+            Entry("E-19", "experiment", "REFUTED",
+                  result="Interaction (60-90 N) - (0-55 N), between patches: -0.003 [-0.013, "
+                         "+0.005]; overall within -0.001, between -0.003; north band -0.007.",
+                  conclusion="Latitude-correct day length adds nothing, least of all in the "
+                             "north; the FWI1987 table can stay."),
+        ),
+    ),
+    Phase(
+        "P7i", "Legacy band, axis and index sweeps on the v2 pack", "2026-11-11",
+        "P7/p7i_legacy_v2", "README.md",
+        "A-56: the v1 fire-outcome sweeps re-run on the v2 pack through "
+        "sweep_bands.py (tier2-small, 35 epochs, seed 0, the slot sweeps' 5 "
+        "folds); 16 arrays, 80/80 folds.",
+        (
+            Entry("E-1", "experiment", "REFUTED",
+                  result="red edge is in the best six (B5, B6 4/5 folds; B7 3/5) but B1 survives "
+                         "in 3/5 folds; the score is flat from k=3 (0.694) to k=6 (0.696).",
+                  conclusion="Fire outcome ranks VNIR bands weakly; an atmospheric band "
+                             "survives."),
+            Entry("E-2", "experiment", "REFUTED",
+                  result="B11 enters all11's greedy search at k=3, 5, 7, 7 and never in one "
+                         "fold.",
+                  conclusion="B11 is not an early pick on the fire outcome."),
+            Entry("E-3", "experiment", "MIXED",
+                  result="forced B11 against vnir at matched k: +0.005 at k=5, +0.003 at k=6, "
+                         "every k from 2 to 6 within noise: small, not shown positive.",
+                  conclusion="Forcing B11 adds nothing measurable at matched k."),
+            Entry("E-4", "experiment", "SUPPORTED",
+                  result="B11 alone +0.099 [+0.081, +0.116] above chance and -0.097 [-0.123, "
+                         "-0.072] below vnir's k=6.",
+                  conclusion="B11 alone carries real signal but is far below VNIR."),
+            Entry("E-5", "experiment", "REFUTED",
+                  result="single removals cost more than 0.02: B5 0.029 (all11), B2 0.024, B5 "
+                         "0.023, B3 0.020 (vnir_swir); B8 and B8A each look worthless, as "
+                         "predicted.",
+                  conclusion="The pool is less redundant than predicted: single bands can cost "
+                             "0.02-0.03."),
+            Entry("E-6", "experiment", "REFUTED",
+                  result="the k=1 band (B7) is chosen in 3/5 folds: even the top band swings.",
+                  conclusion="No band ranking on the fire outcome is stable across folds."),
+            Entry("E-7", "experiment", "SUPPORTED",
+                  result="40 m -0.004 [-0.007, -0.000], 80 m -0.009 [-0.014, -0.005].",
+                  conclusion="40 m costs little; the Mantis MS mode's 32 m is acceptable."),
+            Entry("E-10", "experiment", "SUPPORTED",
+                  result="noise arm 0.5005 (positional prior 0.0005, about 0.3 % of real skill); "
+                         "real bands +0.193.",
+                  conclusion="The positional prior is negligible; real bands carry the skill."),
+            Entry("E-11", "experiment", "MIXED",
+                  result="both beats greenness by +0.016 [+0.001, +0.032] (4/5 folds), but "
+                         "moisture is -0.020 [-0.032, -0.007] below greenness rather than level.",
+                  conclusion="Greenness and moisture together help; moisture alone is weakest."),
+            Entry("E-12", "experiment", "SUPPORTED",
+                  result="raw beats greenness (+0.034), moisture (+0.054) and both (+0.018, 5/5 "
+                         "folds, 2-SE interval reaching 0).",
+                  conclusion="Raw bands beat every index front end."),
+            Entry("E-26", "experiment", "SUPPORTED",
+                  result="within-fire minus overall +0.040 [+0.028, +0.051], 5/5 folds.",
+                  conclusion="Imagery ranks burn inside fires better than across all patches."),
+            Entry("E-28", "experiment", "REFUTED",
+                  result="rigid SWIR shift costs 0.0001 at 1/4 px, 0.0007 at 1 px and 0.0024 at "
+                         "2 px: two pixels cost little, so the rigid-shift risk is retired.",
+                  conclusion="Rigid SWIR misregistration up to 2 px costs little at this label."),
+        ),
+    ),
+    Phase(
         "P9b", "Ignition learned rungs (ignition_v1)", "2026-11-05",
         "P9/p9b_ignition_rungs", "README.md",
         "E-45: 100 of 100 fits (R0 x2 at seed 0; r1, r2, r2_cwfis, r2_leaf_ablated, r4, "
@@ -1666,6 +1752,22 @@ PHASES: tuple[Phase, ...] = (
                              "after the first convolution dominates. A wide input, even "
                              "96 HS channels, is cheap on the board; band count is not a "
                              "hardware constraint."),
+        ),
+    ),
+    Phase(
+        "P12f", "SWIR2 on the general track (E-68)", "2026-11-11",
+        "P12/p12_swir2", "README.md",
+        "E-68: the Sentinel-2 consensus sets k=5 and k=8 with and without B12, "
+        "each through E-47's 12-size U-Net ladder on eco_v3's folds and seeds "
+        "(15/15 each). Not on the Mantis track (A-55).",
+        (
+            Entry("E-68", "experiment", "REFUTED",
+                  result="Best rung without B12 minus with: k=5 -0.0025 [-0.0041, -0.0009]; k=8 "
+                         "+0.0001 [-0.0015, +0.0018]. At 8x2: -0.0064 and -0.0062.",
+                  conclusion="B12 adds a little to the five-band set and nothing to the "
+                             "eight-band set at its best size; its value is largest for "
+                             "small models (about 0.006 at 8x2), which is why the band "
+                             "searches at 8x2 ranked it first."),
         ),
     ),
     Phase(

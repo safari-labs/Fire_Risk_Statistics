@@ -1,0 +1,21 @@
+5 run(s), 1 arm(s)
+
+PER-ARM SCORES, BY FOLD
+
+arm                             f0      f1      f2      f3      f4    mean     sd   n
+-------------------------------------------------------------------------------------
+shift_raw                   0.6538  0.7640  0.6820  0.6788  0.6853  0.6928 0.0417   5
+
+SWIR MISREGISTRATION -- score drop against the unshifted model (E-28)
+
+arm                        n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+shift_raw @ 0.25 px        5  -0.0001  0.0001 [-0.0002, +0.0000]   1/5  within noise
+shift_raw @ 0.5 px         5  -0.0002  0.0002 [-0.0004, -0.0000]   1/5  leans, folds disagree
+shift_raw @ 1 px           5  -0.0007  0.0005 [-0.0012, -0.0003]   0/5  WORSE than baseline
+shift_raw @ 2 px           5  -0.0024  0.0015 [-0.0037, -0.0010]   0/5  WORSE than baseline
+  A rigid translation only -- not rotation, scale or keystone -- so the tolerance read off
+  this is NECESSARY for the co-registration requirement, not sufficient.
+
+  figure -> docs\results\legacy_v2\fig_shift\shift_tolerance.png
+  json   -> docs\results\legacy_v2\arms_shift.json

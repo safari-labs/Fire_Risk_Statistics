@@ -1,0 +1,25 @@
+{
+  "tier2-small_rasters_only_nbac_auc_px_wx-both_pool1_must-B11": {
+    "folds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "consensus": {
+      "1": [
+        "B11"
+      ]
+    },
+    "frequency": {
+      "1": {
+        "B11": 1.0
+      }
+    },
+    "caveats": [
+      "n=5 folds. Stage A produced a front-end claim at n=3 that did not survive n=6."
+    ],
+    "ablation_mean_drop": {}
+  }
+}

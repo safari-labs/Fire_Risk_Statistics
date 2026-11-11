@@ -1,0 +1,26 @@
+10 run(s), 2 arm(s)
+
+PER-ARM SCORES, BY FOLD
+
+arm                             f0      f1      f2      f3      f4    mean     sd   n
+-------------------------------------------------------------------------------------
+neg_noise                   0.5005  0.5004  0.5006  0.5005  0.5003  0.5005 0.0001   5
+neg_real                    0.6538  0.7640  0.6820  0.6788  0.6853  0.6928 0.0417   5
+
+PAIRED CONTRAST -- neg, against real
+
+arm                        n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+noise                      5  -0.1923  0.0418 [-0.2297, -0.1550]   0/5  WORSE than baseline
+
+AGAINST CHANCE (0.5) -- the negative control
+
+arm                        n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+noise                      5  +0.0005  0.0001 [+0.0004, +0.0006]   5/5  BEATS baseline
+real                       5  +0.1928  0.0417 [+0.1555, +0.2301]   5/5  BEATS baseline
+  Whatever the noise arm scores above 0.5 is the positional prior: skill every other
+  arm gets from tile geometry without reading a band. Subtract it before quoting any arm.
+
+  figure -> docs\results\legacy_v2\fig_neg\arm_comparison.png
+  json   -> docs\results\legacy_v2\arms_neg.json

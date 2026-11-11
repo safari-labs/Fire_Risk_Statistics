@@ -1,0 +1,128 @@
+{
+ "runs": {
+  "k5": "narval_results\\arch_k5\\20261109-2213",
+  "k5_no_b12": "narval_results\\arch_k5_no_b12\\20261111-0021",
+  "k8": "narval_results\\arch_k8\\20261109-2213",
+  "k8_no_b12": "narval_results\\arch_k8_no_b12\\20261111-0021"
+ },
+ "best": {
+  "k5": "32x3",
+  "k5 without B12": "32x3",
+  "k8": "32x1",
+  "k8 without B12": "32x3"
+ },
+ "contrasts": [
+  {
+   "pair": "k=5",
+   "band_set": "k5 without B12",
+   "against": "k5",
+   "comparison": "best rung vs best rung",
+   "a_size": "32x3",
+   "b_size": "32x3",
+   "d": -0.0024930070159644917,
+   "se": 0.0008169982850586649,
+   "ci_lo": -0.004094323654679475,
+   "ci_hi": -0.0008916903772495084,
+   "n_pairs": 15,
+   "verdict": "SUPPORTED"
+  },
+  {
+   "pair": "k=5",
+   "band_set": "k5 without B12",
+   "against": "k5",
+   "comparison": "at 8x2",
+   "a_size": "8x2",
+   "b_size": "8x2",
+   "d": -0.006431303298577469,
+   "se": 0.0033660508907616556,
+   "ci_lo": -0.013028763044470315,
+   "ci_hi": 0.00016615644731537548,
+   "n_pairs": 15,
+   "verdict": ""
+  },
+  {
+   "pair": "k=5",
+   "band_set": "k5 without B12",
+   "against": "k5",
+   "comparison": "at 16x1",
+   "a_size": "16x1",
+   "b_size": "16x1",
+   "d": -0.0038633292774194177,
+   "se": 0.0019048007512641844,
+   "ci_lo": -0.007596738749897219,
+   "ci_hi": -0.00012991980494161644,
+   "n_pairs": 15,
+   "verdict": ""
+  },
+  {
+   "pair": "k=5",
+   "band_set": "k5 without B12",
+   "against": "k5",
+   "comparison": "at 32x1",
+   "a_size": "32x1",
+   "b_size": "32x1",
+   "d": -0.003170647701853032,
+   "se": 0.0017993798204274214,
+   "ci_lo": -0.006697432149890777,
+   "ci_hi": 0.0003561367461847138,
+   "n_pairs": 15,
+   "verdict": ""
+  },
+  {
+   "pair": "k=8",
+   "band_set": "k8 without B12",
+   "against": "k8",
+   "comparison": "best rung vs best rung",
+   "a_size": "32x3",
+   "b_size": "32x1",
+   "d": 0.0001169861752425542,
+   "se": 0.0008425159537748827,
+   "ci_lo": -0.001534345094156216,
+   "ci_hi": 0.0017683174446413241,
+   "n_pairs": 15,
+   "verdict": "REFUTED"
+  },
+  {
+   "pair": "k=8",
+   "band_set": "k8 without B12",
+   "against": "k8",
+   "comparison": "at 8x2",
+   "a_size": "8x2",
+   "b_size": "8x2",
+   "d": -0.006208529304636282,
+   "se": 0.0026321842693356186,
+   "ci_lo": -0.011367610472534095,
+   "ci_hi": -0.00104944813673847,
+   "n_pairs": 15,
+   "verdict": ""
+  },
+  {
+   "pair": "k=8",
+   "band_set": "k8 without B12",
+   "against": "k8",
+   "comparison": "at 16x1",
+   "a_size": "16x1",
+   "b_size": "16x1",
+   "d": 0.0011436302039939652,
+   "se": 0.0010710944740180692,
+   "ci_lo": -0.0009557149650814506,
+   "ci_hi": 0.0032429753730693813,
+   "n_pairs": 15,
+   "verdict": ""
+  },
+  {
+   "pair": "k=8",
+   "band_set": "k8 without B12",
+   "against": "k8",
+   "comparison": "at 32x1",
+   "a_size": "32x1",
+   "b_size": "32x1",
+   "d": -0.0003144087314298716,
+   "se": 0.0012422421688843752,
+   "ci_lo": -0.0027492033824432468,
+   "ci_hi": 0.0021203859195835038,
+   "n_pairs": 15,
+   "verdict": ""
+  }
+ ]
+}

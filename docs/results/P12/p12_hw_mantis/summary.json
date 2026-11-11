@@ -16,7 +16,9 @@
    "finn_min_Q7_share": 0.18291353383458647,
    "finn_min_Q7_binding": "lut",
    "finn_min_Q8_share": 0.04223524305555556,
-   "finn_min_Q8_binding": "lut"
+   "finn_min_Q8_binding": "lut",
+   "finn_min_Q9_share": 0.025949333333333335,
+   "finn_min_Q9_binding": "lut"
   },
   {
    "track": "VNIR stand-in (B2 B3 B4 B7 B8A)",
@@ -35,11 +37,15 @@
    "finn_min_Q7_binding": "lut",
    "finn_min_Q8_share": 0.05929487179487179,
    "finn_min_Q8_binding": "bram18k",
+   "finn_min_Q9_share": 0.038262668045501554,
+   "finn_min_Q9_binding": "bram18k",
    "finn_fps6_s": 34.56,
    "finn_fps6_Q7_share": 0.2168609022556391,
    "finn_fps6_Q7_binding": "lut",
    "finn_fps6_Q8_share": 0.05929487179487179,
-   "finn_fps6_Q8_binding": "bram18k"
+   "finn_fps6_Q8_binding": "bram18k",
+   "finn_fps6_Q9_share": 0.038262668045501554,
+   "finn_fps6_Q9_binding": "bram18k"
   },
   {
    "track": "VNIR stand-in (B2 B3 B4 B7 B8A)",
@@ -58,11 +64,15 @@
    "finn_min_Q7_binding": "bram18k",
    "finn_min_Q8_share": 0.20352564102564102,
    "finn_min_Q8_binding": "bram18k",
+   "finn_min_Q9_share": 0.1313340227507756,
+   "finn_min_Q9_binding": "bram18k",
    "finn_fps6_s": 34.56,
    "finn_fps6_Q7_share": 0.45357142857142857,
    "finn_fps6_Q7_binding": "bram18k",
    "finn_fps6_Q8_share": 0.20352564102564102,
-   "finn_fps6_Q8_binding": "bram18k"
+   "finn_fps6_Q8_binding": "bram18k",
+   "finn_fps6_Q9_share": 0.1313340227507756,
+   "finn_fps6_Q9_binding": "bram18k"
   },
   {
    "track": "stand-in + B11 (SWIR filters)",
@@ -80,7 +90,9 @@
    "finn_min_Q7_share": 0.18447368421052632,
    "finn_min_Q7_binding": "lut",
    "finn_min_Q8_share": 0.04259548611111111,
-   "finn_min_Q8_binding": "lut"
+   "finn_min_Q8_binding": "lut",
+   "finn_min_Q9_share": 0.026170666666666665,
+   "finn_min_Q9_binding": "lut"
   },
   {
    "track": "stand-in + B11 (SWIR filters)",
@@ -99,11 +111,15 @@
    "finn_min_Q7_binding": "lut",
    "finn_min_Q8_share": 0.060897435897435896,
    "finn_min_Q8_binding": "bram18k",
+   "finn_min_Q9_share": 0.03929679420889348,
+   "finn_min_Q9_binding": "bram18k",
    "finn_fps6_s": 34.56,
    "finn_fps6_Q7_share": 0.2181578947368421,
    "finn_fps6_Q7_binding": "lut",
    "finn_fps6_Q8_share": 0.060897435897435896,
-   "finn_fps6_Q8_binding": "bram18k"
+   "finn_fps6_Q8_binding": "bram18k",
+   "finn_fps6_Q9_share": 0.03929679420889348,
+   "finn_fps6_Q9_binding": "bram18k"
   },
   {
    "track": "stand-in + B11 (SWIR filters)",
@@ -122,11 +138,15 @@
    "finn_min_Q7_binding": "bram18k",
    "finn_min_Q8_share": 0.20512820512820512,
    "finn_min_Q8_binding": "bram18k",
+   "finn_min_Q9_share": 0.13236814891416754,
+   "finn_min_Q9_binding": "bram18k",
    "finn_fps6_s": 34.56,
    "finn_fps6_Q7_share": 0.45714285714285713,
    "finn_fps6_Q7_binding": "bram18k",
    "finn_fps6_Q8_share": 0.20512820512820512,
-   "finn_fps6_Q8_binding": "bram18k"
+   "finn_fps6_Q8_binding": "bram18k",
+   "finn_fps6_Q9_share": 0.13236814891416754,
+   "finn_fps6_Q9_binding": "bram18k"
   }
  ],
  "channels": [
@@ -175,5 +195,12 @@
    "dpu_gop_per_tile": 0.736403456,
    "dpu_q8_s": 0.14631022135416666
   }
- ]
+ ],
+ "audit": {
+  "rows": 160,
+  "over_100": 0,
+  "over_80": [
+   "B4096, block RAM build (any model) | Vitis AI DPU | Q8 | bram18k"
+  ]
+ }
 }

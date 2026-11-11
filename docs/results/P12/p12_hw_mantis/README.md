@@ -13,7 +13,7 @@ Each went through the three flows at its real input count. This replaces the pre
 
 Builds are local and estimate-only, on untrained networks: resources and op coverage depend on geometry and bit width, not on weights. All values are Reconstructed (ours).
 
-**At a glance:** [T_hw_mantis.csv](T_hw_mantis.csv), [T_channels.csv](T_channels.csv), [summary.json](summary.json).
+**At a glance:** [T_hw_mantis.csv](T_hw_mantis.csv), [T_resource_audit.csv](T_resource_audit.csv), [T_channels.csv](T_channels.csv), [summary.json](summary.json).
 
 ![hw](hw_mantis.png)
 
@@ -36,14 +36,40 @@ At minimal folding the width-32 rungs take 138 s on the Q7. Folded for about 6 t
   - **Q8:** the DPU takes each model as one subgraph, with only `fix2float` on the CPU. It needs at most 0.19 s per scene, about 200 times inside the budget.
   - **Q7:** FINN W4A4 meets 43 s with width 32 folded. The largest share is 46 % (32 × 2, BRAM).
 - **E-48's registered prediction holds:** the chosen model fits a Q8 at ≤ 80 % of every resource (SUPPORTED for the Mantis track; the general track waits for E-68's ladders).
-- **hls4ml is still not a route at any size** (217–1424 % of the Q8's BRAM), as in the pre-check.
+- **hls4ml is still not a route at any size** (217–1424 % of the Q8's BRAM), as in the pre-check. It exceeds 100 %, so it is listed only to rule it out.
 - **The options for James (A-49):**
 
   | Option | Pros | Cons |
   |---|---|---|
-  | **Q8 + DPU, 32 × 1 or 32 × 2** | best skill; real time; a mature flow (Vitis AI) that compiles the whole network | 5 W typical, against the Q7's 2 W |
+  | **Q8 + DPU (UltraRAM build), 32 × 1 or 32 × 2** | best skill; real time; a mature flow (Vitis AI) that compiles the whole network | 5 W typical, against the Q7's 2 W; the B4096 must be built with UltraRAM to meet the 80 % rule |
   | **Q7 + FINN, 32 × 1** | best-skill size at 2 W | the Q7 fit is an estimate until a Vivado build sizes the FIFOs (BRAM is a floor) |
   | **Q7 + FINN, 16 × 1** | the most margin on the Q7 (18 %) at minimal folding | 0.005–0.007 below the best |
+
+## No resource is over 100 % on any chip (audit, 2026-11-11)
+
+Every candidate was checked on every board (Q7, Q8 and Q9) and every resource: block RAM, UltraRAM, LUT, DSP and FF. That is 160 checks, in [T_resource_audit.csv](T_resource_audit.csv).
+
+- **Nothing presented as an option exceeds 100 % of any resource on any chip.**
+- **The largest FINN share is 46 %:** 32 × 2 on the Q7's block RAM.
+- **One row is above A-29's 80 % rule:** the DPU core's default block-RAM build, at 82 % of the Q8's BRAM.
+
+**The DPU core's own footprint.** The model does not change it. AMD PG338 v3.4 gives these figures for the B4096 single core:
+
+| B4096 build | LUT | FF | BRAM18K | UltraRAM | DSP | Largest Q8 share |
+|---|---|---|---|---|---|---|
+| block RAM (default) | 53,540 | 105,008 | 514 (257 BRAM36) | 0 | 562 | **82 % BRAM**: over 80 %, under 100 % |
+| UltraRAM (as on AMD's ZCU104 sample) | 52,681 | 104,562 | 4 | 68 | 562 | **71 % UltraRAM**: fits |
+
+The Q8 option therefore needs the UltraRAM build, or a smaller DPU (B2304 or B1024), since the model leaves about 97 % of a B4096's compute idle. Neither row includes the platform's own logic (interconnect, clocking); a Vivado build of the full design is still the only measurement.
+
+**What the audit cannot see:**
+- FINN's estimates report no flip-flops, so FF is "not estimated" for every FINN row.
+- FINN's block RAM is a floor (FIFOs unsized).
+- The folded builds' LUTs are probably understated.
+
+A Q7 share of 46 % leaves room for those, but it is not a measurement.
+
+**Fixed in the share code (2026-11-11).** A resource a board lacks, such as the Q7's UltraRAM, used to be skipped rather than counted as over. No build used UltraRAM, so no earlier number changes; P12/p12_convert's tables rebuild identically.
 
 ## E-27: what an input channel costs
 
@@ -73,7 +99,7 @@ Under hls4ml, 11 to 16 inputs adds 13 BRAM of about 1,360 (+1 %). That is sub-li
 - **DPU times are a lower bound:** the B4096 at full peak, 300 MHz.
 - **The index front end** (normalised differences) is outside every graph.
 - **Skill comes from the Sentinel-2 stand-in**, not the Mantis bands. The input count matches the real camera's, not its spectral response.
-- **No power measurement.** Board power is from the datasheets (Q7 2 W, Q8 5 W typical).
+- **No power measurement.** Board power is from the datasheets: Q7 2 W typical, Q8 5 W typical (Rev C spec sheet XTI-2001-2024-i, in the repo). `configs/boards.json` gives the Q8 as 3.5 W typical (4–25 W) from the same sheet number; the two disagree, and the PDF in hand says 5 W.
 
 ## Reproduce
 

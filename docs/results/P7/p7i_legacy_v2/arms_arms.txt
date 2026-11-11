@@ -1,0 +1,41 @@
+20 run(s), 4 arm(s)
+
+PER-ARM SCORES, BY FOLD
+
+arm                             f0      f1      f2      f3      f4    mean     sd   n
+-------------------------------------------------------------------------------------
+all11                       0.6427  0.7837  0.6870  0.6832  0.6805  0.6954 0.0525   5
+swir_only                   0.6110  0.6273  0.5819  0.5858  0.5865  0.5985 0.0198   5
+vnir                        0.6599  0.7526  0.6909  0.6929  0.6831  0.6959 0.0343   5
+vnir_swir                   0.6765  0.7757  0.6924  0.6804  0.6933  0.7037 0.0409   5
+
+MATCHED-k CONTRASTS -- band arms against vnir, rung by rung
+
+arm @ k                    n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+all11 @ k=1                5  +0.0001  0.0001 [-0.0001, +0.0002]   4/5  within noise
+all11 @ k=2                5  +0.0027  0.0060 [-0.0027, +0.0080]   3/5  within noise
+all11 @ k=3                5  -0.0025  0.0070 [-0.0088, +0.0038]   4/5  within noise
+all11 @ k=4                5  -0.0054  0.0150 [-0.0188, +0.0081]   1/5  within noise
+all11 @ k=5                5  -0.0042  0.0151 [-0.0177, +0.0093]   1/5  within noise
+all11 @ k=6                5  -0.0006  0.0158 [-0.0148, +0.0136]   1/5  within noise
+vnir_swir @ k=1            5  -0.0749  0.0462 [-0.1162, -0.0336]   0/5  WORSE than baseline
+vnir_swir @ k=2            5  -0.0076  0.0141 [-0.0201, +0.0050]   2/5  within noise
+vnir_swir @ k=3            5  -0.0041  0.0130 [-0.0157, +0.0075]   2/5  within noise
+vnir_swir @ k=4            5  +0.0000  0.0143 [-0.0128, +0.0128]   3/5  within noise
+vnir_swir @ k=5            5  +0.0048  0.0095 [-0.0037, +0.0133]   3/5  within noise
+vnir_swir @ k=6            5  +0.0028  0.0123 [-0.0082, +0.0139]   3/5  within noise
+swir_only @ k=1            5  -0.0750  0.0462 [-0.1163, -0.0337]   0/5  WORSE than baseline
+
+E-4: B11 alone, against chance and against the full VNIR set
+
+swir_only vs 0.5           5  +0.0985  0.0198 [+0.0808, +0.1162]   5/5  BEATS baseline
+swir_only vs vnir k=6      5  -0.0974  0.0290 [-0.1233, -0.0715]   0/5  WORSE than baseline
+
+REPLICATE CHECK: vnir_swir's k=1 rung and swir_only are the same model, seed and data.
+
+vnir_swir@1 - swir_only    5  +0.0001  0.0001 [-0.0000, +0.0001]   4/5  within noise
+  Any spread here is GPU nondeterminism, the floor under every contrast above.
+
+  figure -> docs\results\legacy_v2\fig_arms\band_matched_k.png
+  json   -> docs\results\legacy_v2\arms_arms.json

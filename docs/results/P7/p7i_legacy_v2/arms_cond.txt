@@ -1,0 +1,27 @@
+10 run(s), 2 arm(s)
+
+PER-ARM SCORES, BY FOLD
+
+arm                             f0      f1      f2      f3      f4    mean     sd   n
+-------------------------------------------------------------------------------------
+cond_all                    0.6538  0.7640  0.6820  0.6788  0.6853  0.6928 0.0417   5
+cond_fire                   0.6854  0.8090  0.7270  0.7341  0.7073  0.7326 0.0467   5
+
+PAIRED CONTRAST -- cond, against all
+
+arm                        n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+fire                       5  +0.0398  0.0130 [+0.0281, +0.0514]   5/5  BEATS baseline
+
+SCENE SUBSET -- conditioning on ignition (E-26)
+
+arm                        n    delta      sd       2se interval  wins  verdict
+----------------------------------------------------------------------------------------------
+fire-only vs all@fire      5  +0.0334  0.0390 [-0.0014, +0.0683]   3/5  within noise
+  Same tiles, two models: does training on the conditional cohort help the conditional task?
+within-fire vs overall     5  +0.0398  0.0130 [+0.0281, +0.0514]   5/5  BEATS baseline
+  Different tasks, same folds. AUC ignores prevalence, so this reads as which task the
+  imagery predicts better -- the comparison E-26's hypothesis is stated in.
+
+  figure -> docs\results\legacy_v2\fig_cond\arm_comparison.png
+  json   -> docs\results\legacy_v2\arms_cond.json

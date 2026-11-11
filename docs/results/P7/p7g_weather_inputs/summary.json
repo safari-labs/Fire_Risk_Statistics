@@ -1,0 +1,1386 @@
+{
+ "inputs": [
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 2,
+   "mean": -0.0022285099772333763,
+   "ci": [
+    -0.006447491135829253,
+    0.0019904711813625
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 3,
+   "mean": -0.0019477953085637934,
+   "ci": [
+    -0.008239124574255787,
+    0.002859269968295012
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 7,
+   "mean": 0.001140471424606071,
+   "ci": [
+    -0.001978520783305152,
+    0.004036116504530181
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 2,
+   "mean": 1.1630000936720582e-05,
+   "ci": [
+    -4.8062054870941695e-05,
+    8.659968542361617e-05
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 3,
+   "mean": 5.190621824846531e-06,
+   "ci": [
+    -5.667790820212718e-05,
+    6.866269454812724e-05
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 7,
+   "mean": -8.36780549811067e-05,
+   "ci": [
+    -0.00031850002416959156,
+    9.119132266322734e-05
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 2,
+   "mean": 3.7035818040516884e-05,
+   "ci": [
+    8.324286902124574e-06,
+    6.574734917890918e-05
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 3,
+   "mean": 0.00011421695797815268,
+   "ci": [
+    3.1527595422250104e-05,
+    0.00019749017598359085
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 7,
+   "mean": 0.00015987750155378825,
+   "ci": [
+    8.700847886854805e-05,
+    0.00023274652423902845
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 2,
+   "mean": 5.4349695114789634e-11,
+   "ci": [
+    -6.858905295577717e-11,
+    2.240359749568673e-10
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 3,
+   "mean": 1.924678712702151e-10,
+   "ci": [
+    5.6327535228698857e-11,
+    3.448884067225322e-10
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 7,
+   "mean": -7.332786230070572e-11,
+   "ci": [
+    -2.871829070845896e-10,
+    1.8937161468575897e-10
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 2,
+   "mean": -0.00018312831186983273,
+   "ci": [
+    -0.0009653551935857596,
+    0.0005701555117095284
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 3,
+   "mean": -0.000424107229273322,
+   "ci": [
+    -0.002149709713769695,
+    0.0010549490642436008
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 7,
+   "mean": -0.0017936325045731097,
+   "ci": [
+    -0.00713357983616328,
+    0.0024227089622774903
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 2,
+   "mean": 0.00021089964840936837,
+   "ci": [
+    -6.113799009286325e-05,
+    0.0005578162427181047
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 3,
+   "mean": -0.0005557935239143719,
+   "ci": [
+    -0.0011566216012616575,
+    -4.798399269886715e-05
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 7,
+   "mean": -0.0006900524272584363,
+   "ci": [
+    -0.0018152514834832046,
+    3.344826419843609e-05
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 2,
+   "mean": -0.00040094783629344527,
+   "ci": [
+    -0.0018029565489529795,
+    0.0009370418780422218
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 3,
+   "mean": 0.0015524275652129215,
+   "ci": [
+    0.0005875286095002949,
+    0.0028196394499093356
+   ],
+   "n": 15,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 7,
+   "mean": -0.0010782569723712277,
+   "ci": [
+    -0.002611623671987906,
+    0.0004195131036280437
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 2,
+   "mean": -0.01947378488432411,
+   "ci": [
+    -0.0435081439983401,
+    0.005444130777311357
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 3,
+   "mean": -0.034859749455337694,
+   "ci": [
+    -0.052009803921568655,
+    -0.02031862745098039
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 7,
+   "mean": -0.022814672165162354,
+   "ci": [
+    -0.04245007262164123,
+    0.0026947816163502445
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 2,
+   "mean": -0.0038676535428986414,
+   "ci": [
+    -0.007237848843240991,
+    -0.00029489573607221315
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 3,
+   "mean": -0.0033341114223467048,
+   "ci": [
+    -0.006967787114845922,
+    0.002058045440398411
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 7,
+   "mean": -0.002692025884427851,
+   "ci": [
+    -0.008198302469135828,
+    0.002814250700280126
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 2,
+   "mean": 0.0006164410208527871,
+   "ci": [
+    -0.0015717398070339192,
+    0.002804621848739493
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 3,
+   "mean": -0.0024028361344537934,
+   "ci": [
+    -0.0057014472455649235,
+    0.0006365740740740774
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 7,
+   "mean": 0.0033979147214441285,
+   "ci": [
+    -0.0022175536881419078,
+    0.008064892623716124
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 2,
+   "mean": -0.0005366220562299073,
+   "ci": [
+    -0.0016806722689075792,
+    0.0003322440087145884
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 3,
+   "mean": -0.0008973959954352128,
+   "ci": [
+    -0.0016690009337068322,
+    -0.00015432098765431798
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 7,
+   "mean": -0.0018526623612407978,
+   "ci": [
+    -0.00262507780890134,
+    -0.0008688660649444957
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 2,
+   "mean": 0.00062295751633988,
+   "ci": [
+    -0.007529956427015252,
+    0.008016748366013087
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 3,
+   "mean": 0.0024953314659197,
+   "ci": [
+    -0.003643790849673205,
+    0.010084033613445386
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 7,
+   "mean": 0.00030060172217035347,
+   "ci": [
+    -0.013177196804647772,
+    0.014249403465089735
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 2,
+   "mean": -0.002575020749040354,
+   "ci": [
+    -0.005112693225438317,
+    -3.734827264239007e-05
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 3,
+   "mean": -0.0038346171802054203,
+   "ci": [
+    -0.009244281045751633,
+    0.0011723856209150175
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 7,
+   "mean": -0.00432899548708372,
+   "ci": [
+    -0.011671335200746969,
+    0.0010084033613445343
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 2,
+   "mean": 0.0007654126465400942,
+   "ci": [
+    -0.0022848583877995705,
+    0.004636924214130097
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 3,
+   "mean": -0.00452581958709409,
+   "ci": [
+    -0.010570987654320978,
+    0.00299518881626725
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 7,
+   "mean": -0.00369112459798735,
+   "ci": [
+    -0.008347338935574228,
+    0.0006045751633986832
+   ],
+   "n": 15,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 2,
+   "mean": -0.0022374057716535445,
+   "ci": [
+    -0.005318616551837163,
+    0.0016679270711507988
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 3,
+   "mean": -0.0039786214396895,
+   "ci": [
+    -0.006608971767631222,
+    -0.0009079129633916772
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "ffmc",
+   "lag": 7,
+   "mean": -0.0028118219437660795,
+   "ci": [
+    -0.0058177525544087505,
+    0.00019879352254996706
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "isi",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dmc",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "dc",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 2,
+   "mean": -0.0006227307955409378,
+   "ci": [
+    -0.0012850219011464326,
+    -0.00020133709148222322
+   ],
+   "n": 5,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 3,
+   "mean": -0.0015166393916972165,
+   "ci": [
+    -0.0032260508210792517,
+    0.00015138293548897508
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "bui",
+   "lag": 7,
+   "mean": -0.00309132091449702,
+   "ci": [
+    -0.010443515075453024,
+    0.002021549931758734
+   ],
+   "n": 5,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "fwi",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 2,
+   "mean": -0.0017106082572341474,
+   "ci": [
+    -0.003141948600089051,
+    -0.00027926791437924423
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 3,
+   "mean": 0.0002598720746973315,
+   "ci": [
+    -0.0012276836798438052,
+    0.001656717825208953
+   ],
+   "n": 5,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "input": "wx",
+   "lag": 7,
+   "mean": -0.0016302174126207936,
+   "ci": [
+    -0.00448407617975124,
+    0.001710971350641932
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 2,
+   "mean": -0.0296290460628696,
+   "ci": [
+    -0.06713935574229693,
+    0.004751400560224073
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 3,
+   "mean": -0.07624795751633986,
+   "ci": [
+    -0.0993382352941176,
+    -0.05512663398692812
+   ],
+   "n": 5,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "ffmc",
+   "lag": 7,
+   "mean": -0.03593137254901957,
+   "ci": [
+    -0.08751838235294115,
+    0.01676470588235297
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "isi",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dmc",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "dc",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 2,
+   "mean": 0.004481792717086841,
+   "ci": [
+    0.0,
+    0.009523809523809513
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 3,
+   "mean": 0.01178513071895424,
+   "ci": [
+    0.0034722222222221878,
+    0.022160947712418298
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "bui",
+   "lag": 7,
+   "mean": 0.0175955104263928,
+   "ci": [
+    -0.0006915266106442442,
+    0.03578511612978536
+   ],
+   "n": 5,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 2,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 3,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "fwi",
+   "lag": 7,
+   "mean": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "n": 5,
+   "folds_below": 0,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 2,
+   "mean": -0.008393635231870533,
+   "ci": [
+    -0.018347338935574185,
+    0.00017117958294428083
+   ],
+   "n": 5,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 3,
+   "mean": 0.0025086562402738765,
+   "ci": [
+    -0.006179193899782098,
+    0.01421306022408957
+   ],
+   "n": 5,
+   "folds_below": 3,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "input": "wx",
+   "lag": 7,
+   "mean": -0.002609126984126986,
+   "ci": [
+    -0.01426062091503264,
+    0.011653828197945804
+   ],
+   "n": 5,
+   "folds_below": 3,
+   "n_folds": 5
+  }
+ ],
+ "fast_slow": [
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 3,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.000759248824966748,
+   "ci": [
+    -0.004657502612220309,
+    0.002136448478491944
+   ],
+   "n": 15,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "within patches",
+   "lag": 7,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": 0.0014252129737629682,
+   "ci": [
+    -0.002160108437712349,
+    0.00475926958421687
+   ],
+   "n": 15,
+   "folds_below": 1,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 3,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.019895898174084443,
+   "ci": [
+    -0.02718513331258431,
+    -0.011723455007002776
+   ],
+   "n": 15,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r2",
+   "label": "R2, trained on D-1 weather",
+   "metric": "between patches",
+   "lag": 7,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.01197731870525988,
+   "ci": [
+    -0.02141203703703705,
+    -0.0005261826953003326
+   ],
+   "n": 15,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "lag": 3,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.001230991023996142,
+   "ci": [
+    -0.002176380275670897,
+    0.00012901747293867505
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "within patches",
+   "lag": 7,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": 0.00013974948536547017,
+   "ci": [
+    -0.0029962711640485694,
+    0.0031353402968685717
+   ],
+   "n": 5,
+   "folds_below": 2,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "lag": 3,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.04401654411764705,
+   "ci": [
+    -0.05663398692810456,
+    -0.03281249999999998
+   ],
+   "n": 5,
+   "folds_below": 5,
+   "n_folds": 5
+  },
+  {
+   "config": "r0_scanfi",
+   "label": "R0 HFI, physics only",
+   "metric": "between patches",
+   "lag": 7,
+   "contrast": "mean(FFMC, ISI aged) - mean(DC, BUI aged)",
+   "mean": -0.026763441487706187,
+   "ci": [
+    -0.04421500544662309,
+    -0.0054598506069094225
+   ],
+   "n": 5,
+   "folds_below": 4,
+   "n_folds": 5
+  }
+ ]
+}

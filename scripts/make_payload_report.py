@@ -682,7 +682,10 @@ def build():
          ["Flight heritage", "Q7S in orbit since June 2016", "Q8S in orbit since September 2020"],
          ["Runs the best size (32 × 1)", "Only with a wider dataflow fold (unmeasured)",
           "Yes, ≈0.1 s"],
-         ["Runs 16 × 1", "Yes, ≈35 s, about 19 % of its logic", "Yes, ≈0.03 s"]],
+         ["Runs 16 × 1", "Yes, ≈35 s, about 19 % of its logic", "Yes, ≈0.03 s"],
+         ["DPU core's own footprint (B4096)", "no DPU target",
+          "82 % of block RAM in the default build; 71 % of UltraRAM in the UltraRAM build "
+          "(AMD PG338), which meets the 80 % rule"]],
         [0.24, 0.38, 0.38], caption="The two processing boards (Xiphos datasheets)."))
     story.append(P(
         "Model size and board are therefore one decision. The Q8 runs the best model with a large "

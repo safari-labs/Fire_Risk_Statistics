@@ -46,41 +46,45 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P12d](P12/p12_vnir_swir/README.md) | 2026-11-10 | VNIR against SWIR: the Mantis cameras' models at every size (hs_arch) | 1 MIXED |
 | [P7f](P7/p7f_station_distance/README.md) | 2026-11-10 | Station-distance stratification (slots_v2) | 1 REFUTED |
 | [P12e](P12/p12_hw_mantis/README.md) | 2026-11-11 | The Mantis-track onboard model on the Q7 and Q8 (local builds) | 1 PARTIAL, 1 REFUTED |
+| [P12f](P12/p12_swir2/README.md) | 2026-11-11 | SWIR2 on the general track (E-68) | 1 REFUTED |
+| [P7g](P7/p7g_weather_inputs/README.md) | 2026-11-11 | Weather age, one input at a time (lags_v2) | 1 SUPPORTED |
+| [P7h](P7/p7h_daylat/README.md) | 2026-11-11 | Latitude-correct day length under R2 (slots_e19) | 1 REFUTED |
+| [P7i](P7/p7i_legacy_v2/README.md) | 2026-11-11 | Legacy band, axis and index sweeps on the v2 pack | 2 MIXED, 5 REFUTED, 5 SUPPORTED |
 
 ## Experiments
 
-40 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+54 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
-| E-1 VNIR band selection | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-2 All-11 greedy | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-3 Forced-SWIR delta | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-4 SWIR-only floor | Runnable now | - | - | - |
-| E-5 Leave-one-out band value | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-6 Selection stability | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-7 Resolution requirement | Runnable now | - | - | - |
+| E-1 VNIR band selection | Concluded | P7i REFUTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-2 All-11 greedy | Concluded | P7i REFUTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-3 Forced-SWIR delta | Concluded | P7i MIXED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-4 SWIR-only floor | Concluded | P7i SUPPORTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
+| E-5 Leave-one-out band value | Concluded | P7i REFUTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-6 Selection stability | Concluded | P7i REFUTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-7 Resolution requirement | Concluded | P7i SUPPORTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
 | E-8 Label independence control | Needs a pack | - | - | - |
 | E-9 Lightning cohort | Runnable now | - | - | - |
-| E-10 Negative control | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
-| E-11 Greenness vs moisture indices | Runnable now | - | - | - |
-| E-12 Index baseline vs learned bands | Runnable now | - | - | - |
+| E-10 Negative control | Concluded | P7i SUPPORTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/), [band_search_nbac](band_search_nbac/) | - |
+| E-11 Greenness vs moisture indices | Concluded | P7i MIXED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
+| E-12 Index baseline vs learned bands | Concluded | P7i SUPPORTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
 | E-13 Weather representation | Closed, no result | - | - | - |
 | E-14 Fusion architecture | Closed, no result | - | - | - |
 | E-15 Imagery vs the FBP formula | Closed, no result | - | - | - |
 | E-16 FMC arms | No label exists | - | - | - |
 | E-17 Station-density stratification | Concluded | P7f REFUTED | [P7/p7f_station_distance](P7/p7f_station_distance/) | [patch_map](P7/p7f_station_distance/qual_E-17_patch_map.png) |
 | E-18 Snow-off startup | Concluded | P6d REFUTED | [P6/p6d_startup](P6/p6d_startup/) | [patch_map](P6/p6d_startup/qual_E-18_patch_map.png) |
-| E-19 Latitude-banded weather | Runnable now | - | - | - |
-| E-20 Weather staleness | Runnable now | P7 PARTIAL, P7d PARTIAL | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
+| E-19 Latitude-banded weather | Concluded | P7h REFUTED | [P7/p7h_daylat](P7/p7h_daylat/) | - |
+| E-20 Weather staleness | Concluded | P7 PARTIAL, P7d PARTIAL, P7g SUPPORTED | [P7/p7_slots](P7/p7_slots/), [P7/p7d_weather_age](P7/p7d_weather_age/), [P7/p7g_weather_inputs](P7/p7g_weather_inputs/) | [staleness](P7/p7_slots/qual_E-20_staleness.png), [trained_stale](P7/p7d_weather_age/qual_E-20_trained_stale.png) |
 | E-21 Fuel-layer refresh | Partial result | P2 AT RISK, P3 AT RISK | [P2/p2_r0](P2/p2_r0/), [P3/p3_dated](P3/p3_dated/) | [inventory_age](P3/p3_dated/qual_E-21_inventory_age.png) |
 | E-22 Ecology arm | Concluded | P6a SUPPORTED, P6a-v3 SUPPORTED | [P6/p6a_ecology](P6/p6a_ecology/), [P6/p6a_ecology_v3](P6/p6a_ecology_v3/) | - |
 | E-23 SWIR band placement | Concluded | P12a MIXED | [P12/p12_bands](P12/p12_bands/) | - |
 | E-24 1209 vs 1240 nm | Runnable now | - | - | - |
 | E-25 Spectral resolution: HS vs MS | Runnable now | - | - | - |
-| E-26 Within-fire burn pattern | Runnable now | - | - | - |
+| E-26 Within-fire burn pattern | Concluded | P7i SUPPORTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
 | E-27 Cost per input channel | Concluded | P12e REFUTED | [P12/p12_hw_mantis](P12/p12_hw_mantis/) | - |
-| E-28 Co-registration tolerance | Runnable now | - | - | - |
+| E-28 Co-registration tolerance | Concluded | P7i REFUTED | [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
 | E-29 T1 live foliar moisture | Concluded | P6f SUPPORTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | - |
 | E-30 T2 curing / NPV fraction | No label exists | - | - | - |
 | E-31 Fire occurrence prediction | No label exists | - | - | - |
@@ -106,7 +110,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-51 Operational start-up (R0) | Partial result | P3 MIXED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-51_patch_map.png) |
 | E-52 Weather source: station vs ERA5 (R0) | Partial result | P3 REFUTED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-52_patch_map.png) |
 | E-53 Weather staleness under R0 | Partial result | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-53_patch_map.png) |
-| E-54 Legacy composite leakage | Partial result | P4 MIXED | [P4/p4_prefire](P4/p4_prefire/) | - |
+| E-54 Legacy composite leakage | Concluded | P4 MIXED | [P4/p4_prefire](P4/p4_prefire/), [P7/p7i_legacy_v2](P7/p7i_legacy_v2/) | - |
 | E-55 Operational FWI grid vs the reconstruction | Concluded | P7b MIXED | [P7/p7b_operational](P7/p7b_operational/) | [patch_map](P7/p7b_operational/qual_E-55_patch_map.png) |
 | E-56 Operational FBP outputs on a 2024-2025 cohort | Partial result | P6b PARTIAL | [P6/p6b_cohort](P6/p6b_cohort/) | [cohort_tiles](P6/p6b_cohort/qual_E-56_cohort_tiles.png), [patch_map](P6/p6b_cohort/qual_E-56_patch_map.png) |
 | E-57 Percent-conifer correction with an imagery-free offset | Concluded | P7c SUPPORTED | [P7/p7c_slots_v3](P7/p7c_slots_v3/) | [pc_offset](P7/p7c_slots_v3/qual_E-57_pc_offset.png) |
@@ -120,4 +124,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Concluded | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
 | E-66 What each Dragonfly Mantis mode would offer | Concluded | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
 | E-67 VNIR against SWIR: the Mantis cameras' models at every size | Concluded | P12d MIXED | [P12/p12_vnir_swir](P12/p12_vnir_swir/) | [family_confusion](P12/p12_vnir_swir/qual_E-67_family_confusion.png) |
-| E-68 SWIR2's potential on the general track: the consensus sets with and without B12 | Runnable now | - | - | - |
+| E-68 SWIR2's potential on the general track: the consensus sets with and without B12 | Concluded | P12f REFUTED | [P12/p12_swir2](P12/p12_swir2/) | - |

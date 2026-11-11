@@ -1,0 +1,29 @@
+5 run(s) loaded
+
+====================================================================================================
+preset tier2-small   fusion rasters_only   fmc baseline   label nbac   metric auc_px   weather both
+pool B11   forced B11
+folds: [0, 1, 2, 3, 4]
+====================================================================================================
+
+ k  consensus set                       agree           score            gain   margin
+----------------------------------------------------------------------------------------------------
+ 1  B11                                 100%  0.5985+-0.0198                   0.0000
+
+band      k=1
+-------------
+B11      100%
+
+Read down a column: which bands the folds chose for a set of that size.
+100% means every fold agreed. Anything between is the disagreement, not noise to average away.
+
+band    enters at k   folds  per fold
+--------------------------------------------------------
+B11               1       5  1,1,1,1,1
+
+CAVEATS
+  - n=5 folds. Stage A produced a front-end claim at n=3 that did not survive n=6.
+
+  figure -> docs\results\legacy_v2\pool_swir_only.png\band_selection_tier2-small_rasters_only_nbac_auc_px_wx-both_pool1_must-B11.png
+
+summary -> docs\results\legacy_v2\pool_swir_only.json

@@ -48,10 +48,11 @@ python scripts/make_convert_package.py
   - the DPU on the Q8;
   - FINN on the Q7 and the Q8, with FIFOs sized;
   - power from Vivado, or the board measurements in `boards.json`.
-- If E-47 lands on 8x2, the options are the Q8 with a DPU (a 3.5 W typical board, timing safe, mostly idle) and FINN on the Q7 (a 2 W typical board, if the sized FIFOs still fit). That trade is James's to make (A-49).
+- If E-47 lands on 8x2, the options are the Q8 with a DPU (a 5 W typical board per the Rev C spec sheet in the repo; `boards.json` says 3.5 W; timing safe, mostly idle) and FINN on the Q7 (a 2 W typical board, if the sized FIFOs still fit). That trade is James's to make (A-49).
 
 ## Limits
 
+- **The DPU's own footprint was not checked here** (added 2026-11-11, P12/p12_hw_mantis). A B4096 core takes 82 % of the Q8's block RAM in its default build, over the 80 % rule but under 100 %. The UltraRAM build takes 71 % of the UltraRAM and 4 BRAM18K (AMD PG338 v3.4), so the Q8 option needs that build or a smaller DPU.
 - Untrained weights, so nothing here measures fidelity at deployment precision, only that the conversion computes the network.
 - No synthesis: hls4ml BRAM comes from the law, FINN from analytic estimates, the DPU from the compiler's workload count.
 - The index front end is outside every graph and unmeasured at 14 indices.
