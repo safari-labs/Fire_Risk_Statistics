@@ -1641,6 +1641,34 @@ PHASES: tuple[Phase, ...] = (
         ),
     ),
     Phase(
+        "P12e", "The Mantis-track onboard model on the Q7 and Q8 (local builds)", "2026-11-11",
+        "P12/p12_hw_mantis", "README.md",
+        "E-48 on the Mantis track (A-55): 16x1, 32x1 and 32x2 at the real input counts (11 for "
+        "the VNIR stand-in, 16 with B11), untrained, through hls4ml, FINN W4A4 (estimate only, "
+        "minimal folding and about 6 tiles/s) and the Vitis AI DPU; and E-27, 32x1 at 3, 11, "
+        "16, 22 and 96 inputs.",
+        (
+            Entry("E-48", "experiment", "PARTIAL",
+                  result="Mantis track: every candidate fits both boards on these estimates. "
+                         "Q8 DPU: one subgraph each, 0.03-0.19 s per scene. Q7 FINN W4A4: "
+                         "34.6 s per scene (width 32 folded), largest share 18-46 %. hls4ml: "
+                         "217-1424 % of the Q8's BRAM. The general track waits for E-68.",
+                  conclusion="The registered prediction holds on the Mantis track: the "
+                             "chosen model fits a Q8 at <= 80 %. The Q7 is an option too, "
+                             "provisional until a Vivado build sizes FINN's FIFOs. Options "
+                             "(A-49): Q8 + DPU at 32x1/32x2, Q7 + FINN at 32x1, Q7 + FINN "
+                             "at 16x1."),
+            Entry("E-27", "experiment", "REFUTED",
+                  result="32x1 from 3 to 96 inputs: FINN BRAM +16 %, LUT +14 %, DPU work "
+                         "+42 %, throughput unchanged; 11 to 16 inputs costs 1 BRAM and "
+                         "about 80 LUTs.",
+                  conclusion="Cost is strongly sub-linear in input channels: the network "
+                             "after the first convolution dominates. A wide input, even "
+                             "96 HS channels, is cheap on the board; band count is not a "
+                             "hardware constraint."),
+        ),
+    ),
+    Phase(
         "P12b", "What each Dragonfly Mantis mode would offer (sensors_v1)", "2026-11-06",
         "P12/p12_sensors", "README.md",
         "E-66 on AVIRIS-NG (aviris_v4), hs_v4's folds and seeds: RGB, the MS standard block "

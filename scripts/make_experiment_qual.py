@@ -1115,6 +1115,8 @@ QUAL = [
     ("E-17", "P7/p7f_station_distance", "patch map", ["qual_E-17_patch_map.png"]),
     ("E-46", "P12/p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
     ("E-23", "P12/p12_bands", "band placement", ["qual_E-46_band_placement.png"]),
+    ("E-48", "P12/p12_hw_mantis", "existing", ["hw_mantis.png"]),
+    ("E-27", "P12/p12_hw_mantis", "existing", ["hw_mantis.png"]),
     ("P6f-C2", "P6/p6f_reference", "spectra", ["qual_P6f_spectra.png"]),
     ("E-65", "P6/p6f_lfmc_v2", "site series", ["qual_E-64_series.png"]),
     ("E-66", "P12/p12_sensors", "band placement", ["qual_E-66_sensor_bands.png"]),

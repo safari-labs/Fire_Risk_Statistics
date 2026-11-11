@@ -45,10 +45,11 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | [P12c](P12/p12_arch/README.md) | 2026-11-09 | The onboard model's size (E-47, arch_mantis_std) | 1 REFUTED |
 | [P12d](P12/p12_vnir_swir/README.md) | 2026-11-10 | VNIR against SWIR: the Mantis cameras' models at every size (hs_arch) | 1 MIXED |
 | [P7f](P7/p7f_station_distance/README.md) | 2026-11-10 | Station-distance stratification (slots_v2) | 1 REFUTED |
+| [P12e](P12/p12_hw_mantis/README.md) | 2026-11-11 | The Mantis-track onboard model on the Q7 and Q8 (local builds) | 1 PARTIAL, 1 REFUTED |
 
 ## Experiments
 
-38 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+40 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
@@ -78,7 +79,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-24 1209 vs 1240 nm | Runnable now | - | - | - |
 | E-25 Spectral resolution: HS vs MS | Runnable now | - | - | - |
 | E-26 Within-fire burn pattern | Runnable now | - | - | - |
-| E-27 Cost per input channel | Runnable now | - | - | - |
+| E-27 Cost per input channel | Concluded | P12e REFUTED | [P12/p12_hw_mantis](P12/p12_hw_mantis/) | - |
 | E-28 Co-registration tolerance | Runnable now | - | - | - |
 | E-29 T1 live foliar moisture | Concluded | P6f SUPPORTED | [P6/p6f_lfmc](P6/p6f_lfmc/) | - |
 | E-30 T2 curing / NPV fraction | No label exists | - | - | - |
@@ -99,7 +100,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-45 Ignition slot value | Partial result | P9b REFUTED | [P9/p9b_ignition_rungs](P9/p9b_ignition_rungs/) | [sets_map](P9/p9b_ignition_rungs/qual_E-45_sets_map.png) |
 | E-46 Band and index decision | Partial result | P12a SUPPORTED | [P12/p12_bands](P12/p12_bands/), [P12/p12_weights](P12/p12_weights/) | [band_placement](P12/p12_bands/qual_E-46_band_placement.png) |
 | E-47 Architecture decision | Partial result | P12c REFUTED | [P12/p12_arch](P12/p12_arch/) | [family_confusion](P12/p12_arch/qual_E-47_family_confusion.png) |
-| E-48 Hardware decision | Needs a pack | - | [P12/p12_convert](P12/p12_convert/) | - |
+| E-48 Hardware decision | Partial result | P12e PARTIAL | [P12/p12_hw_mantis](P12/p12_hw_mantis/), [P12/p12_convert](P12/p12_convert/) | - |
 | E-49 Dating the weather (R0) | Partial result | P3 REFUTED | [P3/p3_dated](P3/p3_dated/) | [weather_date](P3/p3_dated/qual_E-49_weather_date.png) |
 | E-50 Latitude-correct day length (R0) | Partial result | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-50_patch_map.png) |
 | E-51 Operational start-up (R0) | Partial result | P3 MIXED | [P3/p3_dated](P3/p3_dated/) | [patch_map](P3/p3_dated/qual_E-51_patch_map.png) |

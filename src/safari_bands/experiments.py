@@ -968,9 +968,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "numerator only. Stream BRAM is "
                    "ceil(width/18) x ceil(depth/1024), so width never stops "
                    "paying.",
-        state="RUNNABLE",
-        runner="sweep_architecture.py --widths",
+        state="CONCLUDED",
+        runner="Fire_Risk_FW export_eco_qonnx.py --in-ch 3/11/16/22/96 + the FINN build "
+               "via finn.sh; vitis_ai.sh inspect; Statistics "
+               "scripts/make_hw_mantis_package.py",
         resources="CPU only: model conversion, no Narval GPU allocation",
+        note="2026-11-11 (docs/results/P12/p12_hw_mantis): measured on the onboard "
+             "ecology network (TinyEcologyUNet 32x1), not the legacy fire network, "
+             "through FINN and the DPU. From 3 to 96 inputs: FINN BRAM +16 %, LUT +14 "
+             "%, DPU work +42 %, throughput unchanged; hls4ml 11 to 16 inputs +1 % "
+             "BRAM. REFUTED: strongly sub-linear, the body dominates.",
     ),
     Experiment(
         "E-28", "Co-registration tolerance", "Hardware",
@@ -1496,9 +1503,13 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="board (Q7, Q8, Q9) x model x input channels",
         dependent="BRAM / DSP / LUT, latency, power (A-29)",
         conclusion="The onboard hardware.",
-        state="NEEDS_PACK",
-        blocker="E-47 (budgets set in A-29: <= 43 s per scene, revised 2026-10-29 "
-                "from 91 s; then lowest power)",
+        runner="Fire_Risk_FW scripts/check_eco_convert.py, export_eco_qonnx.py + "
+               "the FINN build via scripts/finn.sh, scripts/vitis_ai.sh inspect; "
+               "then Statistics scripts/make_hw_mantis_package.py",
+        state="PARTIAL",
+        blocker="the general track waits for E-68's ladders; the Q7 fit is provisional "
+                "until a Vivado (Linux) build sizes FINN's FIFOs; power is from "
+                "datasheets",
         note="Conversion pre-check 2026-11-05 (docs/results/P12/p12_convert), untrained "
              "P6 four-head TinyEcologyUNet, 22 inputs (8 bands raw + indices), all 12 "
              "E-47 rungs. hls4ml: all convert and C-simulate (max |err| 0.0014), but "
@@ -1508,7 +1519,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "FIFOs unsized): all 24 builds convert; 23 fit the Q8 and 20 the Q7 at "
              "<= 80 %, and base_ch 4-16 meet 43 s at minimal folding (8x2 W4A4: 24 % "
              "of the Q7, 8.6 s). Next: FIFO sizing (Vivado on Linux) before the Q7 is "
-             "an option. The index front end divides and is in none of these graphs.",
+             "an option. The index front end divides and is in none of these graphs."
+             + "2026-11-11 (docs/results/P12/p12_hw_mantis, Mantis track, A-55): 16x1, "
+               "32x1 and 32x2 at the real inputs (11; 16 with B11). Q8 DPU: one subgraph "
+               "each, 0.03-0.19 s per scene. Q7 FINN W4A4 (estimate only): 34.6 s per "
+               "scene with width 32 folded for about 6 tiles/s, largest share 18-46 %. "
+               "hls4ml: 217-1424 % of the Q8's BRAM. SUPPORTED on the Mantis track.",
     ),
     # P3 predictions, registered 2026-10-24 before any P3 number existed.
     # Each is scored under R0 (no learning); the latitude bands hold 30 / 34
