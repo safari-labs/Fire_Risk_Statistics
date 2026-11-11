@@ -1391,7 +1391,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                "runs and one sweep_hs references run), then make_band_options.py "
                "--eco-rescore --hs-rescore",
         blocker="E-35 for the fuel-type slot's value; E-68 for SWIR2's increment on "
-                "each track. James chose 2026-11-10 (A-55): both tracks, Mantis first",
+                "the general track only (not the Mantis track). James chose "
+                "2026-11-10 (A-55): both tracks, Mantis first",
         note="2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting "
              "schemes the equal-weight search's best set is tied (paired, one SE) "
              "with the overall best under five; only maximin separates them, by "
@@ -1428,8 +1429,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         resources="--time=1:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G; 15 tasks "
                   "(5 folds x 3 seeds), 3 per job, 12 rungs each (a first guess from "
                   "eco_v3's 14 s per 8x2 fit)",
-        blocker="E-68's ladders (each set with and without B12); then the size is read "
-                "per track, Mantis and general (A-55)",
+        blocker="Mantis track: its ladders are in (stand-in, stand-in + B11), so its "
+                "size can be read now. General track: after E-68 (k=5 and k=8 "
+                "without B12). A-55",
         note="2026-11-09 (docs/results/P12/p12_arch): at B2 B3 B4 B7 B8A, the Mantis "
              "standard-block stand-in, REFUTED: best rung 32x1 (0.413); 8x2 0.011 +- "
              "0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. 32x1 needs the "
@@ -2121,42 +2123,32 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "best rung vs best rung +0.013 [+0.010, +0.016]: SUPPORTED (+0.004 at 8x2).",
     ),
     Experiment(
-        "E-68", "SWIR2's potential: both tracks of the band decision, with and without 2190 nm",
+        "E-68", "SWIR2's potential on the general track: the consensus sets with and without B12",
         "Hardware",
-        hypothesis="Registered 2026-11-10, before any run, on James's E-46 answer (A-55). (1) "
-                   "AVIRIS-NG, hs_v4's folds and seeds, per-pixel models 16x2 to 256x3: adding "
-                   "a 2190/180 nm band (extended InGaAs) to the Mantis VNIR standard block + "
-                   "L4 L6 L9 L11 raises combined skill at every size. (2) The same holds on the "
-                   "custom VNIR block + L4 L6 L9 L11. (3) Sentinel-2 U-Net ladder, E-47's "
-                   "design: B12 raises the best rung's skill in every pair, stand-in + B11 + "
-                   "B12 against stand-in + B11, k=5 against k=5 without B12, k=8 against k=8 "
-                   "without B12. WRONG IF, for (1) and (2), the paired CI reaches 0 at 64x2 "
-                   "(the size every band search used); for (3), in any pair, the best-rung "
-                   "CI reaches 0.",
-        independent="SWIR2 (2190 nm) present or absent, on the Mantis track (AVIRIS-NG fixed "
-                    "DFA sets) and the general track (Sentinel-2 consensus sets), at every "
-                    "model size",
-        dependent="combined skill and per-head RMSE, paired by fold and seed with hs_arch / "
-                  "arch_* (same folds, seeds and noise)",
-        conclusion="How much a SWIR2 chain would add on top of each band option, for P12's "
-                   "options table (A-49: options with pros and cons; no Mantis mode carries "
-                   "it, so this prices the extended-InGaAs case, it does not choose it).",
+        hypothesis="Registered 2026-11-10 and revised 2026-11-11, before any run, on James's "
+                   "E-46 answer (A-55): SWIR2 is unlikely to fly, so it is priced on the "
+                   "general (Sentinel-2) track only and kept out of every Mantis run. On the "
+                   "Sentinel-2 U-Net ladder, E-47's design: B12 raises the best rung's skill "
+                   "in both pairs, k=5 (B4 B5 B8A B11 B12) against k=5 without B12, and k=8 "
+                   "(B3 B4 B5 B6 B8 B8A B11 B12) against k=8 without B12. WRONG IF, in either "
+                   "pair, the paired CI of the best-rung difference reaches 0.",
+        independent="B12 (SWIR2, 2190 nm) present or absent in each Sentinel-2 consensus set, "
+                    "at every model size",
+        dependent="combined skill and per-head RMSE, paired by fold and seed with arch_k5 / "
+                  "arch_k8 (same folds, seeds and noise)",
+        conclusion="How much a SWIR2 band adds to the general band requirement, for P12's "
+                   "options table (A-49). It prices SWIR2; it does not put it on the Mantis "
+                   "track, which carries no SWIR2.",
         state="RUNNABLE",
         blocker="",
-        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch_swir2 "
-               "SETS='dfa_standard_nearest dfa_standard_nearest_swir2 dfa_custom_nearest "
-               "dfa_custom_nearest_swir2' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh; and "
-               "BANDS=B2,B3,B4,B7,B8A,B11,B12 EXP_NAME=arch_mantis_both_b12, BANDS=B4,B5,B8A,"
-               "B11 EXP_NAME=arch_k5_no_b12, BANDS=B3,B4,B5,B6,B8,B8A,B11 EXP_NAME="
-               "arch_k8_no_b12, each SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh",
-        resources="sweep_hs_arch.sh: 15 tasks of 56 fits (4 sets x 7 sizes x 2 noise), 3 per "
-                  "1:30:00 job (hs_arch's 42 fits took 20 min); sweep_eco_arch.sh: 15 tasks "
-                  "per band set, as arch_k5",
-        note="dfa_standard_nearest reruns hs_arch's rows exactly (anchor check); "
-             "dfa_custom_nearest is new to the size ladder (scored at 64x2 in sensors_fixed). "
-             "The SWIR2 band matches Sentinel-2 B12 and config C (2190/180 nm); "
-             "config/grids/p12_sensors_fixed.yaml, exported 2026-11-10 with the old anchors "
-             "unchanged.",
+        runner="Fire_Risk_FW BANDS=B4,B5,B8A,B11 EXP_NAME=arch_k5_no_b12 SUBMIT=1 bash "
+               "scripts/shell/sweep_eco_arch.sh; BANDS=B3,B4,B5,B6,B8,B8A,B11 "
+               "EXP_NAME=arch_k8_no_b12 SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh",
+        resources="sweep_eco_arch.sh: 15 tasks per band set, as arch_k5",
+        note="2026-11-11 revision (James): the first registration also added a 2190 nm band "
+             "to the Mantis VNIR + SWIR sets (AVIRIS-NG) and B12 to the Mantis stand-in. "
+             "Both were withdrawn before any run, because SWIR2 will most likely not be on "
+             "the CubeSat; the grid references were removed.",
     ),
 )
 

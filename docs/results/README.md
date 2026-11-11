@@ -119,4 +119,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Concluded | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
 | E-66 What each Dragonfly Mantis mode would offer | Concluded | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
 | E-67 VNIR against SWIR: the Mantis cameras' models at every size | Concluded | P12d MIXED | [P12/p12_vnir_swir](P12/p12_vnir_swir/) | [family_confusion](P12/p12_vnir_swir/qual_E-67_family_confusion.png) |
-| E-68 SWIR2's potential: both tracks of the band decision, with and without 2190 nm | Runnable now | - | - | - |
+| E-68 SWIR2's potential on the general track: the consensus sets with and without B12 | Runnable now | - | - | - |

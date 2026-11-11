@@ -1677,9 +1677,10 @@ The evaluator scores the variant `scanfi_v1_tree_2020` wherever the sidecar exis
   - The Mantis track: the standard or custom VNIR block, with or without DFA SWIR filters L4, L6, L9 and L11.
 - **If only one can be carried, it is Mantis.**
 - **SWIR2 (2190 nm, extended InGaAs) stays in the analysis "just to see the potential benefit."** It is not a requirement. No Mantis mode carries it.
+- **Clarified 2026-11-11 (James):** SWIR2 will most likely not be available on the CubeSat, so it is **not part of any Mantis run**. It stays in the other runs (the general Sentinel-2 track) to show how it affects performance.
 
 **What follows:**
-- **E-68** prices SWIR2 on both tracks, with and without 2190 nm at every model size.
+- **E-68** prices SWIR2 on the general track only: k = 5 and k = 8 with and without B12, at every model size.
 - **E-47:** the size ladders already cover both tracks (stand-in, stand-in + B11, k = 5, k = 8). The model choice is read per track.
 - **E-48:** both the chosen Mantis model and the chosen general model are converted for the boards.
 - **P12's options table** lists both tracks side by side, each with its SWIR2 increment (A-49: options with pros and cons; cost never chooses).

@@ -29,13 +29,6 @@ references:
   # The nearest set alone, for the MS-or-SWIR question at fixed filters.
   - {name: dfa_swir_nearest_alone, vendor: dragonfly, list: mantis_swir_filter_catalogue,
      include: [L4, L6, L9, L11], detector: ingaas_std}
-  # E-68 (James, 2026-11-10: keep SWIR2 "just to see the potential benefit"):
-  # each Mantis VNIR + SWIR set plus a SWIR2 band at Sentinel-2 B12 / config C
-  # (2190/180 nm, extended InGaAs). No Mantis mode carries it (A-19, A-52).
-  - {name: dfa_standard_nearest_swir2, detector: ingaas_ext, range_nm: [2190, 2190],
-     step_nm: 10, fwhm_nm: 180, with: [dfa_standard_nearest]}
-  - {name: dfa_custom_nearest_swir2, detector: ingaas_ext, range_nm: [2190, 2190],
-     step_nm: 10, fwhm_nm: 180, with: [dfa_custom_nearest]}
 
 role_windows_nm:
   BLUE: [450.0, 520.0]
