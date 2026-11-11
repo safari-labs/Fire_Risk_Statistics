@@ -1668,3 +1668,52 @@ The evaluator scores the variant `scanfi_v1_tree_2020` wherever the sidecar exis
 - It has **no species, closure or height**, so it cannot feed the CFS tree alone.
 - It could give every fire a fire-year-minus-one conifer/broadleaf/lichen map. That bears on E-21 (staleness), the C-1 lichen background and the fuel/non-fuel split (A-31).
 - Not used yet (Q41).
+
+## A-55: E-46 answered: both tracks, Mantis first, SWIR2 kept to price it (James, 2026-11-10)
+
+**James's answer to E-46 (A-49's band choice):**
+- **Carry both tracks.**
+  - The general track: the Sentinel-2 consensus sets k = 5 and k = 8, the sensor-agnostic spectral requirement.
+  - The Mantis track: the standard or custom VNIR block, with or without DFA SWIR filters L4, L6, L9 and L11.
+- **If only one can be carried, it is Mantis.**
+- **SWIR2 (2190 nm, extended InGaAs) stays in the analysis "just to see the potential benefit."** It is not a requirement. No Mantis mode carries it.
+
+**What follows:**
+- **E-68** prices SWIR2 on both tracks, with and without 2190 nm at every model size.
+- **E-47:** the size ladders already cover both tracks (stand-in, stand-in + B11, k = 5, k = 8). The model choice is read per track.
+- **E-48:** both the chosen Mantis model and the chosen general model are converted for the boards.
+- **P12's options table** lists both tracks side by side, each with its SWIR2 increment (A-49: options with pros and cons; cost never chooses).
+
+## A-56: The legacy band, axis and index sweeps re-run on the v2 pack (James, 2026-11-10)
+
+**Why.** The legacy sweeps ran on the v1 pack, whose 30-June composites could include post-fire scenes (E-54). James approved the re-run on 2026-11-10.
+
+**Re-run on v2, through the same `sweep_bands.py` and wrappers:**
+- E-1 to E-7 (band arms, leave-one-out, stability, GSD);
+- E-10 (negative control);
+- E-11 and E-12 (index families);
+- E-26 (within-fire burn pattern);
+- E-28 (co-registration shift).
+
+**What changes for a v2 pack** (`Fire_Risk_FW/src/fire_risk_fw/data.py`, detected from `pack_version`):
+
+| Element | v2 handling |
+|---|---|
+| Pool | `train.h5` + `val.h5` together; `test.h5` stays unopened |
+| Label | `/label` (NBAC burned on or after D, 255 ignore) and `/valid` become the v1 `/mask`, with ignore −1. The label maps to `nbac`, so the circularity guard still applies |
+| Folds | the slot sweeps' folds: whole freeze groups, `group_folds(..., seed 0)`, 5 folds. All 194 development patches carry R2's scalars, so a band fold holds exactly the ground of the slot fold with the same index |
+| Scalars | none; a fusion arm is refused |
+| Run names | tagged `_v2` on scratch, never mixed with v1 |
+
+Bands are reflectance in both packs, in the same order.
+
+**Closed rather than re-run:** E-13 (weather representation), E-14 (fusion architecture) and E-15 (imagery against the FBP formula), with the new register state CLOSED (closed without a valid result). The v2 pack carries none of E-13's 91-day history features, and the CFFDRS ladder answers each question in its own terms:
+- R1 against R2;
+- R4 against R2;
+- the weather-age experiment E-20.
+
+None of the three has a valid v1 result: E-13 and E-14 never ran on the NBAC pack, and E-15 ran on the dNBR one.
+
+**E-19** (latitude-banded weather) becomes one R2 configuration, `r2_daylat`. It uses latitude-correct day length in DMC and BUI (the `c2_daylat` variant; E-50 measured it at R0), paired with `r2`. DC and FWI keep the 46° N table, because the pack carries `c2_daylat` for DMC and BUI only.
+
+**E-27** (cost per input channel) is an hls4ml memory prediction, not training. P12's conversion check (E-48) has largely superseded it, so it is not part of this re-run.

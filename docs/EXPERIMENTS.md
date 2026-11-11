@@ -2,7 +2,7 @@
 
 **Generated from `src/safari_bands/experiments.py` by `scripts/make_experiments_doc.py`. Do not edit by hand** -- the figure `docs/results/figures/experiment_plan.png` renders from the same register, and a hand-kept copy drifts.
 
-67 experiments. **41 can run today** on data already packed and staged.
+68 experiments. **39 can run today** on data already packed and staged.
 
 ## Read this first: the label
 
@@ -17,11 +17,12 @@ The damage concentrates where it matters most: B8, B8A and B11 in the ranking, a
 | State | Count | What it means | Experiments |
 |---|---|---|---|
 | **Concluded** | 14 | every registered part has run; the verdict is in the phase sheets | E-17, E-18, E-22, E-29, E-34, E-55, E-57, E-58, E-59, E-60, E-64, E-65, E-66, E-67 |
-| **Runnable now** | 14 | data packed and staged; nothing missing | E-4, E-7, E-11, E-12, E-13, E-14, E-15, E-19, E-20, E-26, E-27, E-28, E-35, E-37 |
-| **Partial result** | 27 | some folds or arms have completed; the rest are blocked | E-1, E-2, E-3, E-5, E-6, E-10, E-21, E-32, E-33, E-36, E-38, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
+| **Runnable now** | 18 | data packed and staged; nothing missing | E-1, E-2, E-3, E-4, E-5, E-6, E-7, E-10, E-11, E-12, E-19, E-20, E-26, E-27, E-28, E-35, E-37, E-68 |
+| **Partial result** | 21 | some folds or arms have completed; the rest are blocked | E-21, E-32, E-33, E-36, E-38, E-41, E-43, E-44, E-45, E-46, E-47, E-49, E-50, E-51, E-52, E-53, E-54, E-56, E-61, E-62, E-63 |
 | **Needs code** | 2 | no new data; a runner or a flag has to be written | E-39, E-40 |
 | **Needs a pack** | 3 | data held but not tiled, packed or transferred | E-8, E-42, E-48 |
 | **Needs new data** | 4 | free to obtain, not yet held | E-9, E-23, E-24, E-25 |
+| **Closed, no result** | 3 | closed without a valid result; the note names what answers it instead | E-13, E-14, E-15 |
 | **No label exists** | 3 | cannot be run with any amount of work on data we hold | E-16, E-30, E-31 |
 
 Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audit. They were renumbered into this single register rather than left as a second scheme; `docs/CFFDRS_GAPS.md` points at the new ids.
@@ -59,13 +60,13 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-1** | VNIR band selection ★ | Red-edge earns a slot: the best six include at least one of B5/B6/B7 and exclude both 60 m atmospheric bands (B1, B9). WRONG IF an atmospheric band survives into the best six, which would say the ranking is reading haze rather than vegetation. | which 6 of the 10 Sentinel-2 bands in 400-1000 nm | auc_px, scenario-held-out folds, per set size k | Partial result | `sweep_arms.sh ARMS=vnir` |
-| **E-2** | All-11 greedy | B11 enters by k=3, because the NIR/SWIR contrast is the strongest single moisture signal available. WRONG IF it has not entered by k=7, which would be weak evidence against the SWIR chain -- weak, because one band cannot stand in for four. | unconstrained choice over all 11 packed bands | auc_px, scenario-held-out folds; the k at which B11 first enters | Partial result | `sweep_arms.sh ARMS=all11` |
-| **E-3** | Forced-SWIR delta | Positive but small: under +0.02 auc_px. One band in the window is a poor proxy for a four-band mode, so a large gain would be surprising and a null is not disqualifying. | B11 held in the set vs the VNIR-only set, matched k | the paired difference in auc_px, scenario-held-out folds | Partial result | `sweep_arms.sh ARMS=vnir_swir` |
-| **E-4** | SWIR-only floor | Clearly above chance and clearly below the VNIR set. The water features at 1200 and 1600 nm are physically present, so a learned model should find something; without the NIR anchor it cannot normalise for canopy structure or illumination. WRONG IF it matches the VNIR set, which would make the MS chain arguable. | B11 alone, no VNIR band | auc_px, scenario-held-out folds | Runnable now | `sweep_arms.sh ARMS=swir_only` |
-| **E-5** | Leave-one-out band value | Every individual drop is small, because the pool is redundant. B8 and B8A in particular each look worthless while the pair is not: leave-one-out cannot see mutual substitution, and reading a small drop as 'this band does not matter' is the trap. WRONG IF any single removal costs more than about 0.02, which would mean the pool is far less redundant than the near-duplicate pairs suggest and the chosen set is already minimal. | each band removed in turn from the chosen set | the drop in auc_px, scenario-held-out folds on removing each band | Partial result | `sweep_bands.py --leave-one-out (rides in E-1..E-4)` |
-| **E-6** | Selection stability | The top two or three bands are selected in 6/6 folds and the tail is unstable. WRONG IF even the top band swings, which would mean the ranking is fold noise and no k is reportable. | the same search re-run inside each of 6 location folds | the fraction of folds that select each band at each k | Partial result | `pool_bands.py (after E-1..E-4)` |
-| **E-7** | Resolution requirement | Graceful degradation from 20 to 40 m and a sharper fall by 80 m. WRONG IF 20 -> 40 m already costs materially, which matters more than it sounds: the Mantis MS mode is 32 m at 500 km, so our 20 m results would overstate what the sensor delivers. | ground sample distance 20 / 40 / 80 m, in 'pixels' mode: pooled then re-expanded, so INFORMATION is degraded while the tile keeps its shape | auc_px, scenario-held-out folds vs GSD, paired against 20 m | Runnable now | `sweep_axes.sh SETS=gsd` |
+| **E-1** | VNIR band selection ★ | Red-edge earns a slot: the best six include at least one of B5/B6/B7 and exclude both 60 m atmospheric bands (B1, B9). WRONG IF an atmospheric band survives into the best six, which would say the ranking is reading haze rather than vegetation. | which 6 of the 10 Sentinel-2 bands in 400-1000 nm | auc_px, scenario-held-out folds, per set size k | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=vnir SUBMIT=1 bash scripts/shell/sweep_arms.sh` |
+| **E-2** | All-11 greedy | B11 enters by k=3, because the NIR/SWIR contrast is the strongest single moisture signal available. WRONG IF it has not entered by k=7, which would be weak evidence against the SWIR chain -- weak, because one band cannot stand in for four. | unconstrained choice over all 11 packed bands | auc_px, scenario-held-out folds; the k at which B11 first enters | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=all11 SUBMIT=1 bash scripts/shell/sweep_arms.sh` |
+| **E-3** | Forced-SWIR delta | Positive but small: under +0.02 auc_px. One band in the window is a poor proxy for a four-band mode, so a large gain would be surprising and a null is not disqualifying. | B11 held in the set vs the VNIR-only set, matched k | the paired difference in auc_px, scenario-held-out folds | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=vnir_swir SUBMIT=1 bash scripts/shell/sweep_arms.sh` |
+| **E-4** | SWIR-only floor | Clearly above chance and clearly below the VNIR set. The water features at 1200 and 1600 nm are physically present, so a learned model should find something; without the NIR anchor it cannot normalise for canopy structure or illumination. WRONG IF it matches the VNIR set, which would make the MS chain arguable. | B11 alone, no VNIR band | auc_px, scenario-held-out folds | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=swir_only SUBMIT=1 bash scripts/shell/sweep_arms.sh` |
+| **E-5** | Leave-one-out band value | Every individual drop is small, because the pool is redundant. B8 and B8A in particular each look worthless while the pair is not: leave-one-out cannot see mutual substitution, and reading a small drop as 'this band does not matter' is the trap. WRONG IF any single removal costs more than about 0.02, which would mean the pool is far less redundant than the near-duplicate pairs suggest and the chosen set is already minimal. | each band removed in turn from the chosen set | the drop in auc_px, scenario-held-out folds on removing each band | Runnable now | `rides in E-1 to E-4 on v2 (SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_arms.sh)` |
+| **E-6** | Selection stability | The top two or three bands are selected in 6/6 folds and the tail is unstable. WRONG IF even the top band swings, which would mean the ranking is fold noise and no k is reportable. | the same search re-run inside each of 6 location folds | the fraction of folds that select each band at each k | Runnable now | `pool_bands.py over the v2 arms (sweep_bands_*_v2) after E-1 to E-4` |
+| **E-7** | Resolution requirement | Graceful degradation from 20 to 40 m and a sharper fall by 80 m. WRONG IF 20 -> 40 m already costs materially, which matters more than it sounds: the Mantis MS mode is 32 m at 500 km, so our 20 m results would overstate what the sensor delivers. | ground sample distance 20 / 40 / 80 m, in 'pixels' mode: pooled then re-expanded, so INFORMATION is degraded while the tile keeps its shape | auc_px, scenario-held-out folds vs GSD, paired against 20 m | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=gsd SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
 
 ### Controls
 
@@ -73,8 +74,8 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-8** | Label independence control (control) | The ranking is largely preserved. WRONG IF B11's value collapses specifically -- that would say it was reading NBR-like information shared with the perimeter delineation rather than fuel, which is exactly the circularity rule 3 exists to catch. | the label source: NBAC perimeters vs VIIRS thermal | change in the band ranking and in auc_px, scenario-held-out folds | Needs a pack | *none yet* |
 | **E-9** | Lightning cohort (control) | Absolute skill drops (fewer and harder cases) but the band ranking holds. WRONG IF the ranking changes, which would say human-ignition access signals -- roads, settlement -- were driving it. | fires filtered to NFDB CAUSE = lightning | auc_px, scenario-held-out folds, restricted cohort | Needs new data | *none yet* |
-| **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Partial result | `sweep_axes.sh SETS=neg` |
-| **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `sweep_axes.sh SETS=cond` |
+| **E-10** | Negative control (control) | The noise arm is within noise of 0.5, and the real-band arm clearly beats it. WRONG IF the noise arm sits clearly above 0.5: then a POSITIONAL PRIOR -- where burn tends to sit in a tile, learnable from zero padding without reading a band -- inflates every arm in this register, and must be subtracted before any of them is quoted. | the input: the 9 surface bands vs fresh Gaussian noise of the same width | auc_px, scenario-held-out folds against chance, and against the real-band arm | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=neg SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
+| **E-26** | Within-fire burn pattern | Imagery separates burned from unburned pixels INSIDE fire patches at least as well as it does across all patches, because inside a perimeter the outcome is fuel, terrain and firebreaks rather than whether a fire started. WRONG IF within-fire skill is clearly lower, which would say most unconditional skill comes from recognising WHICH patches burned -- between-patch discrimination, not fuel. | the training cohort: all scenes vs fire patches only, with each fold's locations held fixed | auc_px, scenario-held-out folds within fire tiles vs overall; and both models scored on the SAME fire tiles | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=cond SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
 | **E-43** | Date-only control (control) | Day of year and latitude alone separate fire from non-fire at about chance. WRONG IF they do not: the pseudo-date rule for negatives would then be a shortcut every arm can read. | date features only (day-of-year sin/cos, latitude) | between-patch AUC | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-54** | Legacy composite leakage | For fires that started before 30 June, the legacy April-June composite already shows the burn: on burned pixels its NIR-SWIR1 index (B8, B11) is lower than in the pre-fire composite ending D-1, relative to the same change on the patch's unburned pixels, and the drop grows with the days between the fire's start and 30 June. Fires starting in July or later show no drop. WRONG IF the early fires show no drop: then the v1 imagery did not read the outcome, whatever its weather did. | composite: legacy April-June of the patch year vs pre-fire (D-45 to D-1, extended to D-90, else last summer) | difference-in-differences of the B8/B11 index (legacy minus pre-fire, burned minus unburned pixels) per fire patch, against days of overlap (30 June minus D) | Partial result | `Fire_Risk_Model/scripts/python/build_prefire.py` |
 
@@ -82,17 +83,17 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-11** | Greenness vs moisture indices ★ | `both` beats `greenness` by a small but fold-consistent margin, because direct water absorption at 1610 nm carries information a greenness proxy cannot; and `moisture` (2 bands) draws with `greenness` (5 bands). WRONG IF `both` does not beat `greenness`, which would say the 1610 nm moisture signal adds nothing this label can see -- a publishable null, and one that would weaken the case for the SWIR chain considerably. | the index family given to the model: greenness (NDVI, EVI, VARI, NDRE) / moisture (NDMI, MSI) / both / raw bands | the paired difference in auc_px, scenario-held-out folds, against greenness | Runnable now | `sweep_indices.sh` |
-| **E-12** | Index baseline vs learned bands | The learned model on raw bands beats every index family, because an index is a fixed projection that discards information a model could use. WRONG IF indices match it, which would be a strong argument for shipping indices -- cheap on an FPGA and interpretable to an operational user. | hand-built indices vs the learned model on raw bands | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_indices.sh ARMS=raw,both` |
+| **E-11** | Greenness vs moisture indices ★ | `both` beats `greenness` by a small but fold-consistent margin, because direct water absorption at 1610 nm carries information a greenness proxy cannot; and `moisture` (2 bands) draws with `greenness` (5 bands). WRONG IF `both` does not beat `greenness`, which would say the 1610 nm moisture signal adds nothing this label can see -- a publishable null, and one that would weaken the case for the SWIR chain considerably. | the index family given to the model: greenness (NDVI, EVI, VARI, NDRE) / moisture (NDMI, MSI) / both / raw bands | the paired difference in auc_px, scenario-held-out folds, against greenness | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_indices.sh` |
+| **E-12** | Index baseline vs learned bands | The learned model on raw bands beats every index family, because an index is a fixed projection that discards information a model could use. WRONG IF indices match it, which would be a strong argument for shipping indices -- cheap on an FPGA and interpretable to an operational user. | hand-built indices vs the learned model on raw bands | the paired difference in auc_px, scenario-held-out folds | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=raw,both SUBMIT=1 bash scripts/shell/sweep_indices.sh` |
 | **E-59** | Indices as model inputs | For the P6 ecology estimators, giving the model every index its bands can form, alongside the raw bands, lowers error at matched band count, most at small k (k <= 4), under the sensor noise model; indices alone do worse than raw + indices. WRONG IF raw + indices beats raw at no k (spatial-block paired CI spanning 0 at every k, every target). | input mode at each nested band set: raw bands / indices only / raw + indices (an index enters only when its bands are in the set); same bands, folds and seeds | per-target held-out error (RMSE for percent conifer, closure, height; balanced accuracy for fuel family), noisy and noise-free | Concluded | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` |
 
 ### Covariates
 
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
-| **E-13** | Weather representation | BOTH is within noise of CODES. The FWI codes already integrate the same 91 days through a recursion tuned over decades, so our 12 features are unlikely to extract much the codes have not. WRONG IF BOTH wins clearly -- then check DIMENSIONLESS, because a gain that disappears there came from absolute level, which at 45-70 N is latitude wearing a weather costume. | the scalar columns the fusion head sees: FWI codes / our 12 compressed history features / both / dimensionless history | the paired difference in auc_px, scenario-held-out folds, against codes | Runnable now | `sweep_covariates.sh SETS=weather` |
-| **E-14** | Fusion architecture | Both fusion variants beat rasters_only, and two_head is within noise of bottleneck. The CFFDRS-shaped separation is expected to cost little; if it costs a lot, the architecture argument has to give way to the measurement. WRONG IF rasters_only matches both, which would say the weather scalars add nothing at this label and sample size -- and would make E-13 moot. | how weather enters: not at all / two-head late / bottleneck | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_covariates.sh SETS=fusion` |
-| **E-15** | Imagery vs the FBP formula | Imagery plus the FMC scalar beats the scalar alone, substantially. The FBP equation is a function of latitude, longitude, elevation and date only -- it carries no information about the stand -- so a null here would be surprising, and would cast doubt on the imagery rather than vindicate the formula. | the FBP foliar-moisture scalar alone vs that scalar plus all 9 surface bands | the paired difference in auc_px, scenario-held-out folds | Runnable now | `sweep_covariates.sh SETS=g1` |
+| **E-13** | Weather representation | BOTH is within noise of CODES. The FWI codes already integrate the same 91 days through a recursion tuned over decades, so our 12 features are unlikely to extract much the codes have not. WRONG IF BOTH wins clearly -- then check DIMENSIONLESS, because a gain that disappears there came from absolute level, which at 45-70 N is latitude wearing a weather costume. | the scalar columns the fusion head sees: FWI codes / our 12 compressed history features / both / dimensionless history | the paired difference in auc_px, scenario-held-out folds, against codes | Closed, no result | `sweep_covariates.sh SETS=weather` |
+| **E-14** | Fusion architecture | Both fusion variants beat rasters_only, and two_head is within noise of bottleneck. The CFFDRS-shaped separation is expected to cost little; if it costs a lot, the architecture argument has to give way to the measurement. WRONG IF rasters_only matches both, which would say the weather scalars add nothing at this label and sample size -- and would make E-13 moot. | how weather enters: not at all / two-head late / bottleneck | the paired difference in auc_px, scenario-held-out folds | Closed, no result | `sweep_covariates.sh SETS=fusion` |
+| **E-15** | Imagery vs the FBP formula | Imagery plus the FMC scalar beats the scalar alone, substantially. The FBP equation is a function of latitude, longitude, elevation and date only -- it carries no information about the stand -- so a null here would be surprising, and would cast doubt on the imagery rather than vindicate the formula. | the FBP foliar-moisture scalar alone vs that scalar plus all 9 surface bands | the paired difference in auc_px, scenario-held-out folds | Closed, no result | `sweep_covariates.sh SETS=g1` |
 | **E-16** | FMC arms | None. The arms are identical by construction, so no prediction is possible and any apparent difference would be seed noise. | baseline / measured / augment foliar moisture | (none obtainable) | No label exists | `-- (do not run)` |
 
 ### CFFDRS gaps
@@ -101,7 +102,7 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 |---|---|---|---|---|---|---|
 | **E-17** | Station-density stratification | The imagery increment grows with distance to the nearest station. Fuel moisture is the integral of weather, so a satellite estimate should be worth most where the weather grid is interpolated from furthest away -- the north, which is also where most area burns. | distance from each patch to the nearest fire-weather station | the imagery increment in auc_px, scenario-held-out folds, stratified by that distance | Concluded | `Statistics scripts/make_results_package.py --phase P7f --run narval_results/slots_v2/7289478 (station_km from the development pack)` |
 | **E-18** | Snow-off startup | Correcting the start date changes DC and DMC materially above 55 N and improves skill there, with little effect in the south. Our flat 90-day spinup starts around 1 April into frozen, snow-covered ground, so the spurious drying should scale with latitude. WRONG IF, above 55 N, the imagery start-up neither moves the median lag-1 DC by 10 % or more against the ERA5 rule nor raises the between-patch AUC of DC or FWI with a CI above 0. | FWI start date: the Appendix C-2 start-up keyed to a Sentinel-2 snow-off date per patch (the E-60 classifier, SWIR allowed and VNIR only) vs keyed to ERA5-Land snow (E-51's operational rule) vs our flat 90-day spinup | change in the FWI codes by latitude band, and between-patch AUC of DC, DMC, BUI and FWI (paired by patch, block bootstrap) | Concluded | `Fire_Risk_Model/scripts/python/build_s2_startup.py` |
-| **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `sweep_covariates.sh SETS=weather` |
+| **E-19** | Latitude-banded weather | History beats codes at high latitude specifically, and not in the south. The day-length factors are tabulated for ~46 N, so the codes should be least trustworthy where that assumption is furthest from the truth. WRONG IF the gain is uniform across bands, which would make the mechanism something other than day length. | the E-13 weather contrast, scored separately in 0-55 / 55-60 / 60-90 N on the same trained models | the INTERACTION: (history - codes) in 60-90 N minus the same in 0-55 N, paired by fold | Runnable now | `Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e19 CONFIGS=r2,r2_daylat bash scripts/shell/sweep_slots.sh` |
 | **E-20** | Weather staleness | Skill decays with weather age, fastest for CODES and slowest for the dimensionless history. This is the testable half of a claim fwi.py already makes from input drift alone (DC 8.2% over three days against ISI's 89.9%). WRONG IF decay is flat, which would mean a daily uplink costs nothing and the slow-code argument is unnecessary. | the age of the weather at inference: 0 / 24 / 48 / 72 h / 7 d | auc_px, scenario-held-out folds vs weather age, per weather arm | Runnable now | `Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v2 CONFIGS=r0_scanfi,r2 SCORE_LAGS=1,2,3,7 SCORE_LAG_INPUTS=ffmc,dmc,dc,isi,bui,fwi,wx FITS_PER_TASK=8 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (per-input half; run_slots --score-lag-inputs). First half: Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)` |
 | **E-21** | Fuel-layer refresh | A positive slope: the advantage of a refreshed estimate grows with the staleness gap. At gap 0 our estimate should LOSE, because it is a noisy copy of its own training target -- which is why the slope and not the level is the estimator. WRONG IF the slope is flat or negative. (This clause restates the prediction's negation; it was written 2026-10-24, after P2's inventory-half result, and changes nothing it predicts.) | the fuel inventory's vintage (SCANFI v2 2005-2020, pre-fire steps only), and later our refreshed estimate, against the gap to the fire year | the SLOPE of auc_px, scenario-held-out folds against staleness, not the level | Partial result | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` |
 | **E-22** | Ecology arm ★ | The ranking from dense SCANFI labels differs from the fire-outcome ranking, and SWIR ranks higher in it. Structure and biomass retrieval leans on SWIR more than a burn outcome does, because the outcome is diluted by ignition and weather. If the two rankings agree, that is a strong convergent result for whichever bands win. WRONG IF the first SWIR band (B11 or B12) enters the combined-skill nested set no earlier than B11 entered the fire-outcome search (median rung 3.5 over E-2's folds), taking the median over E-22's outer folds and seeds. | the same band searches, against SCANFI structure instead of a burn outcome | per-pixel error on cover, closure, height, biomass, species | Concluded | `Fire_Risk_FW/scripts/shell/sweep_eco.sh` |
@@ -127,10 +128,11 @@ Numbering note: E-17 to E-20 were an earlier E-1 to E-4 from the CFFDRS gap audi
 | ID | Experiment | Hypothesis | Independent variable | Dependent variable | State | Runner |
 |---|---|---|---|---|---|---|
 | **E-27** | Cost per input channel | BRAM scales roughly linearly with input channel count, so 96 channels are infeasible on the target part and 11 are affordable. Stream BRAM is ceil(width/18) x ceil(depth/1024) and width never stops paying. WRONG IF scaling is sub-linear because the first convolution dominates, which would make a wide input cheaper than the marginal-cost argument assumes. | input channel count: 3 / 6 / 10 / 11 / 96 | BRAM, DSP, LUT and latency from a real conversion | Runnable now | `sweep_architecture.py --widths` |
-| **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `sweep_axes.sh SETS=shift` |
+| **E-28** | Co-registration tolerance | Negligible cost below a quarter pixel, material by one pixel. WRONG IF a half-pixel shift already costs materially, which would tighten the dichroic and focal-plane alignment budget; or if two pixels cost little, which would retire the registration risk. | SWIR-channel shift at evaluation: 0, 0.25, 0.5, 1, 2 px, on a model trained with the channels registered | the drop in auc_px, scenario-held-out folds against the unshifted score, paired by fold | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=shift SUBMIT=1 bash scripts/shell/sweep_axes.sh` |
 | **E-48** | Hardware decision | The chosen model fits a Q8 at <= 80 % of every resource. WRONG IF only the Q9 fits, or none does. | board (Q7, Q8, Q9) x model x input channels | BRAM / DSP / LUT, latency, power (A-29) | Needs a pack | *none yet* |
 | **E-66** | What each Dragonfly Mantis mode would offer | Registered 2026-11-06 on James's approval, before any result (PLAN_NEXT section 6; Chameleon and Caiman left out). On AVIRIS-NG with hs_v4's folds: (1) the custom Mantis MS block (490, 560, 665, 705, 740, 865) beats DFA's standard block as published; (2) MS custom alone beats Mantis SWIR alone (best 4 of DFA's filters); (3) all HS channels 470-900 nm are within one paired SE of MS custom; (4) MS custom + the best 4 DFA SWIR filters beats MS custom alone; (5) RGB scores below every MS set. WRONG IF, for (1), (2) and (4), the paired CI reaches 0; for (3), HS leads by more than one SE; for (5), RGB ties an MS set. | Mantis band set: RGB, MS standard (as published; rule-7-clean subset), MS custom, HS (all 81 surface channels; 6 chosen in orbit), SWIR (4 of DFA's 10 usable filters), MS + SWIR | combined skill and RMSE per head on SCANFI labels, paired by fold and seed with hs_v4; lidar height for the leading rows | Concluded | `Fire_Risk_FW ARMS="references dfa_swir_alone dfa_swir_on_custom dfa_swir_on_standard dfa_hs_select" GRID=configs/noise/p12_sensors_grid.json SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=sensors_v1 SUBMIT=1 bash scripts/shell/sweep_hs.sh` |
 | **E-67** | VNIR against SWIR: the Mantis cameras' models at every size | Registered 2026-11-10 on James's request, before any result. On AVIRIS-NG with hs_v4's folds and seeds, per-pixel models from 16x2 to 256x3, raw + indices with noise: (1) the VNIR standard block beats SWIR alone (DFA L4 L6 L9 L11) at every size; (2) VNIR + SWIR beats VNIR alone at the largest size (256x3), so SWIR's gain is not a small-model effect; (3) for each camera the best size is within 0.005 of 64x2. On Sentinel-2 (U-Net ladder, E-47's design): (4) adding B11 to the Mantis VNIR stand-in raises the best rung's skill. WRONG IF, for (1), SWIR alone ties or beats VNIR at any size; for (2) and (4), the paired CI reaches 0; for (3), a size beats 64x2 by more than 0.005. | camera (VNIR standard block with pan; SWIR 4 filters; both) x model size (hidden units x layers on AVIRIS-NG; base_ch x depth on Sentinel-2) | combined skill and RMSE per head, paired by fold and seed with hs_v4 / eco_v3; parameters and MACs per pixel | Concluded | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh (run_hs_arch.py); and BANDS=B2,B3,B4,B7,B8A,B11 EXP_NAME=arch_mantis_both SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh` |
+| **E-68** | SWIR2's potential: both tracks of the band decision, with and without 2190 nm | Registered 2026-11-10, before any run, on James's E-46 answer (A-55). (1) AVIRIS-NG, hs_v4's folds and seeds, per-pixel models 16x2 to 256x3: adding a 2190/180 nm band (extended InGaAs) to the Mantis VNIR standard block + L4 L6 L9 L11 raises combined skill at every size. (2) The same holds on the custom VNIR block + L4 L6 L9 L11. (3) Sentinel-2 U-Net ladder, E-47's design: B12 raises the best rung's skill in every pair, stand-in + B11 + B12 against stand-in + B11, k=5 against k=5 without B12, k=8 against k=8 without B12. WRONG IF, for (1) and (2), the paired CI reaches 0 at 64x2 (the size every band search used); for (3), in any pair, the best-rung CI reaches 0. | SWIR2 (2190 nm) present or absent, on the Mantis track (AVIRIS-NG fixed DFA sets) and the general track (Sentinel-2 consensus sets), at every model size | combined skill and per-head RMSE, paired by fold and seed with hs_arch / arch_* (same folds, seeds and noise) | Runnable now | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch_swir2 SETS='dfa_standard_nearest dfa_standard_nearest_swir2 dfa_custom_nearest dfa_custom_nearest_swir2' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh; and BANDS=B2,B3,B4,B7,B8A,B11,B12 EXP_NAME=arch_mantis_both_b12, BANDS=B4,B5,B8A,B11 EXP_NAME=arch_k5_no_b12, BANDS=B3,B4,B5,B6,B8,B8A,B11 EXP_NAME=arch_k8_no_b12, each SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh` |
 
 ### Out of reach
 
@@ -284,7 +286,7 @@ The CubeSat's bands and indices, presented as options with pros and cons for Jam
 
 *Note:* 2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting schemes the equal-weight search's best set is tied (paired, one SE) with the overall best under five; only maximin separates them, by 0.009 +- 0.009. The best sets are 7-8 bands under every scheme. Consensus 2026-11-05 (docs/results/P12/p12_bands): Sentinel-2 stable at k=1 (B12) and k=5 (B4, B5, B8A, B11, B12; weakest region 10/15), 6-9/15 elsewhere; no AVIRIS-NG SWIR consensus is stable (4-8/15 per 50 nm slot). Re-scores 2026-11-09 (bands_consensus k=1, bands_consensus_v2 k=2-8, all 15/15): each fixed set within ~2 SE of its search; stable k=5 0.4055, 0.010 +- 0.003 below the best; k=8 consensus ties (0.4157). SUPPORTED: B5 and B11 in the stable set.
 
-*Blocked on:* James's choice between stable k=5 and tied k=8 (A-49); E-35 for the fuel-type slot's value
+*Blocked on:* E-35 for the fuel-type slot's value; E-68 for SWIR2's increment on each track. James chose 2026-11-10 (A-55): both tracks, Mantis first
 
 **E-47 — Architecture decision**
 
@@ -294,7 +296,7 @@ The onboard model, as options (each rung within one SE of the best, with its siz
 
 *Note:* 2026-11-09 (docs/results/P12/p12_arch): at B2 B3 B4 B7 B8A, the Mantis standard-block stand-in, REFUTED: best rung 32x1 (0.413); 8x2 0.011 +- 0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. 32x1 needs the Q8 (0.1 s) or a wider FINN fold on the Q7 (138 s at minimal folding); 16x1 fits the Q7 (35 s). Ladders at E-46's options and the stand-in + B11 (2026-11-10, docs/results/P12/p12_arch): width 32 is best for every band set; 8x2 is 0.011-0.022 below, 16x1 0.005-0.008. k=8 best 0.438, k=5 0.426, stand-in + B11 0.427, stand-in 0.413.
 
-*Blocked on:* the band set: E-46 (a run at a candidate set before then is provisional); the FW code must be committed and pulled
+*Blocked on:* E-68's ladders (each set with and without B12); then the size is read per track, Mantis and general (A-55)
 
 **E-49 — Dating the weather (R0)**
 
@@ -370,7 +372,7 @@ Whether the models hold up in a year they never saw -- the condition an operatio
 
 Names the six bands for the Mantis MS mode. The one complete answer the packed data can give today, and it settles one of the three sensor modes outright.
 
-*Note:* First NBAC search done (job 6844532, 6/6 folds; docs/results/band_search_nbac). Open: at k=6 B5 is in 6/6 folds and B7 in 5/6, but B9 is in 4/6, and the k=6 set scores no better than k=1 (0.758 vs 0.766). Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
+*Note:* First NBAC search done (job 6844532, 6/6 folds; docs/results/band_search_nbac). Open: at k=6 B5 is in 6/6 folds and B7 in 5/6, but B9 is in 4/6, and the k=6 set scores no better than k=1 (0.758 vs 0.766). Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-2 — All-11 greedy**
 
@@ -378,7 +380,7 @@ Names the six bands for the Mantis MS mode. The one complete answer the packed d
 
 If greedy reaches for B11 early, the SWIR chain earns a slot on fire-outcome evidence. If it never does, that is weak evidence against, not strong -- one SWIR band cannot test a four-band mode.
 
-*Note:* First NBAC search done (job 6844530; docs/results/band_search_nbac). B11 entry rung per fold: never, 3, 2, 5, 2, 7 -- open. Under the old dNBR label it entered at k=1 in two folds. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
+*Note:* First NBAC search done (job 6844530; docs/results/band_search_nbac). B11 entry rung per fold: never, 3, 2, 5, 2, 7 -- open. Under the old dNBR label it entered at k=1 in two folds. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-3 — Forced-SWIR delta**
 
@@ -386,7 +388,7 @@ If greedy reaches for B11 early, the SWIR chain earns a slot on fire-outcome evi
 
 The marginal value of one SWIR band at equal band count. A lower bound on the SWIR chain: we hold 1 band in the window, the sensor would carry 4.
 
-*Note:* Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung by rung, not at their deepest rungs, which would set k=7 against k=6. First NBAC search done (job 6844531; docs/results/band_search_nbac): within noise at every k from 2 to 6 (2-SE about +-0.02), so the +0.02 bound is not yet tested. SWIR's gain over vnir fell after the dNBR -> NBAC relabel in 11 of 12 matched-k cells. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1.
+*Note:* Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung by rung, not at their deepest rungs, which would set k=7 against k=6. First NBAC search done (job 6844531; docs/results/band_search_nbac): within noise at every k from 2 to 6 (2-SE about +-0.02), so the +0.02 bound is not yet tested. SWIR's gain over vnir fell after the dNBR -> NBAC relabel in 11 of 12 matched-k cells. Replay pending: sweep_replay.sh refits the chosen sets with artefacts under the full-tile evaluation, seeds 0 and 1. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-4 — SWIR-only floor**
 
@@ -394,7 +396,7 @@ The marginal value of one SWIR band at equal band count. A lower bound on the SW
 
 The third sensor option -- SWIR instead of MS -- had no number. Structurally a SWIR-only set forms 0 of 12 catalogue indices and 0 ECVs, measured; this says what a LEARNED model does with it anyway, which rule 4 treats as the real question.
 
-*Note:* A quarter of the sensor. Read strictly as a floor.
+*Note:* A quarter of the sensor. Read strictly as a floor. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-5 — Leave-one-out band value**
 
@@ -402,7 +404,7 @@ The third sensor option -- SWIR instead of MS -- had no number. Structurally a S
 
 Per-band value CONDITIONAL on the rest, which is the only kind that means anything when bands are near-duplicates. Cannot see redundancy: B8 and B8A are 23 nm apart, so each may look worthless while the pair is essential.
 
-*Note:* In the first NBAC searches no band clears 2 SE, and in vnir fold 0 removing ANY of the six raised the score: the noise floor, not redundancy, is what the drops show so far (docs/results/band_search_nbac).
+*Note:* In the first NBAC searches no band clears 2 SE, and in vnir fold 0 removing ANY of the six raised the score: the noise floor, not redundancy, is what the drops show so far (docs/results/band_search_nbac). 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-6 — Selection stability**
 
@@ -410,7 +412,7 @@ Per-band value CONDITIONAL on the rest, which is the only kind that means anythi
 
 6/6 is a finding, 3/6 is a coin flip. Without it a single fold's ranking would be reported as the ranking.
 
-*Note:* WRONG so far, at this budget: no band is chosen at k=1 in more than 1/6 vnir or all11 folds, and the median greedy margin (0.005-0.008) is a tenth of the fold SD. Whether that is the bands or the crop-based evaluation is what the replays decide (docs/results/band_search_nbac).
+*Note:* WRONG so far, at this budget: no band is chosen at k=1 in more than 1/6 vnir or all11 folds, and the median greedy margin (0.005-0.008) is a tenth of the fold SD. Whether that is the bands or the crop-based evaluation is what the replays decide (docs/results/band_search_nbac). 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-7 — Resolution requirement**
 
@@ -418,7 +420,7 @@ Per-band value CONDITIONAL on the rest, which is the only kind that means anythi
 
 How much resolution the retrieval needs -- a mission requirement. The Mantis MS mode is 32 m at 500 km and 39.7 m at 620 km, so ~40 m is the real operating point and every 20 m result in this register is optimistic. This is the information cost only; the pixel-count cost (memory, latency) is E-27's.
 
-*Note:* 'extent' mode (shrink the tile) is refused: it shrinks the input but not the mask, and the loss raises on the first batch. As first wired it would have crashed every 40 m and 80 m run.
+*Note:* 'extent' mode (shrink the tile) is refused: it shrinks the input but not the mask, and the loss raises on the first batch. As first wired it would have crashed every 40 m and 80 m run. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 ### Controls
 
@@ -448,7 +450,7 @@ Human ignitions carry a roads-and-settlement signal that a model can read off th
 
 Sanity and calibration at once. Near 0.5: the pipeline is sound and arms can be read at face value. Above it: the excess is the floor every arm got for free, and it is the number to subtract.
 
-*Note:* REDESIGNED. The old control was 'a deliberately redundant band pool' with the hypothesis 'at or near chance', and those cannot both hold: every real Sentinel-2 band carries surface signal, and the YAML's four overlapping red bands cannot be built from a sensor with one red band. Its runner was 'BANDS=...', not a command. Run this set first. RESULT, noise half (job 6844515): 0.5022 +- 0.0007, above 0.5 in 6/6 folds -- a positional prior of 0.002, about 1% of any real arm's skill. neg_real was not submitted (docs/results/band_search_nbac).
+*Note:* REDESIGNED. The old control was 'a deliberately redundant band pool' with the hypothesis 'at or near chance', and those cannot both hold: every real Sentinel-2 band carries surface signal, and the YAML's four overlapping red bands cannot be built from a sensor with one red band. Its runner was 'BANDS=...', not a command. Run this set first. RESULT, noise half (job 6844515): 0.5022 +- 0.0007, above 0.5 in 6/6 folds -- a positional prior of 0.002, about 1% of any real arm's skill. neg_real was not submitted (docs/results/band_search_nbac). 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-26 — Within-fire burn pattern**
 
@@ -456,7 +458,7 @@ Sanity and calibration at once. Near 0.5: the pipeline is sound and arms can be 
 
 Conditioning on ignition removes the component a reflectance spectrum structurally cannot see. AUC ignores prevalence, so within-fire against overall reads as which task the imagery predicts better. Water and rock inside a perimeter are easy unburned pixels, so part of any within-fire skill is 'non-fuel is visible' -- fuel, but not moisture.
 
-*Note:* REDESIGNED. As first written it asked 'burned > 100 ha, given it burned'. Patches are ~530 x 530 px, ~11,257 ha, and every one of the 99 fire patches exceeds 100 ha -- the smallest burned area is 3,017 ha -- so the cut separated nothing. Folds are now assigned BEFORE the scene filter: fold_indices deals the blocks present round-robin, so filtering first had reshuffled which ground landed in which fold.
+*Note:* REDESIGNED. As first written it asked 'burned > 100 ha, given it burned'. Patches are ~530 x 530 px, ~11,257 ha, and every one of the 99 fire patches exceeds 100 ha -- the smallest burned area is 3,017 ha -- so the cut separated nothing. Folds are now assigned BEFORE the scene filter: fold_indices deals the blocks present round-robin, so filtering first had reshuffled which ground landed in which fold. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-43 — Date-only control**
 
@@ -486,7 +488,7 @@ How much the v1 band searches (E-1 to E-14) could have read the burn itself, and
 
 THE MISSION'S CENTRAL CLAIM. FWI2025 accepts grassland curing from remote sensing and its current option is NDVI-based GREENNESS -- a proxy for dryness. Greenness tracks moisture only while they co-vary seasonally, and a conifer stand stays green as it dries. If moisture beats greenness on a burn outcome, that is a concrete, quantified recommendation to the operational system. If `both` does not beat `greenness`, the 1610 nm moisture signal adds nothing this label can see -- also publishable.
 
-*Note:* Primary contrast is `both` vs `greenness`: a strict superset, so a positive result is unambiguous. Tests ONE moisture index at 1610 nm -- NDWI_Gao needs 1240 nm and NMDI/NDTI/NBR need SWIR2, none of which Sentinel-2 carries.
+*Note:* Primary contrast is `both` vs `greenness`: a strict superset, so a positive result is unambiguous. Tests ONE moisture index at 1610 nm -- NDWI_Gao needs 1240 nm and NMDI/NDTI/NBR need SWIR2, none of which Sentinel-2 carries. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 *CFFDRS gap:* FWI2025 curing input
 
@@ -495,6 +497,8 @@ THE MISSION'S CENTRAL CLAIM. FWI2025 accepts grassland curing from remote sensin
 *Hypothesis:* The learned model on raw bands beats every index family, because an index is a fixed projection that discards information a model could use. WRONG IF indices match it, which would be a strong argument for shipping indices -- cheap on an FPGA and interpretable to an operational user.
 
 If the learned model beats every index family by a wide margin, the recommendation to CFFDRS is to take BANDS rather than indices — a finding about the system's interface, not only about our sensor. The heritage baseline rule 4 asks for.
+
+*Note:* 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-59 — Indices as model inputs**
 
@@ -512,7 +516,9 @@ Whether the on-board model should compute indices before the network, which chan
 
 Does our compression of 91 days beat the FWI System's? CODES is CFFDRS as it stands and is the baseline. If BOTH beats CODES but DIMENSIONLESS does not, the gain came from absolute level, which at 45-70 N is latitude -- geography wearing a weather costume.
 
-*Note:* No repack: the pack carries weather_arm=both, the union, so each arm is a column mask.
+*Note:* No repack: the pack carries weather_arm=both, the union, so each arm is a column mask. 2026-11-10 (A-56, James): closed, not re-run on v2: the v2 pack has no 91-day history features; R1 against R2 and the weather-age experiment E-20 answer what weather representation adds. It never produced a valid result (not run on the NBAC pack).
+
+*Blocked on:* closed 2026-11-10 (A-56): no v2 history features; R1/R2 and E-20 answer it
 
 **E-14 — Fusion architecture**
 
@@ -520,7 +526,9 @@ Does our compression of 91 days beat the FWI System's? CODES is CFFDRS as it sta
 
 What the CFFDRS-shaped separation of fuel and weather costs or buys against early fusion. rasters_only is the no-weather floor and is also the configuration the band ranking is read from, which ties the two together.
 
-*Note:* two_head is submitted once, as wx_both, and report_arms.py aliases it into the fusion family; without that alias the main contrast was never produced. The second baseline, bottleneck, tests the hypothesis's other clause.
+*Note:* two_head is submitted once, as wx_both, and report_arms.py aliases it into the fusion family; without that alias the main contrast was never produced. The second baseline, bottleneck, tests the hypothesis's other clause. 2026-11-10 (A-56, James): closed, not re-run on v2: the CFFDRS ladder fixes how scalars enter (R2's physics layer plus residual); R4 against R2 is the fusion question in its terms. It never produced a valid result (not run on the NBAC pack).
+
+*Blocked on:* closed 2026-11-10 (A-56): the CFFDRS ladder (R4 against R2) answers it
 
 **E-15 — Imagery vs the FBP formula**
 
@@ -528,7 +536,9 @@ What the CFFDRS-shaped separation of fuel and weather costs or buys against earl
 
 G1 restated into something testable: does imagery carry foliar-moisture information the FBP equation does not? It CANNOT say our spectral estimate beats theirs -- that needs an LFMC label (E-29).
 
-*Note:* The imagery-free floor that ran (6/6 folds, auc_px 0.5396 to 0.7660) was trained and scored on the dNBR pack, so it does NOT count: both halves must be rerun on the NBAC pack. The spread is still a fair picture of fold-to-fold variance.
+*Note:* The imagery-free floor that ran (6/6 folds, auc_px 0.5396 to 0.7660) was trained and scored on the dNBR pack, so it does NOT count: both halves must be rerun on the NBAC pack. The spread is still a fair picture of fold-to-fold variance. 2026-11-10 (A-56, James): closed, not re-run on v2: R4 against R2 measures imagery beyond the FBP inputs; the FMC slot (E-16) stays blocked on measured FMC. It never produced a valid result (its only run used the dNBR label, which does not count).
+
+*Blocked on:* closed 2026-11-10 (A-56): R4 against R2 answers it; E-16 needs measured FMC
 
 *CFFDRS gap:* G1 foliar moisture is computed, never observed
 
@@ -570,7 +580,7 @@ Fixes our own defect first: the spinup starts ~1 April, which at 55-67 N is froz
 
 DMC and DC day-length factors are tabulated for ~46 N while Canada spans 42-83. A pooled number cannot distinguish 'history is better' from 'history is better at high latitude', which is the actual claim -- so the test is the interaction, not either band alone.
 
-*Note:* Bands hold 745 / 594 / 495 of the 1834 training tiles, so ~80-125 per band per validation fold -- above the 25-tile floor below which a band is skipped rather than scored.
+*Note:* Bands hold 745 / 594 / 495 of the 1834 training tiles, so ~80-125 per band per validation fold -- above the 25-tile floor below which a band is skipped rather than scored. 2026-11-10 (A-56): re-scoped to one R2 configuration, r2_daylat (latitude-correct day length in DMC and BUI), paired with r2 by fold and seed.
 
 *CFFDRS gap:* G5 day-length tabulated for ~46 N
 
@@ -732,7 +742,7 @@ The MARGINAL COST denominator. The brief asks for value per marginal cost, and w
 
 A number for the requirements table. The dichroic makes misregistration small, not absent. This is the deployment question -- a model built on co-registered imagery meeting a misregistered instrument.
 
-*Note:* REDESIGNED. Shifting during training too would understate the cost, because a convolution can learn to compensate a fixed offset. Rigid translation only -- not rotation, scale or pushbroom keystone -- so the tolerance is NECESSARY, not sufficient. The original hypothesis also placed the loss at snow/forest boundaries; this reports the scene-average cost and cannot localise it, so that clause was dropped rather than left untestable.
+*Note:* REDESIGNED. Shifting during training too would understate the cost, because a convolution can learn to compensate a fixed offset. Rigid translation only -- not rotation, scale or pushbroom keystone -- so the tolerance is NECESSARY, not sufficient. The original hypothesis also placed the loss at snow/forest boundaries; this reports the scene-average cost and cannot localise it, so that clause was dropped rather than left untestable. 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the day before each fire; the slot sweeps' 5 folds). Any v1 result above stays as legacy.
 
 **E-48 — Hardware decision**
 
@@ -759,6 +769,14 @@ P12's sensor option table: what each Mantis mode would deliver, with GSD, swath,
 Whether the VNIR-against-SWIR ranking and the SWIR gain hold at every model size, for P12's camera options (A-49).
 
 *Note:* The SWIR camera's filters (1213-1674 nm) have one Sentinel-2 counterpart (B11), so the SWIR-only model is compared on AVIRIS-NG only; Sentinel-2 adds B11 to the VNIR stand-in for the U-Net. 64x2 is the size every band search used, so its rows must reproduce sensors_fixed exactly (anchor check). hs_arch + arch_mantis_both 2026-11-10 (docs/results/P12/p12_vnir_swir), 15/15 each, anchor exact: MIXED. (1) VNIR beats SWIR at every size, lowest CI bound +0.001: SUPPORTED. (2) VNIR+SWIR - VNIR at 256x3 +0.032 [-0.002, +0.066]: REFUTED narrowly (+0.025 to +0.033 at every size). (3) VNIR +0.002, SWIR +0.004, both +0.007 from 64x2: REFUTED by the combined camera. (4) +B11 on Sentinel-2, best rung vs best rung +0.013 [+0.010, +0.016]: SUPPORTED (+0.004 at 8x2).
+
+**E-68 — SWIR2's potential: both tracks of the band decision, with and without 2190 nm**
+
+*Hypothesis:* Registered 2026-11-10, before any run, on James's E-46 answer (A-55). (1) AVIRIS-NG, hs_v4's folds and seeds, per-pixel models 16x2 to 256x3: adding a 2190/180 nm band (extended InGaAs) to the Mantis VNIR standard block + L4 L6 L9 L11 raises combined skill at every size. (2) The same holds on the custom VNIR block + L4 L6 L9 L11. (3) Sentinel-2 U-Net ladder, E-47's design: B12 raises the best rung's skill in every pair, stand-in + B11 + B12 against stand-in + B11, k=5 against k=5 without B12, k=8 against k=8 without B12. WRONG IF, for (1) and (2), the paired CI reaches 0 at 64x2 (the size every band search used); for (3), in any pair, the best-rung CI reaches 0.
+
+How much a SWIR2 chain would add on top of each band option, for P12's options table (A-49: options with pros and cons; no Mantis mode carries it, so this prices the extended-InGaAs case, it does not choose it).
+
+*Note:* dfa_standard_nearest reruns hs_arch's rows exactly (anchor check); dfa_custom_nearest is new to the size ladder (scored at 64x2 in sensors_fixed). The SWIR2 band matches Sentinel-2 B12 and config C (2190/180 nm); config/grids/p12_sensors_fixed.yaml, exported 2026-11-10 with the old anchors unchanged.
 
 ### Out of reach
 
@@ -794,25 +812,22 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 
 | ID | Experiment | Command | Narval resources per task |
 |---|---|---|---|
-| **E-1** | VNIR band selection | `sweep_arms.sh ARMS=vnir` | 49 fits/task x 6 tasks; est 2:05; --time=4:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-2** | All-11 greedy | `sweep_arms.sh ARMS=all11` | 60 fits/task x 6 tasks; est 2:32; --time=5:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-3** | Forced-SWIR delta | `sweep_arms.sh ARMS=vnir_swir` | 51 fits/task x 6 tasks; est 2:10; --time=4:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-4** | SWIR-only floor | `sweep_arms.sh ARMS=swir_only` | 1 fit/task x 6 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-5** | Leave-one-out band value | `sweep_bands.py --leave-one-out (rides in E-1..E-4)` | no separate job: rides inside E-1 to E-3 |
-| **E-6** | Selection stability | `pool_bands.py (after E-1..E-4)` | no job: pool_bands.py, minutes, on a login node |
-| **E-7** | Resolution requirement | `sweep_axes.sh SETS=gsd` | 1 fit/task x 18 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-10** | Negative control | `sweep_axes.sh SETS=neg` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-11** | Greenness vs moisture indices | `sweep_indices.sh` | 1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-12** | Index baseline vs learned bands | `sweep_indices.sh ARMS=raw,both` | shares E-11's runs |
-| **E-13** | Weather representation | `sweep_covariates.sh SETS=weather` | 1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-14** | Fusion architecture | `sweep_covariates.sh SETS=fusion` | 1 fit/task x 12 tasks (+ wx_both from E-13); est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-15** | Imagery vs the FBP formula | `sweep_covariates.sh SETS=g1` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
-| **E-19** | Latitude-banded weather | `sweep_covariates.sh SETS=weather` | shares E-13's runs; latitude scoring adds seconds |
+| **E-1** | VNIR band selection | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=vnir SUBMIT=1 bash scripts/shell/sweep_arms.sh` | 49 fits/task x 6 tasks; est 2:05; --time=4:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-2** | All-11 greedy | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=all11 SUBMIT=1 bash scripts/shell/sweep_arms.sh` | 60 fits/task x 6 tasks; est 2:32; --time=5:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-3** | Forced-SWIR delta | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=vnir_swir SUBMIT=1 bash scripts/shell/sweep_arms.sh` | 51 fits/task x 6 tasks; est 2:10; --time=4:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-4** | SWIR-only floor | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=swir_only SUBMIT=1 bash scripts/shell/sweep_arms.sh` | 1 fit/task x 6 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-5** | Leave-one-out band value | `rides in E-1 to E-4 on v2 (SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_arms.sh)` | no separate job: rides inside E-1 to E-3 |
+| **E-6** | Selection stability | `pool_bands.py over the v2 arms (sweep_bands_*_v2) after E-1 to E-4` | no job: pool_bands.py, minutes, on a login node |
+| **E-7** | Resolution requirement | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=gsd SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 18 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-10** | Negative control | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=neg SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-11** | Greenness vs moisture indices | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash scripts/shell/sweep_indices.sh` | 1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-12** | Index baseline vs learned bands | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=raw,both SUBMIT=1 bash scripts/shell/sweep_indices.sh` | shares E-11's runs |
+| **E-19** | Latitude-banded weather | `Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e19 CONFIGS=r2,r2_daylat bash scripts/shell/sweep_slots.sh` | shares E-13's runs; latitude scoring adds seconds |
 | **E-20** | Weather staleness | `Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v2 CONFIGS=r0_scanfi,r2 SCORE_LAGS=1,2,3,7 SCORE_LAG_INPUTS=ffmc,dmc,dc,isi,bui,fwi,wx FITS_PER_TASK=8 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (per-input half; run_slots --score-lag-inputs). First half: Fire_Risk_FW SUBMIT=1 EXP_NAME=lags_v1 CONFIGS=r0_scanfi,r2,r2_age7 SCORE_LAGS=1,2,3,7 SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2_lags bash scripts/shell/sweep_slots.sh (run_slots.py --score-lags, A-50)` | as the slot sweeps: --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G. lags_v1: 35 fits in 2 tasks of 18, each fit scored four more times (about +1 min). lags_v2: 16 fits in 2 tasks of 8; each fit is also scored 21 more times (7 inputs x 3 ages, about +5 min) |
 | **E-21** | Fuel-layer refresh | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
-| **E-26** | Within-fire burn pattern | `sweep_axes.sh SETS=cond` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-26** | Within-fire burn pattern | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=cond SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-27** | Cost per input channel | `sweep_architecture.py --widths` | CPU only: model conversion, no Narval GPU allocation |
-| **E-28** | Co-registration tolerance | `sweep_axes.sh SETS=shift` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
+| **E-28** | Co-registration tolerance | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=shift SUBMIT=1 bash scripts/shell/sweep_axes.sh` | 1 fit + 5 evaluations/task x 6 tasks; est 0:06; --time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1 |
 | **E-32** | CFFDRS as is (R0) | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-33** | Fuel inventory comparison | `Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py` | -- |
 | **E-35** | Fuel-type slot | `Fire_Risk_FW RUN_ID=20261102-1959 SUBMIT=1 bash scripts/shell/sweep_eco_fire.sh (FW 15a705b; done 2026-11-10); then SUBMIT=1 EXP_NAME=slots_e35 RUN_ID=20261110-1901 SKIP_DONE=1 ECO_DATA=$HOME/scratch/eco_fire_v1 CONFIGS=r2,r3_fuel_replace,r3_fuel_replace_shuffled,r3_fuel_pc_replace,r3_fuel_pc_replace_shuffled,r3_pc_replace,r3_pc_replace_shuffled bash scripts/shell/sweep_slots.sh` | sweep_eco_fire: --time=1:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=48G per job (a first guess: one eco_v3 fit, about 2 min on an A100, plus forward passes); then the slot sweep as E-36 |
@@ -835,6 +850,7 @@ Parked by decision. Recorded because the argument is strong: FOP runs on 20 km c
 | **E-61** | Best SWIR bands, searched broadly | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='swir_std swir_ext references'` | --time=6:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per job of 6 tasks, 3 at once (A-43); hs_v3 measured 81 min median per standard InGaAs task, 153 per extended InGaAs task |
 | **E-62** | Best VNIR bands, searched broadly | `Fire_Risk_FW/scripts/shell/sweep_hs.sh ARMS='vnir vnir_no_red_edge references'` | as E-61; hs_v3 measured 130 min median per VNIR task, 123 per no-red-edge task |
 | **E-63** | Out-of-time generalisation, two training regimes | `Fire_Risk_FW/scripts/shell/sweep_slots.sh REGIME=A|B` | --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G per task of 18 fits, as E-58 (slots_v3 measured 10 min median, 17 max); a first guess here, since regime A adds 1,080 training tiles and regime B a scoring pass |
+| **E-68** | SWIR2's potential: both tracks of the band decision, with and without 2190 nm | `Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch_swir2 SETS='dfa_standard_nearest dfa_standard_nearest_swir2 dfa_custom_nearest dfa_custom_nearest_swir2' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh; and BANDS=B2,B3,B4,B7,B8A,B11,B12 EXP_NAME=arch_mantis_both_b12, BANDS=B4,B5,B8A,B11 EXP_NAME=arch_k5_no_b12, BANDS=B3,B4,B5,B6,B8,B8A,B11 EXP_NAME=arch_k8_no_b12, each SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh` | sweep_hs_arch.sh: 15 tasks of 56 fits (4 sets x 7 sizes x 2 noise), 3 per 1:30:00 job (hs_arch's 42 fits took 20 min); sweep_eco_arch.sh: 15 tasks per band set, as arch_k5 |
 
 All of these read the **`stage2_fire_11band_nbac`** pack. It replaces the one already in `~/scratch`, which the sweep now refuses.
 

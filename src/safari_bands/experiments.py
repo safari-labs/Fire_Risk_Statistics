@@ -69,6 +69,11 @@ STATES: dict[str, dict[str, str]] = {
         "detail": "commercial or licensed data",
         "colour": "#6f6fae",
     },
+    "CLOSED": {
+        "label": "Closed, no result",
+        "detail": "closed without a valid result; the note names what answers it instead",
+        "colour": "#8a8f98",
+    },
     "BLOCKED": {
         "label": "No label exists",
         "detail": "cannot be run with any amount of work on data we hold",
@@ -143,13 +148,17 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="Names the six bands for the Mantis MS mode. The one "
                    "complete answer the packed data can give today, and it "
                    "settles one of the three sensor modes outright.",
-        state="PARTIAL",
-        runner="sweep_arms.sh ARMS=vnir",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=vnir "
+               "SUBMIT=1 bash scripts/shell/sweep_arms.sh",
         tags=("primary",),
         note="First NBAC search done (job 6844532, 6/6 folds; "
              "docs/results/band_search_nbac). Open: at "
              "k=6 B5 is in 6/6 folds and B7 in 5/6, but B9 is in 4/6, and "
-             "the k=6 set scores no better than k=1 (0.758 vs 0.766). " + _REPLAY,
+             "the k=6 set scores no better than k=1 (0.758 vs 0.766). " + _REPLAY
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="49 fits/task x 6 tasks; est 2:05; --time=4:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -165,12 +174,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "slot on fire-outcome evidence. If it never does, that is "
                    "weak evidence against, not strong -- one SWIR band "
                    "cannot test a four-band mode.",
-        state="PARTIAL",
-        runner="sweep_arms.sh ARMS=all11",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 ARMS=all11 "
+               "SUBMIT=1 bash scripts/shell/sweep_arms.sh",
         note="First NBAC search done (job 6844530; "
              "docs/results/band_search_nbac). B11 entry rung per "
              "fold: never, 3, 2, 5, 2, 7 -- open. Under the old dNBR label it "
-             "entered at k=1 in two folds. " + _REPLAY,
+             "entered at k=1 in two folds. " + _REPLAY
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="60 fits/task x 6 tasks; est 2:32; --time=5:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -184,8 +197,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         conclusion="The marginal value of one SWIR band at equal band count. "
                    "A lower bound on the SWIR chain: we hold 1 band in the "
                    "window, the sensor would carry 4.",
-        state="PARTIAL",
-        runner="sweep_arms.sh ARMS=vnir_swir",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 "
+               "ARMS=vnir_swir SUBMIT=1 bash scripts/shell/sweep_arms.sh",
         resources="51 fits/task x 6 tasks; est 2:10; --time=4:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
         note="Read through report_arms.py's MATCHED-k section: vnir_swir and vnir are paired rung "
@@ -194,7 +208,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "docs/results/band_search_nbac): within noise at every k "
              "from 2 to 6 (2-SE about +-0.02), so the +0.02 bound is not yet "
              "tested. SWIR's gain over vnir fell after the dNBR -> NBAC relabel "
-             "in 11 of 12 matched-k cells. " + _REPLAY,
+             "in 11 of 12 matched-k cells. " + _REPLAY
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
     ),
     Experiment(
         "E-4", "SWIR-only floor", "Band selection",
@@ -212,8 +229,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "LEARNED model does with it anyway, which rule 4 treats "
                    "as the real question.",
         state="RUNNABLE",
-        runner="sweep_arms.sh ARMS=swir_only",
-        note="A quarter of the sensor. Read strictly as a floor.",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 "
+               "ARMS=swir_only SUBMIT=1 bash scripts/shell/sweep_arms.sh",
+        note="A quarter of the sensor. Read strictly as a floor."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="1 fit/task x 6 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -234,11 +255,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "near-duplicates. Cannot see redundancy: B8 and B8A are "
                    "23 nm apart, so each may look worthless while the pair "
                    "is essential.",
-        state="PARTIAL",
-        runner="sweep_bands.py --leave-one-out (rides in E-1..E-4)",
+        state="RUNNABLE",
+        runner="rides in E-1 to E-4 on v2 "
+               "(SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 bash "
+               "scripts/shell/sweep_arms.sh)",
         note="In the first NBAC searches no band clears 2 SE, and in vnir "
              "fold 0 removing ANY of the six raised the score: the noise floor, "
-             "not redundancy, is what the drops show so far (docs/results/band_search_nbac).",
+             "not redundancy, is what the drops show so far (docs/results/band_search_nbac)."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="no separate job: rides inside E-1 to E-3",
     ),
     Experiment(
@@ -250,13 +276,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="the fraction of folds that select each band at each k",
         conclusion="6/6 is a finding, 3/6 is a coin flip. Without it a "
                    "single fold's ranking would be reported as the ranking.",
-        state="PARTIAL",
-        runner="pool_bands.py (after E-1..E-4)",
+        state="RUNNABLE",
+        runner="pool_bands.py over the v2 arms (sweep_bands_*_v2) after E-1 to E-4",
         note="WRONG so far, at this budget: no band is chosen at k=1 in more "
              "than 1/6 vnir or all11 folds, and the median greedy margin "
              "(0.005-0.008) is a tenth of the fold SD. Whether that is the "
              "bands or the crop-based evaluation is what the replays decide "
-             "(docs/results/band_search_nbac).",
+             "(docs/results/band_search_nbac)."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="no job: pool_bands.py, minutes, on a login node",
     ),
     Experiment(
@@ -277,10 +306,14 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "This is the information cost only; the pixel-count cost "
                    "(memory, latency) is E-27's.",
         state="RUNNABLE",
-        runner="sweep_axes.sh SETS=gsd",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=gsd "
+               "SUBMIT=1 bash scripts/shell/sweep_axes.sh",
         note="'extent' mode (shrink the tile) is refused: it shrinks the "
              "input but not the mask, and the loss raises on the first batch. "
-             "As first wired it would have crashed every 40 m and 80 m run.",
+             "As first wired it would have crashed every 40 m and 80 m run."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="1 fit/task x 18 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -349,8 +382,9 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "is sound and arms can be read at face value. Above it: "
                    "the excess is the floor every arm got for free, and it is "
                    "the number to subtract.",
-        state="PARTIAL",
-        runner="sweep_axes.sh SETS=neg",
+        state="RUNNABLE",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=neg "
+               "SUBMIT=1 bash scripts/shell/sweep_axes.sh",
         note="REDESIGNED. The old control was 'a deliberately redundant band "
              "pool' with the hypothesis 'at or near chance', and those cannot "
              "both hold: every real Sentinel-2 band carries surface signal, "
@@ -359,7 +393,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "command. Run this set first. RESULT, noise half (job 6844515): "
              "0.5022 +- 0.0007, above 0.5 in 6/6 folds -- a positional prior "
              "of 0.002, about 1% of any real arm's skill. neg_real was not "
-             "submitted (docs/results/band_search_nbac).",
+             "submitted (docs/results/band_search_nbac)."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         tags=("control",),
         resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
@@ -390,12 +427,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "signal adds nothing this label can see -- also "
                    "publishable.",
         state="RUNNABLE",
-        runner="sweep_indices.sh",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SUBMIT=1 "
+               "bash scripts/shell/sweep_indices.sh",
         gap="FWI2025 curing input",
         note="Primary contrast is `both` vs `greenness`: a strict superset, "
              "so a positive result is unambiguous. Tests ONE moisture index "
              "at 1610 nm -- NDWI_Gao needs 1240 nm and NMDI/NDTI/NBR need "
-             "SWIR2, none of which Sentinel-2 carries.",
+             "SWIR2, none of which Sentinel-2 carries."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         tags=("primary",),
         resources="1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
@@ -415,8 +456,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "interface, not only about our sensor. The heritage "
                    "baseline rule 4 asks for.",
         state="RUNNABLE",
-        runner="sweep_indices.sh ARMS=raw,both",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 "
+               "ARMS=raw,both SUBMIT=1 bash scripts/shell/sweep_indices.sh",
         resources="shares E-11's runs",
+        note="2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+             "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+             "stays as legacy.",
     ),
 
     # ─────────────────────────────── Covariates ──────────────────────────
@@ -437,10 +482,16 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "BOTH beats CODES but DIMENSIONLESS does not, the gain "
                    "came from absolute level, which at 45-70 N is latitude "
                    "-- geography wearing a weather costume.",
-        state="RUNNABLE",
+        state="CLOSED",
+        blocker="closed 2026-11-10 (A-56): no v2 history features; R1/R2 and E-20 answer it",
         runner="sweep_covariates.sh SETS=weather",
         note="No repack: the pack carries weather_arm=both, the union, so "
-             "each arm is a column mask.",
+             "each arm is a column mask."
+             + " 2026-11-10 (A-56, James): closed, not re-run on v2: the v2 pack "
+               "has no 91-day history features; R1 against R2 and the weather-age "
+               "experiment E-20 answer what weather representation adds. It never produced a valid "
+               "result "
+               "(not run on the NBAC pack).",
         resources="1 fit/task x 24 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -460,13 +511,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "costs or buys against early fusion. rasters_only is the "
                    "no-weather floor and is also the configuration the band "
                    "ranking is read from, which ties the two together.",
-        state="RUNNABLE",
+        state="CLOSED",
+        blocker="closed 2026-11-10 (A-56): the CFFDRS ladder (R4 against R2) answers it",
         runner="sweep_covariates.sh SETS=fusion",
         resources="1 fit/task x 12 tasks (+ wx_both from E-13); est 0:05; --time=0:30:00 --mem=16G "
                   "--cpus-per-task=12 --gpus=a100:1",
         note="two_head is submitted once, as wx_both, and report_arms.py aliases it into the "
              "fusion family; without that alias the main contrast was never produced. The second "
-             "baseline, bottleneck, tests the hypothesis's other clause.",
+             "baseline, bottleneck, tests the hypothesis's other clause."
+             + " 2026-11-10 (A-56, James): closed, not re-run on v2: the CFFDRS "
+               "ladder fixes how scalars enter (R2's physics layer plus residual); R4 "
+               "against R2 is the fusion question in its terms. It never produced a valid result "
+               "(not run on the NBAC pack).",
     ),
     Experiment(
         "E-15", "Imagery vs the FBP formula", "Covariates",
@@ -483,13 +539,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "foliar-moisture information the FBP equation does not? "
                    "It CANNOT say our spectral estimate beats theirs -- that "
                    "needs an LFMC label (E-29).",
-        state="RUNNABLE",
+        state="CLOSED",
+        blocker="closed 2026-11-10 (A-56): R4 against R2 answers it; E-16 needs measured FMC",
         runner="sweep_covariates.sh SETS=g1",
         gap="G1 foliar moisture is computed, never observed",
         note="The imagery-free floor that ran (6/6 folds, auc_px 0.5396 to "
              "0.7660) was trained and scored on the dNBR pack, so it does NOT "
              "count: both halves must be rerun on the NBAC pack. The spread "
-             "is still a fair picture of fold-to-fold variance.",
+             "is still a fair picture of fold-to-fold variance."
+             + " 2026-11-10 (A-56, James): closed, not re-run on v2: R4 against R2 "
+               "measures imagery beyond the FBP inputs; the FMC slot (E-16) stays "
+               "blocked on measured FMC. It never produced a valid result (its only "
+               "run used the dNBR label, which does not count).",
         resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -606,11 +667,15 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "at high latitude', which is the actual claim -- so the "
                    "test is the interaction, not either band alone.",
         state="RUNNABLE",
-        runner="sweep_covariates.sh SETS=weather",
+        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e19 CONFIGS=r2,r2_daylat bash "
+               "scripts/shell/sweep_slots.sh",
         gap="G5 day-length tabulated for ~46 N",
         note="Bands hold 745 / 594 / 495 of the 1834 training tiles, so "
              "~80-125 per band per validation fold -- above the 25-tile "
-             "floor below which a band is skipped rather than scored.",
+             "floor below which a band is skipped rather than scored."
+             + " 2026-11-10 (A-56): re-scoped to one R2 configuration, r2_daylat "
+               "(latitude-correct day length in DMC and BUI), paired with r2 by fold and "
+               "seed.",
         resources="shares E-13's runs; latitude scoring adds seconds",
     ),
     Experiment(
@@ -823,14 +888,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "within-fire skill is 'non-fuel is visible' -- fuel, but "
                    "not moisture.",
         state="RUNNABLE",
-        runner="sweep_axes.sh SETS=cond",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=cond "
+               "SUBMIT=1 bash scripts/shell/sweep_axes.sh",
         note="REDESIGNED. As first written it asked 'burned > 100 ha, given "
              "it burned'. Patches are ~530 x 530 px, ~11,257 ha, and every "
              "one of the 99 fire patches exceeds 100 ha -- the smallest burned "
              "area is 3,017 ha -- so the cut separated nothing. Folds are now "
              "assigned BEFORE the scene filter: fold_indices deals the blocks "
              "present round-robin, so filtering first had reshuffled which "
-             "ground landed in which fold.",
+             "ground landed in which fold."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="1 fit/task x 12 tasks; est 0:05; --time=0:30:00 --mem=16G --cpus-per-task=12 "
                   "--gpus=a100:1",
     ),
@@ -872,7 +941,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                    "deployment question -- a model built on co-registered "
                    "imagery meeting a misregistered instrument.",
         state="RUNNABLE",
-        runner="sweep_axes.sh SETS=shift",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/stage2_fire_cffdrs_v2 SETS=shift "
+               "SUBMIT=1 bash scripts/shell/sweep_axes.sh",
         note="REDESIGNED. Shifting during training too would understate the "
              "cost, because a convolution can learn to compensate a fixed "
              "offset. Rigid translation only -- not rotation, scale or "
@@ -880,7 +950,10 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "sufficient. The original hypothesis also placed the loss at "
              "snow/forest boundaries; this reports the scene-average cost and "
              "cannot localise it, so that clause was dropped rather than left "
-             "untestable.",
+             "untestable."
+             + " 2026-11-10 (A-56, James): re-run on the v2 pack (composite ending the "
+               "day before each fire; the slot sweeps' 5 folds). Any v1 result above "
+               "stays as legacy.",
         resources="1 fit + 5 evaluations/task x 6 tasks; est 0:06; "
                   "--time=0:30:00 --mem=16G --cpus-per-task=12 --gpus=a100:1",
     ),
@@ -1317,8 +1390,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
                "then on Nibi docs/results/P12/p12_bands/rescore_commands.md (8 sweep_eco_arch "
                "runs and one sweep_hs references run), then make_band_options.py "
                "--eco-rescore --hs-rescore",
-        blocker="James's choice between stable k=5 and tied k=8 (A-49); "
-                "E-35 for the fuel-type slot's value",
+        blocker="E-35 for the fuel-type slot's value; E-68 for SWIR2's increment on "
+                "each track. James chose 2026-11-10 (A-55): both tracks, Mantis first",
         note="2026-11-05 (A-49, docs/results/P12/p12_weights): under six head-weighting "
              "schemes the equal-weight search's best set is tied (paired, one SE) "
              "with the overall best under five; only maximin separates them, by "
@@ -1355,8 +1428,8 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         resources="--time=1:30:00 --gpus=a100:1 --cpus-per-task=12 --mem=32G; 15 tasks "
                   "(5 folds x 3 seeds), 3 per job, 12 rungs each (a first guess from "
                   "eco_v3's 14 s per 8x2 fit)",
-        blocker="the band set: E-46 (a run at a candidate set before then is "
-                "provisional); the FW code must be committed and pulled",
+        blocker="E-68's ladders (each set with and without B12); then the size is read "
+                "per track, Mantis and general (A-55)",
         note="2026-11-09 (docs/results/P12/p12_arch): at B2 B3 B4 B7 B8A, the Mantis "
              "standard-block stand-in, REFUTED: best rung 32x1 (0.413); 8x2 0.011 +- "
              "0.002 below, 16x1 0.005 +- 0.001; only base_ch 32 ties. 32x1 needs the "
@@ -2046,6 +2119,44 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "REFUTED narrowly (+0.025 to +0.033 at every size). (3) VNIR +0.002, SWIR +0.004, "
              "both +0.007 from 64x2: REFUTED by the combined camera. (4) +B11 on Sentinel-2, "
              "best rung vs best rung +0.013 [+0.010, +0.016]: SUPPORTED (+0.004 at 8x2).",
+    ),
+    Experiment(
+        "E-68", "SWIR2's potential: both tracks of the band decision, with and without 2190 nm",
+        "Hardware",
+        hypothesis="Registered 2026-11-10, before any run, on James's E-46 answer (A-55). (1) "
+                   "AVIRIS-NG, hs_v4's folds and seeds, per-pixel models 16x2 to 256x3: adding "
+                   "a 2190/180 nm band (extended InGaAs) to the Mantis VNIR standard block + "
+                   "L4 L6 L9 L11 raises combined skill at every size. (2) The same holds on the "
+                   "custom VNIR block + L4 L6 L9 L11. (3) Sentinel-2 U-Net ladder, E-47's "
+                   "design: B12 raises the best rung's skill in every pair, stand-in + B11 + "
+                   "B12 against stand-in + B11, k=5 against k=5 without B12, k=8 against k=8 "
+                   "without B12. WRONG IF, for (1) and (2), the paired CI reaches 0 at 64x2 "
+                   "(the size every band search used); for (3), in any pair, the best-rung "
+                   "CI reaches 0.",
+        independent="SWIR2 (2190 nm) present or absent, on the Mantis track (AVIRIS-NG fixed "
+                    "DFA sets) and the general track (Sentinel-2 consensus sets), at every "
+                    "model size",
+        dependent="combined skill and per-head RMSE, paired by fold and seed with hs_arch / "
+                  "arch_* (same folds, seeds and noise)",
+        conclusion="How much a SWIR2 chain would add on top of each band option, for P12's "
+                   "options table (A-49: options with pros and cons; no Mantis mode carries "
+                   "it, so this prices the extended-InGaAs case, it does not choose it).",
+        state="RUNNABLE",
+        blocker="",
+        runner="Fire_Risk_FW SCRATCH_DATA=$HOME/scratch/aviris_v4 EXP_NAME=hs_arch_swir2 "
+               "SETS='dfa_standard_nearest dfa_standard_nearest_swir2 dfa_custom_nearest "
+               "dfa_custom_nearest_swir2' SUBMIT=1 bash scripts/shell/sweep_hs_arch.sh; and "
+               "BANDS=B2,B3,B4,B7,B8A,B11,B12 EXP_NAME=arch_mantis_both_b12, BANDS=B4,B5,B8A,"
+               "B11 EXP_NAME=arch_k5_no_b12, BANDS=B3,B4,B5,B6,B8,B8A,B11 EXP_NAME="
+               "arch_k8_no_b12, each SUBMIT=1 bash scripts/shell/sweep_eco_arch.sh",
+        resources="sweep_hs_arch.sh: 15 tasks of 56 fits (4 sets x 7 sizes x 2 noise), 3 per "
+                  "1:30:00 job (hs_arch's 42 fits took 20 min); sweep_eco_arch.sh: 15 tasks "
+                  "per band set, as arch_k5",
+        note="dfa_standard_nearest reruns hs_arch's rows exactly (anchor check); "
+             "dfa_custom_nearest is new to the size ladder (scored at 64x2 in sensors_fixed). "
+             "The SWIR2 band matches Sentinel-2 B12 and config C (2190/180 nm); "
+             "config/grids/p12_sensors_fixed.yaml, exported 2026-11-10 with the old anchors "
+             "unchanged.",
     ),
 )
 

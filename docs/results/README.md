@@ -48,25 +48,25 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 
 ## Experiments
 
-43 of 67 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
+37 of 68 experiments have a result. The register state says whether it can run again; the verdicts are what the phases found, oldest first. Full definitions: [EXPERIMENTS.md](../EXPERIMENTS.md).
 
 | experiment | register state | verdicts | results | own views |
 |---|---|---|---|---|
-| E-1 VNIR band selection | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
-| E-2 All-11 greedy | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
-| E-3 Forced-SWIR delta | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
+| E-1 VNIR band selection | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
+| E-2 All-11 greedy | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
+| E-3 Forced-SWIR delta | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
 | E-4 SWIR-only floor | Runnable now | - | - | - |
-| E-5 Leave-one-out band value | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
-| E-6 Selection stability | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
+| E-5 Leave-one-out band value | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
+| E-6 Selection stability | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
 | E-7 Resolution requirement | Runnable now | - | - | - |
 | E-8 Label independence control | Needs a pack | - | - | - |
 | E-9 Lightning cohort | Needs new data | - | - | - |
-| E-10 Negative control | Partial result | - | [band_search_nbac](band_search_nbac/) | - |
+| E-10 Negative control | Runnable now | - | [band_search_nbac](band_search_nbac/) | - |
 | E-11 Greenness vs moisture indices | Runnable now | - | - | - |
 | E-12 Index baseline vs learned bands | Runnable now | - | - | - |
-| E-13 Weather representation | Runnable now | - | - | - |
-| E-14 Fusion architecture | Runnable now | - | - | - |
-| E-15 Imagery vs the FBP formula | Runnable now | - | - | - |
+| E-13 Weather representation | Closed, no result | - | - | - |
+| E-14 Fusion architecture | Closed, no result | - | - | - |
+| E-15 Imagery vs the FBP formula | Closed, no result | - | - | - |
 | E-16 FMC arms | No label exists | - | - | - |
 | E-17 Station-density stratification | Concluded | P7f REFUTED | [P7/p7f_station_distance](P7/p7f_station_distance/) | [patch_map](P7/p7f_station_distance/qual_E-17_patch_map.png) |
 | E-18 Snow-off startup | Concluded | P6d REFUTED | [P6/p6d_startup](P6/p6d_startup/) | [patch_map](P6/p6d_startup/qual_E-18_patch_map.png) |
@@ -119,3 +119,4 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-65 LFMC: simulation retrieval with fold-wise narrowed priors (P6f-v2) | Concluded | P6f-v2 MIXED, P6f2 MIXED | [P6/p6f_reference](P6/p6f_reference/), [P6/p6f_lfmc_v2](P6/p6f_lfmc_v2/) | - |
 | E-66 What each Dragonfly Mantis mode would offer | Concluded | P12b MIXED | [P12/p12_sensors](P12/p12_sensors/) | [sensor_bands](P12/p12_sensors/qual_E-66_sensor_bands.png) |
 | E-67 VNIR against SWIR: the Mantis cameras' models at every size | Concluded | P12d MIXED | [P12/p12_vnir_swir](P12/p12_vnir_swir/) | [family_confusion](P12/p12_vnir_swir/qual_E-67_family_confusion.png) |
+| E-68 SWIR2's potential: both tracks of the band decision, with and without 2190 nm | Runnable now | - | - | - |
