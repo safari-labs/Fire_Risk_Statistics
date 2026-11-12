@@ -99,7 +99,7 @@ What substituting each CFFDRS input changed, across the phases so far. Table: [v
 | E-40 Green-up slot | Needs code | - | - | - |
 | E-41 Spread R0 (CFSDS) | Partial result | P8a PARTIAL | [P8/p8a_spread](P8/p8a_spread/) | [progression](P8/p8a_spread/qual_E-41_progression.png) |
 | E-42 Spread slot value | Needs a pack | - | - | - |
-| E-43 Date-only control | Partial result | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | - |
+| E-43 Date-only control | Runnable now | P3 SUPPORTED | [P3/p3_dated](P3/p3_dated/) | - |
 | E-44 Ignition R0 | Partial result | P9 SUPPORTED | [P9/p9_ignition](P9/p9_ignition/) | [sets](P9/p9_ignition/qual_E-44_sets.png) |
 | E-45 Ignition slot value | Partial result | P9b REFUTED | [P9/p9b_ignition_rungs](P9/p9b_ignition_rungs/) | [sets_map](P9/p9b_ignition_rungs/qual_E-45_sets_map.png) |
 | E-46 Band and index decision | Partial result | P12a SUPPORTED | [P12/p12_bands](P12/p12_bands/), [P12/p12_weights](P12/p12_weights/) | [band_placement](P12/p12_bands/qual_E-46_band_placement.png) |

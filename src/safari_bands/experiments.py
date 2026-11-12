@@ -1401,13 +1401,25 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         independent="date features only (day-of-year sin/cos, latitude)",
         dependent="between-patch AUC",
         conclusion="Guards the fire-date design (A-24).",
-        state="PARTIAL",
-        runner="Fire_Risk_Model/scripts/python/eval_cffdrs_reference.py",
-        blocker="the learned date-only classifier waits for P5 (training is Narval only)",
+        state="RUNNABLE",
+        resources="sweep_slots.sh: --time=2:30:00 --gpus=a100:1 --cpus-per-task=12 "
+                  "--mem=32G; 15 fits in one task of 18 (a date-only R1 trains in "
+                  "minutes)",
+        runner="Fire_Risk_FW SUBMIT=1 EXP_NAME=slots_e43 CONFIGS=r1_date bash "
+               "scripts/shell/sweep_slots.sh (r1_date: R1 with date_only, on day of year "
+               "sin/cos and latitude only)",
+        blocker="",
         tags=("control",),
         note="P3 (docs/results/P3/p3_dated): SUPPORTED. Day of year 0.55 [0.50, "
              "0.59], sin 0.45, cos 0.45, latitude 0.53. The confound is the "
-             "year (0.87), not the pseudo-dates.",
+             "year (0.87), not the pseudo-dates."
+             + "2026-11-12, registered before the run: the learned half is r1_date, a "
+               "small network on day of year (sin, cos) and latitude alone, no rasters "
+               "and no weather, one value per patch, on the slot sweeps' folds (15 "
+               "fits). Prediction: its between-patch AUC (fold bootstrap) has a 95 % CI "
+               "reaching below 0.60. WRONG IF the CI lies wholly above 0.60: then the "
+               "pseudo-date rule is a shortcut a learner can read. 0.60 is about a fifth "
+               "of the way from chance to R2's 0.88.",
     ),
     Experiment(
         "E-44", "Ignition R0", "CFFDRS mirror",
@@ -1448,13 +1460,18 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         dependent="paired AUC change",
         conclusion="Imagery's value on the ignition process.",
         state="PARTIAL",
-        runner="Fire_Risk_FW SUBMIT=1 bash scripts/shell/sweep_ignition.sh (run_ignition.py; "
-               "8 configs x 5 folds x 3 seeds, R0 at seed 0: 100 fits)",
-        resources="--time=3:00:00 --gpus=a100:1 --cpus-per-task=8 --mem=32G per task of "
-                  "6 fits, 17 tasks (a first guess: tiles read at 242/s locally, about "
-                  "12 min of reading per fit)",
-        blocker="the fuel slot's replace form needs eco sidecars for the points (E-35's "
-                "eco_fire step); closure waits for Q26",
+        runner="Fire_Risk_FW (1) RUN_ID=<eco_v3 run> TARGET=ignition "
+               "ECO_OUT=$HOME/scratch/eco_ign_v1 SUBMIT=1 bash "
+               "scripts/shell/sweep_eco_fire.sh; (2) SUBMIT=1 EXP_NAME=ignition_e45 "
+               "ECO_DATA=$HOME/scratch/eco_ign_v1 "
+               "CONFIGS=r2,r3_fuel_replace,r3_fuel_replace_shuffled,r3_fuel_pc_replace,"
+               "r3_fuel_pc_replace_shuffled "
+               "bash scripts/shell/sweep_ignition.sh",
+        resources="(1) sweep_eco_fire.sh: one job, --time=1:00:00 --gpus=a100:1 "
+                  "--cpus-per-task=8 --mem=48G; (2) sweep_ignition.sh: --time=3:00:00 "
+                  "--gpus=a100:1 --cpus-per-task=8 --mem=32G per task of 6 fits (5 "
+                  "configs x 5 folds x 3 seeds = 75 fits, 13 tasks)",
+        blocker="closure waits for Q26",
         note="ignition_v1 complete 2026-11-10 (docs/results/P9/p9b_ignition_rungs, 100/100): "
              "REFUTED on what ran. r4 - r4_shuffled +0.008 [-0.006, +0.023]; r4 - r2 +0.003; "
              "r2 - r0 +0.052 [+0.035, +0.068]; r2_leaf_ablated - r2 +0.003 [-0.006, +0.010] "
@@ -1472,7 +1489,12 @@ EXPERIMENTS: tuple[Experiment, ...] = (
              "matched set; R2 starts as logit P(sustained flaming); best epoch chosen on a "
              "15 % inner split of the training groups. Green-up is tested by r2_leaf_ablated "
              "against r2, imagery by r4 against r4_shuffled. The fuel slot's replace form "
-             "needs eco sidecars for the points; closure waits for Q26.",
+             "needs eco sidecars for the points; closure waits for Q26."
+             + "2026-11-12: the fuel slot's replace form is built for the points: "
+               "predict_eco_fire.py writes the ignition pack's sidecar "
+               "(TARGET=ignition), and run_ignition.py takes --eco-dir; the shuffled "
+               "twins permute the sidecars. Same prediction as registered: the replace "
+               "arms beat their twins (paired CI above 0).",
     ),
     Experiment(
         "E-46", "Band and index decision", "CFFDRS mirror",
