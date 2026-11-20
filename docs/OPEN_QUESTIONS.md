@@ -1014,3 +1014,21 @@ E-8 asks whether the band ranking holds when the label is VIIRS thermal detectio
    - *Con:* a 1 km block label on 20 m pixels asserts boundaries the instrument never measured; it rewards coarse spatial smoothness, not bands.
 3. **Close E-8 as answered by design.** The v2 label is NBAC on or after D, which the pre-fire composite cannot contain (A-32).
    - *Con:* the B11 circularity worry (NBR-like delineation) is not tested directly.
+
+---
+
+### Q44 — Which board runs the onboard model, and is the Jetson ever measured?
+
+**Status:** OPEN (raised 2026-11-20, with the four SAFARI reports and the budget sheets)
+
+The team's cost sheet (V1) lists a TakeMe2Space AICube (Jetson Orin NX 16 GB, US$8,600). The ecology report (§5) compares it with the Q7, Q8 and Q9 on the P12e conversions and the power model. Its time a scene is an estimate (233 GOP over 30 TOPS at 5 % use, 0.5 s); its datasheet (rev D) gives 20 W idle, 25 W nominal, 55 W peak at 12 V, and CAN, USB and Ethernet but no LVDS or SpaceWire for the Mantis. The budget rule picks the Q8 at every level: the Q7 fails the power check (it keeps the Mantis reading out about 45 min a pass), and the AICube fails the interface and the NanoEPS's 24 W rail.
+
+1. **Settle on the Q8 (UltraRAM DPU build)** and get a Xiphos quote (no public price: US$10,000-30,000 assumed).
+   - *Pro:* measured conversions; the power system is sized for it.
+   - *Con:* price unknown.
+2. **Measure the model on the team's Jetson** (Fire_Risk_Model `deploy/` benchmark) and ask TakeMe2Space for the AICube's imager inputs and draw profile.
+   - *Pro:* replaces the estimate in the ecology report's Table 5.
+   - *Con:* does not change the interface or power findings.
+3. **Revisit the Q7 with the pass buffered** to its storage before processing.
+   - *Pro:* the cheapest board at 2 W.
+   - *Con:* the power model still finds it short with the Lean budget's arrays.
